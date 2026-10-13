@@ -77,8 +77,8 @@ svg.mainmap,svg.mini{touch-action:pan-x pan-y}svg.panning{cursor:grabbing}
 @media screen{.minibox{position:relative}}
 .minilinks{position:absolute;right:3px;bottom:3px;display:flex;gap:2px;margin:0;font:600 9px/1 system-ui,sans-serif}
 .minilinks a{display:inline-flex;align-items:center;gap:2px;padding:2px 4px;color:#555;background:#ffffffd9;border:1px solid #c8c2b8;border-radius:3px;text-decoration:none}
-.minilinks a:hover{color:#111;border-color:#888}.minilinks svg{width:8px;height:8px}
-@media print{/* side page is zoomed ~0.42: these print at ~6pt */.minilinks{font-size:14pt;right:5pt;bottom:5pt;gap:4pt}.minilinks a{padding:2pt 6pt;border-width:1.2pt;gap:3pt}.minilinks svg{width:12pt;height:12pt}}
+.minilinks a:hover{color:#111;border-color:#888}.minibox .minilinks svg.dlico{width:.8em;height:.8em;flex:none;box-shadow:none}
+@media print{/* side page is zoomed ~0.42: these print at ~6pt */.minilinks{font-size:14pt;right:5pt;bottom:5pt;gap:4pt}.minilinks a{padding:2pt 6pt;border-width:1.2pt;gap:3pt}.minibox .minilinks svg.dlico{width:.8em;height:.8em}}
 @media screen{.profilebox{position:relative}}
 .autoplay{position:absolute;left:8px;top:6px;padding:2px 8px;border:1px solid #ccc;border-radius:4px;background:#fffffff0;color:#555;font:600 11px/1.4 system-ui,sans-serif;cursor:pointer}
 .autoplay:hover{color:#111;border-color:#888}
