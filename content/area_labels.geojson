@@ -10,22 +10,22 @@
    "geometry": {
     "type": "Point",
     "coordinates": [
-     -103.882846,
-     29.344211
+     -103.874966,
+     29.337791
     ]
    }
   },
   {
    "type": "Feature",
    "properties": {
-    "area": "private:waterhole",
+    "area": "private:mines-east",
     "text": "Private"
    },
    "geometry": {
     "type": "Point",
     "coordinates": [
-     -103.808971,
-     29.353559
+     -103.768058,
+     29.361585
     ]
    }
   },
@@ -52,8 +52,8 @@
    "geometry": {
     "type": "Point",
     "coordinates": [
-     -103.769054,
-     29.464105
+     -103.779184,
+     29.484745
     ]
    }
   },
