@@ -85,7 +85,7 @@ export function renderMain(c) {
 }
 /** notched arrowhead (dart), centred on the route point and pointing along the route.
  *  Normalised shape pointing +x: tip (0.6,0), top-back (-0.5,-0.5), notch (-0.28,0), bottom-back (-0.5,0.5) — length:height 1.1:1. */
-const DART: [number, number][] = [[0.6, 0], [-0.5, -0.5], [-0.28, 0], [-0.5, 0.5]];
+export const DART: [number, number][] = [[0.6, 0], [-0.5, -0.5], [-0.28, 0], [-0.5, 0.5]];
 /** white halo thickness as a fraction of arrow height */
 export const ARROW_HALO = 0.3;
 export function chevron(f, V, col) {

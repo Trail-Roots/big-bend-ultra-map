@@ -1,5 +1,5 @@
 import { leaderLine, SHEET, viewProjection, esc, f1, lineD, dash, station } from './util';
-import { hillImage, chevron } from './mainmap';
+import { hillImage, chevron, DART, ARROW_HALO } from './mainmap';
 /** '5:00 AM' -> '5a', '8:30 AM' -> '8:30a' (minutes only when non-zero) */
 export const startShort = (t: string) => { const [hm, ap] = t.split(' '), [h, m] = hm.split(':'); return `${Number(h)}${m === '00' ? '' : ':' + m}${ap === 'PM' ? 'p' : 'a'}`; };
 // ---- start-time bib (fixed 86 x 72 pt for every course) ----
@@ -67,9 +67,12 @@ function turnaround(c, V) {
   let v = [p[0] - q[0], p[1] - q[1]]; const n0 = Math.hypot(...v); v = [v[0] / n0, v[1] / n0]; const n = [-v[1], v[0]];
   const h = 15 * 1.4, r = h * 0.75, L = h * 0.9, P = (a, b, s1, s2) => [a[0] + b[0] * s1 + n[0] * s2, a[1] + b[1] * s1 + n[1] * s2];
   const U = [P(p, v, -L, -r)]; for (let i = 0; i <= 40; i++) { const t = -Math.PI / 2 + Math.PI * i / 40; U.push(P(p, v, r * Math.cos(t), r * Math.sin(t))); } U.push(P(p, v, -L * 0.55, r));
-  const hw = r * 0.75, b0 = P(p, v, -L * 0.55, r), hd = [[b0[0] + n[0] * hw, b0[1] + n[1] * hw], P(p, v, -(L * 0.55 + hw * 1.3), r), [b0[0] - n[0] * hw, b0[1] - n[1] * hw]];
+  // black U-turn: same dart head + halo as the course arrows, with a matching black tail
+  const u = 13.7 * 1.5, tw = u * 0.32, halo = ARROW_HALO * 2 * u, tip = P(p, v, -L * 0.55 - u * 0.6, r), d = [-v[0], -v[1]];
+  const head = DART.map(([x, y]) => [tip[0] + ((x - 0.6) * d[0] - y * d[1]) * u, tip[1] + ((x - 0.6) * d[1] + y * d[0]) * u]);
+  const hd = `M${head.map((q) => `${f1(q[0])},${f1(q[1])}`).join('L')}Z`;
   const lx = p[0] - 1, ly = p[1] + 95;
-  return `<g class="turn"><path d="${lineD(U)}" fill="none" stroke="#fff" stroke-width="${f1(15 * .4 + 5)}" stroke-linejoin="round"/><path d="${lineD(U)}" fill="none" stroke="${col}" stroke-width="6" stroke-linejoin="round"/><path d="${lineD(hd)}z" fill="${col}" stroke="#fff" stroke-width="2"/><path d="M${f1(p[0])},${f1(p[1] + 8)}L${f1(lx)},${f1(ly - 22)}" stroke="${col}" stroke-width="1.2"/><text x="${f1(lx)}" y="${f1(ly)}" font-size="18" font-style="italic" font-weight="700" fill="${col}" text-anchor="middle" stroke="#fff" stroke-width="5" paint-order="stroke"><tspan x="${f1(lx)}" dy="-0.6em">10K</tspan><tspan x="${f1(lx)}" dy="1.2em">turnaround</tspan></text></g>`;
+  return `<g class="turn"><path d="${lineD(U)}" fill="none" stroke="#fff" stroke-width="${f1(tw + halo)}" stroke-linejoin="round" stroke-linecap="round"/><path d="${hd}" fill="#fff" stroke="#fff" stroke-width="${f1(halo)}" stroke-linejoin="round"/><path d="${lineD(U)}" fill="none" stroke="#111111" stroke-width="${f1(tw)}" stroke-linejoin="round"/><path d="${hd}" fill="#111111"/><path d="M${f1(p[0])},${f1(p[1] + 8)}L${f1(lx)},${f1(ly - 22)}" stroke="${col}" stroke-width="1.2"/><text x="${f1(lx)}" y="${f1(ly)}" font-size="18" font-style="italic" font-weight="700" fill="${col}" text-anchor="middle" stroke="#fff" stroke-width="5" paint-order="stroke"><tspan x="${f1(lx)}" dy="-0.6em">10K</tspan><tspan x="${f1(lx)}" dy="1.2em">turnaround</tspan></text></g>`;
 }
 export function renderStrips(c) {
   const st = c.layout.strips, W = st.w * SHEET.w, RH = st.rh * SHEET.h, col = c.colors, [a, b] = st.xlim;

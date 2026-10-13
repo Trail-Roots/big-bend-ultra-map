@@ -3636,8 +3636,8 @@
     },
     {
      "mile": 10.2,
-     "show": true,
-     "reason": "approved #11 (moved 44 m)"
+     "show": false,
+     "reason": "hidden by request: 100K mini shows only Shutup/Solitario/Pila Montoya arrows"
     },
     {
      "mile": 10.3,
@@ -4116,8 +4116,8 @@
     },
     {
      "mile": 19.8,
-     "show": false,
-     "reason": "collides with aid station"
+     "show": true,
+     "reason": "Shutup segment midpoint"
     },
     {
      "mile": 19.9,
@@ -4171,8 +4171,8 @@
     },
     {
      "mile": 20.9,
-     "show": true,
-     "reason": "approved #25 (moved 83 m)"
+     "show": false,
+     "reason": "hidden by request: 100K mini shows only Shutup/Solitario/Pila Montoya arrows"
     },
     {
      "mile": 21,
@@ -4246,8 +4246,8 @@
     },
     {
      "mile": 22.4,
-     "show": true,
-     "reason": "approved #34 (moved 71 m)"
+     "show": false,
+     "reason": "hidden by request: 100K mini shows only Shutup/Solitario/Pila Montoya arrows"
     },
     {
      "mile": 22.5,
@@ -4447,7 +4447,7 @@
     {
      "mile": 26.4,
      "show": true,
-     "reason": "approved #24 (moved 32 m) — note: close to an aid station"
+     "reason": "Solitario segment midpoint"
     },
     {
      "mile": 26.5,
@@ -4526,8 +4526,8 @@
     },
     {
      "mile": 28,
-     "show": true,
-     "reason": "approved #22 (moved 37 m)"
+     "show": false,
+     "reason": "hidden by request: 100K mini shows only Shutup/Solitario/Pila Montoya arrows"
     },
     {
      "mile": 28.1,
@@ -4676,8 +4676,8 @@
     },
     {
      "mile": 31,
-     "show": true,
-     "reason": "approved #23 (moved 44 m)"
+     "show": false,
+     "reason": "hidden by request: 100K mini shows only Shutup/Solitario/Pila Montoya arrows"
     },
     {
      "mile": 31.1,
@@ -4782,7 +4782,7 @@
     {
      "mile": 33.1,
      "show": true,
-     "reason": "approved #33 (moved 42 m)"
+     "reason": "Pila Montoya segment midpoint"
     },
     {
      "mile": 33.2,
@@ -5146,8 +5146,8 @@
     },
     {
      "mile": 40.4,
-     "show": true,
-     "reason": "approved #35 (moved 59 m)"
+     "show": false,
+     "reason": "hidden by request: 100K mini shows only Shutup/Solitario/Pila Montoya arrows"
     },
     {
      "mile": 40.5,
@@ -5886,8 +5886,8 @@
     },
     {
      "mile": 55.2,
-     "show": true,
-     "reason": "approved #12 (moved 25 m) — note: close to an aid station"
+     "show": false,
+     "reason": "hidden by request: 100K mini shows only Shutup/Solitario/Pila Montoya arrows"
     },
     {
      "mile": 55.3,
@@ -6136,8 +6136,8 @@
     },
     {
      "mile": 60.2,
-     "show": true,
-     "reason": "approved #36 (moved 2 m)"
+     "show": false,
+     "reason": "hidden by request: 100K mini shows only Shutup/Solitario/Pila Montoya arrows"
     },
     {
      "mile": 60.3,
@@ -11638,8 +11638,8 @@
     },
     {
      "mile": 17.2,
-     "show": true,
-     "reason": "approved #18 (moved 79 m)"
+     "show": false,
+     "reason": "hidden by request: wrong arrow right of aid station 1"
     },
     {
      "mile": 17.3,
@@ -12152,8 +12152,8 @@
     },
     {
      "mile": 6.2,
-     "show": true,
-     "reason": "approved #21 (moved 70 m)"
+     "show": false,
+     "reason": "hidden by request: appears to contradict direction"
     },
     {
      "mile": 6.3,

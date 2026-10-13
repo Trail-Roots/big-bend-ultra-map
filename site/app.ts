@@ -34,6 +34,7 @@ if (hdEl && prof) {
     // every course that reaches this mile gets a marker; shorter courses show nothing
     const hits = Object.entries(HD.courses).filter(([, c]) => mile <= c.dist).map(([k, c]) => ({ k, c, v: c.s[Math.max(0, Math.min(c.s.length - 1, Math.round(mile / 0.05)))] }));
     if (!hits.length) return hide();
+    hits.sort((a, b) => b.c.dist - a.c.dist); // longest course first (100K on top)
     all().forEach((q) => (q.g.style.display = 'none'));
     const px = X(mile); pg.style.display = ''; vline.setAttribute('x1', String(px)); vline.setAttribute('x2', String(px));
     for (const k in dots) (dots[k] as SVGElement).style.display = 'none';
