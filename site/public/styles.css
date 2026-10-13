@@ -83,3 +83,9 @@ svg.mainmap,svg.mini{touch-action:pan-x pan-y}svg.panning{cursor:grabbing}
 .autoplay{position:absolute;left:8px;top:6px;padding:2px 8px;border:1px solid #ccc;border-radius:4px;background:#fffffff0;color:#555;font:600 11px/1.4 system-ui,sans-serif;cursor:pointer}
 .autoplay:hover{color:#111;border-color:#888}
 @media print{.autoplay{display:none!important}}
+/* draft markings (content/site.json "draft": true) */
+.draftbanner{display:none}
+.draftnote{font:700 .75rem/1 system-ui,sans-serif;letter-spacing:.04em;text-transform:uppercase;color:#b3261e;border:1px solid #b3261e;border-radius:4px;padding:.25rem .5rem;background:#fff5f4}
+@media print{
+  body.draft .main::after,body.draft .side::after{content:'DRAFT';position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) rotate(-35deg);font:900 3.2in/1 system-ui,sans-serif;letter-spacing:.08em;color:#b3261e;opacity:.13;pointer-events:none;z-index:999;white-space:nowrap}
+}

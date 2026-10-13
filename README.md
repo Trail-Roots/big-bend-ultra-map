@@ -80,3 +80,15 @@ button (`dist/big-bend-ultra-2027-map.pdf`) matches what the browser prints. Eve
 `scripts/timeline.ts` (run by `bun run content`) builds `content/timeline.json`: sun times (NOAA equations), per-distance finish-time distributions,
 a grade-adjusted pace model, runners on course per 15 min and runners passing each aid station per 15 min. All modelling assumptions are listed in the JSON.
 `site/lib/timeline.ts` renders it in place of the mile strips; web auto-play sweeps the race-day clock (runner dots on the main map, toggle "Runner dots").
+
+## Draft markings
+
+One flag controls all draft markings: `sources/curated/site.json` (copied to `content/site.json` by `bun run content`).
+
+```json
+{ "draft": true }
+```
+
+When `true`, the build adds a red "DRAFT — NOT FINAL · Subject to change · Generated <date>" banner in the top margin of every
+printed / PDF page, a large faint diagonal "DRAFT" watermark on the two map pages, and a small "Draft · subject to change"
+notice next to Download PDF on the web page. Set it to `false` and rebuild (`bun run build`) to remove every draft marking.
