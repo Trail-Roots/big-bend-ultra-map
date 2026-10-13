@@ -13,7 +13,8 @@ const cutMin = (t: string) => { const m = t.match(/^(\d+):(\d\d) (AM|PM)$/); if 
 export function renderTimeline(c: Ctx) {
   const T = c.timeline, st = c.layout.strips, W = st.w * SHEET.w, H = 5 * st.rh * SHEET.h, col = c.colors, ink = col.ink;
   const [t0, t1] = T.window, LX = 178, RX = W - 8, X = (t: number) => LX + ((t - t0) / (t1 - t0)) * (RX - LX);
-  const AX = 34, CR = 50, SH = 24, SR = 36, order: string[] = c.courses.order, sts: string[] = c.stations.order;
+  const AX = 34, CR = 50, SH = 24, order: string[] = c.courses.order, sts: string[] = c.stations.order.flatMap((k: string) => (k === 'S/F' && T.finish_crowd ? [k, 'crowd'] : [k]));
+  const SR = Math.min(36, (H - 50 - (AX + 4 + order.length * CR + SH)) / sts.length); // station rows shrink to keep the footer inside the fixed strip height
   const cTop = AX + 4, sTop = cTop + order.length * CR + SH, bottom = sTop + sts.length * SR;
   let s = `<rect width="${f1(W)}" height="${f1(H)}" fill="#fff"/>`;
   // sky: night / civil twilight / daylight
@@ -55,12 +56,12 @@ export function renderTimeline(c: Ctx) {
   // stations
   s += `<text x="0" y="${f1(sTop - 6)}" font-size="17" font-weight="700" fill="${ink}">Aid stations · open window · runners passing per 15 min (model; red = busy, ≥ half of that station's peak)</text>`;
     sts.forEach((k, r) => {
-    const S = T.stations[k], maxP = Math.max(...S.passes15), y0 = sTop + r * SR, base = y0 + SR - 6, hgt = SR - 12, B = T.bin_min;
-    let g = `<text x="0" y="${f1(y0 + SR / 2)}" font-size="19" font-weight="700" fill="${ink}" dominant-baseline="central">${esc(k)} <tspan font-weight="400">${esc(S.name)}</tspan></text>`;
+    const FC = T.finish_crowd, crowd = k === 'crowd', S = crowd ? { name: 'Finish area crowd', passes15: FC.present15, window: null, peak15: FC.peak15 } : T.stations[k], maxP = Math.max(...S.passes15), y0 = sTop + r * SR, base = y0 + SR - 6, hgt = SR - 12, B = T.bin_min;
+    let g = `<text x="0" y="${f1(y0 + SR / 2)}" font-size="19" font-weight="700" fill="${ink}" dominant-baseline="central">${crowd ? '' : esc(k) + ' '}<tspan font-weight="400">${esc(S.name)}</tspan></text>`;
     if (S.window) g += `<rect x="${f1(X(S.window[0]))}" y="${f1(y0 + 3)}" width="${f1(X(S.window[1]) - X(S.window[0]))}" height="${f1(SR - 6)}" rx="5" fill="#f3efe7" stroke="#cfc6b6" stroke-width="1"/>`;
     S.passes15.forEach((v: number, i: number) => { if (!v) return; const h = Math.max(1.5, Math.sqrt(v / maxP) * hgt), x = X(t0 + i * B); g += `<rect x="${f1(x + 0.6)}" y="${f1(base - h)}" width="${f1(X(t0 + B) - X(t0) - 1.2)}" height="${f1(h)}" fill="${v >= 0.5 * maxP ? '#b3261e' : ink}" fill-opacity="${(0.3 + 0.7 * v / maxP).toFixed(2)}"/>`; });
     const pk = S.peak15, px = X(pk.start + B / 2);
-    g += `<text x="${f1(Math.max(px, X(S.window ? S.window[0] : t0)) + 10)}" y="${f1(y0 + 14)}" font-size="15" font-weight="700" fill="#b3261e" stroke="#fff" stroke-width="4" paint-order="stroke">peak ${pk.count}/15 min @ ${clock(pk.start, false)}</text>`;
+    g += `<text x="${f1(Math.max(px, X(S.window ? S.window[0] : t0)) + 10)}" y="${f1(y0 + 14)}" font-size="15" font-weight="700" fill="#b3261e" stroke="#fff" stroke-width="4" paint-order="stroke">${crowd ? `peak ${pk.count} present @ ${clock(pk.start, false)} · ≥ ½ peak ${clock(FC.above_half_peak.from, false)}–${clock(FC.above_half_peak.to, false)} · finishers linger ~1 h` : `peak ${pk.count}/15 min @ ${clock(pk.start, false)}`}</text>`;
     s += `<g class="tlst" data-station="${esc(k)}">${g}</g>`;
   });
   s += `<text x="0" y="${f1(bottom + 40)}" font-size="13" fill="${col.mute}">Model from 2026 RunSignup results (fetched ${T.fetched.slice(0, 10)}); shading: night · civil twilight · day at ${T.sun.site.lat}°N ${-T.sun.site.lon}°W</text>`;
