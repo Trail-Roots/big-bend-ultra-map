@@ -141,8 +141,9 @@ for (const k of ORDER) {
 const HRS: Record<string, string> = {};
 for (const l in OPEN) if (l in CLOSE) HRS[l] = `${hmx(OPEN[l])} - ${CLOSE[l].replace(':00', '')}`;
 HRS['S/F'] = SF_HOURS;
+const CAL: Record<string, { lat: number; lon: number }> = rj('curated/calendar_coords.json').stations; // Google Maps links use the race calendar's exact coordinates where published
 
-w('stations.json', { order: ['S/F', '1', '2', '3', '4', '5'], stations: Object.fromEntries(['S/F', '1', '2', '3', '4', '5'].map((k) => [k, { name: NAME[k], kml: KN[k], lonlat: ll([merc(SLL[k])])[0], hours: HRS[k] ?? null, spectator: SPEC.has(k), elevation_ft: Math.round(STEL[k] ?? 0) }])) });
+w('stations.json', { order: ['S/F', '1', '2', '3', '4', '5'], stations: Object.fromEntries(['S/F', '1', '2', '3', '4', '5'].map((k) => [k, { name: NAME[k], kml: KN[k], lonlat: ll([merc(SLL[k])])[0], ...(CAL[k] ? { link_lonlat: [CAL[k].lon, CAL[k].lat] } : {}), hours: HRS[k] ?? null, spectator: SPEC.has(k), elevation_ft: Math.round(STEL[k] ?? 0) }])) });
 w('cutoffs.json', Object.fromEntries(ORDER.map((k) => [k, S[k].map(([station, mile, cutoff]) => ({ station, mile, cutoff }))])));
 // Strava route URL: only taken from the source GPX metadata (<link href="https://www.strava.com/routes/...">); never invented
 const strava = (k: Course) => { const m = fs.readFileSync(path.join(SRC, 'gpx', `${k}.gpx`), 'utf8').match(/https?:\/\/(?:www\.)?strava\.com\/routes\/\d+/); return m ? m[0].replace(/^http:/, 'https:') : null; };
