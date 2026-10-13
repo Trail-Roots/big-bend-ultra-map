@@ -1,4 +1,5 @@
 import { initZoom, zoomOf } from './zoom';
+import { makeGlide, routeAt } from './glide';
 // Layer toggles. No framework; the map is static inline SVG.
 const show = (sel: string, on: boolean) => document.querySelectorAll<SVGGElement>(sel).forEach((g) => (g.style.display = on ? '' : 'none'));
 document.querySelectorAll<HTMLInputElement>('input[data-layer]').forEach((cb) => cb.addEventListener('change', () => { show(`.mainmap g.layer[data-layer="${cb.dataset.layer}"]`, cb.checked); if (cb.dataset.layer === 'zoom') show('svg.mini g.zoombox', cb.checked); if (cb.dataset.layer === 'topo') show('svg.mini g.topo', cb.checked); }));
@@ -26,7 +27,9 @@ if (hdEl && prof) {
   const { W, H, x: [x0, x1], y: [y0, y1] } = HD.profile;
   const X = (m: number) => ((m - x0) / (x1 - x0)) * W, Y = (ft: number) => (1 - (ft - y0) / (y1 - y0)) * H;
   const all = () => [...Object.values(mains), ...Object.values(minis)];
-  const hide = () => { pg.style.display = 'none'; all().forEach((q) => (q.g.style.display = 'none')); };
+  const glide = makeGlide(HD.courses, mains, minis, zoomOf); void all; // markers ease along the route (snap under reduced motion)
+  const hide = () => { pg.style.display = 'none'; glide.clear(); };
+  document.querySelectorAll('svg.mainmap, svg.mini').forEach((m) => m.addEventListener('zoomchange', () => glide.redraw()));
   const move = (ev: PointerEvent) => {
     const ctm = prof.getScreenCTM(); if (!ctm) return;
     const p = new DOMPoint(ev.clientX, ev.clientY).matrixTransform(ctm.inverse());
@@ -35,18 +38,16 @@ if (hdEl && prof) {
   const show = (mile: number) => {
     if (mile < 0) return hide();
     // every course that reaches this mile gets a marker; shorter courses show nothing
-    const hits = Object.entries(HD.courses).filter(([, c]) => mile <= c.dist).map(([k, c]) => ({ k, c, v: c.s[Math.max(0, Math.min(c.s.length - 1, Math.round(mile / 0.05)))] }));
+    const hits = Object.entries(HD.courses).filter(([, c]) => mile <= c.dist).map(([k, c]) => ({ k, c, v: routeAt(c.s, mile) }));
     if (!hits.length) return hide();
     hits.sort((a, b) => b.c.dist - a.c.dist); // longest course first (100K on top)
-    all().forEach((q) => (q.g.style.display = 'none'));
     const px = X(mile); pg.style.display = ''; vline.setAttribute('x1', String(px)); vline.setAttribute('x2', String(px));
     for (const k in dots) (dots[k] as SVGElement).style.display = 'none';
     for (const { k, v } of hits) {
-      const [, ft, ax, ay, bx, by] = v, d = dots[k] as SVGElement;
-      d.style.display = ''; d.setAttribute('cx', String(X(v[0]))); d.setAttribute('cy', String(Y(ft)));
-      mains[k].g.style.display = ''; mains[k].g.setAttribute('transform', `translate(${ax} ${ay}) scale(${1 / zoomOf(main)})`);
-      if (minis[k]) { minis[k].g.style.display = ''; minis[k].g.setAttribute('transform', `translate(${bx} ${by}) scale(${1 / zoomOf(minis[k].g.ownerSVGElement)})`); }
+      const ft = v[1], d = dots[k] as SVGElement;
+      d.style.display = ''; d.setAttribute('cx', String(X(mile))); d.setAttribute('cy', String(Y(ft)));
     }
+    for (const k in HD.courses) glide.set(k, hits.some((h) => h.k === k) ? mile : null);
     // readout: one line per course, longest first: course · mile · cumulative gain from the start
     lab.textContent = '';
     const rows = hits.map(({ k, c, v }) => ({ t: `${k} · mi ${v[0].toFixed(1)} · +${v[6].toLocaleString('en-US')} ft gain`, fill: c.color }));
@@ -66,7 +67,7 @@ if (hdEl && prof) {
     raf = 0; if (!running()) return;
     if (!t0) t0 = t - (mile0 / END) * LOOP_S * 1000;
     const mile = (((t - t0) / 1000 / LOOP_S) % 1) * END; mile0 = mile;
-    if (t - last > 50) { show(mile); last = t; } // ~20 fps is plenty for a slow sweep
+    show(mile); last = t; // every frame: continuous sweep
     raf = requestAnimationFrame(tick);
   };
   const start = () => { if (!raf && running()) { t0 = 0; raf = requestAnimationFrame(tick); } };
