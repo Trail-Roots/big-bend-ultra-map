@@ -61,7 +61,7 @@ Current sections: `10-map` (side-by-side map sheet), `20-stations` (aid stations
 * `lib/util.ts` – projection (Mercator fitted to the layout view windows), page-space path simplification, styles.
 
 Toggles: topo (main + mini hillshade), park boundary (incl. park area labels), routes per course, zoom boxes (main map and mini maps), POIs.
-Always shown: off-course roads, access styles, arrows, aid stations, distances and all labels. Hovering or touch-dragging the elevation profile marks that mile on every course that reaches it (main map + each course mini map) and lists each course’s elevation there. Start bibs: fixed 86×72 pt with a black START band (`BIB_STYLE` in `lib/panels.ts`; mockups via `bun tools/bib-variants.ts`).
+Always shown: off-course roads, access styles, arrows, aid stations, distances and all labels. Hovering or touch-dragging the elevation profile marks that mile on every course that reaches it (main map + each course mini map) and lists each course’s elevation there. Start bibs: fixed 86×72 pt with a black START band along the bottom and full start times like 5:00a (`BIB_STYLE` in `lib/panels.ts`; mockups via `bun tools/bib-variants.ts`).
 
 Layout: side-by-side ≥ 1000 px wide, stacked below.
 

@@ -1,6 +1,8 @@
 import { leaderLine, SHEET, viewProjection, esc, f1, lineD, dash, station } from './util';
 import { hillImage, chevron, DART, ARROW_HALO } from './mainmap';
 /** '5:00 AM' -> '5a', '8:30 AM' -> '8:30a' (minutes only when non-zero) */
+/** '5:00 AM' -> '5:00a' (full time, as shown on the bibs) */
+export const startFull = (t: string) => { const [hm, ap] = t.split(' '), [h, m] = hm.split(':'); return `${Number(h)}:${m}${ap === 'PM' ? 'p' : 'a'}`; };
 export const startShort = (t: string) => { const [hm, ap] = t.split(' '), [h, m] = hm.split(':'); return `${Number(h)}${m === '00' ? '' : ':' + m}${ap === 'PM' ? 'p' : 'a'}`; };
 // ---- start-time bib (fixed 86 x 72 pt for every course) ----
 export type BibStyle = 'band' | 'stopwatch' | 'flag' | 'bandtime';
@@ -14,21 +16,24 @@ const ICON: Record<string, string> = {
 };
 const tw = (t: string, fs: number) => t.length * fs * 0.64;
 export function bib(k: string, start: string, cc: string, W: number, H: number, col: Record<string, string>, style: BibStyle = BIB_STYLE, at?: [number, number]) {
-  const B = BIB, t = startShort(start), ink = col.ink;
+  const B = BIB, t = startFull(start), ink = col.ink;
   const bx = at ? at[0] : W * 0.97 - B.w, by = at ? at[1] : H * 0.03, inner = B.w - 2 * B.pad;
   let g = `<g class="bib bib-${style}"><rect x="${f1(bx)}" y="${f1(by)}" width="${B.w}" height="${B.h}" rx="${B.rx}" fill="${cc}"/>`;
   const txt = (x: number, y: number, fs: number, fill: string, v: string, anchor = 'middle', extra = '') => `<text x="${f1(x)}" y="${f1(y)}" font-size="${f1(fs)}" font-weight="700" fill="${fill}" text-anchor="${anchor}" dominant-baseline="central"${extra}>${v}</text>`;
   const fitFs = (v: string, max: number, room: number) => Math.min(max, room / (tw(v, 1) || 1));
-  if (style === 'band' || style === 'bandtime') {
+  if (style === 'band') {
+    // course name on top, white time pill, black START band along the bottom edge
+    const bandH = 15, clip = `bb${k}${style}`, bandY = by + B.h - bandH, pillH = 20, py = bandY - 5 - pillH;
+    g += `<clipPath id="${clip}"><rect x="${f1(bx)}" y="${f1(by)}" width="${B.w}" height="${B.h}" rx="${B.rx}"/></clipPath><rect x="${f1(bx)}" y="${f1(bandY)}" width="${B.w}" height="${bandH}" fill="${ink}" clip-path="url(#${clip})"/>`;
+    g += txt(bx + B.w / 2, bandY + bandH / 2 + 0.5, fitFs('START', 10.5, inner), '#fff', 'START', 'middle', ' letter-spacing="1"');
+    g += txt(bx + B.w / 2, by + 2 + (py - by - 2) / 2, fitFs(k, 24, inner), '#fff', k);
+    g += `<rect x="${f1(bx + B.pad)}" y="${f1(py)}" width="${f1(inner)}" height="${pillH}" rx="4" fill="#fff"/>` + txt(bx + B.w / 2, py + pillH / 2, fitFs(t, 15, inner - 8), ink, t);
+  } else if (style === 'bandtime') {
     const bandH = 15, clip = `bb${k}${style}`;
     g += `<clipPath id="${clip}"><rect x="${f1(bx)}" y="${f1(by)}" width="${B.w}" height="${B.h}" rx="${B.rx}"/></clipPath><rect x="${f1(bx)}" y="${f1(by)}" width="${B.w}" height="${bandH}" fill="${ink}" clip-path="url(#${clip})"/>`;
-    const bandTxt = style === 'band' ? 'START' : `START ${t}`;
+    const bandTxt = `START ${t}`;
     g += txt(bx + B.w / 2, by + bandH / 2 + 0.5, fitFs(bandTxt, 10.5, inner), '#fff', bandTxt, 'middle', ' letter-spacing="1"');
-    if (style === 'band') {
-      const pillH = 22, py = by + B.h - B.pad - pillH;
-      g += txt(bx + B.w / 2, by + bandH + (py - by - bandH) / 2, fitFs(k, 24, inner), '#fff', k);
-      g += `<rect x="${f1(bx + B.pad)}" y="${f1(py)}" width="${f1(inner)}" height="${pillH}" rx="4" fill="#fff"/>` + txt(bx + B.w / 2, py + pillH / 2, fitFs(t, 15, inner - 8), ink, t);
-    } else g += txt(bx + B.w / 2, by + bandH + (B.h - bandH) / 2, fitFs(k, 28, inner), '#fff', k);
+    g += txt(bx + B.w / 2, by + bandH + (B.h - bandH) / 2, fitFs(k, 28, inner), '#fff', k);
   } else {
     const pillH = 25, py = by + B.h - B.pad - pillH, isz = pillH - 8, sc = isz / 12, gap = 4;
     g += txt(bx + B.w / 2, by + B.pad + (py - by - B.pad) / 2, fitFs(k, 26, inner), '#fff', k);
