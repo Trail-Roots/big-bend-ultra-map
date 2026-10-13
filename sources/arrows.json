@@ -1019,8 +1019,8 @@
     },
     {
      "mile": 20.3,
-     "show": true,
-     "reason": "approved #2 (moved 23 m)"
+     "show": false,
+     "reason": "moved: sat on a bend (read as backtracking)"
     },
     {
      "mile": 20.4,
@@ -1034,8 +1034,8 @@
     },
     {
      "mile": 20.6,
-     "show": false,
-     "reason": "too close to a shown arrow"
+     "show": true,
+     "reason": "approved #2 (moved off the bend at 20.3)"
     },
     {
      "mile": 20.7,
