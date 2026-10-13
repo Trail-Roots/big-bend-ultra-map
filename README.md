@@ -75,6 +75,12 @@ button (`dist/big-bend-ultra-2027-map.pdf`) matches what the browser prints. Eve
 ## Deploy
 `.github/workflows/pages.yml`: on push to `main`, sets up Bun, installs Chromium, `bun run build`, publishes `dist/` to GitHub Pages.
 
+## Race-day timeline (branch `timeline`)
+`scripts/fetch-results.ts` snapshots the public RunSignup results (race 163892) into `sources/results/` (finish times + status counts only, no names).
+`scripts/timeline.ts` (run by `bun run content`) builds `content/timeline.json`: sun times (NOAA equations), per-distance finish-time distributions,
+a grade-adjusted pace model, runners on course per 15 min and runners passing each aid station per 15 min. All modelling assumptions are listed in the JSON.
+`site/lib/timeline.ts` renders it in place of the mile strips; web auto-play sweeps the race-day clock (runner dots on the main map, toggle "Runner dots").
+
 ## Draft markings
 
 One flag controls all draft markings: `sources/curated/site.json` (copied to `content/site.json` by `bun run content`).

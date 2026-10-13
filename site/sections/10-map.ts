@@ -1,9 +1,10 @@
 import { renderMain, mainLayers } from '../lib/mainmap';
-import { renderMini, renderStrips, renderProfile } from '../lib/panels';
+import { renderMini, renderProfile } from '../lib/panels';
 import { esc, SHEET } from '../lib/util';
 export const meta = { id: 'map', title: 'Course & Access Map' };
 import type { Ctx } from '../lib/types';
 import { hoverData } from '../lib/hover';
+import { renderTimeline } from '../lib/timeline';
 // Print = US Letter portrait, 2 pages: p1 the main map, p2 the side panel (header, mini maps, timelines, profile).
 // Panels keep their 36x24 in design-sheet geometry (inches) and each page is uniformly zoomed to fit the printable area.
 /** live site; links in the PDF must be absolute */
@@ -46,7 +47,7 @@ export function render(c: Ctx) {
       <div class="notice"><strong>${esc(notice[0])}</strong>${notice.slice(1).map(l => `<br>${/^\(\d/.test(l) ? `<span class="dist">${esc(l)}</span>` : esc(l)}`).join('')}</div>
     </header>
     <div class="minis">${minis}</div>
-    <div class="stripsbox" id="pb-strips">${renderStrips(c)}</div>
+    <div class="stripsbox" id="pb-strips">${renderTimeline(c)}</div>
     <div class="profilebox" id="pb-prof">${renderProfile(c)}</div>
     <div class="printfoot">trailroots.com/big-bend-ultra</div>
   </aside>

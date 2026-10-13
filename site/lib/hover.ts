@@ -35,5 +35,11 @@ export function hoverData(c: Ctx) {
     courses[k] = { color: c.courses.colors[k], dist, s };
   }
   const W = L.elev[2] * SHEET.w, H = L.elev[3] * SHEET.h;
-  return { profile: { W, H, x: L.elev_xlim, y: L.elev_ylim }, courses };
+  // time model for the race-day timeline / auto-play / runner dots (content/timeline.json)
+  const TL = c.timeline, time = { t0: TL.window[0], t1: TL.window[1], bin: TL.bin_min, courses: Object.fromEntries(c.courses.order.map((k) => {
+    const C = TL.courses[k], fin = C.finish_s.map((v: number) => Math.round(v / 6) / 10), mid = C.passes[Math.floor(C.passes.length / 2)].mile;
+    const midFit = C.curves.fitOf[Math.floor(C.curves.fitOf.length / 2)];
+    return [k, { start: C.start, T: [...fin, ...new Array(C.dnf).fill(Math.round(C.q50 / 6) / 10)], stop: [...fin.map(() => -1), ...new Array(C.dnf).fill(mid)], fit: [...C.curves.fitOf, ...new Array(C.dnf).fill(midFit)], curves: C.curves.byFit, med: C.q50 / 60, medFit: midFit, on: C.on_course }];
+  })) };
+  return { profile: { W, H, x: L.elev_xlim, y: L.elev_ylim }, courses, time };
 }
