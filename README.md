@@ -74,3 +74,15 @@ button (`dist/big-bend-ultra-2027-map.pdf`) matches what the browser prints. Eve
 
 ## Deploy
 `.github/workflows/pages.yml`: on push to `main`, sets up Bun, installs Chromium, `bun run build`, publishes `dist/` to GitHub Pages.
+
+## Draft markings
+
+One flag controls all draft markings: `sources/curated/site.json` (copied to `content/site.json` by `bun run content`).
+
+```json
+{ "draft": true }
+```
+
+When `true`, the build adds a red "DRAFT — NOT FINAL · Subject to change · Generated <date>" banner in the top margin of every
+printed / PDF page, a large faint diagonal "DRAFT" watermark on the two map pages, and a small "Draft · subject to change"
+notice next to Download PDF on the web page. Set it to `false` and rebuild (`bun run build`) to remove every draft marking.

@@ -21,7 +21,12 @@ const sections: Section[] = [];
 for (const f of fs.readdirSync(path.join(here, 'sections')).filter((f) => f.endsWith('.ts')).sort()) sections.push(await import(path.join(here, 'sections', f)));
 const tpl = fs.readFileSync(path.join(here, 'template.html'), 'utf8');
 const body = sections.map((s) => `<section class="sec sec-${s.meta.id}${s.meta.print === false ? ' noprint' : ''}" id="${s.meta.id}" aria-label="${s.meta.title}">${s.render(ctx)}</section>`).join('\n');
-const html = tpl.replace('{{base}}', './').replace(/{{title}}/g, sections[0].meta.title).replace('{{defs}}', markerDefs(ctx.colors)).replace('{{body}}', body).replace(/{{year}}/g, '2027');
+// draft markings: one flag in content/site.json (source: sources/curated/site.json)
+const site = J('site.json'), draft = site.draft === true;
+const gen = new Date().toLocaleDateString('en-US', { timeZone: 'America/Chicago', year: 'numeric', month: 'short', day: 'numeric' });
+const html = tpl.replace('{{bodyclass}}', draft ? 'draft' : '')
+  .replace('{{draftbanner}}', draft ? `<style>@page{@top-center{content:"DRAFT — NOT FINAL · Subject to change · Generated ${gen}";font:800 10pt system-ui,sans-serif;letter-spacing:.06em;color:#fff;background:#b3261e;margin:.08in 0 .08in;width:100%;-webkit-print-color-adjust:exact;print-color-adjust:exact}}</style>` : '')
+  .replace('{{draftnote}}', draft ? `<span class="draftnote" title="Generated ${gen}">Draft · subject to change</span>` : '').replace('{{base}}', './').replace(/{{title}}/g, sections[0].meta.title).replace('{{defs}}', markerDefs(ctx.colors)).replace('{{body}}', body).replace(/{{year}}/g, '2027');
 fs.writeFileSync(path.join(D, 'index.html'), html);
 console.log('index.html', (html.length / 1024).toFixed(0) + ' KB,', sections.length, 'sections:', sections.map((s) => s.meta.id).join(', '));
 fs.cpSync(path.join(here, 'public'), D, { recursive: true });
