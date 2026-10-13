@@ -61,6 +61,6 @@ export function poiLabel(f: Feature, p: (ll: [number, number]) => [number, numbe
   const leads = lines.map((l, i) => (i === 0 ? 0 : i === 1 ? T.title.size / 2 + T.gap + T.note.size / 2 : T.note.size * T.noteLead));
   const { svg, boxes } = block(x, y, (q.align ?? 'center') as Align, lines, leads);
   // POI leaders always run from the title to the POI dot
-  const lead = q.target ? (() => { const [tx, ty] = p(q.target); return leader(boxes, tx, ty, targetR); })() : '';
+  const lead = q.target ? (() => { const [tx, ty] = p(q.target); const b = boxes[0], my = (b.y0 + b.y1) / 2; const sx = tx < b.x0 ? b.x0 : tx > b.x1 ? b.x1 : Math.max(b.x0, Math.min(tx, b.x1)); const sy = tx < b.x0 || tx > b.x1 ? my : ty < b.y0 ? b.y0 : b.y1; return leaderLine(sx, sy, tx, ty, 0, targetR); })() : '';
   return `<g class="poilabel" data-poi="${esc(q.poi)}">${lead}${svg}</g>`;
 }
