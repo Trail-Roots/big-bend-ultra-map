@@ -1,4 +1,4 @@
-import { SHEET, viewProjection, esc, f1, lineD, dash, station } from './util';
+import { leaderLine, SHEET, viewProjection, esc, f1, lineD, dash, station } from './util';
 import { hillImage, chevron } from './mainmap';
 /** '5:00 AM' -> '5a', '8:30 AM' -> '8:30a' (minutes only when non-zero) */
 export const startShort = (t: string) => { const [hm, ap] = t.split(' '), [h, m] = hm.split(':'); return `${Number(h)}${m === '00' ? '' : ':' + m}${ap === 'PM' ? 'p' : 'a'}`; };
@@ -103,7 +103,7 @@ export function renderProfile(c) {
   const lgx = W - 140, lgy = 16; s += `<rect x="${lgx - 10}" y="${lgy - 6}" width="140" height="${O.length * 32 + 10}" fill="#fff" fill-opacity=".9"/>`;
   O.forEach((k, i) => { s += `<path d="M${lgx},${lgy + 14 + i * 32}h36" stroke="${c.courses.colors[k]}" stroke-width="4"/><text x="${lgx + 46}" y="${lgy + 14 + i * 32}" font-size="22" dominant-baseline="central" fill="${col.ink}">${k}</text>`; });
   for (const q of pr.callouts.callouts) {
-    for (const x of q.xs) s += `<path d="M${f1(X(x))},${f1(Y(q.y))}L${f1(X(q.bx))},${f1(Y(q.by))}" stroke="#555" stroke-width="1.2"/><circle cx="${f1(X(x))}" cy="${f1(Y(q.y))}" r="3" fill="${col.ink}"/>`;
+    for (const x of q.xs) s += leaderLine(X(q.bx), Y(q.by), X(x), Y(q.y), Math.sqrt(950) / 2, 3) + `<circle cx="${f1(X(x))}" cy="${f1(Y(q.y))}" r="3" fill="${col.ink}"/>`;
     s += station(X(q.bx), Y(q.by), q.lab, c.stations.stations[q.lab].spectator, { s: 950, fs: 24, badge: false, colors: col });
   }
   for (const r of pr.callouts.rincon) s += `<circle cx="${f1(X(r.mi))}" cy="${f1(Y(r.ft))}" r="6.3" fill="#fff" stroke="${col.ink}" stroke-width="3"/>`;

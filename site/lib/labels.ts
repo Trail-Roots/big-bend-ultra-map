@@ -1,17 +1,17 @@
 // Standard label templates. Content (/content/station_labels.geojson, poi_labels.geojson) holds position,
 // alignment and text; styling + line layout live here so every station / POI label looks the same.
-import { esc, f1 } from './util';
+import { esc, f1, leaderLine } from './util';
 import type { Ctx, Feature } from './types';
 
 export type Align = 'left' | 'right' | 'center';
 type Line = { text: string; size: number; serif: boolean; color: string; weight: number; italic: boolean; halo: number; cls?: string };
 
 // Aid-station template (modeled on Contrabando): serif name, then sans info lines (location, hours) centred below.
-export const STATION_TPL = { name: { size: 34, color: '#2a2a2a', halo: 7 }, info: { size: 22, color: '#555555', halo: 6 }, nameLead: 1.15, gap: 6, infoLead: 1.2, leader: { color: '#555555', width: 1.3, minGap: 14, pad: 5 } };
+export const STATION_TPL = { name: { size: 34, color: '#2a2a2a', halo: 7 }, info: { size: 22, color: '#555555', halo: 6 }, nameLead: 1.15, gap: 6, infoLead: 1.2 };
 // POI template: serif semibold-italic title, serif italic notes.
-export const POI_TPL = { title: { size: 21, color: '#6b665e', halo: 7 }, note: { size: 18, color: '#8a8580', halo: 7 }, titleLead: 1.15, gap: 4, noteLead: 1.25, leader: { color: '#555555', width: 1.3, minGap: 10, pad: 4 } };
+export const POI_TPL = { title: { size: 21, color: '#6b665e', halo: 7 }, note: { size: 18, color: '#8a8580', halo: 7 }, titleLead: 1.15, gap: 4, noteLead: 1.25 };
 
-const wEst = (l: Line) => l.text.length * l.size * (l.serif ? 0.6 : 0.58);
+const wEst = (l: Line) => l.text.length * l.size * (l.serif ? (l.italic ? 0.5 : 0.56) : 0.56);
 /** lays out lines top-down from the block centre (x, y); returns svg + bbox */
 function block(x: number, y: number, align: Align, lines: Line[], leads: number[]) {
   let h = 0; const ys: number[] = [];
@@ -20,15 +20,20 @@ function block(x: number, y: number, align: Align, lines: Line[], leads: number[
   const W = Math.max(...lines.map(wEst)), x0 = align === 'left' ? x : align === 'right' ? x - W : x - W / 2;
   const svg = lines.map((l, i) => `<text x="${f1(x)}" y="${f1(top + ys[i])}" class="f-${l.serif ? 'serif' : 'sans'}${l.cls ? ' ' + l.cls : ''}" font-size="${l.size}" fill="${l.color}" font-style="${l.italic ? 'italic' : 'normal'}" font-weight="${l.weight}" text-anchor="${anchor}" dominant-baseline="central" stroke="#ffffff" stroke-width="${l.halo}" paint-order="stroke" stroke-linejoin="round">${esc(l.text)}</text>`).join('');
   const b = { x0, x1: x0 + W, y0: top - lines[0].size / 2, y1: top + h + lines[lines.length - 1].size / 2 };
-  return { svg, b };
+  const boxes = lines.map((l, i) => { const w = wEst(l), lx = align === 'left' ? x : align === 'right' ? x - w : x - w / 2, cy = top + ys[i]; return { x0: lx, x1: lx + w, y0: cy - l.size * 0.42, y1: cy + l.size * 0.42 }; });
+  const w0 = wEst(lines[0]), t0 = align === 'left' ? x : align === 'right' ? x - w0 : x - w0 / 2;
+  const tb = { x0: t0, x1: t0 + w0, y0: top - lines[0].size / 2, y1: top + lines[0].size / 2 }; // first line only
+  return { svg, b, tb, boxes };
 }
-/** straight leader from the block edge to a target circle of radius r (skipped when the label is already close) */
-function leader(b: { x0: number; x1: number; y0: number; y1: number }, tx: number, ty: number, r: number, L: { color: string; width: number; minGap: number; pad: number }) {
-  const px = Math.max(b.x0, Math.min(tx, b.x1)), py = Math.max(b.y0, Math.min(ty, b.y1));
-  const dx = tx - px, dy = ty - py, d = Math.hypot(dx, dy);
-  if (d - r < L.minGap) return '';
-  const ux = dx / d, uy = dy / d;
-  return `<path d="M${f1(px + ux * L.pad)},${f1(py + uy * L.pad)}L${f1(tx - ux * (r + L.pad))},${f1(ty - uy * (r + L.pad))}" fill="none" stroke="${L.color}" stroke-width="${L.width}"/>`;
+type Box = { x0: number; x1: number; y0: number; y1: number };
+/** leader from the label text (just below/above it when the marker is below/above, else nearest line edge) to the marker */
+function leader(boxes: Box[], tx: number, ty: number, r: number) {
+  const first = boxes[0], last = boxes[boxes.length - 1];
+  let best: [number, number, number] | null = null;
+  if (ty > last.y1) { const px = Math.max(last.x0, Math.min(tx, last.x1)); best = [px, last.y1, 0]; }
+  else if (ty < first.y0) { const px = Math.max(first.x0, Math.min(tx, first.x1)); best = [px, first.y0, 0]; }
+  else for (const b of boxes) { const px = Math.max(b.x0, Math.min(tx, b.x1)), py = Math.max(b.y0, Math.min(ty, b.y1)), d = Math.hypot(tx - px, ty - py); if (!best || d < best[2]) best = [px, py, d]; }
+  return best ? leaderLine(best[0], best[1], tx, ty, 0, r) : '';
 }
 
 export function stationLabel(c: Ctx, f: Feature, p: (ll: [number, number]) => [number, number], radius: (k: string) => number) {
@@ -41,9 +46,9 @@ export function stationLabel(c: Ctx, f: Feature, p: (ll: [number, number]) => [n
     ...info.map((t) => ({ text: t, size: T.info.size, serif: false, color: T.info.color, weight: 400, italic: false, halo: T.info.halo })),
   ];
   const leads = lines.map((l, i) => (i === 0 ? 0 : i < nameLines.length ? T.name.size * T.nameLead : i === nameLines.length ? T.name.size / 2 + T.gap + T.info.size / 2 : T.info.size * T.infoLead));
-  const { svg, b } = block(x, y, (q.align ?? 'center') as Align, lines, leads);
+  const { svg, boxes } = block(x, y, (q.align ?? 'center') as Align, lines, leads);
   const [sx, sy] = p(s.lonlat);
-  return `<g class="stlabel" data-station="${esc(q.station)}">${leader(b, sx, sy, radius(q.station), T.leader)}${svg}</g>`;
+  return `<g class="stlabel" data-station="${esc(q.station)}">${leader(boxes, sx, sy, radius(q.station))}${svg}</g>`;
 }
 
 export function poiLabel(f: Feature, p: (ll: [number, number]) => [number, number], targetR = 6) {
@@ -54,7 +59,8 @@ export function poiLabel(f: Feature, p: (ll: [number, number]) => [number, numbe
     ...notes.map((n) => ({ text: n.text, size: T.note.size, serif: true, color: T.note.color, weight: 400, italic: true, halo: T.note.halo, cls: n.distance ? 'dist' : '' })),
   ];
   const leads = lines.map((l, i) => (i === 0 ? 0 : i === 1 ? T.title.size / 2 + T.gap + T.note.size / 2 : T.note.size * T.noteLead));
-  const { svg, b } = block(x, y, (q.align ?? 'center') as Align, lines, leads);
-  const lead = q.target ? (() => { const [tx, ty] = p(q.target); return leader(b, tx, ty, targetR, T.leader); })() : '';
+  const { svg, boxes } = block(x, y, (q.align ?? 'center') as Align, lines, leads);
+  // POI leaders always run from the title to the POI dot
+  const lead = q.target ? (() => { const [tx, ty] = p(q.target); return leader(boxes, tx, ty, targetR); })() : '';
   return `<g class="poilabel" data-poi="${esc(q.poi)}">${lead}${svg}</g>`;
 }

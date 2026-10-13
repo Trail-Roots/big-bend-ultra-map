@@ -97,3 +97,13 @@ export function simplifyPts(P: [number, number][], tol: number): [number, number
   }
   return P.filter((_, i) => keep[i]);
 }
+
+/** THE leader-line style — every pointer line on the site (station/POI labels, profile callouts, …) uses leaderLine(). */
+export const LEADER = { color: '#333333', width: 1.8, gap: 3, minLen: 6 };
+/** straight leader from point a to point b; each end stops `gap` outside an optional circle of radius ra / rb */
+export function leaderLine(ax: number, ay: number, bx: number, by: number, ra = 0, rb = 0): string {
+  const d = Math.hypot(bx - ax, by - ay), L = LEADER;
+  if (!d || d - ra - rb - 2 * L.gap < L.minLen) return '';
+  const ux = (bx - ax) / d, uy = (by - ay) / d, s0 = ra + L.gap, s1 = rb + L.gap;
+  return `<path class="leader" d="M${f1(ax + ux * s0)},${f1(ay + uy * s0)}L${f1(bx - ux * s1)},${f1(by - uy * s1)}" fill="none" stroke="${L.color}" stroke-width="${L.width}" stroke-linecap="round"/>`;
+}

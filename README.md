@@ -55,7 +55,8 @@ Station labels render the computed hours directly.
 Current sections: `10-map` (side-by-side map sheet), `20-stations` (aid stations & cutoffs). Print/PDF contains the map sheet only.
 
 * `lib/mainmap.ts` – main map inline SVG; one `<g class="layer">` per toggle + legend, scale bar, north arrow, logo.
-* `lib/labels.ts` – the standard station and POI label templates (fonts, sizes, line spacing, alignment, leaders).
+* `lib/labels.ts` – the standard station and POI label templates (fonts, sizes, line spacing, alignment).
+* `lib/util.ts` `LEADER` / `leaderLine()` – the one leader-line style used by every pointer line (labels, profile callouts).
 * `lib/panels.ts` – mini maps, timeline strips, elevation profile (all SVG).
 * `lib/util.ts` – projection (Mercator fitted to the layout view windows), page-space path simplification, styles.
 

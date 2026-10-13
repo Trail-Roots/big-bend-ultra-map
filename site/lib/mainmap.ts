@@ -1,5 +1,5 @@
 import { stationLabel, poiLabel } from './labels';
-import { poiDot, SHEET, viewProjection, esc, f1, lineD, dash, STYLE, station, textBlock } from './util';
+import { leaderLine, poiDot, SHEET, viewProjection, esc, f1, lineD, dash, STYLE, station, textBlock } from './util';
 // user-toggleable layers (off-course roads, access styles, arrows and aid stations are always shown)
 const LAYERS: [string, string, boolean][] = [
   ['topo', 'Topo shading', true], ['park', 'Park boundary', true],
@@ -59,7 +59,7 @@ export function renderMain(c) {
     if (p.kind === 'curved') { add('labels', curvedLabel(f, V, col)); continue; }
     const [x, y] = V.p(f.geometry.coordinates);
     let lead = '';
-    if (p.leader) lead = `<path d="${lineD(p.leader.coords.map(V.p))}" fill="none" stroke="${p.leader.color}" stroke-width="${p.leader.lw}"/>`;
+    if (p.leader) { const P = p.leader.coords.map(V.p); lead = leaderLine(P[0][0], P[0][1], P[P.length - 1][0], P[P.length - 1][1]); }
     const layer = p.kind === 'station_number' || p.kind === 'station_label' ? 'stations' : p.kind === 'zoombox_label' ? 'zoom' : p.kind === 'poi_label' ? 'pois' : 'labels';
     if (p.kind === 'station_label' || p.kind === 'poi_label') continue; // replaced by the label templates below
     if (p.kind === 'station_number') continue; // numbers are part of the station marker template
@@ -91,7 +91,7 @@ export function chevron(f, V, col) {
   const ux = dx / n0, uy = dy / n0, u = p.size_pt * 1.5, cx0 = (0.6 - 0.5) / 2; // centre the shape's length on the route point
   const pts = DART.map(([x, y]) => [c[0] + ((x - cx0) * ux - y * uy) * u, c[1] + ((x - cx0) * uy + y * ux) * u]);
   const sw = p.map === 'main' ? 0.9 : 0.8; // hairline: ~0.4 pt printed, ~0.5–0.6 px on screen
-  return `<path class="arrow" d="M${pts.map((q) => `${f1(q[0])},${f1(q[1])}`).join('L')}Z" fill="#fff" stroke="${col.ink}" stroke-width="${sw}" stroke-linejoin="miter" stroke-miterlimit="10"/>`;
+  return `<path class="arrow" d="M${pts.map((q) => `${f1(q[0])},${f1(q[1])}`).join('L')}Z" fill="#111111" stroke="#ffffff" stroke-width="${sw}" stroke-linejoin="miter" stroke-miterlimit="10"/>`;
 }
 let cid = 0;
 function curvedLabel(f, V, col) {
