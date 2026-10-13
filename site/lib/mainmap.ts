@@ -86,12 +86,14 @@ export function renderMain(c) {
 /** notched arrowhead (dart), centred on the route point and pointing along the route.
  *  Normalised shape pointing +x: tip (0.6,0), top-back (-0.5,-0.5), notch (-0.28,0), bottom-back (-0.5,0.5) — length:height 1.1:1. */
 const DART: [number, number][] = [[0.6, 0], [-0.5, -0.5], [-0.28, 0], [-0.5, 0.5]];
+/** white halo thickness as a fraction of arrow height */
+export const ARROW_HALO = 0.3;
 export function chevron(f, V, col) {
   const [b, c] = f.geometry.coordinates.map(V.p), p = f.properties, dx = c[0] - b[0], dy = c[1] - b[1], n0 = Math.hypot(dx, dy) || 1;
   const ux = dx / n0, uy = dy / n0, u = p.size_pt * 1.5, cx0 = (0.6 - 0.5) / 2; // centre the shape's length on the route point
   const pts = DART.map(([x, y]) => [c[0] + ((x - cx0) * ux - y * uy) * u, c[1] + ((x - cx0) * uy + y * ux) * u]);
-  const sw = p.map === 'main' ? 0.9 : 0.8; // hairline: ~0.4 pt printed, ~0.5–0.6 px on screen
-  return `<path class="arrow" d="M${pts.map((q) => `${f1(q[0])},${f1(q[1])}`).join('L')}Z" fill="#111111" stroke="#ffffff" stroke-width="${sw}" stroke-linejoin="miter" stroke-miterlimit="10"/>`;
+  const sw = ARROW_HALO * 2 * u; // halo extends ARROW_HALO × arrow height outside the shape; paint-order keeps it behind the fill
+  return `<path class="arrow" d="M${pts.map((q) => `${f1(q[0])},${f1(q[1])}`).join('L')}Z" fill="#111111" stroke="#ffffff" stroke-width="${f1(sw)}" stroke-linejoin="round" paint-order="stroke"/>`;
 }
 let cid = 0;
 function curvedLabel(f, V, col) {
