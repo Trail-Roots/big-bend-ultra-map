@@ -1,4 +1,6 @@
 // Seeds sources/curated/area_labels.geojson: places each area label (Private / Big Bend Ranch State Park) at the
+// NOTE: private:contrabando, private:mines-east and private:northeast are hand-set in sources/curated/area_labels.geojson
+// (centre of the largest unshaded parcel region); re-running this script overwrites them.
 // visual centre of its area's visible part (pole of inaccessibility on a distance raster), clear of routes, labels,
 // markers and the map edge. Obstacles come from the rendered main map itself (topo + park layers hidden), so
 // anything drawn counts. Run after a build: bun scripts/place-area-labels.ts && bun run build
