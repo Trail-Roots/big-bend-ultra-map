@@ -1,5 +1,5 @@
 import { stationLabel, poiLabel, areaLabel } from './labels';
-import { leaderLine, poiDot, SHEET, viewProjection, esc, f1, lineD, dash, STYLE, station, textBlock } from './util';
+import { chaikin, mergeChains, simplifyPts, leaderLine, poiDot, SHEET, viewProjection, esc, f1, lineD, dash, STYLE, station, textBlock } from './util';
 // user-toggleable layers (off-course roads, access styles, arrows, aid stations, distances and all labels are always shown)
 const LAYERS: [string, string, boolean][] = [
   ['topo', 'Topo shading', true], ['park', 'Park boundary', true],
@@ -35,9 +35,14 @@ export function renderMain(c) {
   // on-course access runs: casing first, then patterns (draw order as in make.py)
   const on = net.filter(f => f.properties.on_course);
   let cas = '', pat = '';
-  for (const f of on) if (f.properties.cls !== 'foot') cas += `<path d="${V.path(f)}" class="ln" stroke="#fff" stroke-width="12"/>`;
-  for (const cls of ['foot_bike', 'unpaved', '4x4', 'foot']) for (const f of on.filter(f => f.properties.cls === cls)) {
-    const s = STYLE.on[cls], d = V.path(f);
+  // Dash patterns restart per path and get garbled on GPS jitter: per access class, merge contiguous pieces into
+  // single continuous chains (shared sections drawn once), simplify (DP 1.5 pt) and Chaikin-smooth in page space.
+  const smoothD = (cls: string) => mergeChains(on.filter(f => f.properties.cls === cls).flatMap(f => V.lines(f)))
+    .map(l => 'M' + chaikin(simplifyPts(l, 1.5), 2).map(q => `${f1(q[0])},${f1(q[1])}`).join('L')).join('');
+  const D: Record<string, string> = Object.fromEntries(['foot_bike', 'unpaved', '4x4', 'foot'].map(k => [k, smoothD(k)]));
+  for (const cls of ['foot_bike', 'unpaved', '4x4']) if (D[cls]) cas += `<path d="${D[cls]}" class="ln" stroke="#fff" stroke-width="12"/>`;
+  for (const cls of ['foot_bike', 'unpaved', '4x4', 'foot']) if (D[cls]) {
+    const s = STYLE.on[cls], d = D[cls];
     pat += `<path d="${d}" class="ln" stroke="${col.ink}" stroke-width="${s.lw}" stroke-dasharray="${dash(s.pat, s.lw)}" stroke-linecap="butt"/>` + (s.rail ? `<path d="${d}" class="ln" stroke="#fff" stroke-width="${s.rail}" stroke-linecap="butt"/>` : '');
   }
   add('access', cas + pat);
