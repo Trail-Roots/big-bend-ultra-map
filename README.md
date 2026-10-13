@@ -34,7 +34,7 @@ Steps can run separately: `bun run content`, `bun run site`, `bun run pdf`.
 | `arrows.json` | `arrows.geojson`: direction-arrow mile markers per course and map on a 0.1 mi grid (`show` true/false + `reason`); position and heading come from the route at that mile. Markers are data only, never drawn as text. `scripts/seed-arrows.ts` re-seeds it from `arrows_approved.json` (the 36 arrows approved on the PDF) |
 | `curated/park.geojson` | `park.geojson`, simplified (DP 2 m) |
 | `curated/station_labels.geojson` | aid-station label position + `align` (left/right/center, default center); optional `name` (line breaks) and `location` line. Name/hours text comes from `stations.json` |
-| `curated/poi_labels.geojson` | POI labels (Rincon, Sauceda): `title`, `notes[]` (`distance: true` marks text hidden by the Distances toggle), `align`, leader `target` |
+| `curated/poi_labels.geojson` | POI labels (Rincon, Sauceda): `title`, `notes[]` (`distance: true` marks a distance line), `align`, leader `target` |
 | `curated/{network,labels,pois,zoomboxes}.geojson`, `curated/layout.json` | copied verbatim: hand-tuned road classification, label placement, zoom boxes and sheet layout as approved on the PDF |
 | `hillshade/*.jpg`, `logos/*` | copied; the hillshade is the only raster layer |
 
@@ -60,8 +60,8 @@ Current sections: `10-map` (side-by-side map sheet), `20-stations` (aid stations
 * `lib/panels.ts` – mini maps, timeline strips, elevation profile (all SVG).
 * `lib/util.ts` – projection (Mercator fitted to the layout view windows), page-space path simplification, styles.
 
-Toggles: topo, park boundary, per-course routes, zoom boxes (main map and mini maps), POIs, labels, and Distances (hides every
-distance text: timeline mileages, profile mile axis, POI distance notes). Off-course roads, access styles, arrows and aid stations are always on. Hovering or touch-dragging the elevation profile marks that mile on every course that reaches it (main map + each course mini map) and lists each course’s elevation there. Start bibs: fixed 86×72 pt with a black START band (`BIB_STYLE` in `lib/panels.ts`; mockups via `bun tools/bib-variants.ts`).
+Toggles: topo (main + mini hillshade), park boundary (incl. park area labels), routes per course, zoom boxes (main map and mini maps), POIs.
+Always shown: off-course roads, access styles, arrows, aid stations, distances and all labels. Hovering or touch-dragging the elevation profile marks that mile on every course that reaches it (main map + each course mini map) and lists each course’s elevation there. Start bibs: fixed 86×72 pt with a black START band (`BIB_STYLE` in `lib/panels.ts`; mockups via `bun tools/bib-variants.ts`).
 
 Layout: side-by-side ≥ 1000 px wide, stacked below.
 

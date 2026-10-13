@@ -14,7 +14,6 @@ const fit = (w: number, h: number) => Math.min(PW / w, PH / h);
 export function render(c: Ctx) {
   const L = c.layout, hdr = L.header, st = L.strips;
   const toggles = mainLayers.map(([k, lab, on]) => `<label><input type="checkbox" data-layer="${k}"${on ? ' checked' : ''}> ${lab}</label>`).join('')
-    + `<label><input type="checkbox" data-dist checked> Distances</label>`
     + `<span class="sub">${c.courses.order.map(k => `<label class="ck" style="--c:${c.courses.colors[k]}"><input type="checkbox" data-course="${k}" checked> ${k}</label>`).join('')}</span>`;
   const minis = c.courses.order.map(k => `<figure class="minibox" id="pb-m${k}">${renderMini(c, k)}</figure>`).join('');
   const stripBox = [st.rx, st.top - 5 * st.rh, st.w, 5 * st.rh];

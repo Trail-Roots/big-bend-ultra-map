@@ -1,9 +1,9 @@
 import { stationLabel, poiLabel } from './labels';
 import { leaderLine, poiDot, SHEET, viewProjection, esc, f1, lineD, dash, STYLE, station, textBlock } from './util';
-// user-toggleable layers (off-course roads, access styles, arrows and aid stations are always shown)
+// user-toggleable layers (off-course roads, access styles, arrows, aid stations, distances and all labels are always shown)
 const LAYERS: [string, string, boolean][] = [
   ['topo', 'Topo shading', true], ['park', 'Park boundary', true],
-  ['courses', 'Routes per course', false], ['zoom', 'Zoom boxes', true], ['pois', 'POIs', true], ['labels', 'Labels', true],
+  ['courses', 'Routes per course', false], ['zoom', 'Zoom boxes', true], ['pois', 'POIs', true],
 ];
 export const mainLayers = LAYERS;
 /** logo width in sheet pt — identical to the header logo above the mini maps (1.45 in) */
@@ -60,7 +60,7 @@ export function renderMain(c) {
     const [x, y] = V.p(f.geometry.coordinates);
     let lead = '';
     if (p.leader) { const P = p.leader.coords.map(V.p); lead = leaderLine(P[0][0], P[0][1], P[P.length - 1][0], P[P.length - 1][1]); }
-    const layer = p.kind === 'station_number' || p.kind === 'station_label' ? 'stations' : p.kind === 'zoombox_label' ? 'zoom' : p.kind === 'poi_label' ? 'pois' : 'labels';
+    const layer = p.kind === 'station_number' || p.kind === 'station_label' ? 'stations' : p.kind === 'zoombox_label' ? 'zoom' : 'labels';
     if (p.kind === 'station_label' || p.kind === 'poi_label') continue; // replaced by the label templates below
     if (p.kind === 'station_number') continue; // numbers are part of the station marker template
     add(layer === 'stations' ? 'stationLabels' : (p.text === 'Private' || p.text === 'State Park') ? 'park' : layer, lead + textBlock(x, y, p));
@@ -68,7 +68,7 @@ export function renderMain(c) {
   // standard station + POI label templates
   const rad = (k: string) => (k === 'S/F' ? Math.sqrt(2900 * 1.8) / 2 : c.stations.stations[k].spectator ? Math.sqrt(2000 * 1.8) / 2 : Math.sqrt(2000) / 2);
   for (const f of c.stationLabels.features) add('stationLabels', stationLabel(c, f, V.p, rad));
-  for (const f of c.poiLabels.features) add('pois', poiLabel(f, V.p, 10.2));
+  for (const f of c.poiLabels.features) add('labels', poiLabel(f, V.p, 10.2));
   // frame furniture: scale bar, north arrow, logo, legend
   const sb = c.layout.scalebar, sx = (sb.x - c.layout.views.main.x[0]) * V.ppm, sy = (c.layout.views.main.y[1] - sb.y) * V.ppm, m5 = sb.m5 * V.ppm, tick = H * 0.006;
   let fur = `<g class="scalebar" stroke="${col.ink}" stroke-width="3"><path d="M${f1(sx)},${f1(sy)}h${f1(m5)}M${f1(sx)},${f1(sy)}v${f1(-tick)}M${f1(sx + m5 / 2)},${f1(sy)}v${f1(-tick)}M${f1(sx + m5)},${f1(sy)}v${f1(-tick)}" fill="none"/></g>`;
