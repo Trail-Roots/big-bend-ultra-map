@@ -98,7 +98,7 @@ if (hdEl && prof) {
       const t0 = +tl.dataset.t0!, t1 = +tl.dataset.t1!, lx = +tl.dataset.lx!, rx = +tl.dataset.rx!, x = lx + ((t - t0) / (t1 - t0)) * (rx - lx);
       const cur = tl.querySelector<SVGGElement>('g.tlcursor')!, txt = cur.querySelector('text')!, bx = cur.querySelector('rect')!;
       cur.style.display = ''; cur.querySelector('path')!.setAttribute('transform', `translate(${x} 0)`);
-      const b = Math.floor((t - TM.t0) / TM.bin), rows = [fmt(t), ...Object.entries(TM.courses).map(([k, C]: [string, any]) => ({ k, n: C.on[b] ?? 0 })).filter((r) => r.n).map((r) => r.k)];
+      const b = Math.floor((t - TM.t0) / TM.bin), rows = [fmt(t)]; void b; // time of day only
       txt.textContent = ''; const right = x < rx - 260;
       rows.forEach((r, i) => { const ts = document.createElementNS(NS, 'tspan'); ts.setAttribute('x', String(x + (right ? 10 : -10))); ts.setAttribute('dx', '0'); ts.textContent = i === 0 ? String(r) : String(r); if (i) ts.setAttribute('dx', '8'); ts.setAttribute('y', '23'); if (i === 0) ts.setAttribute('font-size', '19'); txt.appendChild(ts); });
       // lay the readout out on one line
