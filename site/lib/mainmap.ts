@@ -74,7 +74,7 @@ export function renderMain(c) {
   // standard station + POI label templates
   const rad = (k: string) => (k === 'S/F' ? Math.sqrt(2900 * 1.8) / 2 : c.stations.stations[k].spectator ? Math.sqrt(2000 * 1.8) / 2 : Math.sqrt(2000) / 2);
   for (const f of c.stationLabels.features) add('stationLabels', stationLabel(c, f, V.p, rad));
-  for (const f of c.poiLabels.features) add('labels', poiLabel(f, V.p, 10.2));
+  for (const f of c.poiLabels.features) add('pois', poiLabel(f, V.p, 10.2));
   // frame furniture: scale bar, north arrow, logo, legend
   const sb = c.layout.scalebar, sx = (sb.x - c.layout.views.main.x[0]) * V.ppm, sy = (c.layout.views.main.y[1] - sb.y) * V.ppm, m5 = sb.m5 * V.ppm, tick = H * 0.006;
   let fur = `<g class="scalebar" stroke="${col.ink}" stroke-width="3"><path d="M${f1(sx)},${f1(sy)}h${f1(m5)}M${f1(sx)},${f1(sy)}v${f1(-tick)}M${f1(sx + m5 / 2)},${f1(sy)}v${f1(-tick)}M${f1(sx + m5)},${f1(sy)}v${f1(-tick)}" fill="none"/></g>`;

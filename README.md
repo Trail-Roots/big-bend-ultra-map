@@ -60,7 +60,7 @@ Current sections: `10-map` (side-by-side map sheet), `20-stations` (aid stations
 * `lib/panels.ts` – mini maps, timeline strips, elevation profile (all SVG).
 * `lib/util.ts` – projection (Mercator fitted to the layout view windows), page-space path simplification, styles.
 
-Toggles: topo (main + mini hillshade), park boundary (incl. park area labels), routes per course, zoom boxes (main map and mini maps), POIs.
+Toggles: topo (main + mini hillshade), park boundary (incl. park area labels), routes per course, zoom boxes (main map and mini maps), POIs (dots plus their labels and leader lines; aid station labels always show).
 Web view: wheel/trackpad, drag, double-click, two-finger pinch and +/−/reset buttons zoom and pan the main and mini maps (`site/zoom.ts`; markers, arrows and labels keep their on-screen size; print resets). Each mini map links its Strava route (from the GPX metadata) and a GPX download (`dist/gpx/`).
 Always shown: off-course roads, access styles, arrows, aid stations, distances and all labels. Hovering or touch-dragging the elevation profile marks that mile on every course that reaches it (main map + each course mini map) and lists each course’s elevation there. Start bibs: fixed 86×72 pt with a black START band along the bottom and full start times like 5:00a (`BIB_STYLE` in `lib/panels.ts`; mockups via `bun tools/bib-variants.ts`).
 
