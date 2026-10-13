@@ -84,13 +84,13 @@ export function renderMain(c) {
   return `<svg class="mainmap" viewBox="0 0 ${f1(W)} ${f1(H)}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Big Bend Ultra main course map"><defs><clipPath id="mclip"><rect width="${f1(W)}" height="${f1(H)}"/></clipPath></defs><rect width="${f1(W)}" height="${f1(H)}" fill="#fff"/><g clip-path="url(#mclip)">${grp}</g>${fur}<rect width="${f1(W)}" height="${f1(H)}" fill="none" stroke="#000" stroke-width="1.6"/></svg>`;
 }
 /** notched arrowhead (dart), centred on the route point and pointing along the route.
- *  Normalised shape pointing +x: tip (1,0), top-back (-0.55,-0.5), notch (-0.32,0), bottom-back (-0.55,0.5). */
-const DART: [number, number][] = [[1, 0], [-0.55, -0.5], [-0.32, 0], [-0.55, 0.5]];
+ *  Normalised shape pointing +x: tip (0.6,0), top-back (-0.5,-0.5), notch (-0.28,0), bottom-back (-0.5,0.5) — length:height 1.1:1. */
+const DART: [number, number][] = [[0.6, 0], [-0.5, -0.5], [-0.28, 0], [-0.5, 0.5]];
 export function chevron(f, V, col) {
   const [b, c] = f.geometry.coordinates.map(V.p), p = f.properties, dx = c[0] - b[0], dy = c[1] - b[1], n0 = Math.hypot(dx, dy) || 1;
-  const ux = dx / n0, uy = dy / n0, u = p.size_pt * 1.5, cx0 = (1 - 0.55) / 2; // centre the shape's length on the route point
+  const ux = dx / n0, uy = dy / n0, u = p.size_pt * 1.5, cx0 = (0.6 - 0.5) / 2; // centre the shape's length on the route point
   const pts = DART.map(([x, y]) => [c[0] + ((x - cx0) * ux - y * uy) * u, c[1] + ((x - cx0) * uy + y * ux) * u]);
-  const sw = p.map === 'main' ? 3.6 : 3;
+  const sw = p.map === 'main' ? 0.9 : 0.8; // hairline: ~0.4 pt printed, ~0.5–0.6 px on screen
   return `<path class="arrow" d="M${pts.map((q) => `${f1(q[0])},${f1(q[1])}`).join('L')}Z" fill="#fff" stroke="${col.ink}" stroke-width="${sw}" stroke-linejoin="miter" stroke-miterlimit="10"/>`;
 }
 let cid = 0;

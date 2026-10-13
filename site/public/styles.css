@@ -38,11 +38,12 @@ svg .stnum{fill:#fff;font-weight:700}
   .stripsbox{overflow-x:auto}.stripsbox svg{min-width:640px}
 }
 @media (max-width:560px){.minis{grid-template-columns:repeat(2,minmax(0,1fr))}.printctl{display:none}}
-/* ---------- print: US Letter portrait, 2 pages (map | side panel); sizes/zoom injected by pages/index.ts ---------- */
+/* ---------- print: US Letter portrait, 2 pages (map | side panel); sizes/zoom injected by sections/10-map.ts ---------- */
 @page{size:8.5in 11in;margin:.25in}
 .printfoot{display:none}
 @media print{
   .ui{display:none!important}
+  .sec:not(.sec-map){display:none}
   html,body{background:#fff;margin:0}
   main{margin:0}
   .sheet{display:block;padding:0;margin:0;max-width:none;gap:0;background:#fff}

@@ -1,7 +1,7 @@
 import { renderMain, mainLayers } from '../lib/mainmap';
 import { renderMini, renderStrips, renderProfile } from '../lib/panels';
 import { esc, SHEET } from '../lib/util';
-export const meta = { path: 'index.html', title: 'Course & Access Map', nav: 'Map' };
+export const meta = { id: 'map', title: 'Course & Access Map' };
 import type { Ctx } from '../lib/types';
 import { hoverData } from '../lib/hover';
 // Print = US Letter portrait, 2 pages: p1 the main map, p2 the side panel (header, mini maps, timelines, profile).

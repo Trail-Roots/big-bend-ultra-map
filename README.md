@@ -49,9 +49,10 @@ Station labels render the computed hours directly.
 * `bun tools/diff-content.ts content <other-content-dir>` compares two content trees with numeric tolerance.
 
 ## Rendering (`/site`)
-`site/build.ts` loads `/content`, imports every `site/pages/*.ts` (each exports `meta = {path, title, nav}` and
-`render(ctx)`), wraps it in `site/template.html` and writes `dist/`; `site/app.ts` is bundled to `dist/app.js`.
-**Add a page** = drop `site/pages/foo.ts`; it is routed to `meta.path` and appears in the nav automatically.
+`site/build.ts` loads `/content`, imports every `site/sections/*.ts` in filename order (each exports `meta = {id, title}` and
+`render(ctx)`) and stacks them as `<section id>` blocks on **one scrollable page** (`dist/index.html`, no tabs or page nav);
+`site/app.ts` is bundled to `dist/app.js`. **Add a section** = drop e.g. `site/sections/30-crew.ts` (data from `/content`).
+Current sections: `10-map` (side-by-side map sheet), `20-stations` (aid stations & cutoffs). Print/PDF contains the map sheet only.
 
 * `lib/mainmap.ts` – main map inline SVG; one `<g class="layer">` per toggle + legend, scale bar, north arrow, logo.
 * `lib/labels.ts` – the standard station and POI label templates (fonts, sizes, line spacing, alignment, leaders).

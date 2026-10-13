@@ -7,4 +7,5 @@ export interface Ctx {
   network: FC; park: FC; pois: FC; zoom: FC; arrows: FC; labels: FC; stationLabels: FC; poiLabels: FC;
   courseGeo: Record<string, FC>; profiles: Record<string, any>;
 }
-export interface Page { meta: { path: string; title: string; nav: string }; render(c: Ctx): string }
+/** one section of the single-page site; files in site/sections/ render in filename order */
+export interface Section { meta: { id: string; title: string }; render(c: Ctx): string }
