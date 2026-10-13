@@ -1,3 +1,4 @@
+import { clock, cutMin } from './timeline';
 import { leaderLine, SHEET, viewProjection, esc, f1, lineD, dash, station } from './util';
 import { hillImage, chevron, DART, ARROW_HALO } from './mainmap';
 /** '5:00 AM' -> '5a', '8:30 AM' -> '8:30a' (minutes only when non-zero) */
@@ -116,6 +117,30 @@ export function renderProfile(c) {
     for (const x of q.xs) s += leaderLine(X(q.bx), Y(q.by), X(x), Y(q.y), Math.sqrt(950) / 2, 3) + `<circle cx="${f1(X(x))}" cy="${f1(Y(q.y))}" r="3" fill="${col.ink}"/>`;
     s += station(X(q.bx), Y(q.by), q.lab, c.stations.stations[q.lab].spectator, { s: 950, fs: 24, badge: false, colors: col });
   }
+  // cutoff times (time of day, per course colour) beside each station badge + finish cutoff at each course end; greedy collision-free placement
+  const BR = Math.sqrt(950) / 2 + 4, boxes: number[][] = pr.callouts.callouts.map((q) => [X(q.bx) - BR, Y(q.by) - BR, X(q.bx) + BR, Y(q.by) + BR]);
+  boxes.push([lgx - 10, lgy - 6, lgx + 130, lgy + O.length * 32 + 4]);
+  for (const k of O) { const P = pts(k); for (let i = 0; i < P.length; i += 4) boxes.push([P[i][0] - 2, P[i][1] - 3, P[i][0] + 2, P[i][1] + 3]); } // keep text off the profile lines
+  const hit = (b: number[]) => b[0] < 0 || b[2] > W || b[1] < 0 || b[3] > H || boxes.some((o) => b[0] < o[2] && b[2] > o[0] && b[1] < o[3] && b[3] > o[1]);
+  const FS = 19, LH = 21, cw = FS * 0.56, labs: string[] = [];
+  const place = (ax: number, ay: number, rows: { t: string; fill: string }[], ar: number) => {
+    const w = Math.max(...rows.map((r) => r.t.length)) * cw, h = rows.length * LH;
+    const cand: number[][] = [];
+    for (const d of [0, 14, 28, 44, 62, 84, 110, 140, 180]) for (const [cx, cy] of [[ar + 4 + d, -h / 2], [-ar - 4 - w - d, -h / 2], [-w / 2, -ar - 4 - h - d], [-w / 2, ar + 4 + d], [ar + 2 + d, -ar - h - d], [-ar - 2 - w - d, -ar - h - d]]) cand.push([ax + cx, ay + cy]);
+    const c = cand.find(([x, y]) => !hit([x - 2, y - 2, x + w + 2, y + h + 2])); if (!c) return;
+    const [x, y] = c; boxes.push([x - 2, y - 2, x + w + 2, y + h + 2]);
+    const far = Math.hypot(x + w / 2 - ax, y + h / 2 - ay) > ar + Math.max(w, h) / 2 + 20;
+    let g = far ? leaderLine(x + w / 2 < ax ? x + w : x, Math.max(y, Math.min(y + h, ay)), ax, ay, 0, ar) : '';
+    rows.forEach((r, i) => { g += `<text x="${f1(x)}" y="${f1(y + (i + 0.8) * LH)}" font-size="${FS}" font-weight="700" fill="${r.fill}" stroke="#fff" stroke-width="4" paint-order="stroke">${esc(r.t)}</text>`; });
+    labs.push(`<g class="cutlab">${g}</g>`);
+  };
+  const cut = (k: string, st: { cutoff: string }) => { const m = cutMin(st.cutoff); return m == null ? null : clock(m < cutMin(c.cutoffs[k][0].cutoff)! ? m + 1440 : m, false); };
+  for (const q of pr.callouts.callouts) {
+    const rows = O.flatMap((k) => c.cutoffs[k].filter((st) => st.station === q.lab && q.xs.some((x) => Math.abs(x - st.mile) < 0.05)).map((st) => cut(k, st)).filter(Boolean).map((t) => ({ t: t!, fill: c.courses.colors[k] })));
+    if (rows.length) place(X(q.bx), Y(q.by), rows, BR - 4);
+  }
+  for (const k of O) { const L2 = c.cutoffs[k][c.cutoffs[k].length - 1], t = cut(k, L2), P = pts(k), e = P[P.length - 1]; if (t) place(e[0], e[1], [{ t: `finish ${t}`, fill: c.courses.colors[k] }], 4); }
+  s += labs.join('');
   for (const r of pr.callouts.rincon) s += `<circle cx="${f1(X(r.mi))}" cy="${f1(Y(r.ft))}" r="6.3" fill="#fff" stroke="${col.ink}" stroke-width="3"/>`;
   return `<svg class="profile" viewBox="0 0 ${f1(W)} ${f1(H + 40)}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Elevation profiles">${s}</svg>`;
 }

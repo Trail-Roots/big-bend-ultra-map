@@ -49,7 +49,7 @@ if (hdEl && prof) {
     for (const k in HD.courses) glide.set(k, hits.some((h) => h.k === k) ? mile : null);
     // readout: one line per course, longest first: course · mile · cumulative gain from the start
     lab.textContent = '';
-    const rows = hits.map(({ k, c, v }) => ({ t: `${k} · mi ${v[0].toFixed(1)} · +${v[6].toLocaleString('en-US')} ft gain`, fill: c.color }));
+    const rows = hits.map(({ k, c, v }) => ({ t: `${k} · mi ${v[0].toFixed(1)} · +${Math.round(v[6]).toLocaleString('en-US')} ft gain`, fill: c.color }));
     const right = px < W * 0.7, lx = px + (right ? 16 : -16), ly = 14;
     rows.forEach((r, i) => { const ts = el('tspan', { x: lx, y: ly + 13 + i * 26, fill: r.fill }, lab); ts.textContent = r.t; });
     lab.setAttribute('text-anchor', right ? 'start' : 'end');
@@ -86,7 +86,7 @@ if (hdEl && prof) {
       const t0 = +tl.dataset.t0!, t1 = +tl.dataset.t1!, lx = +tl.dataset.lx!, rx = +tl.dataset.rx!, x = lx + ((t - t0) / (t1 - t0)) * (rx - lx);
       const cur = tl.querySelector<SVGGElement>('g.tlcursor')!, txt = cur.querySelector('text')!, bx = cur.querySelector('rect')!;
       cur.style.display = ''; cur.querySelector('path')!.setAttribute('transform', `translate(${x} 0)`);
-      const b = Math.floor((t - TM.t0) / TM.bin), rows = [fmt(t), ...Object.entries(TM.courses).map(([k, C]: [string, any]) => ({ k, n: C.on[b] ?? 0 })).filter((r) => r.n).map((r) => `${r.k} ${r.n}`)];
+      const b = Math.floor((t - TM.t0) / TM.bin), rows = [fmt(t), ...Object.entries(TM.courses).map(([k, C]: [string, any]) => ({ k, n: C.on[b] ?? 0 })).filter((r) => r.n).map((r) => r.k)];
       txt.textContent = ''; const right = x < rx - 260;
       rows.forEach((r, i) => { const ts = document.createElementNS(NS, 'tspan'); ts.setAttribute('x', String(x + (right ? 10 : -10))); ts.setAttribute('dx', '0'); ts.textContent = i === 0 ? String(r) : String(r); if (i) ts.setAttribute('dx', '8'); ts.setAttribute('y', '23'); if (i === 0) ts.setAttribute('font-size', '19'); txt.appendChild(ts); });
       // lay the readout out on one line

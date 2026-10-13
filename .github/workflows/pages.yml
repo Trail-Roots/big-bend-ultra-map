@@ -19,17 +19,6 @@ jobs:
       - run: bun install --frozen-lockfile
       - run: bunx playwright install --with-deps chromium
       - run: bun run build
-      # preview of the `timeline` branch at /preview/ (best effort: never blocks the main deploy)
-      - uses: actions/checkout@v4
-        continue-on-error: true
-        with:
-          ref: timeline
-          path: _preview
-      - name: Build timeline preview into dist/preview
-        continue-on-error: true
-        run: |
-          cd _preview && bun install --frozen-lockfile && bun run build
-          mkdir -p ../dist/preview && cp -r dist/. ../dist/preview/
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist

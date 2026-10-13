@@ -10,6 +10,8 @@ const lerp = (x: number, xs: number[], ys: number[]) => {
 };
 /** cumulative elevation gain over 0.05 mi samples: ±0.25 mi moving average, then a 10 ft hysteresis so GPS noise does not count as climbing */
 export const GAIN = { halfWin: 5, threshold: 10 };
+/** small seeded PRNG (mulberry32) so bootstrapped dots are stable between builds */
+const rng = (key: string) => { let h = 2166136261; for (const ch of key) h = Math.imul(h ^ ch.charCodeAt(0), 16777619); return () => { h += 0x6d2b79f5; let t = h; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; };
 export function cumGain(ft: number[]) {
   const n = ft.length, sm = ft.map((_, i) => { let t = 0, c = 0; for (let j = Math.max(0, i - GAIN.halfWin); j <= Math.min(n - 1, i + GAIN.halfWin); j++) { t += ft[j]; c++; } return t / c; });
   const out: number[] = []; let a = sm[0], gain = 0;
@@ -39,7 +41,12 @@ export function hoverData(c: Ctx) {
   const TL = c.timeline, time = { t0: TL.window[0], t1: TL.window[1], bin: TL.bin_min, courses: Object.fromEntries(c.courses.order.map((k) => {
     const C = TL.courses[k], fin = C.finish_s.map((v: number) => Math.round(v / 6) / 10), mid = C.passes[Math.floor(C.passes.length / 2)].mile;
     const midFit = C.curves.fitOf[Math.floor(C.curves.fitOf.length / 2)];
-    return [k, { start: C.start, T: [...fin, ...new Array(C.dnf).fill(Math.round(C.q50 / 6) / 10)], stop: [...fin.map(() => -1), ...new Array(C.dnf).fill(mid)], fit: [...C.curves.fitOf, ...new Array(C.dnf).fill(midFit)], curves: C.curves.byFit, med: C.q50 / 60, medFit: midFit, on: C.on_course }];
+    let T: number[] = [...fin, ...new Array(C.dnf).fill(Math.round(C.q50 / 6) / 10)], stop: number[] = [...fin.map(() => -1), ...new Array(C.dnf).fill(mid)], fit: number[] = [...C.curves.fitOf, ...new Array(C.dnf).fill(midFit)];
+    // expected runners N != 2026 starters: bootstrap whole 2026 runners (seeded, ±1% time jitter) so the dots keep the 2026 clustering
+    const N = C.expected_starters ?? T.length;
+    if (N !== T.length) { const r = rng(k), idx = Array.from({ length: N }, (_, i) => (i < T.length && N > T.length ? i : Math.floor(r() * T.length)));
+      T = idx.map((i, j) => (j < T.length && N > T.length ? T[i] : Math.round(T[i] * (1 + (r() - 0.5) * 0.02) * 10) / 10)); stop = idx.map((i) => stop[i]); fit = idx.map((i) => fit[i]); }
+    return [k, { start: C.start, T, stop, fit, curves: C.curves.byFit, med: C.q50 / 60, medFit: midFit, on: C.on_course }];
   })) };
   return { profile: { W, H, x: L.elev_xlim, y: L.elev_ylim }, courses, time };
 }

@@ -1,1 +1,5 @@
-{ "draft": true }
+{
+  "draft": true,
+  "expectedRunners": { "100K": 81, "55K": 143, "35K": 145, "20K": 218, "10K": 165 },
+  "expectedRunners_note": "Expected 2027 starters per course; defaults = 2026 starters (finishers + DNF) from RunSignup. Change and rebuild: heat map, crowd and on-course counts scale by N / 2026 starters; map dots bootstrap whole 2026 runners."
+}
