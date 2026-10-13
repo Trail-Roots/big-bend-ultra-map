@@ -1,5 +1,5 @@
 import { renderMain, mainLayers } from '../lib/mainmap';
-import { renderMini, renderProfile } from '../lib/panels';
+import { renderMini, renderProfile, miniBibSvg } from '../lib/panels';
 import { esc, SHEET } from '../lib/util';
 export const meta = { id: 'map', title: 'Course & Access Map' };
 import type { Ctx } from '../lib/types';
@@ -21,7 +21,7 @@ function place(w: number, h: number) {
 export function render(c: Ctx) {
   const L = c.layout, hdr = L.header, st = L.strips;
   const toggles = mainLayers.map(([k, lab, on]) => `<label><input type="checkbox" data-layer="${k}"${on ? ' checked' : ''}> ${lab}</label>`).join('')
-    + `<span class="sub">${c.courses.order.map(k => `<label class="ck" style="--c:${c.courses.colors[k]}"><input type="checkbox" data-course="${k}" checked> ${k}</label>`).join('')}</span>`;
+    + `<span class="sub">${c.courses.order.map(k => `<label class="ck" style="--c:${c.courses.colors[k]}"><input type="checkbox" data-course="${k}" checked> ${miniBibSvg(k, c.courses.colors[k], 0.8)}</label>`).join('')}</span>`;
   const minis = c.courses.order.map(k => `<figure class="minibox" id="pb-m${k}">${renderMini(c, k)}<figcaption class="minilinks">${c.courses.courses[k].stravaUrl ? `<a href="${esc(c.courses.courses[k].stravaUrl)}" target="_blank" rel="noopener" title="${k} route on Strava">Strava</a>` : ''}<a href="${SITE_URL}${esc(c.courses.courses[k].gpx)}" download title="Download the ${k} GPX"><svg class="dlico" viewBox="0 0 10 10" aria-hidden="true"><path d="M5 1v5.2M2.6 4.2 5 6.6l2.4-2.4M1.5 8.6h7" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>.GPX</a></figcaption></figure>`).join('');
   const stripBox = [st.rx, st.top - 5 * st.rh, st.w, 5 * st.rh];
   const evb = L.elev, evBox = [evb[0], evb[1] - 40 / SHEET.h, evb[2], evb[3] + 40 / SHEET.h];
@@ -47,7 +47,7 @@ export function render(c: Ctx) {
       <div class="notice"><strong>${esc(notice[0])}</strong>${notice.slice(1).map(l => `<br>${/^\(\d/.test(l) ? `<span class="dist">${esc(l)}</span>` : esc(l)}`).join('')}</div>
     </header>
     <div class="minis">${minis}</div>
-    <div class="stripsbox" id="pb-strips">${renderTimeline(c)}</div>
+    <div class="stripsbox" id="pb-strips">${renderTimeline(c)}<div class="minilinks callinks"><span class="calnote">Save race day to your phone (times + GPS, works offline):</span>${['all', ...c.courses.order].map((k) => `<a href="${SITE_URL}calendar/big-bend-ultra-2027-${k.toLowerCase()}.ics" download title="${k === 'all' ? 'All races and aid-station hours' : k + ' start, cutoffs and finish'} (.ics calendar)"><span class="calico" aria-hidden="true">↓</span>${k === 'all' ? 'All races' : k} .ICS</a>`).join('')}</div></div>
     <div class="profilebox" id="pb-prof">${renderProfile(c)}</div>
     <div class="printfoot">trailroots.com/big-bend-ultra</div>
   </aside>

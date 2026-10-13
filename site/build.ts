@@ -37,3 +37,5 @@ fs.cpSync(path.join(C, 'hillshade'), path.join(D, 'hillshade'), { recursive: tru
 fs.mkdirSync(path.join(D, 'gpx'), { recursive: true });
 for (const k of ctx.courses.order) fs.copyFileSync(path.join(here, '..', 'sources', 'gpx', `${k}.gpx`), path.join(D, ctx.courses.courses[k].gpx));
 for (const f of ['logo_ink_crop.png', 'logo_white_crop.png']) fs.copyFileSync(path.join(C, f), path.join(D, f));
+// race-day calendars (.ics) from content
+{ const { buildIcs } = await import('./lib/ics'); const { SITE_URL } = await import('./sections/10-map'); fs.mkdirSync(path.join(D, 'calendar'), { recursive: true }); for (const [f, t] of Object.entries(buildIcs(ctx, SITE_URL))) fs.writeFileSync(path.join(D, f), t); }

@@ -150,8 +150,8 @@ const nb = Math.ceil((T1 - T0) / BIN), bins = (n: number) => new Array(n).fill(0
 const out: any = { source: RS.source, fetched: RS.fetched, generated: new Date().toISOString(), date: '2027-01-17', window: [T0, T1], bin_min: BIN, sun, caps, history, courses: {}, stations: {} };
 const stBins: Record<string, number[]> = Object.fromEntries(stations.order.map((s: string) => [s, bins(nb)]));
 const stByCourse: Record<string, Record<string, number[]>> = {};
-// finish-area crowd: finishers linger LINGER min after finishing; mid-race S/F pass-throughs stay PASS_LINGER min
-const LINGER = 60, PASS_LINGER = 5, crowd = bins(nb), crowdBy: Record<string, number[]> = {};
+// start/finish crowd: runners arrive PRE min before their own start and stay until it; finishers linger LINGER min after finishing; mid-race S/F pass-throughs stay PASS_LINGER min
+const PRE = 60, LINGER = 60, PASS_LINGER = 5, crowd = bins(nb), crowdBy: Record<string, number[]> = {};
 const W8: Record<string, number> = Object.fromEntries(ORDER.map((k) => [k, dist[k].scale]));
 const presence = (k: string, a: number, d: number) => { for (let b = 0; b < nb; b++) { const t = T0 + (b + 0.5) * BIN; if (t >= a && t < a + d) { crowd[b] += W8[k]; (crowdBy[k] ??= bins(nb))[b] += W8[k]; } } };
 const runners: Record<string, { T: number; stop?: number }[]> = {};
@@ -165,6 +165,7 @@ for (const k of ORDER) {
   for (const r of R) {
     const endMin = r.stop != null ? S0 + r.T * fracAt(k, r.stop, r.T) : S0 + r.T;
     for (let b = 0; b < nb; b++) { const t = T0 + (b + 0.5) * BIN; if (t >= S0 && t <= endMin) onCourse[b] += W8[k]; }
+    presence(k, S0 - PRE, PRE);
     if (r.stop == null) presence(k, S0 + r.T, LINGER);
     for (const c of cuts) { if (c.station === 'S/F' && c.mile > 0 && c.mile < total - 0.01 && (r.stop == null || c.mile <= r.stop)) presence(k, S0 + r.T * fracAt(k, c.mile, r.T), PASS_LINGER); }
     for (const c of cuts) { if (c.mile === 0 || (r.stop != null && c.mile > r.stop)) continue; const t = S0 + r.T * fracAt(k, c.mile, r.T), b = Math.floor((t - T0) / BIN); if (b >= 0 && b < nb) { stBins[c.station][b] += W8[k]; (stByCourse[k][c.station] ??= bins(nb))[b] += W8[k]; } }
@@ -182,11 +183,11 @@ for (const s of stations.order) {
   out.stations[s] = { name: stations.stations[s].name, hours: stations.stations[s].hours, window: stations.stations[s].hours ? parseHours(stations.stations[s].hours) : null, passes15: B, by_course15: Object.fromEntries(ORDER.filter((k) => stByCourse[k][s]).map((k) => [k, stByCourse[k][s]])), total_passes: B.reduce((a, b) => a + b, 0), peak15: { start: T0 + peak * BIN, count: B[peak] }, peak30: { start: T0 + p30 * 30, count: b30[p30] } };
 }
 { const pk = crowd.reduce((bi, v, i) => (v > crowd[bi] ? i : bi), 0), half = crowd.map((v, i) => [v, i]).filter(([v]) => v >= 0.5 * crowd[pk]).map(([, i]) => i);
-  out.finish_crowd = { name: 'Finish area crowd (finishers linger ~1 h)', linger_min: LINGER, pass_linger_min: PASS_LINGER, present15: crowd, by_course15: crowdBy, peak15: { start: T0 + pk * BIN, count: crowd[pk] }, above_half_peak: { from: T0 + half[0] * BIN, to: T0 + (half[half.length - 1] + 1) * BIN }, above_quarter_peak: (() => { const q = crowd.map((v, i) => [v, i]).filter(([v]) => v >= 0.25 * crowd[pk]).map(([, i]) => i); return { from: T0 + q[0] * BIN, to: T0 + (q[q.length - 1] + 1) * BIN }; })() }; }
+  out.finish_crowd = { name: 'Start / Finish', pre_start_min: PRE, linger_min: LINGER, pass_linger_min: PASS_LINGER, present15: crowd, by_course15: crowdBy, peak15: { start: T0 + pk * BIN, count: crowd[pk] }, above_half_peak: { from: T0 + half[0] * BIN, to: T0 + (half[half.length - 1] + 1) * BIN }, above_quarter_peak: (() => { const q = crowd.map((v, i) => [v, i]).filter(([v]) => v >= 0.25 * crowd[pk]).map(([, i]) => i); return { from: T0 + q[0] * BIN, to: T0 + (q[q.length - 1] + 1) * BIN }; })() }; }
 out.pace_model = { params: PAR, grid: GRID, validation, mean_abs_error_min: +best!.err.toFixed(1), previous_model_mean_abs_error_min: +baselineErr.toFixed(1), same_without_fitness_scaling_min: +noFitnessErr.toFixed(1), beta_note: 'beta ≥ 0.5 enforced (faster runners less affected, per spec); the splits alone slightly prefer beta = 0', reference_runner_20min_mi: pace20, validated_points: VAL.reduce((a, v) => a + v.pts.length, 0) };
 out.assumptions = [
   'Expected runners per course = sources/curated/site.json expectedRunners (default 2026 starters). All counts (on course, aid-station passes, finish crowd) are the 2026-shaped simulation scaled by N / 2026 starters, i.e. the expected value of resampling N runners from the 2026 finish-time distribution. Map dots bootstrap whole 2026 runners (seeded, ±1% time jitter) when N differs, keeping 2026 clustering.',
-  `Finish area crowd: every finisher (all five distances) stays ${LINGER} min after their modelled finish; runners passing S/F mid-race (not finishing there) count for ${PASS_LINGER} min. DNF runners and spectators/crew are not counted. Count = people present at the middle of each 15 min bin.`,
+  `Start / Finish crowd (one row, same place): every runner (finisher or DNF) arrives ${PRE} min before their own start and stays until the gun; every finisher (all five distances) stays ${LINGER} min after their modelled finish; runners passing S/F mid-race (not finishing there) count for ${PASS_LINGER} min. DNF runners and spectators/crew are not counted. Count = people present at the middle of each 15 min bin.`,
   'Finish-time distributions per 2027 distance = 2026 RunSignup results for the identically named event (same start times); one simulated runner per 2026 finisher.',
   'Expected 2027 starters = 2026 starters (finishers + DNF): 2027 registrant counts are not public (RunSignup participants endpoint returns Permission Denied). 2027 caps from RunSignup are shown for reference only.',
   'Pre-2026 years ran 50M / 50K / 30K (plus 10K, 20K) on different courses: used for volume history only, not for times.',

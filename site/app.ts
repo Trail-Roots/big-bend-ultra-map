@@ -23,7 +23,8 @@ if (hdEl && prof) {
   const dots: Record<string, Element> = {};
   for (const [k, c] of Object.entries(HD.courses)) dots[k] = el('circle', { r: 7, fill: '#fff', 'stroke-width': 3.5, stroke: c.color }, pg);
   const box = el('rect', { fill: '#fff', 'fill-opacity': 0.92, stroke: '#bbb', 'stroke-width': 1, rx: 4 }, pg);
-  const lab = el('text', { 'font-size': 22, 'font-weight': 700 }, pg);
+  const lab = el('text', { 'font-size': 22, 'font-weight': 700 }, pg), bibs = el('g', {}, pg);
+  const BW: number = (HD.courses as any)._bibw, BH: number = (HD.courses as any)._bibh; delete (HD.courses as any)._bibw; delete (HD.courses as any)._bibh;
   const { W, H, x: [x0, x1], y: [y0, y1] } = HD.profile;
   const X = (m: number) => ((m - x0) / (x1 - x0)) * W, Y = (ft: number) => (1 - (ft - y0) / (y1 - y0)) * H;
   const all = () => [...Object.values(mains), ...Object.values(minis)];
@@ -49,11 +50,13 @@ if (hdEl && prof) {
     for (const k in HD.courses) glide.set(k, hits.some((h) => h.k === k) ? mile : null);
     // readout: one line per course, longest first: course · mile · cumulative gain from the start
     lab.textContent = '';
-    const rows = hits.map(({ k, c, v }) => ({ t: `${k} · mi ${v[0].toFixed(1)} · +${Math.round(v[6]).toLocaleString('en-US')} ft gain`, fill: c.color }));
-    const right = px < W * 0.7, lx = px + (right ? 16 : -16), ly = 14;
-    rows.forEach((r, i) => { const ts = el('tspan', { x: lx, y: ly + 13 + i * 26, fill: r.fill }, lab); ts.textContent = r.t; });
+    const rows = hits.map(({ k, c, v }) => ({ k, bib: (c as any).bib, t: `mi ${v[0].toFixed(1)} · +${Math.round(v[6]).toLocaleString('en-US')} ft gain` }));
+    const right = px < W * 0.7, lx = px + (right ? 16 + BW + 8 : -16), ly = 14;
+    rows.forEach((r, i) => { const ts = el('tspan', { x: lx, y: ly + 13 + i * 30, fill: '#1a1a1a' }, lab); ts.textContent = r.t; });
     lab.setAttribute('text-anchor', right ? 'start' : 'end');
-    const bb = (lab as SVGTextElement).getBBox();
+    const bb = (lab as SVGTextElement).getBBox(), bx = bb.x - BW - 8;
+    bibs.innerHTML = rows.map((r, i) => `<g transform="translate(${bx} ${ly + 13 + i * 30 - 8 - BH / 2})">${r.bib}</g>`).join('');
+    bb.width += bb.x - bx; bb.x = bx;
     box.setAttribute('x', String(bb.x - 8)); box.setAttribute('y', String(bb.y - 5)); box.setAttribute('width', String(bb.width + 16)); box.setAttribute('height', String(bb.height + 10));
   };
   prof.style.touchAction = 'none'; prof.style.cursor = 'crosshair';

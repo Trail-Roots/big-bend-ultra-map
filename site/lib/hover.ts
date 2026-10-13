@@ -1,6 +1,7 @@
 // Data for the elevation-profile hover: per course, samples every 0.05 mi of
 // [mile, ft, main-map x, y, mini-map x, y, cumulative gain ft] in each SVG's own viewBox units.
 import { SHEET, viewProjection } from './util';
+import { miniBib, MINIBIB } from './panels';
 import type { Ctx } from './types';
 
 const lerp = (x: number, xs: number[], ys: number[]) => {
@@ -34,8 +35,9 @@ export function hoverData(c: Ctx) {
     }
     const g = cumGain(s.map((q) => lerp(q[0], pr.mi, pr.ft)));
     s.forEach((q, i) => q.push(g[i]));
-    courses[k] = { color: c.courses.colors[k], dist, s };
+    courses[k] = { color: c.courses.colors[k], dist, s, bib: miniBib(k, c.courses.colors[k], 0, 0, c.colors, 0.85) } as any;
   }
+  (courses as any)._bibw = MINIBIB.w * 0.85; (courses as any)._bibh = MINIBIB.h * 0.85;
   const W = L.elev[2] * SHEET.w, H = L.elev[3] * SHEET.h;
   // time model for the race-day timeline / auto-play / runner dots (content/timeline.json)
   const TL = c.timeline, time = { t0: TL.window[0], t1: TL.window[1], bin: TL.bin_min, courses: Object.fromEntries(c.courses.order.map((k) => {

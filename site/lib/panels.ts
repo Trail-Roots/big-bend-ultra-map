@@ -44,6 +44,15 @@ export function bib(k: string, start: string, cc: string, W: number, H: number, 
   }
   return g + `<title>${k} start time ${t}</title></g>`;
 }
+// ---- mini bib: same family as the full bib (course colour, rounded corners, bold white distance), distance only, no START band ----
+export const MINIBIB = { w: 54, h: 26, rx: 4 };
+/** mini bib with top-left at (x, y); scale multiplies the whole bib. Used everywhere a distance is shown except the mini maps. */
+export function miniBib(k: string, cc: string, x: number, y: number, _col?: Record<string, string>, scale = 1) {
+  const B = MINIBIB, w = B.w * scale, h = B.h * scale, fs = Math.min(16, (w - 8 * scale) / (tw(k, 1) || 1)) * (scale > 0 ? 1 : 1);
+  return `<g class="bib bib-mini"><rect x="${f1(x)}" y="${f1(y)}" width="${f1(w)}" height="${f1(h)}" rx="${f1(B.rx * scale)}" fill="${cc}"/><text x="${f1(x + w / 2)}" y="${f1(y + h / 2 + 0.5)}" font-size="${f1(Math.min(16 * scale, fs))}" font-weight="700" fill="#fff" text-anchor="middle" dominant-baseline="central">${k}</text></g>`;
+}
+/** standalone inline SVG of the mini bib (HTML contexts: layer toggles, hover readout) */
+export const miniBibSvg = (k: string, cc: string, scale = 1) => `<svg class="minibib" width="${f1(MINIBIB.w * scale)}" height="${f1(MINIBIB.h * scale)}" viewBox="0 0 ${f1(MINIBIB.w * scale)} ${f1(MINIBIB.h * scale)}" aria-label="${k}">${miniBib(k, cc, 0, 0, undefined, scale)}</svg>`;
 const short = t => t.toLowerCase().replace(' am', 'a').replace(' pm', 'p');
 export function renderMini(c, k) {
   const view = c.layout.views[k], W = view.fig[2] * SHEET.w, H = view.fig[3] * SHEET.h, V = viewProjection(view, W, H), col = c.colors, O = c.courses.order;
@@ -87,7 +96,7 @@ export function renderStrips(c) {
   let s = '';
   c.courses.order.forEach((k, r) => {
     const S = c.cutoffs[k], P = []; S.forEach(q => P.push(P.length ? Math.max(q.mile, P[P.length - 1] + 8.2) : q.mile));
-    let g = `<text x="0" y="${f1(Y(0.22))}" font-size="36" font-weight="700" fill="${c.courses.colors[k]}" dominant-baseline="central">${k}</text><text class="dist" x="0" y="${f1(Y(-0.42))}" font-size="22" fill="${col.ink}" dominant-baseline="central">${S[S.length - 1].mile}m</text>`;
+    let g = miniBib(k, c.courses.colors[k], 0, Y(0.22) - MINIBIB.h * 0.75, col, 1.5) + `<text class="dist" x="0" y="${f1(Y(-0.42))}" font-size="22" fill="${col.ink}" dominant-baseline="central">${S[S.length - 1].mile}m</text>`;
     g += `<path d="M${f1(X(0))},${f1(Y(0))}H${f1(X(P[P.length - 1]))}" stroke="${c.courses.colors[k]}" stroke-width="7" stroke-linecap="round"/>`;
     S.forEach((q, i) => {
       g += station(X(P[i]), Y(0), q.station, c.stations.stations[q.station].spectator, { s: 950, fs: 24, badge: false, colors: col });
@@ -112,35 +121,11 @@ export function renderProfile(c) {
   for (const k of O) s += `<path class="ln prof" data-course="${k}" d="${lineD(pts(k))}" stroke="${c.courses.colors[k]}" stroke-width="${k === '100K' ? 4 : 3}"/>`;
   // legend upper right
   const lgx = W - 140, lgy = 16; s += `<rect x="${lgx - 10}" y="${lgy - 6}" width="140" height="${O.length * 32 + 10}" fill="#fff" fill-opacity=".9"/>`;
-  O.forEach((k, i) => { s += `<path d="M${lgx},${lgy + 14 + i * 32}h36" stroke="${c.courses.colors[k]}" stroke-width="4"/><text x="${lgx + 46}" y="${lgy + 14 + i * 32}" font-size="22" dominant-baseline="central" fill="${col.ink}">${k}</text>`; });
+  O.forEach((k, i) => { s += `<path d="M${lgx},${lgy + 14 + i * 32}h36" stroke="${c.courses.colors[k]}" stroke-width="4"/>` + miniBib(k, c.courses.colors[k], lgx + 46, lgy + 14 + i * 32 - 13, col); });
   for (const q of pr.callouts.callouts) {
     for (const x of q.xs) s += leaderLine(X(q.bx), Y(q.by), X(x), Y(q.y), Math.sqrt(950) / 2, 3) + `<circle cx="${f1(X(x))}" cy="${f1(Y(q.y))}" r="3" fill="${col.ink}"/>`;
     s += station(X(q.bx), Y(q.by), q.lab, c.stations.stations[q.lab].spectator, { s: 950, fs: 24, badge: false, colors: col });
   }
-  // cutoff times (time of day, per course colour) beside each station badge + finish cutoff at each course end; greedy collision-free placement
-  const BR = Math.sqrt(950) / 2 + 4, boxes: number[][] = pr.callouts.callouts.map((q) => [X(q.bx) - BR, Y(q.by) - BR, X(q.bx) + BR, Y(q.by) + BR]);
-  boxes.push([lgx - 10, lgy - 6, lgx + 130, lgy + O.length * 32 + 4]);
-  for (const k of O) { const P = pts(k); for (let i = 0; i < P.length; i += 4) boxes.push([P[i][0] - 2, P[i][1] - 3, P[i][0] + 2, P[i][1] + 3]); } // keep text off the profile lines
-  const hit = (b: number[]) => b[0] < 0 || b[2] > W || b[1] < 0 || b[3] > H || boxes.some((o) => b[0] < o[2] && b[2] > o[0] && b[1] < o[3] && b[3] > o[1]);
-  const FS = 19, LH = 21, cw = FS * 0.56, labs: string[] = [];
-  const place = (ax: number, ay: number, rows: { t: string; fill: string; flag?: boolean }[], ar: number) => {
-    const w = Math.max(...rows.map((r) => r.t.length * cw + (r.flag ? 19 : 0))), h = rows.length * LH;
-    const cand: number[][] = [];
-    for (const d of [0, 14, 28, 44, 62, 84, 110, 140, 180]) for (const [cx, cy] of [[ar + 4 + d, -h / 2], [-ar - 4 - w - d, -h / 2], [-w / 2, -ar - 4 - h - d], [-w / 2, ar + 4 + d], [ar + 2 + d, -ar - h - d], [-ar - 2 - w - d, -ar - h - d]]) cand.push([ax + cx, ay + cy]);
-    const c = cand.find(([x, y]) => !hit([x - 2, y - 2, x + w + 2, y + h + 2])); if (!c) return;
-    const [x, y] = c; boxes.push([x - 2, y - 2, x + w + 2, y + h + 2]);
-    const far = Math.hypot(x + w / 2 - ax, y + h / 2 - ay) > ar + Math.max(w, h) / 2 + 20;
-    let g = far ? leaderLine(x + w / 2 < ax ? x + w : x, Math.max(y, Math.min(y + h, ay)), ax, ay, 0, ar) : '';
-    rows.forEach((r, i) => { if (r.flag) g += finishFlag(x + 1, y + (i + 1) * LH - 1, y + i * LH + 3, col.ink); g += `<text x="${f1(x + (r.flag ? 19 : 0))}" y="${f1(y + (i + 0.8) * LH)}" font-size="${FS}" font-weight="700" fill="${r.fill}" stroke="#fff" stroke-width="4" paint-order="stroke">${esc(r.t)}</text>`; });
-    labs.push(`<g class="cutlab">${g}</g>`);
-  };
-  const cut = (k: string, st: { cutoff: string }) => { const m = cutMin(st.cutoff); return m == null ? null : clock(m < cutMin(c.cutoffs[k][0].cutoff)! ? m + 1440 : m, false); };
-  for (const q of pr.callouts.callouts) {
-    const rows = O.flatMap((k) => c.cutoffs[k].filter((st) => st.station === q.lab && q.xs.some((x) => Math.abs(x - st.mile) < 0.05)).map((st) => cut(k, st)).filter(Boolean).map((t) => ({ t: t!, fill: c.courses.colors[k] })));
-    if (rows.length) place(X(q.bx), Y(q.by), rows, BR - 4);
-  }
-  for (const k of O) { const L2 = c.cutoffs[k][c.cutoffs[k].length - 1], t = cut(k, L2), P = pts(k), e = P[P.length - 1]; if (t) place(e[0], e[1], [{ t, fill: c.courses.colors[k], flag: true }], 4); }
-  s += labs.join('');
   for (const r of pr.callouts.rincon) s += `<circle cx="${f1(X(r.mi))}" cy="${f1(Y(r.ft))}" r="6.3" fill="#fff" stroke="${col.ink}" stroke-width="3"/>`;
   return `<svg class="profile" viewBox="0 0 ${f1(W)} ${f1(H + 40)}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Elevation profiles">${s}</svg>`;
 }

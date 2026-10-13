@@ -19,7 +19,7 @@ svg .stnum{fill:#fff;font-weight:700}
 .brand{display:flex;align-items:center;gap:.4rem;font-weight:700}.brand img{height:28px}
 .printctl{margin-left:auto;display:flex;gap:.4rem;align-items:center}.printctl a,.printctl button{font:inherit;font-size:.9rem;padding:.25rem .7rem;border:1px solid #888;border-radius:4px;background:#fff;color:var(--ink);text-decoration:none;cursor:pointer}.printctl a.pdf{background:var(--ink);color:#fff;border-color:var(--ink)}
 .layers{margin:.6rem 1rem;background:#fff;border:1px solid #ddd;border-radius:6px;padding:.4rem .8rem;font-size:.9rem}
-.toggles{display:flex;flex-wrap:wrap;gap:.3rem 1rem;padding:.4rem 0}.toggles .sub{display:flex;gap:.6rem}.ck{color:var(--c);font-weight:700}
+.toggles{display:flex;flex-wrap:wrap;gap:.3rem 1rem;padding:.4rem 0}.toggles .sub{display:flex;gap:.6rem}.ck{color:var(--c);font-weight:700;display:inline-flex;align-items:center;gap:.3rem}.minibib{display:inline-block;width:auto;vertical-align:middle}
 .sheet{display:grid;grid-template-columns:minmax(0,44fr) minmax(0,51fr);gap:1.5vw;padding:0 1rem 1rem;max-width:2400px;margin:0 auto}
 .main svg{background:#fff;box-shadow:0 1px 4px #0002}
 .side{display:flex;flex-direction:column;gap:1.2vw;min-width:0}
@@ -93,3 +93,6 @@ svg.mainmap,svg.mini{touch-action:pan-x pan-y}svg.panning{cursor:grabbing}
 .runkey svg{width:12px!important;height:12px!important;flex:none}
 .runkey span{font-weight:400;color:#888}
 @media print{.runkey{display:none!important}}
+.bibh{display:flex;align-items:center;gap:.4rem}
+@media screen{.stripsbox{position:relative}}.callinks{align-items:center;flex-wrap:wrap}.callinks .calnote{color:#555;font-weight:500;margin-right:4px}.stripsbox .callinks svg.dlico{width:.8em;height:.8em;flex:none;box-shadow:none;display:inline-block}
+@media print{.stripsbox{overflow:visible!important}.stripsbox .callinks{position:absolute;z-index:3;top:100%;left:0;right:auto;width:max-content;flex-wrap:nowrap;white-space:nowrap;margin-top:2pt;font-size:13pt;gap:4pt}.stripsbox .callinks a{padding:2pt 6pt;border-width:1.2pt;gap:3pt}}
