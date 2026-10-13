@@ -1,0 +1,91 @@
+{
+ "type": "FeatureCollection",
+ "features": [
+  {
+   "type": "Feature",
+   "properties": {
+    "station": "S/F",
+    "align": "center",
+    "name": "Start /\nFinish",
+    "location": "Barton Warnock"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -103.806806,
+     29.289755
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "station": "1",
+    "align": "center"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -103.787368,
+     29.33686
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "station": "2",
+    "align": "center"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -103.81091,
+     29.361439
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "station": "3",
+    "align": "center"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -103.839991,
+     29.446004
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "station": "4",
+    "align": "center"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -103.791733,
+     29.510569
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "station": "5",
+    "align": "center"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -103.88017,
+     29.308409
+    ]
+   }
+  }
+ ]
+}

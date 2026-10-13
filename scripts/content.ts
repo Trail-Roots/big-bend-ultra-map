@@ -23,10 +23,6 @@ const PACE = (st: string) => (st === '1' || st === '2' ? 4 : 5);
 const SF_HOURS = '4a - 1a';
 // sheet station names -> station ids
 const SHEET_ID: Record<string, string> = { 'Barton Warnock': 'S/F', Finish: 'S/F', Waterhole: '1', 'Whit Roy': '2', 'Right Hand Shutup': '3', 'Paso al Solitario': '4', Contrabando: '5', Contabando: '5' };
-// access-zone polygons: legacy names in access.json -> agreed access names
-const ZONE: Record<string, { zone: string; cls: string }> = {
-  '4x4 Only': { zone: '4x4', cls: '4x4' }, 'ATV/Emergency Only': { zone: 'foot + bike', cls: 'foot_bike' }, 'No Vehicle Access': { zone: 'foot only', cls: 'foot' },
-};
 
 // ---------- official stations sheet (CSV export of the Google Sheet) ----------
 function csvRows(t: string): string[][] {
@@ -189,9 +185,6 @@ const arrows = (rj('arrows_approved.json') as [number[], XY[], number, number][]
 });
 w('arrows.geojson', fc(arrows));
 
-// access zones (hidden layer) with the agreed access names
-w('zones.geojson', fc((rj('access.json') as [string, XY[]][]).map(([n, c]) => ({ type: 'Feature', properties: ZONE[n] ?? { zone: n, cls: n }, geometry: { type: 'Polygon', coordinates: [[...c, c[0]]] } }))));
-
 // park: boundary ways / polygon / inholdings, simplified (DP 2 m in Web Mercator ≈ 1.7 m ground — below one print pixel)
 const simp = (ring: XY[], tol = 2) => ll(simplify(ring.map(merc), tol));
 const park = rj('curated/park.geojson');
@@ -203,11 +196,9 @@ for (const f of park.features) {
 w('park.geojson', park);
 
 // curated layers (hand-placed decisions frozen from the approved PDF): copied verbatim
-for (const f of ['network.geojson', 'labels.geojson', 'pois.geojson', 'zoomboxes.geojson', 'layout.json']) fs.copyFileSync(path.join(SRC, 'curated', f), path.join(OUT, f));
+for (const f of ['network.geojson', 'labels.geojson', 'station_labels.geojson', 'poi_labels.geojson', 'pois.geojson', 'zoomboxes.geojson', 'layout.json']) fs.copyFileSync(path.join(SRC, 'curated', f), path.join(OUT, f));
 fs.cpSync(path.join(SRC, 'hillshade'), path.join(OUT, 'hillshade'), { recursive: true });
 fs.cpSync(path.join(SRC, 'logos'), OUT, { recursive: true });
 
-// consistency: station hours must match the curated station labels
-const texts = new Set<string>(rj('curated/labels.geojson').features.map((f: any) => f.properties.text as string));
-for (const [k, h] of Object.entries(HRS)) if (![...texts].some((t) => t.includes(h))) console.warn(`WARN station ${k} hours "${h}" not found in labels.geojson — update the label text`);
+// station labels (sources/curated/station_labels.geojson) only hold position/alignment; name + hours text comes from stations.json
 console.log('content written:', Object.entries(HRS).map(([k, v]) => `${k} ${v}`).join(' | '));

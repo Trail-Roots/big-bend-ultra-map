@@ -32,14 +32,15 @@ Steps can run separately: `bun run content`, `bun run site`, `bun run pdf`.
 | `logistics.kml` (Logistics My Map) | station positions |
 | `stel.json` | station elevations (m, SRTM 30 m, cached) |
 | `arrows_approved.json` | `arrows.geojson` — the frozen, approved 36 direction arrows (no auto-placement) |
-| `access.json` | `zones.geojson` (access zones, named foot only / foot + bike / 4x4) |
 | `curated/park.geojson` | `park.geojson`, simplified (DP 2 m) |
+| `curated/station_labels.geojson` | aid-station label position + `align` (left/right/center, default center); optional `name` (line breaks) and `location` line. Name/hours text comes from `stations.json` |
+| `curated/poi_labels.geojson` | POI labels (Rincon, Sauceda): `title`, `notes[]` (`distance: true` marks text hidden by the Distances toggle), `align`, leader `target` |
 | `curated/{network,labels,pois,zoomboxes}.geojson`, `curated/layout.json` | copied verbatim: hand-tuned road classification, label placement, zoom boxes and sheet layout as approved on the PDF |
 | `hillshade/*.jpg`, `logos/*` | copied; the hillshade is the only raster layer |
 
 **Station hours rule:** opens at earliest course start + miles × pace (4 min/mi Waterhole & Mines, 5 min/mi elsewhere),
 rounded to the nearest 15 min and never before 5a; closes at the latest cutoff. Start/Finish is fixed at 4a – 1a.
-The build warns if a computed hours string no longer matches the station label text in `curated/labels.geojson`.
+Station labels render the computed hours directly.
 
 ### Editing
 * Cutoffs / start times: update `sources/sheet.csv` (re-export the sheet), `bun run build`.
@@ -53,8 +54,12 @@ The build warns if a computed hours string no longer matches the station label t
 **Add a page** = drop `site/pages/foo.ts`; it is routed to `meta.path` and appears in the nav automatically.
 
 * `lib/mainmap.ts` – main map inline SVG; one `<g class="layer">` per toggle + legend, scale bar, north arrow, logo.
+* `lib/labels.ts` – the standard station and POI label templates (fonts, sizes, line spacing, alignment, leaders).
 * `lib/panels.ts` – mini maps, timeline strips, elevation profile (all SVG).
 * `lib/util.ts` – projection (Mercator fitted to the layout view windows), page-space path simplification, styles.
+
+Toggles: topo, park boundary, off-course roads, per-course routes, zoom boxes, POIs, labels, and Distances (hides every
+distance text: timeline mileages, profile mile axis, POI distance notes). Access styles, arrows and aid stations are always on.
 
 Layout: side-by-side ≥ 1000 px wide, stacked below.
 

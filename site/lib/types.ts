@@ -4,7 +4,7 @@ export type FC = { type: 'FeatureCollection'; features: Feature[] };
 export interface Ctx {
   layout: any; colors: Record<string, string>; courses: { order: string[]; colors: Record<string, string>; courses: Record<string, any> };
   stations: { order: string[]; stations: Record<string, any> }; cutoffs: Record<string, { station: string; mile: number; cutoff: string }[]>;
-  network: FC; park: FC; zones: FC; pois: FC; zoom: FC; arrows: FC; labels: FC;
+  network: FC; park: FC; pois: FC; zoom: FC; arrows: FC; labels: FC; stationLabels: FC; poiLabels: FC;
   courseGeo: Record<string, FC>; profiles: Record<string, any>;
 }
 export interface Page { meta: { path: string; title: string; nav: string }; render(c: Ctx): string }

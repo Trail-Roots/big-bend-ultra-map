@@ -1,8 +1,9 @@
+import { stationLabel, poiLabel } from './labels';
 import { SHEET, viewProjection, esc, f1, lineD, dash, STYLE, station, textBlock } from './util';
-const LAYERS = [
-  ['topo', 'Topo shading', true], ['park', 'Park boundary', true], ['zones', 'Access zones', false], ['roads', 'Roads (off-course)', true],
-  ['access', 'Access styles (on-course)', true], ['courses', 'Routes per course', false], ['zoom', 'Zoom boxes', true], ['arrows', 'Direction arrows', true],
-  ['stations', 'Aid stations', true], ['pois', 'POIs', true], ['labels', 'Labels', true],
+// user-toggleable layers (access styles, arrows and aid stations are always shown)
+const LAYERS: [string, string, boolean][] = [
+  ['topo', 'Topo shading', true], ['park', 'Park boundary', true], ['roads', 'Roads (off-course)', true],
+  ['courses', 'Routes per course', false], ['zoom', 'Zoom boxes', true], ['pois', 'POIs', true], ['labels', 'Labels', true],
 ];
 export const mainLayers = LAYERS;
 export function hillImage(c, key, V) {
@@ -20,8 +21,6 @@ export function renderMain(c) {
   }
   for (const f of c.park.features) if (f.properties.kind === 'boundary')
     add('park', `<path d="${V.path(f)}" fill="none" stroke="${col.boundary}" stroke-opacity=".9" stroke-width="2.6" stroke-dasharray="${dash([0.6, 2.6], 2.6)}" stroke-linecap="round"/>`);
-  const zc: Record<string, string> = { '4x4': '#e9d4a5', 'foot + bike': '#d49564', 'foot only': '#b05c51' };
-  for (const f of c.zones.features) add('zones', `<path d="${V.path(f)}" fill="${zc[f.properties.zone] || '#ccc'}" fill-opacity=".35" stroke="${zc[f.properties.zone]}" stroke-width="1.5"><title>${esc(f.properties.zone)}</title></path>`);
   // roads
   const net = c.network.features;
   for (const f of net.filter(f => f.properties.cls === 'paved')) { const d = V.path(f); add('roads', `<path d="${d}" class="ln" stroke="#fff" stroke-width="14"/><path d="${d}" class="ln" stroke="#333" stroke-width="10"/><path d="${d}" class="ln" stroke="#fff" stroke-width="2.2" stroke-dasharray="${dash([6, 5], 2.2)}" stroke-linecap="butt"/>`); }
@@ -60,9 +59,14 @@ export function renderMain(c) {
     let lead = '';
     if (p.leader) lead = `<path d="${lineD(p.leader.coords.map(V.p))}" fill="none" stroke="${p.leader.color}" stroke-width="${p.leader.lw}"/>`;
     const layer = p.kind === 'station_number' || p.kind === 'station_label' ? 'stations' : p.kind === 'zoombox_label' ? 'zoom' : p.kind === 'poi_label' ? 'pois' : 'labels';
+    if (p.kind === 'station_label' || p.kind === 'poi_label') continue; // replaced by the label templates below
     if (p.kind === 'station_number') { add('stations', `<text x="${f1(x)}" y="${f1(y)}" class="stnum" font-size="${p.fs}" text-anchor="middle" dominant-baseline="central">${esc(p.text)}</text>`); continue; }
     add(layer === 'stations' ? 'stationLabels' : layer, lead + textBlock(x, y, p));
   }
+  // standard station + POI label templates
+  const rad = (k: string) => (k === 'S/F' ? Math.sqrt(2900 * 1.8) / 2 : c.stations.stations[k].spectator ? Math.sqrt(2000 * 1.8) / 2 : Math.sqrt(2000) / 2);
+  for (const f of c.stationLabels.features) add('stationLabels', stationLabel(c, f, V.p, rad));
+  for (const f of c.poiLabels.features) add('pois', poiLabel(f, V.p, f.properties.poi === 'rincon' ? Math.sqrt(420) / 2 : 4));
   // frame furniture: scale bar, north arrow, logo, legend
   const sb = c.layout.scalebar, sx = (sb.x - c.layout.views.main.x[0]) * V.ppm, sy = (c.layout.views.main.y[1] - sb.y) * V.ppm, m5 = sb.m5 * V.ppm, tick = H * 0.006;
   let fur = `<g class="scalebar" stroke="${col.ink}" stroke-width="3"><path d="M${f1(sx)},${f1(sy)}h${f1(m5)}M${f1(sx)},${f1(sy)}v${f1(-tick)}M${f1(sx + m5 / 2)},${f1(sy)}v${f1(-tick)}M${f1(sx + m5)},${f1(sy)}v${f1(-tick)}" fill="none"/></g>`;
@@ -71,9 +75,9 @@ export function renderMain(c) {
   fur += `<g class="north"><line x1="${f1(nx)}" y1="${f1(ny + H * .03)}" x2="${f1(nx)}" y2="${f1(ny - H * .02)}" stroke="${col.ink}" stroke-width="3"/><path d="M${f1(nx - 9)},${f1(ny - H * .02 + 4)}L${f1(nx)},${f1(ny - H * .03)}L${f1(nx + 9)},${f1(ny - H * .02 + 4)}z" fill="${col.ink}"/><text x="${f1(nx)}" y="${f1(ny + H * .045)}" class="f-serif" font-size="30" text-anchor="middle" fill="${col.ink}">N</text></g>`;
   fur += `<a href="https://trailroots.com/big-bend-ultra" target="_blank" rel="noopener"><image href="logo_ink_crop.png" x="${f1(W * 0.08)}" y="${f1(H * (1 - 0.985))}" width="${f1(W * 0.1)}" height="${f1(H * 0.1)}" preserveAspectRatio="xMidYMid meet"/></a>`;
   fur += legend(c, W, H);
-  const order = ['topo', 'park', 'zones', 'roads', 'access', 'courses', 'zoom', 'arrows', 'stations', 'pois', 'stationLabels', 'labels'];
+  const order = ['topo', 'park', 'roads', 'access', 'courses', 'zoom', 'arrows', 'stations', 'pois', 'stationLabels', 'labels'];
   const vis = Object.fromEntries(LAYERS.map(l => [l[0], l[2]]));
-  const grp = order.map(k => `<g class="layer" data-layer="${k === 'stationLabels' ? 'stations' : k}"${(vis[k] === false) ? ' style="display:none"' : ''}>${g[k] || ''}</g>`).join('\n');
+  const grp = order.map(k => `<g class="layer" data-layer="${k}"${(vis[k] === false) ? ' style="display:none"' : ''}>${g[k] || ''}</g>`).join('\n');
   return `<svg class="mainmap" viewBox="0 0 ${f1(W)} ${f1(H)}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Big Bend Ultra main course map"><defs><clipPath id="mclip"><rect width="${f1(W)}" height="${f1(H)}"/></clipPath></defs><rect width="${f1(W)}" height="${f1(H)}" fill="#fff"/><g clip-path="url(#mclip)">${grp}</g>${fur}<rect width="${f1(W)}" height="${f1(H)}" fill="none" stroke="#000" stroke-width="1.6"/></svg>`;
 }
 export function chevron(f, V, col) {

@@ -41,11 +41,11 @@ export function renderStrips(c) {
   let s = '';
   c.courses.order.forEach((k, r) => {
     const S = c.cutoffs[k], P = []; S.forEach(q => P.push(P.length ? Math.max(q.mile, P[P.length - 1] + 8.2) : q.mile));
-    let g = `<text x="0" y="${f1(Y(0.22))}" font-size="36" font-weight="700" fill="${c.courses.colors[k]}" dominant-baseline="central">${k}</text><text x="0" y="${f1(Y(-0.42))}" font-size="22" fill="${col.ink}" dominant-baseline="central">${S[S.length - 1].mile}m</text>`;
+    let g = `<text x="0" y="${f1(Y(0.22))}" font-size="36" font-weight="700" fill="${c.courses.colors[k]}" dominant-baseline="central">${k}</text><text class="dist" x="0" y="${f1(Y(-0.42))}" font-size="22" fill="${col.ink}" dominant-baseline="central">${S[S.length - 1].mile}m</text>`;
     g += `<path d="M${f1(X(0))},${f1(Y(0))}H${f1(X(P[P.length - 1]))}" stroke="${c.courses.colors[k]}" stroke-width="7" stroke-linecap="round"/>`;
     S.forEach((q, i) => {
       g += station(X(P[i]), Y(0), q.station, c.stations.stations[q.station].spectator, { s: 950, fs: 24, badge: false, colors: col });
-      g += `<text x="${f1(X(P[i]))}" y="${f1(Y(0.32))}" font-size="24" text-anchor="middle" fill="${col.mute}">${q.mile}m</text>`;
+      g += `<text class="dist" x="${f1(X(P[i]))}" y="${f1(Y(0.32))}" font-size="24" text-anchor="middle" fill="${col.mute}">${q.mile}m</text>`;
       if (q.cutoff !== 'TBD') g += `<text x="${f1(X(P[i]))}" y="${f1(Y(-0.32))}" font-size="30" font-weight="700" text-anchor="middle" dominant-baseline="hanging" fill="${col.ink}">${short(q.cutoff)}</text>`;
     });
     s += `<g class="strip" data-course="${k}" transform="translate(0 ${f1(r * RH)})">${g}</g>`;
@@ -58,7 +58,7 @@ export function renderProfile(c) {
   let s = `<rect width="${f1(W)}" height="${f1(H)}" fill="${col.cream}"/>`;
   for (const t of [2500, 3500, 4500]) s += `<path d="M0,${f1(Y(t))}H${f1(W)}" stroke="#d8d0c0" stroke-width="1"/><text x="12" y="${f1(Y(t) - 6)}" font-size="24" fill="${col.ink}">${t.toLocaleString('en-US')} ft</text>`;
   s += `<path d="M0,${f1(H)}H${f1(W)}" stroke="${col.ink}" stroke-width="1"/>`;
-  for (let v = 0; v <= 60; v += 10) s += `<text x="${f1(X(v))}" y="${f1(H + 10)}" font-size="24" text-anchor="middle" dominant-baseline="hanging" fill="${col.ink}">${v}m</text>`;
+  for (let v = 0; v <= 60; v += 10) s += `<text class="dist" x="${f1(X(v))}" y="${f1(H + 10)}" font-size="24" text-anchor="middle" dominant-baseline="hanging" fill="${col.ink}">${v}m</text>`;
   const O = c.courses.order, pr = c.profiles;
   const pts = k => pr[k].mi.map((m, i) => [X(m), Y(pr[k].ft[i])]);
   const p100 = pts('100K'); s += `<path d="${lineD(p100)}L${f1(p100[p100.length - 1][0])},${f1(Y(2200))}L${f1(p100[0][0])},${f1(Y(2200))}z" fill="#888" fill-opacity=".10"/>`;

@@ -9,8 +9,8 @@ const J = (p: string) => JSON.parse(fs.readFileSync(path.join(C, p), 'utf8'));
 const courses = J('courses.json');
 const ctx: Ctx = {
   layout: J('layout.json'), colors: J('colors.json'), courses, stations: J('stations.json'), cutoffs: J('cutoffs.json'),
-  network: J('network.geojson'), park: J('park.geojson'), zones: J('zones.geojson'), pois: J('pois.geojson'), zoom: J('zoomboxes.geojson'),
-  arrows: J('arrows.geojson'), labels: J('labels.geojson'),
+  network: J('network.geojson'), park: J('park.geojson'), pois: J('pois.geojson'), zoom: J('zoomboxes.geojson'),
+  arrows: J('arrows.geojson'), labels: J('labels.geojson'), stationLabels: J('station_labels.geojson'), poiLabels: J('poi_labels.geojson'),
   courseGeo: Object.fromEntries(courses.order.map((k: string) => [k, J(`courses/${k}.geojson`)])),
   profiles: { ...Object.fromEntries(courses.order.map((k: string) => [k, J(`profiles/${k}.json`)])), callouts: J('profiles/callouts.json') },
 };

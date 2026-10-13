@@ -1,0 +1,57 @@
+{
+ "type": "FeatureCollection",
+ "features": [
+  {
+   "type": "Feature",
+   "properties": {
+    "poi": "sauceda",
+    "title": "Sauceda",
+    "notes": [
+     {
+      "text": "ranger station"
+     },
+     {
+      "text": "to S/F: 64m, ~2h30",
+      "distance": true
+     }
+    ],
+    "align": "center",
+    "target": [
+     -103.955315,
+     29.468517
+    ]
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -103.933135,
+     29.464463
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "poi": "rincon",
+    "title": "Rincon",
+    "notes": [
+     {
+      "text": "no aid · restroom"
+     }
+    ],
+    "align": "center",
+    "target": [
+     -103.855581,
+     29.408106
+    ]
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -103.833601,
+     29.411879
+    ]
+   }
+  }
+ ]
+}
