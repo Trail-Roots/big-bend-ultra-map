@@ -2,24 +2,41 @@ import { SHEET, viewProjection, esc, f1, lineD, dash, station } from './util';
 import { hillImage, chevron } from './mainmap';
 /** '5:00 AM' -> '5a', '8:30 AM' -> '8:30a' (minutes only when non-zero) */
 export const startShort = (t: string) => { const [hm, ap] = t.split(' '), [h, m] = hm.split(':'); return `${Number(h)}${m === '00' ? '' : ':' + m}${ap === 'PM' ? 'p' : 'a'}`; };
-// monochrome revolver-style starter pistol, barrel pointing up (fired into the air); 12 x 16 units
-const GUN = 'M3.2,0h2.4v1h.6v6.2h2.6v1h-.6v2.8l4,4.6-2.6,1.4-3.4-4.6h-1.2v1.4c0,.9-1.8,.9-1.8,0V11H2V7.2h1.2z';
-const GUN_W = 12, GUN_H = 16;
-/** bib template: fixed size for every course; course on top, white pill with pistol + start time, text scaled to fit with padding */
-export const BIB = { w: 86, h: 72, pad: 7, rx: 7, top: 26, time: 15, pillH: 25 };
-export function bib(k: string, start: string, cc: string, W: number, H: number, col: Record<string, string>) {
-  const B = BIB, tw = (t: string, fs: number) => t.length * fs * 0.64, t = startShort(start);
-  const bx = W * 0.97 - B.w, by = H * 0.03, inner = B.w - 2 * B.pad;
-  const fsTop = Math.min(B.top, inner / (tw(k, 1) || 1));
-  const px = bx + B.pad - 2, pw = B.w - 2 * (B.pad - 2), py = by + B.h - B.pad + 2 - B.pillH;
-  const gh = B.pillH - 8, gs = gh / GUN_H, gw = GUN_W * gs, gap = 4;
-  const fsT = Math.min(B.time, (pw - 10 - gw - gap) / (tw(t, 1) || 1));
-  const cw = gw + gap + tw(t, fsT), gx = px + (pw - cw) / 2, gy = py + 4;
-  return `<g class="bib"><rect x="${f1(bx)}" y="${f1(by)}" width="${B.w}" height="${B.h}" rx="${B.rx}" fill="${cc}"/>`
-    + `<text x="${f1(bx + B.w / 2)}" y="${f1(by + B.pad + (py - by - B.pad) / 2)}" font-size="${f1(fsTop)}" font-weight="700" fill="#fff" text-anchor="middle" dominant-baseline="central">${k}</text>`
-    + `<rect x="${f1(px)}" y="${f1(py)}" width="${f1(pw)}" height="${B.pillH}" rx="4" fill="#fff"/>`
-    + `<path d="${GUN}" transform="translate(${f1(gx)} ${f1(gy)}) scale(${gs.toFixed(3)})" fill="${col.ink}"><title>start time</title></path>`
-    + `<text x="${f1(gx + gw + gap)}" y="${f1(py + B.pillH / 2)}" font-size="${f1(fsT)}" font-weight="700" fill="${col.ink}" dominant-baseline="central"><title>start time</title>${t}</text></g>`;
+// ---- start-time bib (fixed 86 x 72 pt for every course) ----
+export type BibStyle = 'band' | 'stopwatch' | 'flag' | 'bandtime';
+/** default start indicator: a 'START' header band like a real race bib */
+export const BIB_STYLE: BibStyle = 'band';
+export const BIB = { w: 86, h: 72, pad: 6, rx: 7 };
+// 12 x 12 unit icons (ink)
+const ICON: Record<string, string> = {
+  stopwatch: '<circle cx="6" cy="7" r="4.6" fill="none" stroke-width="1.6"/><path d="M4.6,0.6h2.8M6,0.6v1.8M6,7V4.3M9.6,2.6l1,-1" fill="none" stroke-width="1.5" stroke-linecap="round"/>',
+  flag: '<path d="M1.6,0.6V11.6" fill="none" stroke-width="1.5" stroke-linecap="round"/><path d="M2.3,1h3v2.2h-3zM5.3,1h3v2.2h-3zM8.3,1h2.8v2.2h-2.8zM2.3,3.2h3v2.2h-3zM5.3,3.2h3v2.2h-3zM8.3,3.2h2.8v2.2h-2.8z" fill="none" stroke-width=".7"/><path d="M2.3,1h3v2.2h-3zM8.3,1h2.8v2.2h-2.8zM5.3,3.2h3v2.2h-3z" stroke="none"/>',
+};
+const tw = (t: string, fs: number) => t.length * fs * 0.64;
+export function bib(k: string, start: string, cc: string, W: number, H: number, col: Record<string, string>, style: BibStyle = BIB_STYLE, at?: [number, number]) {
+  const B = BIB, t = startShort(start), ink = col.ink;
+  const bx = at ? at[0] : W * 0.97 - B.w, by = at ? at[1] : H * 0.03, inner = B.w - 2 * B.pad;
+  let g = `<g class="bib bib-${style}"><rect x="${f1(bx)}" y="${f1(by)}" width="${B.w}" height="${B.h}" rx="${B.rx}" fill="${cc}"/>`;
+  const txt = (x: number, y: number, fs: number, fill: string, v: string, anchor = 'middle', extra = '') => `<text x="${f1(x)}" y="${f1(y)}" font-size="${f1(fs)}" font-weight="700" fill="${fill}" text-anchor="${anchor}" dominant-baseline="central"${extra}>${v}</text>`;
+  const fitFs = (v: string, max: number, room: number) => Math.min(max, room / (tw(v, 1) || 1));
+  if (style === 'band' || style === 'bandtime') {
+    const bandH = 15, clip = `bb${k}${style}`;
+    g += `<clipPath id="${clip}"><rect x="${f1(bx)}" y="${f1(by)}" width="${B.w}" height="${B.h}" rx="${B.rx}"/></clipPath><rect x="${f1(bx)}" y="${f1(by)}" width="${B.w}" height="${bandH}" fill="${ink}" clip-path="url(#${clip})"/>`;
+    const bandTxt = style === 'band' ? 'START' : `START ${t}`;
+    g += txt(bx + B.w / 2, by + bandH / 2 + 0.5, fitFs(bandTxt, 10.5, inner), '#fff', bandTxt, 'middle', ' letter-spacing="1"');
+    if (style === 'band') {
+      const pillH = 22, py = by + B.h - B.pad - pillH;
+      g += txt(bx + B.w / 2, by + bandH + (py - by - bandH) / 2, fitFs(k, 24, inner), '#fff', k);
+      g += `<rect x="${f1(bx + B.pad)}" y="${f1(py)}" width="${f1(inner)}" height="${pillH}" rx="4" fill="#fff"/>` + txt(bx + B.w / 2, py + pillH / 2, fitFs(t, 15, inner - 8), ink, t);
+    } else g += txt(bx + B.w / 2, by + bandH + (B.h - bandH) / 2, fitFs(k, 28, inner), '#fff', k);
+  } else {
+    const pillH = 25, py = by + B.h - B.pad - pillH, isz = pillH - 8, sc = isz / 12, gap = 4;
+    g += txt(bx + B.w / 2, by + B.pad + (py - by - B.pad) / 2, fitFs(k, 26, inner), '#fff', k);
+    const fsT = fitFs(t, 15, inner - 10 - isz - gap), cw = isz + gap + tw(t, fsT), gx = bx + (B.w - cw) / 2;
+    g += `<rect x="${f1(bx + B.pad)}" y="${f1(py)}" width="${f1(inner)}" height="${pillH}" rx="4" fill="#fff"/>`
+      + `<g transform="translate(${f1(gx)} ${f1(py + 4)}) scale(${sc.toFixed(3)})" fill="${ink}" stroke="${ink}">${ICON[style]}</g>` + txt(gx + isz + gap, py + pillH / 2, fsT, ink, t, 'start');
+  }
+  return g + `<title>${k} start time ${t}</title></g>`;
 }
 const short = t => t.toLowerCase().replace(' am', 'a').replace(' pm', 'p');
 export function renderMini(c, k) {

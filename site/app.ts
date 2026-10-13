@@ -14,34 +14,44 @@ if (hdEl && prof) {
   const el = (tag: string, attrs: Record<string, string | number>, parent: Element) => { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, String(attrs[k])); parent.appendChild(e); return e; };
   const main = document.querySelector<SVGSVGElement>('svg.mainmap')!;
   const mk = (svg: SVGSVGElement, r: number, sw: number) => { const g = el('g', { class: 'hov', style: 'display:none;pointer-events:none' }, svg); el('circle', { r: r + sw, fill: '#fff' }, g); const c = el('circle', { r, fill: 'none', 'stroke-width': sw }, g); el('circle', { r: sw * 0.9, fill: '#111' }, g); return { g, c }; };
-  const mm = mk(main, 16, 6), minis: Record<string, ReturnType<typeof mk>> = {};
-  document.querySelectorAll<SVGSVGElement>('svg.mini').forEach((s) => (minis[s.dataset.mini!] = mk(s, 12, 4.5)));
+  // one marker per course on the main map, one on each course's own mini map
+  const mains: Record<string, ReturnType<typeof mk>> = {}, minis: Record<string, ReturnType<typeof mk>> = {};
+  for (const [k, c] of Object.entries(HD.courses)) { mains[k] = mk(main, 13, 5); mains[k].c.setAttribute('stroke', c.color); }
+  document.querySelectorAll<SVGSVGElement>('svg.mini').forEach((s) => { const k = s.dataset.mini!; minis[k] = mk(s, 12, 4.5); if (HD.courses[k]) minis[k].c.setAttribute('stroke', HD.courses[k].color); });
   const pg = el('g', { class: 'hov', style: 'display:none;pointer-events:none' }, prof);
   const vline = el('line', { y1: 0, y2: HD.profile.H, stroke: '#111', 'stroke-width': 1.5, 'stroke-dasharray': '4 3' }, pg);
-  const dot = el('circle', { r: 7, fill: '#fff', 'stroke-width': 3.5 }, pg);
-  const lab = el('text', { 'font-size': 26, 'font-weight': 700, 'paint-order': 'stroke', stroke: '#fff', 'stroke-width': 6, 'dominant-baseline': 'central' }, pg);
+  const dots: Record<string, Element> = {};
+  for (const [k, c] of Object.entries(HD.courses)) dots[k] = el('circle', { r: 7, fill: '#fff', 'stroke-width': 3.5, stroke: c.color }, pg);
+  const box = el('rect', { fill: '#fff', 'fill-opacity': 0.92, stroke: '#bbb', 'stroke-width': 1, rx: 4 }, pg);
+  const lab = el('text', { 'font-size': 22, 'font-weight': 700 }, pg);
   const { W, H, x: [x0, x1], y: [y0, y1] } = HD.profile;
   const X = (m: number) => ((m - x0) / (x1 - x0)) * W, Y = (ft: number) => (1 - (ft - y0) / (y1 - y0)) * H;
-  const hide = () => { pg.style.display = 'none'; mm.g.style.display = 'none'; Object.values(minis).forEach((q) => (q.g.style.display = 'none')); };
+  const all = () => [...Object.values(mains), ...Object.values(minis)];
+  const hide = () => { pg.style.display = 'none'; all().forEach((q) => (q.g.style.display = 'none')); };
   const move = (ev: PointerEvent) => {
     const ctm = prof.getScreenCTM(); if (!ctm) return;
     const p = new DOMPoint(ev.clientX, ev.clientY).matrixTransform(ctm.inverse()), mile = x0 + (p.x / W) * (x1 - x0);
-    let best: { k: string; v: number[]; d: number } | null = null;
-    for (const [k, c] of Object.entries(HD.courses)) {
-      if (mile < 0 || mile > c.dist) continue;
-      const v = c.s[Math.max(0, Math.min(c.s.length - 1, Math.round(mile / 0.05)))], d = Math.abs(Y(v[1]) - p.y);
-      if (!best || d < best.d) best = { k, v, d };
+    if (mile < 0) return hide();
+    // every course that reaches this mile gets a marker; shorter courses show nothing
+    const hits = Object.entries(HD.courses).filter(([, c]) => mile <= c.dist).map(([k, c]) => ({ k, c, v: c.s[Math.max(0, Math.min(c.s.length - 1, Math.round(mile / 0.05)))] }));
+    if (!hits.length) return hide();
+    all().forEach((q) => (q.g.style.display = 'none'));
+    const px = X(mile); pg.style.display = ''; vline.setAttribute('x1', String(px)); vline.setAttribute('x2', String(px));
+    for (const k in dots) (dots[k] as SVGElement).style.display = 'none';
+    for (const { k, v } of hits) {
+      const [, ft, ax, ay, bx, by] = v, d = dots[k] as SVGElement;
+      d.style.display = ''; d.setAttribute('cx', String(X(v[0]))); d.setAttribute('cy', String(Y(ft)));
+      mains[k].g.style.display = ''; mains[k].g.setAttribute('transform', `translate(${ax} ${ay})`);
+      if (minis[k]) { minis[k].g.style.display = ''; minis[k].g.setAttribute('transform', `translate(${bx} ${by})`); }
     }
-    if (!best) return hide();
-    const c = HD.courses[best.k], [mi, ft, ax, ay, bx, by] = best.v, px = X(mi), py = Y(ft);
-    pg.style.display = ''; vline.setAttribute('x1', String(px)); vline.setAttribute('x2', String(px));
-    dot.setAttribute('cx', String(px)); dot.setAttribute('cy', String(py)); dot.setAttribute('stroke', c.color);
-    const right = px < W * 0.8; lab.setAttribute('x', String(px + (right ? 14 : -14))); lab.setAttribute('y', String(Math.max(20, py - 30)));
-    lab.setAttribute('text-anchor', right ? 'start' : 'end'); lab.setAttribute('fill', c.color);
-    lab.textContent = `${best.k} · mile ${mi.toFixed(1)} · ${ft.toLocaleString('en-US')} ft`;
-    mm.g.style.display = ''; mm.g.setAttribute('transform', `translate(${ax} ${ay})`); mm.c.setAttribute('stroke', c.color);
-    Object.entries(minis).forEach(([k, q]) => (q.g.style.display = 'none'));
-    const q = minis[best.k]; if (q) { q.g.style.display = ''; q.g.setAttribute('transform', `translate(${bx} ${by})`); q.c.setAttribute('stroke', c.color); }
+    // readout: mile header + one line per course (elevation at that mile)
+    lab.textContent = '';
+    const rows = [{ t: `mile ${mile.toFixed(1)}`, fill: '#2a2a2a' }, ...hits.map(({ k, c, v }) => ({ t: `${k}  ${v[1].toLocaleString('en-US')} ft`, fill: c.color }))];
+    const right = px < W * 0.7, lx = px + (right ? 16 : -16), ly = 14;
+    rows.forEach((r, i) => { const ts = el('tspan', { x: lx, y: ly + 13 + i * 26, fill: r.fill }, lab); ts.textContent = r.t; });
+    lab.setAttribute('text-anchor', right ? 'start' : 'end');
+    const bb = (lab as SVGTextElement).getBBox();
+    box.setAttribute('x', String(bb.x - 8)); box.setAttribute('y', String(bb.y - 5)); box.setAttribute('width', String(bb.width + 16)); box.setAttribute('height', String(bb.height + 10));
   };
   prof.style.touchAction = 'none'; prof.style.cursor = 'crosshair';
   prof.addEventListener('pointermove', move); prof.addEventListener('pointerdown', move);
