@@ -193,7 +193,7 @@ out.assumptions = [
   'Pre-2026 years ran 50M / 50K / 30K (plus 10K, 20K) on different courses: used for volume history only, not for times.',
   `Pace along the course: grade-adjusted curve on the 0.25 mi-smoothed profile (see pace_model.params), deviation from flat scaled by fitness (avg pace / 20 min/mi)^beta; fatigue on 100K/55K; ${PAR.dwell} min dwell per aid-station visit; each runner normalised to their real 2026 finish time. Parameters tuned by grid search against 2026 Waterhole timing-mat splits (pace_model.validation).`,
   'DNF runners follow the 2026 median finisher pace and stop at the middle aid-station visit of their course.',
-  'Start times and station hours/cutoffs from the race sheet (content/); RunSignup lists the 2027 100K start as 05:30 while the sheet says 5:00 AM — the sheet is used.',
+  'Start times and station hours/cutoffs from the race sheet (content/); Start times match RunSignup 2027 (race 163892): 100K 5:30a, 55K 7a, 35K 8a, 20K 8:30a, 10K 9a.',
 ];
 fs.writeFileSync(path.join(ROOT, 'content/timeline.json'), JSON.stringify(out) + '\n');
 const hm = (m: number) => { const d = m >= 1440 ? ' (+1)' : ''; m = ((m % 1440) + 1440) % 1440; return `${Math.floor(m / 60)}:${String(Math.round(m % 60)).padStart(2, '0')}${d}`; };
