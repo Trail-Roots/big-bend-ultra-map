@@ -70,6 +70,9 @@ if (hdEl && prof) {
   const dotLayer = main.querySelector('g.layer[data-layer="dots"]');
   const dots2: { k: string; T: number; stop: number; c: SVGCircleElement; j: number; cv: any }[] = [];
   if (dotLayer) for (const [k, C] of Object.entries(TM.courses) as [string, any][]) C.T.forEach((T: number, i: number) => { const c = el('circle', { r: 3.4, fill: HD.courses[k].color, stroke: '#fff', 'stroke-width': 0.9, style: 'display:none' }, dotLayer) as SVGCircleElement; dots2.push({ k, T, stop: C.stop[i], c, j: (dots2.length * 2.399) % 6.283, cv: C.curves[C.fit[i]] }); });
+  // leader ring: one per course, a course-colour ring around the leader's standard dot (small gap)
+  const leadRing: Record<string, SVGCircleElement> = {};
+  if (dotLayer) for (const k of Object.keys(TM.courses)) leadRing[k] = el('circle', { fill: 'none', stroke: HD.courses[k].color, style: 'display:none;pointer-events:none' }, dotLayer) as SVGCircleElement;
   let tShown = -1;
   const setTime = (t: number) => {
     tShown = t; const z = 1 / zoomOf(main);
@@ -82,10 +85,12 @@ if (hdEl && prof) {
       d.c.style.display = ''; d.c.setAttribute('cx', String(p[2] + Math.cos(j) * 3)); d.c.setAttribute('cy', String(p[3] + Math.sin(j) * 3)); d.c.setAttribute('r', String(3.4 * z)); d.c.setAttribute('fill', HD.courses[d.k].color); d.c.setAttribute('stroke', '#fff'); d.c.setAttribute('stroke-width', String(0.9 * z));
       const E = (ends[d.k] ??= {}); if (!E.lead || mile > E.lead[0]) E.lead = [mile, d]; if (!E.last || mile < E.last[0]) E.last = [mile, d];
     }
-    // leader = solid course-colour dot with a dark ring; last runner = hollow ring (white fill, course-colour stroke). Small, drawn on top.
+    for (const k in leadRing) leadRing[k].style.display = 'none';
+    // leader = standard dot + course-colour ring with a small gap; last runner = hollow ring (white fill, course-colour stroke). Small, drawn on top.
     for (const [k, E] of Object.entries(ends)) for (const [q, lead] of [[E.last, false], [E.lead, true]] as const) {
       if (!q) continue; const c = q[1].c as SVGCircleElement, col = HD.courses[k].color;
-      c.setAttribute('r', String((lead ? 4.6 : 4.2) * z)); c.setAttribute('fill', lead ? col : '#fff'); c.setAttribute('stroke', lead ? '#1a1a1a' : col); c.setAttribute('stroke-width', String((lead ? 1.4 : 2) * z));
+      if (lead) { const R = leadRing[k]; R.setAttribute('cx', c.getAttribute('cx')!); R.setAttribute('cy', c.getAttribute('cy')!); R.setAttribute('r', String(6.4 * z)); R.setAttribute('stroke-width', String(1.5 * z)); R.style.display = ''; c.parentNode!.appendChild(c); c.parentNode!.appendChild(R); continue; }
+      c.setAttribute('r', String(4.2 * z)); c.setAttribute('fill', '#fff'); c.setAttribute('stroke', col); c.setAttribute('stroke-width', String(2 * z));
       if (c.nextSibling) c.parentNode!.appendChild(c);
     }
     glide.clear(); // no median-runner markers during time play (profile distance-hover markers are separate)
@@ -123,7 +128,7 @@ if (hdEl && prof) {
   const label = () => { btn.textContent = paused ? '▶ Play race day' : '❚❚ Pause'; btn.setAttribute('aria-label', paused ? 'Play race-day animation' : 'Pause race-day animation'); btn.setAttribute('aria-pressed', String(!paused)); };
   if (!reduced) { label(); prof.parentElement!.appendChild(btn); }
   // key for the runner-dot markers (web only, like the dots themselves)
-  if (dotLayer && tl) { const key = document.createElement('div'); key.className = 'runkey ui'; key.innerHTML = '<svg width="12" height="12" viewBox="-6 -6 12 12" aria-hidden="true"><circle r="4.4" fill="#666" stroke="#1a1a1a" stroke-width="1.4"/></svg> Leader <svg width="12" height="12" viewBox="-6 -6 12 12" aria-hidden="true"><circle r="4" fill="#fff" stroke="#666" stroke-width="2"/></svg> Last runner <span>(course colour)</span>'; tl.insertAdjacentElement('afterend', key); }
+  if (dotLayer && tl) { const key = document.createElement('div'); key.className = 'runkey ui'; key.innerHTML = '<svg width="16" height="16" viewBox="-8 -8 16 16" aria-hidden="true"><circle r="3.4" fill="#666" stroke="#fff" stroke-width=".9"/><circle r="6.4" fill="none" stroke="#666" stroke-width="1.5"/></svg> Leader <svg width="12" height="12" viewBox="-6 -6 12 12" aria-hidden="true"><circle r="4" fill="#fff" stroke="#666" stroke-width="2"/></svg> Last runner <span>(course colour)</span>'; tl.insertAdjacentElement('afterend', key); }
   btn.addEventListener('click', () => { paused = !paused; localStorage.setItem(KEY, paused ? '1' : '0'); label(); if (paused) { stop(); clearTime(); } else start(); });
   const suspend = () => { user = true; stop(); };
   const resume = () => { user = false; start(); };
