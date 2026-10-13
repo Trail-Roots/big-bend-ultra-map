@@ -210,7 +210,7 @@ for (const f of park.features) {
 w('park.geojson', park);
 
 // curated layers (hand-placed decisions frozen from the approved PDF): copied verbatim
-for (const f of ['network.geojson', 'labels.geojson', 'station_labels.geojson', 'poi_labels.geojson', 'pois.geojson', 'zoomboxes.geojson', 'layout.json']) fs.copyFileSync(path.join(SRC, 'curated', f), path.join(OUT, f));
+for (const f of ['network.geojson', 'labels.geojson', 'area_labels.geojson', 'station_labels.geojson', 'poi_labels.geojson', 'pois.geojson', 'zoomboxes.geojson', 'layout.json']) fs.copyFileSync(path.join(SRC, 'curated', f), path.join(OUT, f));
 fs.cpSync(path.join(SRC, 'hillshade'), path.join(OUT, 'hillshade'), { recursive: true });
 fs.cpSync(path.join(SRC, 'logos'), OUT, { recursive: true });
 

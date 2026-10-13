@@ -1,4 +1,4 @@
-import { stationLabel, poiLabel } from './labels';
+import { stationLabel, poiLabel, areaLabel } from './labels';
 import { leaderLine, poiDot, SHEET, viewProjection, esc, f1, lineD, dash, STYLE, station, textBlock } from './util';
 // user-toggleable layers (off-course roads, access styles, arrows, aid stations, distances and all labels are always shown)
 const LAYERS: [string, string, boolean][] = [
@@ -23,6 +23,7 @@ export function renderMain(c) {
   }
   for (const f of c.park.features) if (f.properties.kind === 'boundary')
     add('park', `<path d="${V.path(f)}" fill="none" stroke="${col.boundary}" stroke-opacity=".9" stroke-width="2.6" stroke-dasharray="${dash([0.6, 2.6], 2.6)}" stroke-linecap="round"/>`);
+  for (const f of c.areaLabels.features) add('park', areaLabel(f, V.p));
   // roads
   const net = c.network.features;
   for (const f of net.filter(f => f.properties.cls === 'paved')) { const d = V.path(f); add('roads', `<path d="${d}" class="ln" stroke="#fff" stroke-width="14"/><path d="${d}" class="ln" stroke="#333" stroke-width="10"/><path d="${d}" class="ln" stroke="#fff" stroke-width="2.2" stroke-dasharray="${dash([6, 5], 2.2)}" stroke-linecap="butt"/>`); }
@@ -63,7 +64,7 @@ export function renderMain(c) {
     const layer = p.kind === 'station_number' || p.kind === 'station_label' ? 'stations' : p.kind === 'zoombox_label' ? 'zoom' : 'labels';
     if (p.kind === 'station_label' || p.kind === 'poi_label') continue; // replaced by the label templates below
     if (p.kind === 'station_number') continue; // numbers are part of the station marker template
-    add(layer === 'stations' ? 'stationLabels' : (p.text === 'Private' || p.text === 'State Park') ? 'park' : layer, lead + textBlock(x, y, p));
+    add(layer === 'stations' ? 'stationLabels' : layer, lead + textBlock(x, y, p));
   }
   // standard station + POI label templates
   const rad = (k: string) => (k === 'S/F' ? Math.sqrt(2900 * 1.8) / 2 : c.stations.stations[k].spectator ? Math.sqrt(2000 * 1.8) / 2 : Math.sqrt(2000) / 2);

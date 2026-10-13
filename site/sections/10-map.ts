@@ -6,6 +6,8 @@ import type { Ctx } from '../lib/types';
 import { hoverData } from '../lib/hover';
 // Print = US Letter portrait, 2 pages: p1 the main map, p2 the side panel (header, mini maps, timelines, profile).
 // Panels keep their 36x24 in design-sheet geometry (inches) and each page is uniformly zoomed to fit the printable area.
+/** live site; links in the PDF must be absolute */
+export const SITE_URL = 'https://trail-roots.github.io/big-bend-ultra-map/';
 export const LETTER = { w: 8.5, h: 11, margin: 0.4 };
 type Box = [number, number, number, number]; // sheet fractions [x0, y0 (from bottom), w, h]
 const inch = (b: Box) => ({ l: b[0] * 36, t: (1 - b[1] - b[3]) * 24, w: b[2] * 36, h: b[3] * 24 });
@@ -19,7 +21,7 @@ export function render(c: Ctx) {
   const L = c.layout, hdr = L.header, st = L.strips;
   const toggles = mainLayers.map(([k, lab, on]) => `<label><input type="checkbox" data-layer="${k}"${on ? ' checked' : ''}> ${lab}</label>`).join('')
     + `<span class="sub">${c.courses.order.map(k => `<label class="ck" style="--c:${c.courses.colors[k]}"><input type="checkbox" data-course="${k}" checked> ${k}</label>`).join('')}</span>`;
-  const minis = c.courses.order.map(k => `<figure class="minibox" id="pb-m${k}">${renderMini(c, k)}<figcaption class="ui minilinks">${c.courses.courses[k].stravaUrl ? `<a href="${esc(c.courses.courses[k].stravaUrl)}" target="_blank" rel="noopener">Strava route</a>` : ''}<a href="${esc(c.courses.courses[k].gpx)}" download>Download GPX</a></figcaption></figure>`).join('');
+  const minis = c.courses.order.map(k => `<figure class="minibox" id="pb-m${k}">${renderMini(c, k)}<figcaption class="minilinks">${c.courses.courses[k].stravaUrl ? `<a href="${esc(c.courses.courses[k].stravaUrl)}" target="_blank" rel="noopener" title="${k} route on Strava">Strava</a>` : ''}<a href="${SITE_URL}${esc(c.courses.courses[k].gpx)}" download title="Download the ${k} GPX"><svg viewBox="0 0 10 10" aria-hidden="true"><path d="M5 1v5.2M2.6 4.2 5 6.6l2.4-2.4M1.5 8.6h7" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>.GPX</a></figcaption></figure>`).join('');
   const stripBox = [st.rx, st.top - 5 * st.rh, st.w, 5 * st.rh];
   const evb = L.elev, evBox = [evb[0], evb[1] - 40 / SHEET.h, evb[2], evb[3] + 40 / SHEET.h];
   const notice = hdr[2].text.split('\n');

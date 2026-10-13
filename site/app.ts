@@ -30,7 +30,10 @@ if (hdEl && prof) {
   const hide = () => { pg.style.display = 'none'; all().forEach((q) => (q.g.style.display = 'none')); };
   const move = (ev: PointerEvent) => {
     const ctm = prof.getScreenCTM(); if (!ctm) return;
-    const p = new DOMPoint(ev.clientX, ev.clientY).matrixTransform(ctm.inverse()), mile = x0 + (p.x / W) * (x1 - x0);
+    const p = new DOMPoint(ev.clientX, ev.clientY).matrixTransform(ctm.inverse());
+    show(x0 + (p.x / W) * (x1 - x0));
+  };
+  const show = (mile: number) => {
     if (mile < 0) return hide();
     // every course that reaches this mile gets a marker; shorter courses show nothing
     const hits = Object.entries(HD.courses).filter(([, c]) => mile <= c.dist).map(([k, c]) => ({ k, c, v: c.s[Math.max(0, Math.min(c.s.length - 1, Math.round(mile / 0.05)))] }));
@@ -55,9 +58,31 @@ if (hdEl && prof) {
     box.setAttribute('x', String(bb.x - 8)); box.setAttribute('y', String(bb.y - 5)); box.setAttribute('width', String(bb.width + 16)); box.setAttribute('height', String(bb.height + 10));
   };
   prof.style.touchAction = 'none'; prof.style.cursor = 'crosshair';
-  prof.addEventListener('pointermove', move); prof.addEventListener('pointerdown', move);
-  prof.addEventListener('pointerleave', (e) => { if (e.pointerType === 'mouse') hide(); });
-  prof.addEventListener('pointerup', (e) => { if (e.pointerType !== 'mouse') setTimeout(hide, 1500); });
+  // ---- auto-play: slow sweep 0 -> 100K finish, looping (web only; off for reduced motion; pause persisted) ----
+  const LOOP_S = 75, END = Math.max(...Object.values(HD.courses).map((c) => c.dist)), KEY = 'bbu-autoplay-paused';
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let paused = localStorage.getItem(KEY) === '1', user = false, t0 = 0, mile0 = 0, raf = 0, last = 0;
+  const running = () => !reduced && !paused && !user && !document.hidden && !matchMedia('print').matches;
+  const tick = (t: number) => {
+    raf = 0; if (!running()) return;
+    if (!t0) t0 = t - (mile0 / END) * LOOP_S * 1000;
+    const mile = (((t - t0) / 1000 / LOOP_S) % 1) * END; mile0 = mile;
+    if (t - last > 50) { show(mile); last = t; } // ~20 fps is plenty for a slow sweep
+    raf = requestAnimationFrame(tick);
+  };
+  const start = () => { if (!raf && running()) { t0 = 0; raf = requestAnimationFrame(tick); } };
+  const stop = () => { if (raf) cancelAnimationFrame(raf); raf = 0; };
+  const btn = document.createElement('button'); btn.type = 'button'; btn.className = 'autoplay ui';
+  const label = () => { btn.textContent = paused ? '▶ Play' : '❚❚ Pause'; btn.setAttribute('aria-label', paused ? 'Play elevation sweep' : 'Pause elevation sweep'); btn.setAttribute('aria-pressed', String(!paused)); };
+  if (!reduced) { label(); prof.parentElement!.appendChild(btn); }
+  btn.addEventListener('click', () => { paused = !paused; localStorage.setItem(KEY, paused ? '1' : '0'); label(); if (paused) { stop(); hide(); } else start(); });
+  prof.addEventListener('pointermove', move); prof.addEventListener('pointerdown', (e) => { user = true; stop(); move(e); });
+  prof.addEventListener('pointerenter', () => { user = true; stop(); });
+  prof.addEventListener('pointerleave', (e) => { if (e.pointerType === 'mouse') { hide(); user = false; start(); } });
+  prof.addEventListener('pointerup', (e) => { if (e.pointerType !== 'mouse') setTimeout(() => { hide(); user = false; start(); }, 1500); });
+  document.addEventListener('visibilitychange', () => (document.hidden ? stop() : start()));
+  addEventListener('beforeprint', () => { stop(); hide(); }); addEventListener('afterprint', start);
+  start();
 }
 
 // keep the main-map logo exactly the rendered size of the header logo above the mini maps

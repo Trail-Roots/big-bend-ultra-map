@@ -1,0 +1,89 @@
+{
+ "type": "FeatureCollection",
+ "features": [
+  {
+   "type": "Feature",
+   "properties": {
+    "area": "private:contrabando",
+    "text": "Private"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -103.882846,
+     29.344211
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "area": "private:waterhole",
+    "text": "Private"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -103.808971,
+     29.353559
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "area": "private:east",
+    "text": "Private"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -103.776799,
+     29.397688
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "area": "private:northeast",
+    "text": "Private"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -103.769054,
+     29.464105
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "area": "park:west",
+    "text": "Big Bend Ranch\nState Park"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -103.926333,
+     29.436193
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "area": "park:shutup",
+    "text": "Big Bend Ranch\nState Park"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -103.807775,
+     29.427891
+    ]
+   }
+  }
+ ]
+}

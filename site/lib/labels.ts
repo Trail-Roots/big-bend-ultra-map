@@ -65,3 +65,11 @@ export function poiLabel(f: Feature, p: (ll: [number, number]) => [number, numbe
   const [ax, ay] = q.target ? p(q.target) : [x, y];
   return `<g class="poilabel" data-poi="${esc(q.poi)}" data-ax="${f1(ax)}" data-ay="${f1(ay)}">${lead}${svg}</g>`;
 }
+
+/** area labels (Private, Big Bend Ranch State Park): one very subtle template; placements in content/area_labels.geojson */
+export const AREA_TPL = { size: 19, color: '#8a8a8a', opacity: 0.45, lead: 1.2, halo: 5 };
+export function areaLabel(f: Feature, p: (ll: [number, number]) => [number, number]) {
+  const T = AREA_TPL, [x, y] = p(f.geometry.coordinates), lines = String(f.properties.text).split('\n'), y0 = y - ((lines.length - 1) * T.size * T.lead) / 2;
+  const ts = lines.map((l, i) => `<tspan x="${f1(x)}" y="${f1(y0 + i * T.size * T.lead)}">${esc(l)}</tspan>`).join('');
+  return `<text class="arealabel f-serif" font-size="${T.size}" fill="${T.color}" opacity="${T.opacity}" font-style="italic" font-weight="400" text-anchor="middle" dominant-baseline="central" stroke="#ffffff" stroke-width="${T.halo}" paint-order="stroke" stroke-linejoin="round">${ts}</text>`;
+}
