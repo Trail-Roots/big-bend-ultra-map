@@ -28,7 +28,12 @@ export function viewProjection(view, W, H) {
       default: return geoPath(proj).digits(1)(f as any) || '';
     }
   };
-  return { proj, path, W, H, ppm: k, p: (ll) => proj(ll) };
+  /** Projected page-space polylines of a line feature (raw, unsimplified). */
+  const lines = (f: { geometry: { type: string; coordinates: any } }): [number, number][][] => {
+    const g = f.geometry, ls = g.type === 'LineString' ? [g.coordinates] : g.type === 'MultiLineString' ? g.coordinates : [];
+    return ls.filter(vis).map((l) => l.map((q) => proj(q) as [number, number]));
+  };
+  return { proj, path, lines, W, H, ppm: k, p: (ll) => proj(ll) };
 }
 export const ptsAttr = (P) => P.map(q => `${f1(q[0])},${f1(q[1])}`).join(' ');
 export const lineD = (P) => 'M' + P.map(q => `${f1(q[0])},${f1(q[1])}`).join('L');
@@ -106,4 +111,37 @@ export function leaderLine(ax: number, ay: number, bx: number, by: number, ra = 
   if (!d || d - ra - rb - 2 * L.gap < L.minLen) return '';
   const ux = (bx - ax) / d, uy = (by - ay) / d, s0 = ra + L.gap, s1 = rb + L.gap;
   return `<path class="leader" d="M${f1(ax + ux * s0)},${f1(ay + uy * s0)}L${f1(bx - ux * s1)},${f1(by - uy * s1)}" fill="none" stroke="${L.color}" stroke-width="${L.width}" stroke-linecap="round"/>`;
+}
+/** Chaikin corner-cutting (endpoints kept). */
+export function chaikin(P: [number, number][], iters = 2): [number, number][] {
+  for (let k = 0; k < iters && P.length > 2; k++) {
+    const Q: [number, number][] = [P[0]];
+    for (let i = 0; i < P.length - 1; i++) {
+      const [a, b] = [P[i], P[i + 1]];
+      if (i > 0) Q.push([a[0] * 0.75 + b[0] * 0.25, a[1] * 0.75 + b[1] * 0.25]);
+      if (i < P.length - 2) Q.push([a[0] * 0.25 + b[0] * 0.75, a[1] * 0.25 + b[1] * 0.75]);
+    }
+    Q.push(P[P.length - 1]); P = Q;
+  }
+  return P;
+}
+/** Merge a set of polylines (page space) into maximal continuous chains by joining shared endpoints, dropping exact duplicate lines. */
+export function mergeChains(L: [number, number][][], eps = 0.5): [number, number][][] {
+  const key = (q: [number, number]) => `${Math.round(q[0] / eps)},${Math.round(q[1] / eps)}`;
+  const seen = new Set<string>(); let lines = L.filter(l => l.length > 1).filter(l => { const k = l.map(key).join(';'), r = [...l].reverse().map(key).join(';'); if (seen.has(k) || seen.has(r)) return false; seen.add(k); return true; });
+  let merged = true;
+  while (merged) {
+    merged = false;
+    outer: for (let i = 0; i < lines.length; i++) for (let j = 0; j < lines.length; j++) {
+      if (i === j) continue;
+      const a = lines[i], b = lines[j], near = (p, q) => Math.hypot(p[0] - q[0], p[1] - q[1]) <= eps;
+      let m: [number, number][] | null = null;
+      if (near(a[a.length - 1], b[0])) m = a.concat(b.slice(1));
+      else if (near(a[a.length - 1], b[b.length - 1])) m = a.concat([...b].reverse().slice(1));
+      else if (near(a[0], b[b.length - 1])) m = b.concat(a.slice(1));
+      else if (near(a[0], b[0])) m = [...b].reverse().concat(a.slice(1));
+      if (m) { lines = lines.filter((_, k) => k !== i && k !== j).concat([m]); merged = true; break outer; }
+    }
+  }
+  return lines;
 }
