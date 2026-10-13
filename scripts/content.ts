@@ -2,6 +2,7 @@
 // Run: bun run content
 import fs from 'node:fs';
 import path from 'node:path';
+import { alongRoute, type ArrowsFile } from './lib/arrows';
 import { type XY, merc, unmerc, ll, r6, hyp, cumlen, interpolate, simplify, simplifyTP, chaikin, hav, interp, fc } from './lib/geo';
 
 const ROOT = path.resolve(import.meta.dir, '..');
@@ -109,13 +110,23 @@ const ampm = (t: string) => t.toLowerCase().replace(' am', 'a').replace(' pm', '
 
 // ---------- build ----------
 fs.rmSync(OUT, { recursive: true, force: true });
+const RT = {} as Record<Course, XY[]>, RMI = {} as Record<Course, number[]>;
+/** sheet mileage at every route vertex: route length remapped piecewise-linearly so station passes land on the sheet miles */
+function routeMiles(k: Course, rt: XY[]) {
+  const cum = cumlen(rt).map((v) => v / 1609.34), mid = S[k].slice(1, -1);
+  const kn: [number, number][] = [[0, 0], [cum[cum.length - 1], S[k][S[k].length - 1][1]]];
+  for (const lab of new Set(mid.map((x) => x[0]))) { const mis = mid.filter((x) => x[0] === lab).map((x) => x[1]); passes(rt, merc(SLL[lab]), mis.length).idx.forEach((i, j) => kn.push([cum[i], mis[j]])); }
+  kn.sort((a, b) => a[0] - b[0]);
+  return cum.map((v) => interp(v, kn.map((a) => a[0]), kn.map((a) => a[1])));
+}
 const G = {} as Record<Course, { lat: number[]; lon: number[]; d: number[]; el: number[] }>;
 for (const k of ORDER) {
   const p = gpx(k);
   const d = [0]; for (let i = 1; i < p.length; i++) d.push(d[i - 1] + hav([p[i - 1].lat, p[i - 1].lon], [p[i].lat, p[i].lon]));
   G[k] = { lat: p.map((q) => q.lat), lon: p.map((q) => q.lon), d, el: p.map((q) => q.ele ?? 0) };
   const dist = S[k][S[k].length - 1][1];
-  w(`courses/${k}.geojson`, fc([{ type: 'Feature', properties: { course: k, color: C[k], distance_mi: dist }, geometry: { type: 'LineString', coordinates: ll(cleanCourse(p)) } }]));
+  const rt = cleanCourse(p); RT[k] = rt; RMI[k] = routeMiles(k, rt);
+  w(`courses/${k}.geojson`, fc([{ type: 'Feature', properties: { course: k, color: C[k], distance_mi: dist, mi: RMI[k].map((v) => Math.round(v * 1e4) / 1e4) }, geometry: { type: 'LineString', coordinates: ll(rt) } }]));
 }
 
 // station hours
@@ -175,14 +186,15 @@ for (const [xs, y, lab] of grp) {
 }
 w('profiles/callouts.json', { callouts, rincon });
 
-// arrows: frozen approved set (no auto-placement). Each entry = [axes bounds, 3-pt chevron in EPSG:3857, lw, z]
+// direction arrows: sources/arrows.json lists mile markers per course and map (show true/false); geometry comes from the route
 const layout = rj('curated/layout.json');
-const views = Object.entries(layout.views as Record<string, { fig: number[] }>);
-const arrows = (rj('arrows_approved.json') as [number[], XY[], number, number][]).map(([bd, p, lw]) => {
-  const map = views.reduce((b, [k, v]) => { const s = v.fig.reduce((a, u, i) => a + Math.abs(u - bd[i]), 0); return s < b[1] ? [k, s] as [string, number] : b; }, ['', Infinity] as [string, number])[0];
-  const tip = p[1], P = p.map(([x, y]) => [tip[0] + (x - tip[0]) * 1.45, tip[1] + (y - tip[1]) * 1.45] as XY);
-  return { type: 'Feature', properties: { map, lw_pt: lw * 1.45, outline_pt: lw * 1.45 + 8.5 }, geometry: { type: 'LineString', coordinates: ll(P) } };
-});
+const AR = rj('arrows.json') as ArrowsFile;
+const arrows: unknown[] = [];
+for (const k of ORDER) for (const [map, list] of Object.entries(AR.courses[k] ?? {})) for (const m of list) {
+  if (!m.show) continue;
+  const { at, dir } = alongRoute(RT[k], RMI[k], m.mile);
+  arrows.push({ type: 'Feature', properties: { map, course: k, mile: m.mile, size_pt: AR.size_pt[map === 'main' ? 'main' : 'mini'] }, geometry: { type: 'LineString', coordinates: ll([[at[0] - dir[0] * 20, at[1] - dir[1] * 20], at]) } });
+}
 w('arrows.geojson', fc(arrows));
 
 // park: boundary ways / polygon / inholdings, simplified (DP 2 m in Web Mercator ≈ 1.7 m ground — below one print pixel)

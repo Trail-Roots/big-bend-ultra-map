@@ -1,11 +1,13 @@
 import { stationLabel, poiLabel } from './labels';
-import { SHEET, viewProjection, esc, f1, lineD, dash, STYLE, station, textBlock } from './util';
-// user-toggleable layers (access styles, arrows and aid stations are always shown)
+import { poiDot, SHEET, viewProjection, esc, f1, lineD, dash, STYLE, station, textBlock } from './util';
+// user-toggleable layers (off-course roads, access styles, arrows and aid stations are always shown)
 const LAYERS: [string, string, boolean][] = [
-  ['topo', 'Topo shading', true], ['park', 'Park boundary', true], ['roads', 'Roads (off-course)', true],
+  ['topo', 'Topo shading', true], ['park', 'Park boundary', true],
   ['courses', 'Routes per course', false], ['zoom', 'Zoom boxes', true], ['pois', 'POIs', true], ['labels', 'Labels', true],
 ];
 export const mainLayers = LAYERS;
+/** logo width in sheet pt — identical to the header logo above the mini maps (1.45 in) */
+export const LOGO_PT = 1.45 * 72;
 export function hillImage(c, key, V) {
   const h = c.layout.hillshade[key], [bx0, by0, bx1, by1] = h.bounds_3857, k = V.ppm, x0 = c.layout.views[key].x[0], y1 = c.layout.views[key].y[1];
   return `<image href="${h.file}" x="${f1((bx0 - x0) * k)}" y="${f1((y1 - by1) * k)}" width="${f1((bx1 - bx0) * k)}" height="${f1((by1 - by0) * k)}" preserveAspectRatio="none"/>`;
@@ -47,10 +49,10 @@ export function renderMain(c) {
   // stations
   for (const k of c.stations.order) {
     const s = c.stations.stations[k], [x, y] = V.p(s.lonlat);
-    add('stations', station(x, y, k, s.spectator, k === 'S/F' ? { s: 2900, fs: 34, colors: col, numberText: false } : { colors: col, numberText: false }));
+    add('stations', station(x, y, k, s.spectator, k === 'S/F' ? { s: 2900, fs: 34, colors: col } : { colors: col }));
   }
   // POIs
-  for (const f of c.pois.features) if (f.properties.kind === 'rincon') { const [x, y] = V.p(f.geometry.coordinates); add('pois', `<circle cx="${f1(x)}" cy="${f1(y)}" r="${f1(Math.sqrt(420) / 2)}" fill="#fff" stroke="${col.ink}" stroke-width="4"/>`); }
+  for (const f of c.pois.features) if (f.geometry.type === 'Point') { const [x, y] = V.p(f.geometry.coordinates); add('pois', poiDot(x, y)); }
   // labels
   for (const f of c.labels.features) {
     const p = f.properties;
@@ -60,29 +62,35 @@ export function renderMain(c) {
     if (p.leader) lead = `<path d="${lineD(p.leader.coords.map(V.p))}" fill="none" stroke="${p.leader.color}" stroke-width="${p.leader.lw}"/>`;
     const layer = p.kind === 'station_number' || p.kind === 'station_label' ? 'stations' : p.kind === 'zoombox_label' ? 'zoom' : p.kind === 'poi_label' ? 'pois' : 'labels';
     if (p.kind === 'station_label' || p.kind === 'poi_label') continue; // replaced by the label templates below
-    if (p.kind === 'station_number') { add('stations', `<text x="${f1(x)}" y="${f1(y)}" class="stnum" font-size="${p.fs}" text-anchor="middle" dominant-baseline="central">${esc(p.text)}</text>`); continue; }
-    add(layer === 'stations' ? 'stationLabels' : layer, lead + textBlock(x, y, p));
+    if (p.kind === 'station_number') continue; // numbers are part of the station marker template
+    add(layer === 'stations' ? 'stationLabels' : (p.text === 'Private' || p.text === 'State Park') ? 'park' : layer, lead + textBlock(x, y, p));
   }
   // standard station + POI label templates
   const rad = (k: string) => (k === 'S/F' ? Math.sqrt(2900 * 1.8) / 2 : c.stations.stations[k].spectator ? Math.sqrt(2000 * 1.8) / 2 : Math.sqrt(2000) / 2);
   for (const f of c.stationLabels.features) add('stationLabels', stationLabel(c, f, V.p, rad));
-  for (const f of c.poiLabels.features) add('pois', poiLabel(f, V.p, f.properties.poi === 'rincon' ? Math.sqrt(420) / 2 : 4));
+  for (const f of c.poiLabels.features) add('pois', poiLabel(f, V.p, 10.2));
   // frame furniture: scale bar, north arrow, logo, legend
   const sb = c.layout.scalebar, sx = (sb.x - c.layout.views.main.x[0]) * V.ppm, sy = (c.layout.views.main.y[1] - sb.y) * V.ppm, m5 = sb.m5 * V.ppm, tick = H * 0.006;
   let fur = `<g class="scalebar" stroke="${col.ink}" stroke-width="3"><path d="M${f1(sx)},${f1(sy)}h${f1(m5)}M${f1(sx)},${f1(sy)}v${f1(-tick)}M${f1(sx + m5 / 2)},${f1(sy)}v${f1(-tick)}M${f1(sx + m5)},${f1(sy)}v${f1(-tick)}" fill="none"/></g>`;
   fur += `<text x="${f1(sx)}" y="${f1(sy + H * .008)}" font-size="26" text-anchor="middle" dominant-baseline="hanging" fill="${col.ink}">0</text><text x="${f1(sx + m5)}" y="${f1(sy + H * .008)}" font-size="26" text-anchor="middle" dominant-baseline="hanging" fill="${col.ink}">5m</text>`;
-  const nx = W * 0.06, ny = H * 0.05;
-  fur += `<g class="north"><line x1="${f1(nx)}" y1="${f1(ny + H * .03)}" x2="${f1(nx)}" y2="${f1(ny - H * .02)}" stroke="${col.ink}" stroke-width="3"/><path d="M${f1(nx - 9)},${f1(ny - H * .02 + 4)}L${f1(nx)},${f1(ny - H * .03)}L${f1(nx + 9)},${f1(ny - H * .02 + 4)}z" fill="${col.ink}"/><text x="${f1(nx)}" y="${f1(ny + H * .045)}" class="f-serif" font-size="30" text-anchor="middle" fill="${col.ink}">N</text></g>`;
-  fur += `<a href="https://trailroots.com/big-bend-ultra" target="_blank" rel="noopener"><image href="logo_ink_crop.png" x="${f1(W * 0.08)}" y="${f1(H * (1 - 0.985))}" width="${f1(W * 0.1)}" height="${f1(H * 0.1)}" preserveAspectRatio="xMidYMid meet"/></a>`;
+  // north arrow: small and subtle
+  const nx = W * 0.05, ny = H * 0.04, na = H * 0.012, nc = col.mute;
+  fur += `<g class="north" opacity=".8"><line x1="${f1(nx)}" y1="${f1(ny + na)}" x2="${f1(nx)}" y2="${f1(ny - na)}" stroke="${nc}" stroke-width="1.6"/><path d="M${f1(nx - 5)},${f1(ny - na + 6)}L${f1(nx)},${f1(ny - na - 3)}L${f1(nx + 5)},${f1(ny - na + 6)}z" fill="${nc}"/><text x="${f1(nx)}" y="${f1(ny + na + 14)}" class="f-serif" font-size="17" text-anchor="middle" fill="${nc}">N</text></g>`;
+  fur += `<a href="https://trailroots.com/big-bend-ultra" target="_blank" rel="noopener"><image class="maplogo" href="logo_ink_crop.png" x="${f1(W * 0.08)}" y="${f1(H * (1 - 0.985))}" width="${f1(LOGO_PT)}" height="${f1(LOGO_PT * 776 / 730)}" preserveAspectRatio="xMidYMid meet"/></a>`;
   fur += legend(c, W, H);
   const order = ['topo', 'park', 'roads', 'access', 'courses', 'zoom', 'arrows', 'stations', 'pois', 'stationLabels', 'labels'];
   const vis = Object.fromEntries(LAYERS.map(l => [l[0], l[2]]));
   const grp = order.map(k => `<g class="layer" data-layer="${k}"${(vis[k] === false) ? ' style="display:none"' : ''}>${g[k] || ''}</g>`).join('\n');
   return `<svg class="mainmap" viewBox="0 0 ${f1(W)} ${f1(H)}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Big Bend Ultra main course map"><defs><clipPath id="mclip"><rect width="${f1(W)}" height="${f1(H)}"/></clipPath></defs><rect width="${f1(W)}" height="${f1(H)}" fill="#fff"/><g clip-path="url(#mclip)">${grp}</g>${fur}<rect width="${f1(W)}" height="${f1(H)}" fill="none" stroke="#000" stroke-width="1.6"/></svg>`;
 }
+/** angular arrowhead (dart) centred on the route point, pointing along the route */
 export function chevron(f, V, col) {
-  const P = f.geometry.coordinates.map(V.p), d = lineD(P), p = f.properties;
-  return `<path d="${d}" fill="none" stroke="${col.ink}" stroke-width="${f1(p.outline_pt)}" stroke-linecap="round" stroke-linejoin="miter"/><path d="${d}" fill="none" stroke="#fff" stroke-width="${f1(p.lw_pt)}" stroke-linecap="round" stroke-linejoin="miter"/>`;
+  const [b, c] = f.geometry.coordinates.map(V.p), p = f.properties, dx = c[0] - b[0], dy = c[1] - b[1], n0 = Math.hypot(dx, dy) || 1;
+  const v = [dx / n0, dy / n0], n = [-v[1], v[0]], h = p.size_pt / Math.hypot(1.1, 1);
+  const T = [c[0] + v[0] * 0.55 * h, c[1] + v[1] * 0.55 * h], P = (a, s1, s2) => [a[0] + v[0] * s1 + n[0] * s2, a[1] + v[1] * s1 + n[1] * s2];
+  const pts = [T, P(T, -1.1 * h, h), P(T, -0.6 * h, 0), P(T, -1.1 * h, -h)];
+  const sw = p.map === 'main' ? 2.6 : 2.2;
+  return `<path class="arrow" d="M${pts.map((q) => `${f1(q[0])},${f1(q[1])}`).join('L')}Z" fill="#fff" stroke="${col.ink}" stroke-width="${sw}" stroke-linejoin="miter" stroke-miterlimit="8"/>`;
 }
 let cid = 0;
 function curvedLabel(f, V, col) {
@@ -108,7 +116,7 @@ function legend(c, W, H) {
     else if (kk === 'zt') s += `<path d="${L}" stroke="${col.ink}" stroke-width="6" stroke-dasharray="${whole(6, [11.7, .83])}"/>`;
     else if (kk === 'z4') s += `<path d="${L}" stroke="${col.ink}" stroke-width="6" stroke-dasharray="${whole(6, [7.3, .7])}"/><path d="${L}" stroke="#fff" stroke-width="1.9"/>`;
     else if (kk === 'zn') s += `<path d="${L}" stroke="${col.ink}" stroke-width="6" stroke-dasharray="${whole(6, [1.17, .5])}"/>`;
-    else if (kk === 'rin') s += `<circle cx="${f1(x + sw / 2)}" cy="${f1(y)}" r="${f1(Math.sqrt(300) / 2)}" fill="#fff" stroke="${col.ink}" stroke-width="3"/>`;
+    else if (kk === 'rin') s += poiDot(x + sw / 2, y, 0.85);
     else if (kk === 'ring') s += station(x + sw / 2, y, '', true, { s: 420, badge: false, colors: col });
     else if (kk === 'aid') s += station(x + sw / 2, y, '', false, { s: 420, colors: col });
     else if (kk.startsWith('st')) { const k = kk.slice(2); s += station(x + sw / 2, y, k, c.stations.stations[k].spectator, { s: 520, fs: 17, badge: false, colors: col }); }

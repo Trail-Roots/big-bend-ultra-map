@@ -3,6 +3,7 @@ import { renderMini, renderStrips, renderProfile } from '../lib/panels';
 import { esc, SHEET } from '../lib/util';
 export const meta = { path: 'index.html', title: 'Course & Access Map', nav: 'Map' };
 import type { Ctx } from '../lib/types';
+import { hoverData } from '../lib/hover';
 // Print = US Letter portrait, 2 pages: p1 the main map, p2 the side panel (header, mini maps, timelines, profile).
 // Panels keep their 36x24 in design-sheet geometry (inches) and each page is uniformly zoomed to fit the printable area.
 export const LETTER = { w: 8.5, h: 11, margin: 0.25 };
@@ -19,10 +20,11 @@ export function render(c: Ctx) {
   const stripBox = [st.rx, st.top - 5 * st.rh, st.w, 5 * st.rh];
   const evb = L.elev, evBox = [evb[0], evb[1] - 40 / SHEET.h, evb[2], evb[3] + 40 / SHEET.h];
   const notice = hdr[2].text.split('\n');
-  const mainIn = inch(L.views.main.fig), z1 = fit(mainIn.w, mainIn.h);
+  const mainIn = inch(L.views.main.fig), z0 = fit(mainIn.w, mainIn.h);
   const side: [string, Box][] = [['pb-hdr', [L.logo[0], L.logo[1], 0.51, L.logo[3]]], ...c.courses.order.map((k) => [`pb-m${k}`, L.views[k].fig] as [string, Box]), ['pb-strips', stripBox as Box], ['pb-prof', evBox as Box]];
   const si = side.map(([id, b]) => [id, inch(b)] as const), ox = Math.min(...si.map(([, b]) => b.l)), oy = Math.min(...si.map(([, b]) => b.t));
-  const sw = Math.max(...si.map(([, b]) => b.l + b.w)) - ox, sh = Math.max(...si.map(([, b]) => b.t + b.h)) - oy + 0.5, z2 = fit(sw, sh);
+  const sw = Math.max(...si.map(([, b]) => b.l + b.w)) - ox, sh = Math.max(...si.map(([, b]) => b.t + b.h)) - oy + 0.5;
+  const z1 = Math.min(z0, fit(sw, sh)), z2 = z1; // same zoom on both pages => map logo prints the same size as the header logo
   const px = (b: { l: number; t: number; w: number; h: number }) => `{left:${(b.l - ox).toFixed(3)}in;top:${(b.t - oy).toFixed(3)}in;width:${b.w.toFixed(3)}in;height:${b.h.toFixed(3)}in}`;
   const css = `@media print{#pb-main{width:${mainIn.w.toFixed(3)}in;height:${mainIn.h.toFixed(3)}in;zoom:${z1.toFixed(4)}}`
     + `.side{width:${sw.toFixed(3)}in;height:${sh.toFixed(3)}in;zoom:${z2.toFixed(4)}}${si.map(([id, b]) => `#${id}${px(b)}`).join('')}}`;
@@ -41,6 +43,7 @@ export function render(c: Ctx) {
     <div class="profilebox" id="pb-prof">${renderProfile(c)}</div>
     <div class="printfoot">trailroots.com/big-bend-ultra</div>
   </aside>
+  <script type="application/json" id="hoverdata">${JSON.stringify(hoverData(c))}</script>
   <a class="footlink" href="https://trailroots.com/big-bend-ultra" target="_blank" rel="noopener">trailroots.com/big-bend-ultra</a>
 </div>`;
 }

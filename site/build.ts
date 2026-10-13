@@ -2,6 +2,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import type { Ctx, Page } from './lib/types';
+import { markerDefs } from './lib/util';
 
 const here = import.meta.dir, root = path.resolve(here, '..');
 const C = path.join(root, 'content'), D = path.join(root, 'dist');
@@ -22,7 +23,7 @@ const tpl = fs.readFileSync(path.join(here, 'template.html'), 'utf8');
 for (const p of pages) {
   const depth = p.meta.path.split('/').length - 1, base = depth ? '../'.repeat(depth) : './';
   const nav = pages.map((q) => `<a href="${base}${q.meta.path.replace(/index\.html$/, '')}"${q === p ? ' aria-current="page"' : ''}>${q.meta.nav}</a>`).join('');
-  const html = tpl.replace('{{base}}', base).replace(/{{title}}/g, p.meta.title).replace('{{nav}}', nav).replace('{{body}}', p.render(ctx)).replace(/{{year}}/g, '2027');
+  const html = tpl.replace('{{base}}', base).replace(/{{title}}/g, p.meta.title).replace('{{nav}}', nav).replace('{{defs}}', markerDefs(ctx.colors)).replace('{{body}}', p.render(ctx)).replace(/{{year}}/g, '2027');
   const out = path.join(D, p.meta.path); fs.mkdirSync(path.dirname(out), { recursive: true }); fs.writeFileSync(out, html);
   console.log('page', p.meta.path, (html.length / 1024).toFixed(0) + ' KB');
 }

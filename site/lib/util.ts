@@ -45,17 +45,31 @@ export const STYLE = {
     '4x4': { lw: 3, pat: [8, 0.8], color: '#8f8a82', rail: 0.7 },
   },
 };
-export function station(x, y, lab, spec, { s = 2000, fs = 28, badge = true, colors, numberText = true }) {
-  const r = Math.sqrt(s) / 2, out = [];
-  if (spec) { const lw = Math.max(2.5, s / 320); out.push(`<circle cx="${f1(x)}" cy="${f1(y)}" r="${f1(Math.sqrt(s * 1.8) / 2)}" fill="#fff" stroke="${colors.ring}" stroke-width="${lw}"/>`); }
-  out.push(`<circle cx="${f1(x)}" cy="${f1(y)}" r="${f1(r)}" fill="${colors.ink}" stroke="${colors.cream}" stroke-width="${Math.max(1.5, s / 700)}"/>`);
-  if (numberText && lab) out.push(`<text x="${f1(x)}" y="${f1(y)}" class="stnum" font-size="${lab.length === 1 ? fs : f1(fs * 0.6)}" text-anchor="middle" dominant-baseline="central">${esc(lab)}</text>`);
-  if (badge) {
-    const d = r * 0.95, bx = x + d, by = y - d, br = Math.sqrt(s * 0.33) / 2, pl = Math.sqrt(s * 0.11) / 2, t = pl * 0.36;
-    out.push(`<g class="badge"><circle cx="${f1(bx)}" cy="${f1(by)}" r="${f1(br)}" fill="${colors.aid_red}" stroke="#fff" stroke-width="${f1(Math.max(1.2, s / 1300))}"/><path d="M${f1(bx - pl)},${f1(by - t)}h${f1(pl - t)}v${f1(-(pl - t))}h${f1(2 * t)}v${f1(pl - t)}h${f1(pl - t)}v${f1(2 * t)}h${f1(-(pl - t))}v${f1(pl - t)}h${f1(-2 * t)}v${f1(-(pl - t))}h${f1(-(pl - t))}z" fill="#fff"/></g>`);
-  }
-  return out.join('');
+// ---- shared marker symbols: one definition used by every map, the legend, strips and profile ----
+// Base size = matplotlib s=2000 (r ≈ 22.4 pt); <use> elements scale it about the exact coordinate.
+const BASE_S = 2000, BR = Math.sqrt(BASE_S) / 2;
+export function markerDefs(colors: Record<string, string>) {
+  const br = Math.sqrt(BASE_S * 0.33) / 2, pl = Math.sqrt(BASE_S * 0.11) / 2, t = pl * 0.36, d = BR * 0.95;
+  const plus = `M${f1(d - pl)},${f1(-d - t)}h${f1(pl - t)}v${f1(-(pl - t))}h${f1(2 * t)}v${f1(pl - t)}h${f1(pl - t)}v${f1(2 * t)}h${f1(-(pl - t))}v${f1(pl - t)}h${f1(-2 * t)}v${f1(-(pl - t))}h${f1(-(pl - t))}z`;
+  return `<svg class="defs" width="0" height="0" style="position:absolute" aria-hidden="true"><defs>`
+    + `<symbol id="mk-dot" overflow="visible"><circle r="${f1(BR)}" fill="${colors.ink}" stroke="${colors.cream}" stroke-width="2.9"/></symbol>`
+    + `<symbol id="mk-ring" overflow="visible"><circle r="${f1(Math.sqrt(BASE_S * 1.8) / 2)}" fill="#fff" stroke="${colors.ring}" stroke-width="6.25"/></symbol>`
+    + `<symbol id="mk-badge" overflow="visible"><circle cx="${f1(d)}" cy="${f1(-d)}" r="${f1(br)}" fill="${colors.aid_red}" stroke="#fff" stroke-width="1.54"/><path d="${plus}" fill="#fff"/></symbol>`
+    + `<symbol id="mk-poi" overflow="visible"><circle r="10.2" fill="#fff" stroke="${colors.ink}" stroke-width="4"/></symbol>`
+    + `</defs></svg>`;
 }
+/** station marker centred exactly on (x, y): optional spectator ring, dot, number, aid badge — all from the shared symbols */
+export function station(x, y, lab, spec, { s = 2000, fs = 28, badge = true, colors = null as any, numberText = true }) {
+  const k = Math.sqrt(s / BASE_S), sc = `transform="scale(${k.toFixed(4)})"`;
+  let out = `<g class="marker" transform="translate(${f1(x)} ${f1(y)})">`;
+  if (spec) out += `<use href="#mk-ring" ${sc}/>`;
+  out += `<use href="#mk-dot" ${sc}/>`;
+  if (numberText && lab) out += `<text class="stnum" font-size="${lab.length === 1 ? fs : f1(fs * 0.6)}" text-anchor="middle" dominant-baseline="central">${esc(lab)}</text>`;
+  if (badge) out += `<use href="#mk-badge" ${sc}/>`;
+  return out + '</g>';
+}
+/** POI dot (Rincon, Sauceda, …) centred on (x, y) */
+export const poiDot = (x: number, y: number, scale = 1) => `<use class="marker" href="#mk-poi" transform="translate(${f1(x)} ${f1(y)}) scale(${scale})"/>`;
 /** Text block centred on (x,y) (matplotlib bbox centre), honouring ha for multi-line alignment. */
 export function textBlock(x, y, p, cls = '') {
   const lines = String(p.text).split('\n'), fs = p.fs, lh = fs * (p.linespacing || 1.2) * 1.0;

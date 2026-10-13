@@ -1,9 +1,27 @@
 import { SHEET, viewProjection, esc, f1, lineD, dash, station } from './util';
 import { hillImage, chevron } from './mainmap';
+/** '5:00 AM' -> '5a', '8:30 AM' -> '8:30a' (minutes only when non-zero) */
+export const startShort = (t: string) => { const [hm, ap] = t.split(' '), [h, m] = hm.split(':'); return `${Number(h)}${m === '00' ? '' : ':' + m}${ap === 'PM' ? 'p' : 'a'}`; };
+// monochrome starting-pistol glyph, 16 x 12 units, muzzle to the left
+const GUN = 'M0,1.2h11.2l1-1.2h2.4v1.2h1.4v3.4h-4.2l-1.6,1.6v.4h-2.2l-.4-.9h-1.3v-.9h1.9l-.6-1.2H0zM9.3,4.6h2.7l1.4,7.4h-3.4l-.9-4.4z M7.6,4.6v2.4';
+/** bib template: course on top, white pill with pistol + start time; sized from text so nothing touches the edges */
+export function bib(k: string, start: string, cc: string, W: number, H: number, col: Record<string, string>) {
+  const pad = 8, fsTop = 26, fsT = 15, tw = (t: string, fs: number) => t.length * fs * 0.64;
+  const t = startShort(start), gw = 16 * (fsT / 13), gh = 12 * (fsT / 13), gap = 4;
+  const pillW = gw + gap + tw(t, fsT) + 2 * 6, pillH = fsT + 8;
+  const bw = Math.max(tw(k, fsTop) + 2 * pad, pillW + 2 * 5), bh = pad + fsTop + 6 + pillH + 5;
+  const bx = W * 0.97 - bw, by = H * 0.03, px = bx + (bw - pillW) / 2, py = by + bh - 5 - pillH;
+  const gx = px + 6, gy = py + (pillH - gh) / 2, sc = fsT / 13;
+  return `<g class="bib"><rect x="${f1(bx)}" y="${f1(by)}" width="${f1(bw)}" height="${f1(bh)}" rx="7" fill="${cc}"/>`
+    + `<text x="${f1(bx + bw / 2)}" y="${f1(by + pad + fsTop / 2)}" font-size="${fsTop}" font-weight="700" fill="#fff" text-anchor="middle" dominant-baseline="central">${k}</text>`
+    + `<rect x="${f1(px)}" y="${f1(py)}" width="${f1(pillW)}" height="${f1(pillH)}" rx="4" fill="#fff"/>`
+    + `<path d="${GUN}" transform="translate(${f1(gx)} ${f1(gy)}) scale(${sc.toFixed(3)})" fill="${col.ink}" stroke="${col.ink}" stroke-width=".3"><title>start time</title></path>`
+    + `<text x="${f1(gx + gw + gap)}" y="${f1(py + pillH / 2)}" font-size="${fsT}" font-weight="700" fill="${col.ink}" dominant-baseline="central"><title>start time</title>${t}</text></g>`;
+}
 const short = t => t.toLowerCase().replace(' am', 'a').replace(' pm', 'p');
 export function renderMini(c, k) {
   const view = c.layout.views[k], W = view.fig[2] * SHEET.w, H = view.fig[3] * SHEET.h, V = viewProjection(view, W, H), col = c.colors, O = c.courses.order;
-  const lw = 0.4; let s = hillImage(c, k, V);
+  const lw = 0.4; let s = `<g class="topo">${hillImage(c, k, V)}</g>`;
   for (const f of c.network.features.filter(f => f.properties.cls === 'paved')) { const d = V.path(f); s += `<path d="${d}" class="ln" stroke="#fff" stroke-width="${14 * lw}"/><path d="${d}" class="ln" stroke="#333" stroke-width="${10 * lw}"/><path d="${d}" class="ln" stroke="#fff" stroke-width="${f1(2.2 * lw)}" stroke-dasharray="${dash([6, 5], 2.2 * lw)}" stroke-linecap="butt"/>`; }
   for (const f of c.network.features.filter(f => f.properties.cls === 'connector')) { const d = V.path(f); s += `<path d="${d}" class="ln" stroke="${col.cream}" stroke-width="${12 * lw}" stroke-linecap="butt"/><path d="${d}" class="ln" stroke="#000" stroke-width="${7 * lw}"/>`; }
   for (const q of O) s += `<path d="${V.path(c.courseGeo[q].features[0])}" class="ln" stroke="${col.minis_network}" stroke-width="5"/>`;
@@ -14,17 +32,15 @@ export function renderMini(c, k) {
   s += `<path d="${d}" class="ln" stroke="#fff" stroke-width="10.5"/><path d="${d}" class="ln" stroke="${c.courses.colors[k]}" stroke-width="7.5"/>`;
   if (nx) {
     const zb = c.zoom.features.find(f => f.properties.course === nx);
-    s += `<path d="${V.path(zb)}" fill="none" stroke="${zb.properties.color}" stroke-width="1.8" stroke-dasharray="${dash([4, 2], 1.8)}"/>`;
+    s += `<g class="zoombox"><path d="${V.path(zb)}" fill="none" stroke="${zb.properties.color}" stroke-width="1.8" stroke-dasharray="${dash([4, 2], 1.8)}"/>`;
     const ring = zb.geometry.coordinates[0], [bx, by] = V.p(ring[2]);
-    s += `<text x="${f1(bx)}" y="${f1(by - 2)}" font-size="14" font-weight="700" text-anchor="end" fill="${zb.properties.color}" stroke="${col.cream}" stroke-width="4" paint-order="stroke">${nx}</text>`;
+    s += `<text x="${f1(bx)}" y="${f1(by - 2)}" font-size="14" font-weight="700" text-anchor="end" fill="${zb.properties.color}" stroke="${col.cream}" stroke-width="4" paint-order="stroke">${nx}</text></g>`;
   }
   for (const f of c.arrows.features.filter(f => f.properties.map === k)) s += chevron(f, V, col);
   if (k === '10K') s += turnaround(c, V);
   for (const st of c.cutoffs[k]) { const [x, y] = V.p(c.stations.stations[st.station].lonlat); s += station(x, y, st.station, c.stations.stations[st.station].spectator, { s: 1280, fs: 23, badge: false, colors: col }); }
-  // bib
-  const bw = 78, bh = 66, bx = W * 0.97 - bw, by = H * 0.03, cc = c.courses.colors[k];
-  s += `<g class="bib"><rect x="${f1(bx)}" y="${f1(by)}" width="${bw}" height="${bh}" rx="7" fill="${cc}" stroke="${cc}" stroke-width="3"/><rect x="${f1(bx + 6)}" y="${f1(by + 40)}" width="${bw - 12}" height="21" rx="4" fill="#fff"/><text x="${f1(bx + bw / 2)}" y="${f1(by + 21)}" font-size="30" font-weight="700" fill="#fff" text-anchor="middle" dominant-baseline="central">${k}</text><text x="${f1(bx + bw / 2)}" y="${f1(by + 50.5)}" font-size="14" font-weight="700" fill="${col.ink}" text-anchor="middle" dominant-baseline="central">${short(c.courses.courses[k].start)}</text></g>`;
-  return `<svg class="mini" viewBox="0 0 ${f1(W)} ${f1(H)}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${k} course map"><defs><clipPath id="mc${k}"><rect width="${f1(W)}" height="${f1(H)}"/></clipPath></defs><rect width="${f1(W)}" height="${f1(H)}" fill="#fff"/><g clip-path="url(#mc${k})">${s}</g><rect width="${f1(W)}" height="${f1(H)}" fill="none" stroke="#b8ae9c" stroke-width="1.6"/></svg>`;
+  s += bib(k, c.courses.courses[k].start, c.courses.colors[k], W, H, col);
+  return `<svg class="mini" data-mini="${k}" viewBox="0 0 ${f1(W)} ${f1(H)}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${k} course map"><defs><clipPath id="mc${k}"><rect width="${f1(W)}" height="${f1(H)}"/></clipPath></defs><rect width="${f1(W)}" height="${f1(H)}" fill="#fff"/><g clip-path="url(#mc${k})">${s}</g><rect width="${f1(W)}" height="${f1(H)}" fill="none" stroke="#b8ae9c" stroke-width="1.6"/></svg>`;
 }
 function turnaround(c, V) {
   const f = c.pois.features.find(f => f.properties.kind === 'turnaround'), [p, q] = f.geometry.coordinates.map(V.p), col = c.courses.colors['10K'];

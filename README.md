@@ -31,7 +31,7 @@ Steps can run separately: `bun run content`, `bun run site`, `bun run pdf`.
 | `sheet.csv` (official stations Google Sheet export) | `cutoffs.json`, `courses.json`, station hours in `stations.json` |
 | `logistics.kml` (Logistics My Map) | station positions |
 | `stel.json` | station elevations (m, SRTM 30 m, cached) |
-| `arrows_approved.json` | `arrows.geojson` — the frozen, approved 36 direction arrows (no auto-placement) |
+| `arrows.json` | `arrows.geojson`: direction-arrow mile markers per course and map on a 0.1 mi grid (`show` true/false + `reason`); position and heading come from the route at that mile. Markers are data only, never drawn as text. `scripts/seed-arrows.ts` re-seeds it from `arrows_approved.json` (the 36 arrows approved on the PDF) |
 | `curated/park.geojson` | `park.geojson`, simplified (DP 2 m) |
 | `curated/station_labels.geojson` | aid-station label position + `align` (left/right/center, default center); optional `name` (line breaks) and `location` line. Name/hours text comes from `stations.json` |
 | `curated/poi_labels.geojson` | POI labels (Rincon, Sauceda): `title`, `notes[]` (`distance: true` marks text hidden by the Distances toggle), `align`, leader `target` |
@@ -58,8 +58,8 @@ Station labels render the computed hours directly.
 * `lib/panels.ts` – mini maps, timeline strips, elevation profile (all SVG).
 * `lib/util.ts` – projection (Mercator fitted to the layout view windows), page-space path simplification, styles.
 
-Toggles: topo, park boundary, off-course roads, per-course routes, zoom boxes, POIs, labels, and Distances (hides every
-distance text: timeline mileages, profile mile axis, POI distance notes). Access styles, arrows and aid stations are always on.
+Toggles: topo, park boundary, per-course routes, zoom boxes (main map and mini maps), POIs, labels, and Distances (hides every
+distance text: timeline mileages, profile mile axis, POI distance notes). Off-course roads, access styles, arrows and aid stations are always on. Hovering or touch-dragging the elevation profile shows the position on the main map and the course mini map, with a course · mile · ft readout.
 
 Layout: side-by-side ≥ 1000 px wide, stacked below.
 
