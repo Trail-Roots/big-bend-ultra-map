@@ -47,7 +47,7 @@ export function render(c: Ctx) {
       <div class="notice"><strong>${esc(notice[0])}</strong>${notice.slice(1).map(l => `<br>${/^\(\d/.test(l) ? `<span class="dist">${esc(l)}</span>` : esc(l)}`).join('')}</div>
     </header>
     <div class="minis">${minis}</div>
-    <div class="stripsbox" id="pb-strips">${renderTimeline(c)}<div class="minilinks callinks"><span class="calnote">Save race day to your phone (times + GPS, works offline):</span>${['all', ...c.courses.order].map((k) => `<a href="${SITE_URL}calendar/big-bend-ultra-2027-${k.toLowerCase()}.ics" download title="${k === 'all' ? 'All races and aid-station hours' : k + ' start, cutoffs and finish'} (.ics calendar)"><span class="calico" aria-hidden="true">↓</span>${k === 'all' ? 'All races' : k} .ICS</a>`).join('')}</div></div>
+    <div class="stripsbox" id="pb-strips">${renderTimeline(c)}<div class="minilinks callinks"><span class="calnote">Save race day to your phone (times + GPS, works offline):</span><a href="https://calendar.google.com/calendar/u/0?cid=Njc1ZWZhYmI1ZmY0MDE1OTZlNDk5Mzg5YWRiNzdiZTU4YTUxODhkMWFkOTc1MjE1MzgxZDUzNjI1OWVlMTU0NkBncm91cC5jYWxlbmRhci5nb29nbGUuY29t" target="_blank" rel="noopener" title="Subscribe to the Race: Big Bend Ultra Google Calendar"><span class="calico" aria-hidden="true">+</span>Google Calendar</a><a href="webcal://calendar.google.com/calendar/ical/675efabb5ff401596e499389adb77be58a5188d1ad975215381d536259ee1546%40group.calendar.google.com/public/basic.ics" title="Subscribe in Apple / iCal (public calendar feed)">iCal / Apple</a></div></div>
     <div class="profilebox" id="pb-prof">${renderProfile(c)}</div>
     <div class="printfoot">trailroots.com/big-bend-ultra</div>
   </aside>
