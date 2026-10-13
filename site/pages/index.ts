@@ -36,7 +36,7 @@ export function render(c: Ctx) {
     <header class="hdr" id="pb-hdr">
       <a class="logo" href="https://trailroots.com/big-bend-ultra" target="_blank" rel="noopener"><img src="logo_ink_crop.png" alt="Trail Roots Running – Big Bend Ultra"></a>
       <div class="titles"><h1>${esc(hdr[0].text)}</h1><p class="subtitle">${esc(hdr[1].text)}</p></div>
-      <div class="notice"><strong>${esc(notice[0])}</strong>${notice.slice(1).map(l => `<br>${esc(l)}`).join('')}</div>
+      <div class="notice"><strong>${esc(notice[0])}</strong>${notice.slice(1).map(l => `<br>${/^\(\d/.test(l) ? `<span class="dist">${esc(l)}</span>` : esc(l)}`).join('')}</div>
     </header>
     <div class="minis">${minis}</div>
     <div class="stripsbox" id="pb-strips">${renderStrips(c)}</div>
