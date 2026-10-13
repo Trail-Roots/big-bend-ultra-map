@@ -44,9 +44,9 @@ if (hdEl && prof) {
       mains[k].g.style.display = ''; mains[k].g.setAttribute('transform', `translate(${ax} ${ay})`);
       if (minis[k]) { minis[k].g.style.display = ''; minis[k].g.setAttribute('transform', `translate(${bx} ${by})`); }
     }
-    // readout: mile header + one line per course (elevation at that mile)
+    // readout: one line per course, longest first: course · mile · cumulative gain from the start
     lab.textContent = '';
-    const rows = [{ t: `mile ${mile.toFixed(1)}`, fill: '#2a2a2a' }, ...hits.map(({ k, c, v }) => ({ t: `${k}  ${v[1].toLocaleString('en-US')} ft`, fill: c.color }))];
+    const rows = hits.map(({ k, c, v }) => ({ t: `${k} · mi ${v[0].toFixed(1)} · +${v[6].toLocaleString('en-US')} ft gain`, fill: c.color }));
     const right = px < W * 0.7, lx = px + (right ? 16 : -16), ly = 14;
     rows.forEach((r, i) => { const ts = el('tspan', { x: lx, y: ly + 13 + i * 26, fill: r.fill }, lab); ts.textContent = r.t; });
     lab.setAttribute('text-anchor', right ? 'start' : 'end');

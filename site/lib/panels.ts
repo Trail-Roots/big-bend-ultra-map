@@ -97,7 +97,8 @@ export function renderProfile(c) {
   let s = `<rect width="${f1(W)}" height="${f1(H)}" fill="${col.cream}"/>`;
   for (const t of [2500, 3500, 4500]) s += `<path d="M0,${f1(Y(t))}H${f1(W)}" stroke="#d8d0c0" stroke-width="1"/><text x="12" y="${f1(Y(t) - 6)}" font-size="24" fill="${col.ink}">${t.toLocaleString('en-US')} ft</text>`;
   s += `<path d="M0,${f1(H)}H${f1(W)}" stroke="${col.ink}" stroke-width="1"/>`;
-  for (let v = 0; v <= 60; v += 10) s += `<text class="dist" x="${f1(X(v))}" y="${f1(H + 10)}" font-size="24" text-anchor="middle" dominant-baseline="hanging" fill="${col.ink}">${v}m</text>`;
+  for (let v = 1; v < x1; v++) if (v % 10) s += `<path d="M${f1(X(v))},${f1(H)}v6" stroke="#c9c2b6" stroke-width="1"/>`; // minor 1 mi ticks
+  for (let v = 0; v <= 60; v += 10) s += `<path d="M${f1(X(v))},${f1(H)}v10" stroke="${col.ink}" stroke-width="1"/><text class="dist" x="${f1(X(v))}" y="${f1(H + 10)}" font-size="24" text-anchor="middle" dominant-baseline="hanging" fill="${col.ink}">${v}m</text>`;
   const O = c.courses.order, pr = c.profiles;
   const pts = k => pr[k].mi.map((m, i) => [X(m), Y(pr[k].ft[i])]);
   const p100 = pts('100K'); s += `<path d="${lineD(p100)}L${f1(p100[p100.length - 1][0])},${f1(Y(2200))}L${f1(p100[0][0])},${f1(Y(2200))}z" fill="#888" fill-opacity=".10"/>`;
