@@ -96,3 +96,5 @@ svg.mainmap,svg.mini{touch-action:pan-x pan-y}svg.panning{cursor:grabbing}
 .bibh{display:flex;align-items:center;gap:.4rem}
 @media screen{.stripsbox{position:relative}}.callinks{align-items:center;flex-wrap:wrap}.callinks .calnote{color:#555;font-weight:500;margin-right:4px}.stripsbox .callinks svg.dlico{width:.8em;height:.8em;flex:none;box-shadow:none;display:inline-block}
 @media print{.stripsbox{overflow:visible!important}.stripsbox .callinks{position:absolute;z-index:3;top:100%;left:0;right:auto;width:max-content;flex-wrap:nowrap;white-space:nowrap;margin-top:2pt;font-size:13pt;gap:4pt}.stripsbox .callinks a{padding:2pt 6pt;border-width:1.2pt;gap:3pt}}
+.links{font-size:.8rem;color:#555}.links h4{margin:.8rem 0 .2rem;color:var(--ink)}.links ol{margin:0;padding-left:1.4rem}.links li{margin:.1rem 0;line-height:1.35}.links .lk{color:var(--ink)}.links a{color:#555;word-break:break-all}
+@media print{.sec-links{break-before:page}.links{font-size:8pt}}

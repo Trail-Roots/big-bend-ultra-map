@@ -24,9 +24,27 @@ const body = sections.map((s) => `<section class="sec sec-${s.meta.id}${s.meta.p
 // draft markings: one flag in content/site.json (source: sources/curated/site.json)
 const site = J('site.json'), draft = site.draft === true;
 const gen = new Date().toLocaleDateString('en-US', { timeZone: 'America/Chicago', year: 'numeric', month: 'short', day: 'numeric' });
-const html = tpl.replace('{{bodyclass}}', draft ? 'draft' : '')
+let html = tpl.replace('{{bodyclass}}', draft ? 'draft' : '')
   .replace('{{draftbanner}}', draft ? `<style>@page{@top-center{content:"DRAFT — NOT FINAL · Subject to change · Generated ${gen}";font:800 10pt system-ui,sans-serif;letter-spacing:.06em;color:#fff;background:#b3261e;margin:.08in 0 .08in;width:100%;-webkit-print-color-adjust:exact;print-color-adjust:exact}}</style>` : '')
   .replace('{{draftnote}}', draft ? `<span class="draftnote" title="Generated ${gen}">Draft · subject to change</span>` : '').replace('{{base}}', './').replace(/{{title}}/g, sections[0].meta.title).replace('{{defs}}', markerDefs(ctx.colors)).replace('{{body}}', body).replace(/{{year}}/g, '2027');
+// ---- link footnotes: every clickable link on the page, collected from the rendered HTML (same data the links come from) ----
+const { SITE_URL } = await import('./sections/10-map');
+const strip = (t: string) => t.replace(/<title>[\s\S]*?<\/title>/g, '').replace(/<[^>]+>/g, ' ').replace(/&amp;/g, '&').replace(/\s+/g, ' ').trim();
+const attr = (tag: string, n: string) => (tag.match(new RegExp(`\\s${n}="([^"]*)"`)) || [])[1]?.replace(/&amp;/g, '&');
+const seen = new Map<string, { label: string; url: string }>();
+for (const m of html.matchAll(/<a\s[^>]*href="[^"]*"[^>]*>([\s\S]*?)<\/a>/g)) {
+  const tag = m[0].slice(0, m[0].indexOf('>') + 1), href = attr(tag, 'href')!; if (href.startsWith('#')) continue;
+  const url = /^[a-z]+:/i.test(href) ? href : new URL(href, SITE_URL).href;
+  let label = (/trailroots\.com/.test(href) ? 'Trail Roots · Big Bend Ultra race page (header, logo, footer)' : '') || (attr(tag, 'aria-label') || attr(tag, 'title') || strip(m[1]) || url).replace(/ on Google Maps$/, '');
+  if (!seen.has(url)) seen.set(url, { label, url }); else if (label.length > seen.get(url)!.label.length && !/Google Maps/.test(label)) seen.get(url)!.label = label;
+}
+const group = (u: string) => /google\.com\/maps/.test(u) ? 'Locations' : /strava\.com/.test(u) ? 'Routes' : /calendar/.test(u) ? 'Calendar' : /\.(gpx|pdf)$/.test(u) ? 'Downloads' : 'Other';
+const G: Record<string, { label: string; url: string }[]> = { Locations: [], Routes: [], Downloads: [], Calendar: [], Other: [] };
+for (const v of seen.values()) G[group(v.url)].push(v);
+const linksHtml = `<section class="sec sec-links" id="links" aria-label="Links"><article class="doc links"><h2>Links</h2>${Object.entries(G).filter(([, v]) => v.length).map(([g, v]) => `<h4>${g}</h4><ol>${v.map((e) => `<li><span class="lk">${e.label.replace(/&/g, '&amp;').replace(/</g, '&lt;')}</span> <a href="${e.url.replace(/&/g, '&amp;')}">${e.url.replace(/&/g, '&amp;')}</a></li>`).join('')}</ol>`).join('')}</article></section>`;
+html = html.replace('</main>', linksHtml + '</main>');
+fs.writeFileSync(path.join(D, 'links.json'), JSON.stringify([...seen.values()], null, 1));
+console.log('links', seen.size);
 fs.writeFileSync(path.join(D, 'index.html'), html);
 console.log('index.html', (html.length / 1024).toFixed(0) + ' KB,', sections.length, 'sections:', sections.map((s) => s.meta.id).join(', '));
 fs.cpSync(path.join(here, 'public'), D, { recursive: true });
