@@ -3,7 +3,7 @@ import { leaderLine, poiDot, SHEET, viewProjection, esc, f1, lineD, dash, STYLE,
 // user-toggleable layers (off-course roads, access styles, arrows, aid stations, distances and all labels are always shown)
 const LAYERS: [string, string, boolean][] = [
   ['topo', 'Topo shading', true], ['park', 'Park boundary', true],
-  ['courses', 'Routes per course', false], ['zoom', 'Zoom boxes', true], ['pois', 'POIs', true],
+  ['courses', 'Routes per course', false], ['zoom', 'Zoom boxes', true], ['pois', 'POIs', true], ['dots', 'Runner dots (model)', true],
 ];
 export const mainLayers = LAYERS;
 /** logo width in sheet pt — identical to the header logo above the mini maps (1.45 in) */
@@ -79,7 +79,7 @@ export function renderMain(c) {
   fur += `<g class="north" opacity=".8"><line x1="${f1(nx)}" y1="${f1(ny + na)}" x2="${f1(nx)}" y2="${f1(ny - na)}" stroke="${nc}" stroke-width="1.6"/><path d="M${f1(nx - 5)},${f1(ny - na + 6)}L${f1(nx)},${f1(ny - na - 3)}L${f1(nx + 5)},${f1(ny - na + 6)}z" fill="${nc}"/><text x="${f1(nx)}" y="${f1(ny + na + 14)}" class="f-serif" font-size="17" text-anchor="middle" fill="${nc}">N</text></g>`;
   fur += `<a href="https://trailroots.com/big-bend-ultra" target="_blank" rel="noopener"><image class="maplogo" href="logo_ink_crop.png" x="${f1(W * 0.08)}" y="${f1(H * (1 - 0.985))}" width="${f1(LOGO_PT)}" height="${f1(LOGO_PT * 776 / 730)}" preserveAspectRatio="xMidYMid meet"/></a>`;
   fur += legend(c, W, H);
-  const order = ['topo', 'park', 'roads', 'access', 'courses', 'zoom', 'arrows', 'stations', 'pois', 'stationLabels', 'labels'];
+  const order = ['topo', 'park', 'roads', 'access', 'courses', 'zoom', 'arrows', 'stations', 'pois', 'stationLabels', 'labels', 'dots'];
   const vis = Object.fromEntries(LAYERS.map(l => [l[0], l[2]]));
   const grp = order.map(k => `<g class="layer" data-layer="${k}"${(vis[k] === false) ? ' style="display:none"' : ''}>${g[k] || ''}</g>`).join('\n');
   return `<svg class="mainmap" viewBox="0 0 ${f1(W)} ${f1(H)}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Big Bend Ultra main course map"><defs><clipPath id="mclip"><rect width="${f1(W)}" height="${f1(H)}"/></clipPath></defs><rect width="${f1(W)}" height="${f1(H)}" fill="#fff"/><g clip-path="url(#mclip)"><g class="zv">${grp}</g></g>${fur}<rect width="${f1(W)}" height="${f1(H)}" fill="none" stroke="#000" stroke-width="1.6"/></svg>`;

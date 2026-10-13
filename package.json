@@ -2,7 +2,7 @@
   "name": "big-bend-ultra-map",
   "description": "Big Bend Ultra 2027 course & access map site (Bun + TypeScript)",
   "scripts": {
-    "content": "bun scripts/content.ts",
+    "content": "bun scripts/content.ts && bun scripts/timeline.ts",
     "site": "bun site/build.ts",
     "pdf": "bun scripts/pdf.ts",
     "build": "bun run content && bun run site && bun run pdf",
