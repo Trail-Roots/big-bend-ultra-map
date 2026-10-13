@@ -1,0 +1,62 @@
+@font-face{font-family:"DejaVu Sans";src:url(fonts/DejaVuSans.ttf)}
+@font-face{font-family:"DejaVu Sans";font-weight:700;src:url(fonts/DejaVuSans-Bold.ttf)}
+@font-face{font-family:"DejaVu Sans";font-style:italic;src:url(fonts/DejaVuSans-Oblique.ttf)}
+@font-face{font-family:"DejaVu Sans";font-style:italic;font-weight:700;src:url(fonts/DejaVuSans-BoldOblique.ttf)}
+@font-face{font-family:"DejaVu Serif";src:url(fonts/DejaVuSerif.ttf)}
+@font-face{font-family:"DejaVu Serif";font-style:italic;src:url(fonts/DejaVuSerif-Italic.ttf)}
+@font-face{font-family:"DejaVu Serif";font-weight:700;src:url(fonts/DejaVuSerif-Bold.ttf)}
+:root{--ink:#2a2a2a;--mute:#7d766b}
+*{box-sizing:border-box}
+body{margin:0;font-family:"DejaVu Sans",system-ui,sans-serif;color:var(--ink);background:#f4f2ee}
+svg{font-family:"DejaVu Sans",sans-serif;display:block;width:100%;height:auto}
+svg .f-serif{font-family:"DejaVu Serif",Georgia,serif}
+svg .ln{fill:none;stroke-linejoin:round}
+svg .ln:not([stroke-dasharray]){stroke-linecap:round}
+svg .legend path{fill:none}
+svg .stnum{fill:#fff;font-weight:700}
+.topnav{display:flex;gap:1rem;align-items:center;padding:.5rem 1rem;background:#fff;border-bottom:1px solid #ddd;flex-wrap:wrap}
+.topnav a{color:var(--ink);text-decoration:none}.topnav a[aria-current]{font-weight:700;border-bottom:2px solid var(--ink)}
+.brand{display:flex;align-items:center;gap:.4rem;font-weight:700}.brand img{height:28px}
+.printctl{margin-left:auto;display:flex;gap:.4rem}
+.layers{margin:.6rem 1rem;background:#fff;border:1px solid #ddd;border-radius:6px;padding:.4rem .8rem;font-size:.9rem}
+.toggles{display:flex;flex-wrap:wrap;gap:.3rem 1rem;padding:.4rem 0}.toggles .sub{display:flex;gap:.6rem}.ck{color:var(--c);font-weight:700}
+.sheet{display:grid;grid-template-columns:minmax(0,44fr) minmax(0,51fr);gap:1.5vw;padding:0 1rem 1rem;max-width:2400px;margin:0 auto}
+.main svg{background:#fff;box-shadow:0 1px 4px #0002}
+.side{display:flex;flex-direction:column;gap:1.2vw;min-width:0}
+.hdr{display:grid;grid-template-columns:auto 1fr auto;gap:1rem;align-items:start}
+.logo img{width:clamp(56px,6vw,120px);display:block}
+.hdr h1{font-family:"DejaVu Serif",serif;font-weight:400;font-size:clamp(1.4rem,2.4vw,2.6rem);margin:0}
+.subtitle{font-family:"DejaVu Serif",serif;font-style:italic;color:var(--mute);margin:.2rem 0 0;font-size:clamp(.9rem,1.3vw,1.4rem)}
+.notice{background:#efefef;padding:.5rem .7rem;font-size:clamp(.7rem,.85vw,.95rem);line-height:1.4;text-align:right}
+.minis{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:.3vw}.minibox{margin:0}
+.doc{max-width:900px;margin:1rem auto;background:#fff;padding:1rem 2rem}.doc table{border-collapse:collapse;width:100%}.doc td,.doc th{border-bottom:1px solid #ddd;padding:.3rem;text-align:left}
+@media (max-width:1000px){
+  .sheet{grid-template-columns:1fr}
+  .minis{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .hdr{grid-template-columns:auto 1fr}.notice{grid-column:1/-1;text-align:left}
+  .stripsbox{overflow-x:auto}.stripsbox svg{min-width:640px}
+}
+@media (max-width:560px){.minis{grid-template-columns:repeat(2,minmax(0,1fr))}.printctl{display:none}}
+/* ---------- print: exact 36x24 in sheet, positions = matplotlib figure fractions ---------- */
+@page{size:36in 24in;margin:0}
+@page tabloid{size:17in 11in;margin:0}
+@page letter{size:11in 8.5in;margin:0}
+@media print{
+  .ui{display:none!important}
+  html,body{background:#fff;margin:0}
+  main{margin:0}
+  .sheet{display:block;position:relative;width:36in;height:24in;padding:0;margin:0;max-width:none;gap:0;overflow:hidden;page-break-after:avoid;background:#fff}
+  .side{display:contents}
+  .main,.minibox,.hdr,.stripsbox,.profilebox{position:absolute}
+  .minis{display:contents}
+  .main svg,.minibox svg,.stripsbox svg,.profilebox svg{width:100%;height:100%;box-shadow:none}
+  .hdr{display:block}
+  .hdr .logo{position:absolute;left:0;top:0;width:1.58in}.hdr .logo img{width:1.45in}
+  .hdr .titles{position:absolute;left:1.98in;top:0}
+  .hdr h1{font-size:40pt;line-height:1}.subtitle{font-size:24pt;margin-top:.12in}
+  .notice{position:absolute;right:.19in;top:.18in;font-size:17pt;line-height:1.4;padding:12pt;text-align:right}
+  body.paper-tabloid .sheet{page:tabloid;zoom:.4583}
+  body.paper-letter .sheet{page:letter;zoom:.3055}
+}
+.footlink{grid-column:1/-1;justify-self:end;color:var(--ink);font-size:.95rem}
+@media print{.footlink{position:absolute;right:.5in;bottom:.12in;font-size:17pt;text-decoration:none}}

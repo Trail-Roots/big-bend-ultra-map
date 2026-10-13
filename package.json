@@ -1,0 +1,18 @@
+{
+  "name": "bbu-web",
+  "version": "1.0.0",
+  "description": "",
+  "scripts": {
+    "build": "node site/build.mjs",
+    "preview": "npx --yes http-server dist -p 8787",
+    "shots": "node tools/shoot.mjs"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "d3-geo": "^3.1.1"
+  },
+  "private": true,
+  "type": "module",
+  "devDependencies": {}
+}
