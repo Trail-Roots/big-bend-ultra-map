@@ -89,3 +89,7 @@ svg.mainmap,svg.mini{touch-action:pan-x pan-y}svg.panning{cursor:grabbing}
 @media print{
   body.draft .main::after,body.draft .side::after{content:'DRAFT';position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) rotate(-35deg);font:900 3.2in/1 system-ui,sans-serif;letter-spacing:.08em;color:#b3261e;opacity:.13;pointer-events:none;z-index:999;white-space:nowrap}
 }
+.runkey{justify-content:flex-end;margin:2px 8px 0;font:600 11px/1 system-ui,sans-serif;color:#555;background:#fffffff0;padding:3px 6px;border-radius:4px;display:flex;gap:4px;align-items:center}
+.runkey svg{width:12px!important;height:12px!important;flex:none}
+.runkey span{font-weight:400;color:#888}
+@media print{.runkey{display:none!important}}

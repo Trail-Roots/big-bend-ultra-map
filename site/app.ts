@@ -70,18 +70,22 @@ if (hdEl && prof) {
   let tShown = -1;
   const setTime = (t: number) => {
     tShown = t; const z = 1 / zoomOf(main);
+    const ends: Record<string, { lead?: [number, any]; last?: [number, any] }> = {};
     for (const d of dots2) {
       const C = TM.courses[d.k], f = (t - C.start) / d.T; const mile = effAt(d.cv, f);
       if (f < 0 || f > 1 || (d.stop >= 0 && mile >= d.stop)) { d.c.style.display = 'none'; continue; } // not started / finished / dropped (DNF)
       // spread runners slightly so a crowd reads as a crowd, not one dot
       const p = ptAt(d.k, mile), j = d.j;
-      d.c.style.display = ''; d.c.setAttribute('cx', String(p[2] + Math.cos(j) * 3)); d.c.setAttribute('cy', String(p[3] + Math.sin(j) * 3)); d.c.setAttribute('r', String(3.4 * z));
+      d.c.style.display = ''; d.c.setAttribute('cx', String(p[2] + Math.cos(j) * 3)); d.c.setAttribute('cy', String(p[3] + Math.sin(j) * 3)); d.c.setAttribute('r', String(3.4 * z)); d.c.setAttribute('fill', HD.courses[d.k].color); d.c.setAttribute('stroke', '#fff'); d.c.setAttribute('stroke-width', String(0.9 * z));
+      const E = (ends[d.k] ??= {}); if (!E.lead || mile > E.lead[0]) E.lead = [mile, d]; if (!E.last || mile < E.last[0]) E.last = [mile, d];
     }
-    // median runner of each course on the main + mini maps
-    for (const [k, C] of Object.entries(TM.courses) as [string, any][]) {
-      const f = (t - C.start) / C.med;
-      glide.set(k, f < 0 || f > 1 ? null : effAt(C.curves[C.medFit], f));
+    // leader = solid course-colour dot with a dark ring; last runner = hollow ring (white fill, course-colour stroke). Small, drawn on top.
+    for (const [k, E] of Object.entries(ends)) for (const [q, lead] of [[E.last, false], [E.lead, true]] as const) {
+      if (!q) continue; const c = q[1].c as SVGCircleElement, col = HD.courses[k].color;
+      c.setAttribute('r', String((lead ? 4.6 : 4.2) * z)); c.setAttribute('fill', lead ? col : '#fff'); c.setAttribute('stroke', lead ? '#1a1a1a' : col); c.setAttribute('stroke-width', String((lead ? 1.4 : 2) * z));
+      if (c.nextSibling) c.parentNode!.appendChild(c);
     }
+    glide.clear(); // no median-runner markers during time play (profile distance-hover markers are separate)
     if (tl) {
       const t0 = +tl.dataset.t0!, t1 = +tl.dataset.t1!, lx = +tl.dataset.lx!, rx = +tl.dataset.rx!, x = lx + ((t - t0) / (t1 - t0)) * (rx - lx);
       const cur = tl.querySelector<SVGGElement>('g.tlcursor')!, txt = cur.querySelector('text')!, bx = cur.querySelector('rect')!;
@@ -115,6 +119,8 @@ if (hdEl && prof) {
   const btn = document.createElement('button'); btn.type = 'button'; btn.className = 'autoplay ui';
   const label = () => { btn.textContent = paused ? '▶ Play race day' : '❚❚ Pause'; btn.setAttribute('aria-label', paused ? 'Play race-day animation' : 'Pause race-day animation'); btn.setAttribute('aria-pressed', String(!paused)); };
   if (!reduced) { label(); prof.parentElement!.appendChild(btn); }
+  // key for the runner-dot markers (web only, like the dots themselves)
+  if (dotLayer && tl) { const key = document.createElement('div'); key.className = 'runkey ui'; key.innerHTML = '<svg width="12" height="12" viewBox="-6 -6 12 12" aria-hidden="true"><circle r="4.4" fill="#666" stroke="#1a1a1a" stroke-width="1.4"/></svg> Leader <svg width="12" height="12" viewBox="-6 -6 12 12" aria-hidden="true"><circle r="4" fill="#fff" stroke="#666" stroke-width="2"/></svg> Last runner <span>(course colour)</span>'; tl.insertAdjacentElement('afterend', key); }
   btn.addEventListener('click', () => { paused = !paused; localStorage.setItem(KEY, paused ? '1' : '0'); label(); if (paused) { stop(); clearTime(); } else start(); });
   const suspend = () => { user = true; stop(); };
   const resume = () => { user = false; start(); };

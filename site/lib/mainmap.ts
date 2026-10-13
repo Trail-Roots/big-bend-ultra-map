@@ -1,5 +1,5 @@
 import { stationLabel, poiLabel, areaLabel } from './labels';
-import { chaikin, mergeChains, simplifyPts, leaderLine, poiDot, SHEET, viewProjection, esc, f1, lineD, dash, STYLE, station, textBlock } from './util';
+import { chaikin, mergeChains, simplifyPts, leaderLine, poiDot, SHEET, viewProjection, esc, f1, lineD, dash, STYLE, station, textBlock, gmapLink } from './util';
 // user-toggleable layers (off-course roads, access styles, arrows, aid stations, distances and all labels are always shown)
 const LAYERS: [string, string, boolean][] = [
   ['topo', 'Topo shading', true], ['park', 'Park boundary', true],
@@ -55,10 +55,10 @@ export function renderMain(c) {
   // stations
   for (const k of c.stations.order) {
     const s = c.stations.stations[k], [x, y] = V.p(s.lonlat);
-    add('stations', station(x, y, k, s.spectator, k === 'S/F' ? { s: 2900, fs: 34, colors: col } : { colors: col }));
+    add('stations', gmapLink(s.lonlat, k === 'S/F' ? s.name : `Aid station ${k} · ${s.name}`, station(x, y, k, s.spectator, k === 'S/F' ? { s: 2900, fs: 34, colors: col } : { colors: col })));
   }
   // POIs
-  for (const f of c.pois.features) if (f.geometry.type === 'Point') { const [x, y] = V.p(f.geometry.coordinates); add('pois', poiDot(x, y)); }
+  for (const f of c.pois.features) if (f.geometry.type === 'Point') { const [x, y] = V.p(f.geometry.coordinates); add('pois', gmapLink(f.geometry.coordinates, f.properties.name ?? 'Point of interest', poiDot(x, y))); }
   // labels
   for (const f of c.labels.features) {
     const p = f.properties;
@@ -111,7 +111,7 @@ function curvedLabel(f, V, col) {
 }
 function legend(c, W, H) {
   const [lx, ly, lw, lh] = c.layout.legend_axes, x0 = lx * W, y0 = (1 - ly - lh) * H, w = lw * W, h = lh * H, col = c.colors;
-  const items = [['zn', 'Foot only'], ['za', 'Foot + bike'], ['z4', '4x4'], ['zt', 'Unpaved'], ['fm', 'Paved'], ['pk', 'Park boundary'], ['aid', 'Aid station'], ['ring', 'Spectator access'],
+  const items = [['fm', 'Paved'], ['zt', 'Unpaved'], ['z4', '4x4'], ['za', 'Foot + bike'], ['zn', 'Foot only'], ['pk', 'Park boundary'], ['aid', 'Aid station'], ['ring', 'Spectator access'],
     ...c.stations.order.map(k => ['st' + k, c.stations.stations[k].name]), ['rin', 'Point of interest']];
   let s = `<g class="legend"><rect x="${f1(x0)}" y="${f1(y0)}" width="${f1(w)}" height="${f1(h)}" fill="#fff" fill-opacity=".85"/>`;
   const sw = 0.16 * w;
@@ -124,11 +124,11 @@ function legend(c, W, H) {
     else if (kk === 'za') s += `<path d="${L}" stroke="${col.ink}" stroke-width="6" stroke-dasharray="${whole(6, [4, .6, 1.6, .6])}"/>`;
     else if (kk === 'zt') s += `<path d="${L}" stroke="${col.ink}" stroke-width="6" stroke-dasharray="${whole(6, [11.7, .83])}"/>`;
     else if (kk === 'z4') s += `<path d="${L}" stroke="${col.ink}" stroke-width="6" stroke-dasharray="${whole(6, [7.3, .7])}"/><path d="${L}" stroke="#fff" stroke-width="1.9"/>`;
-    else if (kk === 'zn') s += `<path d="${L}" stroke="${col.ink}" stroke-width="6" stroke-dasharray="${whole(6, [1.17, .5])}"/>`;
+    else if (kk === 'zn') s += `<path d="${L}" stroke="${col.ink}" stroke-width="6" stroke-dasharray="${whole(6, [0.58, 0.25])}"/>`;
     else if (kk === 'rin') s += poiDot(x + sw / 2, y, 0.85);
     else if (kk === 'ring') s += station(x + sw / 2, y, '', true, { s: 420, badge: false, colors: col });
     else if (kk === 'aid') s += station(x + sw / 2, y, '', false, { s: 420, colors: col });
-    else if (kk.startsWith('st')) { const k = kk.slice(2); s += station(x + sw / 2, y, k, c.stations.stations[k].spectator, { s: 520, fs: 17, badge: false, colors: col }); }
+    else if (kk.startsWith('st')) { const k = kk.slice(2); s += gmapLink(c.stations.stations[k].lonlat, c.stations.stations[k].name, station(x + sw / 2, y, k, c.stations.stations[k].spectator, { s: 520, fs: 17, badge: false, colors: col })); }
     s += `<text x="${f1(x0 + 0.25 * w)}" y="${f1(y)}" font-size="21" dominant-baseline="central" fill="${col.ink}">${esc(txt)}</text>`;
   });
   return s + '</g>';
