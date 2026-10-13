@@ -2,21 +2,24 @@ import { SHEET, viewProjection, esc, f1, lineD, dash, station } from './util';
 import { hillImage, chevron } from './mainmap';
 /** '5:00 AM' -> '5a', '8:30 AM' -> '8:30a' (minutes only when non-zero) */
 export const startShort = (t: string) => { const [hm, ap] = t.split(' '), [h, m] = hm.split(':'); return `${Number(h)}${m === '00' ? '' : ':' + m}${ap === 'PM' ? 'p' : 'a'}`; };
-// monochrome starting-pistol glyph, 16 x 12 units, muzzle to the left
-const GUN = 'M0,1.2h11.2l1-1.2h2.4v1.2h1.4v3.4h-4.2l-1.6,1.6v.4h-2.2l-.4-.9h-1.3v-.9h1.9l-.6-1.2H0zM9.3,4.6h2.7l1.4,7.4h-3.4l-.9-4.4z M7.6,4.6v2.4';
-/** bib template: course on top, white pill with pistol + start time; sized from text so nothing touches the edges */
+// monochrome revolver-style starter pistol, barrel pointing up (fired into the air); 12 x 16 units
+const GUN = 'M3.2,0h2.4v1h.6v6.2h2.6v1h-.6v2.8l4,4.6-2.6,1.4-3.4-4.6h-1.2v1.4c0,.9-1.8,.9-1.8,0V11H2V7.2h1.2z';
+const GUN_W = 12, GUN_H = 16;
+/** bib template: fixed size for every course; course on top, white pill with pistol + start time, text scaled to fit with padding */
+export const BIB = { w: 86, h: 72, pad: 7, rx: 7, top: 26, time: 15, pillH: 25 };
 export function bib(k: string, start: string, cc: string, W: number, H: number, col: Record<string, string>) {
-  const pad = 8, fsTop = 26, fsT = 15, tw = (t: string, fs: number) => t.length * fs * 0.64;
-  const t = startShort(start), gw = 16 * (fsT / 13), gh = 12 * (fsT / 13), gap = 4;
-  const pillW = gw + gap + tw(t, fsT) + 2 * 6, pillH = fsT + 8;
-  const bw = Math.max(tw(k, fsTop) + 2 * pad, pillW + 2 * 5), bh = pad + fsTop + 6 + pillH + 5;
-  const bx = W * 0.97 - bw, by = H * 0.03, px = bx + (bw - pillW) / 2, py = by + bh - 5 - pillH;
-  const gx = px + 6, gy = py + (pillH - gh) / 2, sc = fsT / 13;
-  return `<g class="bib"><rect x="${f1(bx)}" y="${f1(by)}" width="${f1(bw)}" height="${f1(bh)}" rx="7" fill="${cc}"/>`
-    + `<text x="${f1(bx + bw / 2)}" y="${f1(by + pad + fsTop / 2)}" font-size="${fsTop}" font-weight="700" fill="#fff" text-anchor="middle" dominant-baseline="central">${k}</text>`
-    + `<rect x="${f1(px)}" y="${f1(py)}" width="${f1(pillW)}" height="${f1(pillH)}" rx="4" fill="#fff"/>`
-    + `<path d="${GUN}" transform="translate(${f1(gx)} ${f1(gy)}) scale(${sc.toFixed(3)})" fill="${col.ink}" stroke="${col.ink}" stroke-width=".3"><title>start time</title></path>`
-    + `<text x="${f1(gx + gw + gap)}" y="${f1(py + pillH / 2)}" font-size="${fsT}" font-weight="700" fill="${col.ink}" dominant-baseline="central"><title>start time</title>${t}</text></g>`;
+  const B = BIB, tw = (t: string, fs: number) => t.length * fs * 0.64, t = startShort(start);
+  const bx = W * 0.97 - B.w, by = H * 0.03, inner = B.w - 2 * B.pad;
+  const fsTop = Math.min(B.top, inner / (tw(k, 1) || 1));
+  const px = bx + B.pad - 2, pw = B.w - 2 * (B.pad - 2), py = by + B.h - B.pad + 2 - B.pillH;
+  const gh = B.pillH - 8, gs = gh / GUN_H, gw = GUN_W * gs, gap = 4;
+  const fsT = Math.min(B.time, (pw - 10 - gw - gap) / (tw(t, 1) || 1));
+  const cw = gw + gap + tw(t, fsT), gx = px + (pw - cw) / 2, gy = py + 4;
+  return `<g class="bib"><rect x="${f1(bx)}" y="${f1(by)}" width="${B.w}" height="${B.h}" rx="${B.rx}" fill="${cc}"/>`
+    + `<text x="${f1(bx + B.w / 2)}" y="${f1(by + B.pad + (py - by - B.pad) / 2)}" font-size="${f1(fsTop)}" font-weight="700" fill="#fff" text-anchor="middle" dominant-baseline="central">${k}</text>`
+    + `<rect x="${f1(px)}" y="${f1(py)}" width="${f1(pw)}" height="${B.pillH}" rx="4" fill="#fff"/>`
+    + `<path d="${GUN}" transform="translate(${f1(gx)} ${f1(gy)}) scale(${gs.toFixed(3)})" fill="${col.ink}"><title>start time</title></path>`
+    + `<text x="${f1(gx + gw + gap)}" y="${f1(py + B.pillH / 2)}" font-size="${f1(fsT)}" font-weight="700" fill="${col.ink}" dominant-baseline="central"><title>start time</title>${t}</text></g>`;
 }
 const short = t => t.toLowerCase().replace(' am', 'a').replace(' pm', 'p');
 export function renderMini(c, k) {
