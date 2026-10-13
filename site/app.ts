@@ -128,7 +128,7 @@ if (hdEl && prof) {
   const label = () => { btn.textContent = paused ? '▶ Play race day' : '❚❚ Pause'; btn.setAttribute('aria-label', paused ? 'Play race-day animation' : 'Pause race-day animation'); btn.setAttribute('aria-pressed', String(!paused)); };
   if (!reduced) { label(); prof.parentElement!.appendChild(btn); }
   // key for the runner-dot markers (web only, like the dots themselves)
-  if (dotLayer && tl) { const key = document.createElement('div'); key.className = 'runkey ui'; key.innerHTML = '<svg width="16" height="16" viewBox="-8 -8 16 16" aria-hidden="true"><circle r="3.4" fill="#666" stroke="#fff" stroke-width=".9"/><circle r="6.4" fill="none" stroke="#666" stroke-width="1.5"/></svg> Leader <svg width="12" height="12" viewBox="-6 -6 12 12" aria-hidden="true"><circle r="4" fill="#fff" stroke="#666" stroke-width="2"/></svg> Last runner <span>(course colour)</span>'; tl.insertAdjacentElement('afterend', key); }
+  if (dotLayer && tl) { const key = document.createElement('div'); key.className = 'runkey ui'; key.innerHTML = '<svg width="16" height="16" viewBox="-8 -8 16 16" aria-hidden="true"><circle r="3.4" fill="#666" stroke="#fff" stroke-width=".9"/><circle r="6.4" fill="none" stroke="#666" stroke-width="1.5"/></svg> Leader <svg width="12" height="12" viewBox="-6 -6 12 12" aria-hidden="true"><circle r="4" fill="#fff" stroke="#666" stroke-width="2"/></svg> Last runner <span>(course color)</span>'; tl.insertAdjacentElement('afterend', key); }
   btn.addEventListener('click', () => { paused = !paused; localStorage.setItem(KEY, paused ? '1' : '0'); label(); if (paused) { stop(); clearTime(); } else start(); });
   const suspend = () => { user = true; stop(); };
   const resume = () => { user = false; start(); };
