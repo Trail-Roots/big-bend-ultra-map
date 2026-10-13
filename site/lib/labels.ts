@@ -48,7 +48,7 @@ export function stationLabel(c: Ctx, f: Feature, p: (ll: [number, number]) => [n
   const leads = lines.map((l, i) => (i === 0 ? 0 : i < nameLines.length ? T.name.size * T.nameLead : i === nameLines.length ? T.name.size / 2 + T.gap + T.info.size / 2 : T.info.size * T.infoLead));
   const { svg, boxes } = block(x, y, (q.align ?? 'center') as Align, lines, leads);
   const [sx, sy] = p(s.lonlat);
-  return `<g class="stlabel" data-station="${esc(q.station)}">${leader(boxes, sx, sy, radius(q.station))}${svg}</g>`;
+  return `<g class="stlabel" data-station="${esc(q.station)}" data-ax="${f1(sx)}" data-ay="${f1(sy)}">${leader(boxes, sx, sy, radius(q.station))}${svg}</g>`;
 }
 
 export function poiLabel(f: Feature, p: (ll: [number, number]) => [number, number], targetR = 6) {
@@ -62,5 +62,6 @@ export function poiLabel(f: Feature, p: (ll: [number, number]) => [number, numbe
   const { svg, boxes } = block(x, y, (q.align ?? 'center') as Align, lines, leads);
   // POI leaders always run from the title to the POI dot
   const lead = q.target ? (() => { const [tx, ty] = p(q.target); const b = boxes[0], my = (b.y0 + b.y1) / 2; const sx = tx < b.x0 ? b.x0 : tx > b.x1 ? b.x1 : Math.max(b.x0, Math.min(tx, b.x1)); const sy = tx < b.x0 || tx > b.x1 ? my : ty < b.y0 ? b.y0 : b.y1; return leaderLine(sx, sy, tx, ty, 0, targetR); })() : '';
-  return `<g class="poilabel" data-poi="${esc(q.poi)}">${lead}${svg}</g>`;
+  const [ax, ay] = q.target ? p(q.target) : [x, y];
+  return `<g class="poilabel" data-poi="${esc(q.poi)}" data-ax="${f1(ax)}" data-ay="${f1(ay)}">${lead}${svg}</g>`;
 }

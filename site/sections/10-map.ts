@@ -6,27 +6,33 @@ import type { Ctx } from '../lib/types';
 import { hoverData } from '../lib/hover';
 // Print = US Letter portrait, 2 pages: p1 the main map, p2 the side panel (header, mini maps, timelines, profile).
 // Panels keep their 36x24 in design-sheet geometry (inches) and each page is uniformly zoomed to fit the printable area.
-export const LETTER = { w: 8.5, h: 11, margin: 0.25 };
-const PW = LETTER.w - 2 * LETTER.margin, PH = LETTER.h - 2 * LETTER.margin;
+export const LETTER = { w: 8.5, h: 11, margin: 0.4 };
 type Box = [number, number, number, number]; // sheet fractions [x0, y0 (from bottom), w, h]
 const inch = (b: Box) => ({ l: b[0] * 36, t: (1 - b[1] - b[3]) * 24, w: b[2] * 36, h: b[3] * 24 });
-const fit = (w: number, h: number) => Math.min(PW / w, PH / h);
+/** best letter orientation for a w x h in block: largest uniform zoom inside equal 0.4in margins, centred */
+function place(w: number, h: number) {
+  const opt = (pw: number, ph: number, orient: string) => { const W = pw - 2 * LETTER.margin, H = ph - 2 * LETTER.margin, z = Math.min(W / w, H / h); return { z, orient, mx: (W - w * z) / 2, my: (H - h * z) / 2 }; };
+  const a = opt(LETTER.w, LETTER.h, 'portrait'), b = opt(LETTER.h, LETTER.w, 'landscape');
+  return a.z >= b.z ? a : b;
+}
 export function render(c: Ctx) {
   const L = c.layout, hdr = L.header, st = L.strips;
   const toggles = mainLayers.map(([k, lab, on]) => `<label><input type="checkbox" data-layer="${k}"${on ? ' checked' : ''}> ${lab}</label>`).join('')
     + `<span class="sub">${c.courses.order.map(k => `<label class="ck" style="--c:${c.courses.colors[k]}"><input type="checkbox" data-course="${k}" checked> ${k}</label>`).join('')}</span>`;
-  const minis = c.courses.order.map(k => `<figure class="minibox" id="pb-m${k}">${renderMini(c, k)}</figure>`).join('');
+  const minis = c.courses.order.map(k => `<figure class="minibox" id="pb-m${k}">${renderMini(c, k)}<figcaption class="ui minilinks">${c.courses.courses[k].stravaUrl ? `<a href="${esc(c.courses.courses[k].stravaUrl)}" target="_blank" rel="noopener">Strava route</a>` : ''}<a href="${esc(c.courses.courses[k].gpx)}" download>Download GPX</a></figcaption></figure>`).join('');
   const stripBox = [st.rx, st.top - 5 * st.rh, st.w, 5 * st.rh];
   const evb = L.elev, evBox = [evb[0], evb[1] - 40 / SHEET.h, evb[2], evb[3] + 40 / SHEET.h];
   const notice = hdr[2].text.split('\n');
-  const mainIn = inch(L.views.main.fig), z0 = fit(mainIn.w, mainIn.h);
+  const mainIn = inch(L.views.main.fig);
   const side: [string, Box][] = [['pb-hdr', [L.logo[0], L.logo[1], 0.51, L.logo[3]]], ...c.courses.order.map((k) => [`pb-m${k}`, L.views[k].fig] as [string, Box]), ['pb-strips', stripBox as Box], ['pb-prof', evBox as Box]];
   const si = side.map(([id, b]) => [id, inch(b)] as const), ox = Math.min(...si.map(([, b]) => b.l)), oy = Math.min(...si.map(([, b]) => b.t));
   const sw = Math.max(...si.map(([, b]) => b.l + b.w)) - ox, sh = Math.max(...si.map(([, b]) => b.t + b.h)) - oy + 0.5;
-  const z1 = Math.min(z0, fit(sw, sh)), z2 = z1; // same zoom on both pages => map logo prints the same size as the header logo
+  const P1 = place(mainIn.w, mainIn.h), P2 = place(sw, sh); // each page fitted on its own
   const px = (b: { l: number; t: number; w: number; h: number }) => `{left:${(b.l - ox).toFixed(3)}in;top:${(b.t - oy).toFixed(3)}in;width:${b.w.toFixed(3)}in;height:${b.h.toFixed(3)}in}`;
-  const css = `@media print{#pb-main{width:${mainIn.w.toFixed(3)}in;height:${mainIn.h.toFixed(3)}in;zoom:${z1.toFixed(4)}}`
-    + `.side{width:${sw.toFixed(3)}in;height:${sh.toFixed(3)}in;zoom:${z2.toFixed(4)}}${si.map(([id, b]) => `#${id}${px(b)}`).join('')}}`;
+  // margins inside a zoomed box are zoomed too, so divide the centring offsets by z
+  const pg = (sel: string, name: string, w: number, h: number, P: ReturnType<typeof place>) => `@page ${name}{size:letter ${P.orient};margin:${LETTER.margin}in}`
+    + `@media print{${sel}{page:${name};width:${w.toFixed(3)}in;height:${h.toFixed(3)}in;zoom:${P.z.toFixed(4)};margin:${(P.my / P.z).toFixed(4)}in ${(P.mx / P.z).toFixed(4)}in!important}}`;
+  const css = pg('#pb-main', 'pmain', mainIn.w, mainIn.h, P1) + pg('.side', 'pside', sw, sh, P2) + `@media print{${si.map(([id, b]) => `#${id}${px(b)}`).join('')}}`;
   return `<style>${css}</style>
 <details class="ui layers" open><summary>Map layers</summary><div class="toggles">${toggles}</div></details>
 <div class="sheet">

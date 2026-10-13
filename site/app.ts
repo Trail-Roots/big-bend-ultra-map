@@ -1,3 +1,4 @@
+import { initZoom, zoomOf } from './zoom';
 // Layer toggles + print button. No framework; the map is static inline SVG.
 const show = (sel: string, on: boolean) => document.querySelectorAll<SVGGElement>(sel).forEach((g) => (g.style.display = on ? '' : 'none'));
 document.querySelectorAll<HTMLInputElement>('input[data-layer]').forEach((cb) => cb.addEventListener('change', () => { show(`.mainmap g.layer[data-layer="${cb.dataset.layer}"]`, cb.checked); if (cb.dataset.layer === 'zoom') show('svg.mini g.zoombox', cb.checked); if (cb.dataset.layer === 'topo') show('svg.mini g.topo', cb.checked); }));
@@ -12,7 +13,7 @@ if (hdEl && prof) {
   const HD: HD = JSON.parse(hdEl.textContent || '{}'), NS = 'http://www.w3.org/2000/svg';
   const el = (tag: string, attrs: Record<string, string | number>, parent: Element) => { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, String(attrs[k])); parent.appendChild(e); return e; };
   const main = document.querySelector<SVGSVGElement>('svg.mainmap')!;
-  const mk = (svg: SVGSVGElement, r: number, sw: number) => { const g = el('g', { class: 'hov', style: 'display:none;pointer-events:none' }, svg); el('circle', { r: r + sw, fill: '#fff' }, g); const c = el('circle', { r, fill: 'none', 'stroke-width': sw }, g); el('circle', { r: sw * 0.9, fill: '#111' }, g); return { g, c }; };
+  const mk = (svg: SVGSVGElement, r: number, sw: number) => { const g = el('g', { class: 'hov', style: 'display:none;pointer-events:none' }, svg.querySelector('g.zv') ?? svg); el('circle', { r: r + sw, fill: '#fff' }, g); const c = el('circle', { r, fill: 'none', 'stroke-width': sw }, g); el('circle', { r: sw * 0.9, fill: '#111' }, g); return { g, c }; };
   // one marker per course on the main map, one on each course's own mini map
   const mains: Record<string, ReturnType<typeof mk>> = {}, minis: Record<string, ReturnType<typeof mk>> = {};
   for (const [k, c] of Object.entries(HD.courses)) { mains[k] = mk(main, 13, 5); mains[k].c.setAttribute('stroke', c.color); }
@@ -41,8 +42,8 @@ if (hdEl && prof) {
     for (const { k, v } of hits) {
       const [, ft, ax, ay, bx, by] = v, d = dots[k] as SVGElement;
       d.style.display = ''; d.setAttribute('cx', String(X(v[0]))); d.setAttribute('cy', String(Y(ft)));
-      mains[k].g.style.display = ''; mains[k].g.setAttribute('transform', `translate(${ax} ${ay})`);
-      if (minis[k]) { minis[k].g.style.display = ''; minis[k].g.setAttribute('transform', `translate(${bx} ${by})`); }
+      mains[k].g.style.display = ''; mains[k].g.setAttribute('transform', `translate(${ax} ${ay}) scale(${1 / zoomOf(main)})`);
+      if (minis[k]) { minis[k].g.style.display = ''; minis[k].g.setAttribute('transform', `translate(${bx} ${by}) scale(${1 / zoomOf(minis[k].g.ownerSVGElement)})`); }
     }
     // readout: one line per course, longest first: course · mile · cumulative gain from the start
     lab.textContent = '';
@@ -69,3 +70,5 @@ const syncLogo = () => {
 addEventListener('resize', syncLogo); hdrLogo?.addEventListener('load', syncLogo); syncLogo();
 addEventListener('beforeprint', () => { if (mapLogo) { mapLogo.setAttribute('width', String(1.45 * 72)); mapLogo.setAttribute('height', String(1.45 * 72 * 776 / 730)); } });
 addEventListener('afterprint', syncLogo);
+
+initZoom();

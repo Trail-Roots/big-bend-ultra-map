@@ -64,6 +64,7 @@ export function renderMini(c, k) {
   for (const f of c.arrows.features.filter(f => f.properties.map === k)) s += chevron(f, V, col);
   if (k === '10K') s += turnaround(c, V);
   for (const st of c.cutoffs[k]) { const [x, y] = V.p(c.stations.stations[st.station].lonlat); s += station(x, y, st.station, c.stations.stations[st.station].spectator, { s: 1280, fs: 23, badge: false, colors: col }); }
+  s = `<g class="zv">${s}</g>`; // zoom/pan content (bib stays fixed)
   s += bib(k, c.courses.courses[k].start, c.courses.colors[k], W, H, col);
   return `<svg class="mini" data-mini="${k}" viewBox="0 0 ${f1(W)} ${f1(H)}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${k} course map"><defs><clipPath id="mc${k}"><rect width="${f1(W)}" height="${f1(H)}"/></clipPath></defs><rect width="${f1(W)}" height="${f1(H)}" fill="#fff"/><g clip-path="url(#mc${k})">${s}</g><rect width="${f1(W)}" height="${f1(H)}" fill="none" stroke="#b8ae9c" stroke-width="1.6"/></svg>`;
 }

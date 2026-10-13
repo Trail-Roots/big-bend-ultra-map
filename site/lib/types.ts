@@ -8,4 +8,4 @@ export interface Ctx {
   courseGeo: Record<string, FC>; profiles: Record<string, any>;
 }
 /** one section of the single-page site; files in site/sections/ render in filename order */
-export interface Section { meta: { id: string; title: string }; render(c: Ctx): string }
+export interface Section { meta: { id: string; title: string; /** opt out of the print/PDF pages (default: printed) */ print?: boolean }; render(c: Ctx): string }

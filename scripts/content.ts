@@ -144,7 +144,9 @@ HRS['S/F'] = SF_HOURS;
 
 w('stations.json', { order: ['S/F', '1', '2', '3', '4', '5'], stations: Object.fromEntries(['S/F', '1', '2', '3', '4', '5'].map((k) => [k, { name: NAME[k], kml: KN[k], lonlat: ll([merc(SLL[k])])[0], hours: HRS[k] ?? null, spectator: SPEC.has(k), elevation_ft: Math.round(STEL[k] ?? 0) }])) });
 w('cutoffs.json', Object.fromEntries(ORDER.map((k) => [k, S[k].map(([station, mile, cutoff]) => ({ station, mile, cutoff }))])));
-w('courses.json', { order: ORDER, colors: C, courses: Object.fromEntries(ORDER.map((k) => [k, { distance_mi: S[k][S[k].length - 1][1], start: S[k][0][2], color: C[k] }])) });
+// Strava route URL: only taken from the source GPX metadata (<link href="https://www.strava.com/routes/...">); never invented
+const strava = (k: Course) => { const m = fs.readFileSync(path.join(SRC, 'gpx', `${k}.gpx`), 'utf8').match(/https?:\/\/(?:www\.)?strava\.com\/routes\/\d+/); return m ? m[0].replace(/^http:/, 'https:') : null; };
+w('courses.json', { order: ORDER, colors: C, courses: Object.fromEntries(ORDER.map((k) => [k, { distance_mi: S[k][S[k].length - 1][1], start: S[k][0][2], color: C[k], stravaUrl: strava(k), gpx: `gpx/big-bend-ultra-${k.toLowerCase()}.gpx` }])) });
 w('colors.json', { cream: '#ffffff', ink: '#2a2a2a', mute: '#7d766b', ring: '#111111', road: '#5d5850', aid_red: '#c4161c', park: '#5f8a5a', offcourse: '#9b968e', offcourse_4x4: '#8f8a82', minis_network: '#b9b3aa', minis_next: '#a9a299', boundary: '#8e8e8e', bar: '#9c2f1e' });
 
 // elevation profiles: GPX distance remapped so station passes land on sheet mileage
