@@ -1,0 +1,10 @@
+// Shared shapes for the renderer. Content is plain GeoJSON/JSON (see README); kept loose on purpose.
+export type Feature = { type: 'Feature'; properties: Record<string, any>; geometry: { type: string; coordinates: any } };
+export type FC = { type: 'FeatureCollection'; features: Feature[] };
+export interface Ctx {
+  layout: any; colors: Record<string, string>; courses: { order: string[]; colors: Record<string, string>; courses: Record<string, any> };
+  stations: { order: string[]; stations: Record<string, any> }; cutoffs: Record<string, { station: string; mile: number; cutoff: string }[]>;
+  network: FC; park: FC; zones: FC; pois: FC; zoom: FC; arrows: FC; labels: FC;
+  courseGeo: Record<string, FC>; profiles: Record<string, any>;
+}
+export interface Page { meta: { path: string; title: string; nav: string }; render(c: Ctx): string }

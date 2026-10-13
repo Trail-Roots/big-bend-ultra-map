@@ -1,5 +1,5 @@
-import { SHEET, viewProjection, esc, f1, lineD, dash, station } from './util.mjs';
-import { hillImage, chevron } from './mainmap.mjs';
+import { SHEET, viewProjection, esc, f1, lineD, dash, station } from './util';
+import { hillImage, chevron } from './mainmap';
 const short = t => t.toLowerCase().replace(' am', 'a').replace(' pm', 'p');
 export function renderMini(c, k) {
   const view = c.layout.views[k], W = view.fig[2] * SHEET.w, H = view.fig[3] * SHEET.h, V = viewProjection(view, W, H), col = c.colors, O = c.courses.order;

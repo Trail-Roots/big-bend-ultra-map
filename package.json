@@ -1,18 +1,28 @@
 {
-  "name": "bbu-web",
-  "version": "1.0.0",
-  "description": "",
+  "name": "big-bend-ultra-map",
+  "description": "Big Bend Ultra 2027 course & access map site (Bun + TypeScript)",
   "scripts": {
-    "build": "node site/build.mjs",
-    "preview": "npx --yes http-server dist -p 8787",
-    "shots": "node tools/shoot.mjs"
+    "content": "bun scripts/content.ts",
+    "site": "bun site/build.ts",
+    "pdf": "bun scripts/pdf.ts",
+    "build": "bun run content && bun run site && bun run pdf",
+    "preview": "bun tools/serve.ts",
+    "shots": "bun tools/shoot.ts",
+    "check": "tsc -p .",
+    "diff:content": "bun tools/diff-content.ts"
   },
-  "author": "",
-  "license": "ISC",
   "dependencies": {
     "d3-geo": "^3.1.1"
   },
   "private": true,
   "type": "module",
-  "devDependencies": {}
+  "devDependencies": {
+    "@types/d3-geo": "^3.1.1",
+    "@types/pngjs": "^6.0.5",
+    "bun-types": "^1.4.3",
+    "pixelmatch": "^8.0.0",
+    "playwright": "^1.64.0",
+    "pngjs": "^7.0.0",
+    "typescript": "^7.0.2"
+  }
 }

@@ -1,67 +1,68 @@
 # Big Bend Ultra – course map website
 
-Static, responsive and printable version of the Big Bend Ultra 2027 race map
-(same geometry and placement decisions as `big-bend-ultra-2027-race-map.pdf`, page 1).
+Static, responsive and printable Big Bend Ultra 2027 course & access map. 100 % TypeScript, built with **Bun**.
+Live: https://trail-roots.github.io/big-bend-ultra-map/
 
 ```
-content/   data only (no styling decisions beyond named colors)
-site/      rendering: build script, page modules, SVG renderers, CSS, tiny client JS
-tools/     export_content.py (pipeline -> content), shoot.mjs (screens + print PDFs)
-dist/      build output (git-ignored)
-previews/  desktop / mobile / print renders
+sources/   raw inputs (GPX, stations sheet CSV, logistics KML, cached elevations, frozen arrows, curated layers, hillshade)
+scripts/   content pipeline (sources -> content) + PDF export
+content/   generated GeoJSON/JSON the site renders (committed so diffs are reviewable)
+site/      rendering: build script, page modules, SVG renderers, CSS, client app.ts
+tools/     dev helpers: local server, screenshots, content diff, image diff
+dist/      build output (git-ignored), deployed to GitHub Pages
+previews/  desktop / mobile / letter print renders
 ```
 
-## Content (`/content`)
-| file | what |
+## Build
+```
+bun install
+bunx playwright install chromium   # once, for the PDF + screenshots
+bun run build      # content -> dist/ (HTML) -> dist/big-bend-ultra-2027-map.pdf
+bun run preview    # http://localhost:8787
+bun run shots      # previews/*.png
+bun run check      # tsc type check
+```
+Steps can run separately: `bun run content`, `bun run site`, `bun run pdf`.
+
+## Sources (`/sources`) and the content pipeline (`scripts/content.ts`)
+| input | produces |
 |---|---|
-| `courses/{100K,55K,35K,20K,10K}.geojson` | course lines |
-| `network.geojson` | every drawn road/trail. `cls`: `paved`, `unpaved`, `4x4`, `foot_bike`, `foot`, `connector`; `on_course` true = bold ink access style, false = thin gray off-course |
-| `park.geojson` | park boundary ways (`kind: boundary`), park polygon, private inholdings |
-| `zones.geojson` | access zones (4x4 only / ATV-emergency / no vehicles), hidden by default |
-| `pois.geojson` | Rincon, 10K turnaround |
-| `labels.geojson` | `kind: curved` LineStrings (rendered with `<textPath>`), plus every placed text (station labels/hours, Rincon, Sauceda, Private, zoom box labels…) as Points at their final position, with font size, halo and leader lines |
-| `arrows.geojson` | the frozen arrow set from `arrows_approved.json` (36 chevrons; `map` = main or a course mini map) |
-| `zoomboxes.geojson` | per-course zoom rectangles |
-| `stations.json`, `cutoffs.json`, `courses.json`, `colors.json` | stations (hours, spectator access, elevation), per-course miles + cutoffs, start times, palette |
-| `profiles/*.json` | elevation profile (mile, ft) per course + station callout placement |
-| `layout.json` | sheet layout (figure fractions of the 36×24 in page), map view windows (EPSG:3857), legend box, scale bar, hillshade bounds |
-| `hillshade/*.jpg` | the **only raster**: hillshade underlay for the main map (300 dpi at print size) and each mini map |
+| `gpx/*.gpx` | `content/courses/*.geojson` (dedupe, spike removal, topology-preserving Douglas–Peucker ~10 m, Chaikin ×2, 12 m resample, DP 2.5 m) and `content/profiles/*.json` (GPX elevation, distance remapped so station passes fall on sheet mileage) + profile callout placement |
+| `sheet.csv` (official stations Google Sheet export) | `cutoffs.json`, `courses.json`, station hours in `stations.json` |
+| `logistics.kml` (Logistics My Map) | station positions |
+| `stel.json` | station elevations (m, SRTM 30 m, cached) |
+| `arrows_approved.json` | `arrows.geojson` — the frozen, approved 36 direction arrows (no auto-placement) |
+| `access.json` | `zones.geojson` (access zones, named foot only / foot + bike / 4x4) |
+| `curated/park.geojson` | `park.geojson`, simplified (DP 2 m) |
+| `curated/{network,labels,pois,zoomboxes}.geojson`, `curated/layout.json` | copied verbatim: hand-tuned road classification, label placement, zoom boxes and sheet layout as approved on the PDF |
+| `hillshade/*.jpg`, `logos/*` | copied; the hillshade is the only raster layer |
 
-All coordinates are WGS84 lon/lat. The renderer projects with d3-geo Mercator fitted to the view windows in `layout.json`, so the SVG lines up exactly with the PDF axes.
+**Station hours rule:** opens at earliest course start + miles × pace (4 min/mi Waterhole & Mines, 5 min/mi elsewhere),
+rounded to the nearest 15 min and never before 5a; closes at the latest cutoff. Start/Finish is fixed at 4a – 1a.
+The build warns if a computed hours string no longer matches the station label text in `curated/labels.geojson`.
 
-### Editing content
-* Small edits (cutoff time, station hours, label text, a color): edit the JSON/GeoJSON directly and rebuild.
-* Moving a label: change its Point coordinate in `labels.geojson` (curved labels: edit the LineString the text follows).
-* Geometry changes: edit the GeoJSON in any GIS tool (QGIS, geojson.io) keeping the `properties`.
-* Full re-export from the Python map pipeline (`/workspace/big-bend-ultra-map`):
-  `cp tools/export_content.py ../big-bend-ultra-map/ && cd ../big-bend-ultra-map && BBU_EXPORT=1 .venv/bin/python make.py`
-  (make.py execs the exporter just before saving the PDF; it writes straight into `content/`).
+### Editing
+* Cutoffs / start times: update `sources/sheet.csv` (re-export the sheet), `bun run build`.
+* Course change: replace `sources/gpx/<course>.gpx`.
+* Moving a label / road style / arrow: edit the curated GeoJSON (any GIS tool, keep `properties`) or `arrows_approved.json`.
+* `bun tools/diff-content.ts content <other-content-dir>` compares two content trees with numeric tolerance.
 
 ## Rendering (`/site`)
-Plain Node ESM, no framework. `site/build.mjs` loads `/content`, imports every module in `site/pages/*.mjs`
-(each exports `meta = {path, title, nav}` and `render(ctx)`), wraps it in `site/template.html` and writes `dist/`.
-**Add a page** = drop a new `site/pages/foo.mjs`; it is routed to `meta.path` and appears in the nav automatically.
+`site/build.ts` loads `/content`, imports every `site/pages/*.ts` (each exports `meta = {path, title, nav}` and
+`render(ctx)`), wraps it in `site/template.html` and writes `dist/`; `site/app.ts` is bundled to `dist/app.js`.
+**Add a page** = drop `site/pages/foo.ts`; it is routed to `meta.path` and appears in the nav automatically.
 
-* `lib/mainmap.mjs` – main map inline SVG; one `<g class="layer" data-layer=…>` per toggle (topo, park, zones, roads, access, courses, zoom, arrows, stations, pois, labels) + legend, scale bar, north arrow, logo.
-* `lib/panels.mjs` – mini maps (bibs, turnaround glyph), timeline strips, elevation profile – all SVG.
-* `public/` – CSS (screen + print), `app.js` (layer toggles, print size), DejaVu fonts (same fonts as the PDF).
+* `lib/mainmap.ts` – main map inline SVG; one `<g class="layer">` per toggle + legend, scale bar, north arrow, logo.
+* `lib/panels.ts` – mini maps, timeline strips, elevation profile (all SVG).
+* `lib/util.ts` – projection (Mercator fitted to the layout view windows), page-space path simplification, styles.
 
-Layout: side-by-side ≥1000 px wide, stacked below. Print: `@page 36in 24in`, UI hidden, every panel absolutely
-positioned at its PDF figure position. Fallbacks: choose "tabloid" or "letter" in the print menu (or `?paper=tabloid`),
-which scales the full sheet onto 17×11 / 11×8.5.
+Layout: side-by-side ≥ 1000 px wide, stacked below.
 
-## Build / preview
-```
-npm ci
-npm run build      # -> dist/
-npm run preview    # http://localhost:8787
-npm run shots      # previews/*.png + print PDFs (needs: npx playwright install chromium)
-```
+## Print / PDF
+US Letter portrait only, 2 pages: page 1 = main map, page 2 = header, mini maps, timelines and elevation profile.
+(One letter page would shrink the 36×24 design to ~30 %, making map labels ~6 pt; two pages keep them ~10 pt.)
+`scripts/pdf.ts` prints the built page with headless Chromium using the same print CSS, so the **Download PDF**
+button (`dist/big-bend-ultra-2027-map.pdf`) matches what the browser prints. Everything is vector except the hillshade.
 
-## Deploy (Cloudflare Pages)
-Connect the GitHub repo in Cloudflare Pages → Framework preset: None
-* Build command: `npm run build`
-* Build output directory: `dist`
-* Environment: `NODE_VERSION=20`
-
-or from CLI: `npm run build && npx wrangler pages deploy dist` (`wrangler.toml` sets `pages_build_output_dir`).
+## Deploy
+`.github/workflows/pages.yml`: on push to `main`, sets up Bun, installs Chromium, `bun run build`, publishes `dist/` to GitHub Pages.

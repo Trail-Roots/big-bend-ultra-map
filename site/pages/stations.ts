@@ -1,4 +1,4 @@
-import { esc } from '../lib/util.mjs';
+import { esc } from '../lib/util';
 export const meta = { path: 'stations/index.html', title: 'Aid stations & cutoffs', nav: 'Stations' };
 export function render(c) {
   const rows = c.stations.order.map(k => { const s = c.stations.stations[k]; return `<tr><td>${esc(k)}</td><td>${esc(s.name)}</td><td>${esc(s.hours || '')}</td><td>${s.spectator ? 'yes' : ''}</td><td>${s.elevation_ft || ''}</td></tr>`; }).join('');

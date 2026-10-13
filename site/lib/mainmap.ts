@@ -1,4 +1,4 @@
-import { SHEET, viewProjection, esc, f1, lineD, dash, STYLE, station, textBlock } from './util.mjs';
+import { SHEET, viewProjection, esc, f1, lineD, dash, STYLE, station, textBlock } from './util';
 const LAYERS = [
   ['topo', 'Topo shading', true], ['park', 'Park boundary', true], ['zones', 'Access zones', false], ['roads', 'Roads (off-course)', true],
   ['access', 'Access styles (on-course)', true], ['courses', 'Routes per course', false], ['zoom', 'Zoom boxes', true], ['arrows', 'Direction arrows', true],
@@ -20,7 +20,7 @@ export function renderMain(c) {
   }
   for (const f of c.park.features) if (f.properties.kind === 'boundary')
     add('park', `<path d="${V.path(f)}" fill="none" stroke="${col.boundary}" stroke-opacity=".9" stroke-width="2.6" stroke-dasharray="${dash([0.6, 2.6], 2.6)}" stroke-linecap="round"/>`);
-  const zc = { '4x4 Only': '#e9d4a5', 'ATV/Emergency Only': '#d49564', 'No Vehicle Access': '#b05c51' };
+  const zc: Record<string, string> = { '4x4': '#e9d4a5', 'foot + bike': '#d49564', 'foot only': '#b05c51' };
   for (const f of c.zones.features) add('zones', `<path d="${V.path(f)}" fill="${zc[f.properties.zone] || '#ccc'}" fill-opacity=".35" stroke="${zc[f.properties.zone]}" stroke-width="1.5"><title>${esc(f.properties.zone)}</title></path>`);
   // roads
   const net = c.network.features;

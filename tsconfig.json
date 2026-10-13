@@ -1,0 +1,7 @@
+{
+  "compilerOptions": {
+    "target": "ESNext", "module": "ESNext", "moduleResolution": "bundler", "lib": ["ESNext", "DOM"],
+    "types": ["bun-types"], "strict": false, "noImplicitAny": false, "skipLibCheck": true, "noEmit": true, "allowImportingTsExtensions": true
+  },
+  "include": ["scripts", "site", "tools"]
+}

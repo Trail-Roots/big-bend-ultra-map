@@ -6,8 +6,29 @@ export const f1 = v => Math.round(v * 10) / 10;
 export function viewProjection(view, W, H) {
   const [x0, x1] = view.x, [y0, y1] = view.y, k = W / (x1 - x0);
   const proj = geoMercator().scale(R * k).translate([-x0 * k, y1 * k]);
-  const path = geoPath(proj).digits(1);
-  return { proj, path, W, H, ppm: k, p: ll => proj(ll) };
+  // Project + simplify in page space (DP 0.15 pt ≈ 0.002 in: invisible at any print/screen size) and drop
+  // geometries lying entirely off-view. Whole partially-visible lines are kept so dash phases don't move.
+  const TOL = 0.15, PAD = 60;
+  const ring = (cs: [number, number][], close = false) => {
+    const P = simplifyPts(cs.map((q) => proj(q) as [number, number]), TOL);
+    return 'M' + P.map((q) => `${f1(q[0])},${f1(q[1])}`).join('L') + (close ? 'Z' : '');
+  };
+  const vis = (cs: [number, number][]) => {
+    let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+    for (const q of cs) { const [x, y] = proj(q) as [number, number]; x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y); }
+    return x1 >= -PAD && y1 >= -PAD && x0 <= W + PAD && y0 <= H + PAD;
+  };
+  const path = (f: { geometry: { type: string; coordinates: any } }) => {
+    const g = f.geometry, c = g.coordinates;
+    switch (g.type) {
+      case 'LineString': return vis(c) ? ring(c) : '';
+      case 'MultiLineString': return c.filter(vis).map((l) => ring(l)).join('');
+      case 'Polygon': return vis(c[0]) ? c.map((r) => ring(r, true)).join('') : '';
+      case 'MultiPolygon': return c.filter((p) => vis(p[0])).map((p) => p.map((r) => ring(r, true)).join('')).join('');
+      default: return geoPath(proj).digits(1)(f as any) || '';
+    }
+  };
+  return { proj, path, W, H, ppm: k, p: (ll) => proj(ll) };
 }
 export const ptsAttr = (P) => P.map(q => `${f1(q[0])},${f1(q[1])}`).join(' ');
 export const lineD = (P) => 'M' + P.map(q => `${f1(q[0])},${f1(q[1])}`).join('L');
@@ -48,4 +69,17 @@ export function textBlock(x, y, p, cls = '') {
   const tsp = lines.map((l, i) => `<tspan x="${f1(tx)}" y="${f1(y0 + i * lh)}">${esc(l)}</tspan>`).join('');
   const rot = p.rotation ? ` transform="rotate(${-p.rotation} ${f1(x)} ${f1(y)})"` : '';
   return `<text class="${cls} f-${fam}" font-size="${fs}" fill="${p.color}" font-style="${p.style}" font-weight="${/bold|semibold|600|700/.test(p.weight) ? (p.weight === 'semibold' ? 600 : 700) : 400}" text-anchor="${anchor}" dominant-baseline="central"${halo}${op}${rot}>${tsp}</text>`;
+}
+
+/** Douglas–Peucker on projected points */
+export function simplifyPts(P: [number, number][], tol: number): [number, number][] {
+  if (P.length < 3) return P;
+  const keep = new Uint8Array(P.length); keep[0] = keep[P.length - 1] = 1;
+  const st: [number, number][] = [[0, P.length - 1]];
+  while (st.length) {
+    const [a, b] = st.pop()!; let dm = -1, im = -1; const ax = P[a][0], ay = P[a][1], dx = P[b][0] - ax, dy = P[b][1] - ay, l2 = dx * dx + dy * dy;
+    for (let i = a + 1; i < b; i++) { let t = l2 ? ((P[i][0] - ax) * dx + (P[i][1] - ay) * dy) / l2 : 0; t = Math.max(0, Math.min(1, t)); const d = Math.hypot(P[i][0] - ax - t * dx, P[i][1] - ay - t * dy); if (d > dm) { dm = d; im = i; } }
+    if (dm > tol) { keep[im] = 1; st.push([a, im], [im, b]); }
+  }
+  return P.filter((_, i) => keep[i]);
 }
