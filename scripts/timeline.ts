@@ -64,34 +64,40 @@ for (const k of ORDER) {
 //   uphill   1 + up·g (g ≤ 0.15), then + steepUp·(g − 0.15) (power-hiking steep climbs)
 //   downhill max(downFloor, 1 + down·g); beyond −20 % it slows again (+2·(−g − 0.2)) for technical descents
 // Fitness: a runner's deviation from flat is scaled by s = (avg pace / 20 min/mi)^beta, clamped 0.4–1.5 (faster runners less affected).
-// Fatigue (100K/55K only): × (1 + fatigue · mile/total). Aid-station dwell: `dwell` minutes at every aid-station visit.
+// Fatigue (100K/55K only): × (1 + fatigue · mile/total). Climb fatigue (all courses): × (1 + climbFat · cumulative gain / 10,000 ft),
+// so pace slows with elevation gained, not just with distance.
+// Aid-station dwell: base `dwell` minutes scaled by race position (0.5× at the start .. 1.5× at the finish: short stops early, longer late)
+// and halved when the previous aid-station visit was less than 3 mi earlier.
 // Every runner's total time is normalised to their real 2026 finish time.
 const lerp = (x: number, xs: number[], ys: number[]) => { if (x <= xs[0]) return ys[0]; if (x >= xs[xs.length - 1]) return ys[ys.length - 1]; let lo = 0, hi = xs.length - 1; while (hi - lo > 1) { const m = (lo + hi) >> 1; if (xs[m] <= x) lo = m; else hi = m; } return ys[lo] + ((ys[hi] - ys[lo]) * (x - xs[lo])) / (xs[hi] - xs[lo] || 1); };
 const start = (k: string) => { const [hm, ap] = courses.courses[k].start.split(' '), [h, mi] = hm.split(':').map(Number); return (h % 12 + (ap === 'PM' ? 12 : 0)) * 60 + mi; };
-type Params = { up: number; steepUp: number; down: number; downFloor: number; beta: number; fatigue: number; dwell: number };
-const grade: Record<string, { mi: number[]; g: number[] }> = {};
+type Params = { up: number; steepUp: number; down: number; downFloor: number; beta: number; fatigue: number; climbFat: number; dwell: number };
+const grade: Record<string, { mi: number[]; g: number[]; cg: number[] }> = {};
 for (const k of ORDER) {
   const p = J(`content/profiles/${k}.json`), mi: number[] = p.mi, ft: number[] = p.ft, n = mi.length;
   const sm = ft.map((_, i) => { let t = 0, c = 0; for (let j = Math.max(0, i - 40); j < Math.min(n, i + 40); j++) if (Math.abs(mi[j] - mi[i]) <= 0.25) { t += ft[j]; c++; } return t / c; });
   const g = [0]; for (let i = 1; i < n; i++) { const dm = mi[i] - mi[i - 1]; g.push(dm > 0 ? (sm[i] - sm[i - 1]) / (dm * 5280) : 0); }
-  grade[k] = { mi, g };
+  const cg = [0]; for (let i = 1; i < n; i++) cg.push(cg[i - 1] + Math.max(0, sm[i] - sm[i - 1]));
+  grade[k] = { mi, g, cg } as any;
 }
 const baseF = (g: number, P: Params) => g >= 0 ? (g <= 0.15 ? 1 + P.up * g : 1 + P.up * 0.15 + P.steepUp * (g - 0.15)) : Math.max(P.downFloor, 1 + P.down * g) + (g < -0.2 ? 2 * (-g - 0.2) : 0);
 const fit = (paceMinMi: number, P: Params) => Math.min(1.5, Math.max(0.4, (paceMinMi / 20) ** P.beta));
 const cache = new Map<string, { mi: number[]; e: number[] }>();
 /** moving-time fraction reached at each profile sample (0..1), for fitness s */
 function curve(k: string, s: number, P: Params) {
-  const key = `${k}|${s.toFixed(2)}`; let c = cache.get(key); if (c) return c;
-  const { mi, g } = grade[k], tot = mi[mi.length - 1], fat = k === '100K' || k === '55K' ? P.fatigue : 0;
-  const e = [0]; for (let i = 1; i < mi.length; i++) e.push(e[i - 1] + (mi[i] - mi[i - 1]) * (1 + (baseF(g[i], P) - 1) * s) * (1 + fat * (mi[i] / tot)));
+  const key = `${k}|${s.toFixed(2)}|${P.up},${P.steepUp},${P.down},${P.fatigue},${P.climbFat}`; let c = cache.get(key); if (c) return c;
+  const { mi, g, cg } = grade[k], tot = mi[mi.length - 1], fat = k === '100K' || k === '55K' ? P.fatigue : 0;
+  const e = [0]; for (let i = 1; i < mi.length; i++) e.push(e[i - 1] + (mi[i] - mi[i - 1]) * (1 + (baseF(g[i], P) - 1) * s) * (1 + fat * (mi[i] / tot)) * (1 + P.climbFat * (cg[i] / 10000)));
   c = { mi, e: e.map((v) => v / e[e.length - 1]) }; cache.set(key, c); return c;
 }
-const stopsBefore = (k: string, mile: number) => cutoffs[k].filter((c: any) => c.mile > 0 && c.mile < courses.courses[k].distance_mi - 0.01 && c.mile < mile - 1e-6).length;
-const nStops = (k: string) => stopsBefore(k, Infinity);
+const stopMiles = (k: string): number[] => cutoffs[k].filter((c: any) => c.mile > 0 && c.mile < courses.courses[k].distance_mi - 0.01).map((c: any) => c.mile);
+/** dwell minutes at each aid-station visit: shorter early, halved right after another visit */
+const dwells = (k: string, P: Params) => { const D = courses.courses[k].distance_mi, m = stopMiles(k); return m.map((x, i) => P.dwell * (0.5 + x / D) * (i > 0 && x - m[i - 1] < 3 ? 0.5 : 1)); };
+const dwellBefore = (k: string, mile: number, P: Params) => { const m = stopMiles(k), d = dwells(k, P); let t = 0; m.forEach((x, i) => { if (x < mile - 1e-6) t += d[i]; }); return t; };
 /** elapsed minutes when a runner with finish time T (min) arrives at `mile` */
 function arrive(k: string, T: number, mile: number, P: Params) {
-  const D = courses.courses[k].distance_mi, s = Math.round(fit(T / D, P) * 20) / 20, c = curve(k, s, P), mov = T - P.dwell * nStops(k);
-  return P.dwell * stopsBefore(k, mile) + mov * lerp(mile, c.mi, c.e);
+  const D = courses.courses[k].distance_mi, s = Math.round(fit(T / D, P) * 20) / 20, c = curve(k, s, P), mov = T - dwellBefore(k, Infinity, P);
+  return dwellBefore(k, mile, P) + mov * lerp(mile, c.mi, c.e);
 }
 // ---------- validate / tune against 2026 timing-mat splits ----------
 // RunSignup 2026 "Lap 1" / "Lap 2" are cumulative times at the Waterhole mat on the way out (mile 5.1) and back (finish − 5.1 mi);
@@ -111,14 +117,14 @@ for (const k of ORDER) {
   void D;
 }
 const score = (P: Params) => { let s = 0, n = 0; for (const v of VAL) for (const [m, a] of v.pts) { s += Math.abs(arrive(v.k, v.T, m, P) - a); n++; } return s / n; };
-const GRID = { up: [7, 8, 9, 10], steepUp: [2, 4], down: [2.5, 3.5, 4.5], downFloor: [0.62], beta: [0.5, 1, 1.5], fatigue: [0, 0.2, 0.4, 0.6, 0.8, 1.0, 1.2], dwell: [0, 2, 4, 6] };
+const GRID = { up: [7, 8, 9, 10], steepUp: [2, 4], down: [2.5, 3.5, 4.5], downFloor: [0.62], beta: [0.5, 1, 1.5], fatigue: [0, 0.2, 0.4, 0.6, 0.8, 1.0, 1.2], climbFat: [0, 0.05, 0.1, 0.2], dwell: [0, 2, 4, 6, 8] };
 let best: { P: Params; err: number } | null = null;
-for (const up of GRID.up) for (const steepUp of GRID.steepUp) for (const down of GRID.down) for (const beta of GRID.beta) for (const fatigue of GRID.fatigue) for (const dwell of GRID.dwell) {
-  const P = { up, steepUp, down, downFloor: 0.62, beta, fatigue, dwell }, err = score(P); if (!best || err < best.err) best = { P, err };
+for (const up of GRID.up) for (const steepUp of GRID.steepUp) for (const down of GRID.down) for (const beta of GRID.beta) for (const fatigue of GRID.fatigue) for (const climbFat of GRID.climbFat) for (const dwell of GRID.dwell) {
+  const P = { up, steepUp, down, downFloor: 0.62, beta, fatigue, climbFat, dwell }, err = score(P); if (!best || err < best.err) best = { P, err };
 }
 const PAR = best!.P;
 const noFitnessErr = score({ ...best!.P, beta: 0 });
-const baselineErr = score({ up: 8, steepUp: 8, down: 3, downFloor: 0.8, beta: 0, fatigue: 0, dwell: 0 });
+const baselineErr = score({ up: 8, steepUp: 8, down: 3, downFloor: 0.8, beta: 0, fatigue: 0, climbFat: 0, dwell: 0 });
 const med = (a: number[]) => { const b = [...a].sort((x, y) => x - y); return b[b.length >> 1]; };
 const validation = ORDER.flatMap((k) => {
   const rows = VAL.filter((v) => v.k === k); if (!rows.length) return [];
@@ -134,10 +140,10 @@ function curvesFor(k: string) {
   for (const s0 of dist[k].finish_s) { const T = s0 / 60, s = (Math.round(fit(T / D, PAR) * 10) / 10).toFixed(1); (cls.get(s) ?? cls.set(s, []).get(s)!).push(T); }
   const out: Record<string, { mi: number[]; f: number[] }> = {};
   for (const [s, Ts] of cls) {
-    const T = med(Ts), c = curve(k, Math.round(Number(s) * 20) / 20, PAR), mov = T - PAR.dwell * nStops(k), mi: number[] = [], f: number[] = [];
+    const T = med(Ts), c = curve(k, Math.round(Number(s) * 20) / 20, PAR), mov = T - dwellBefore(k, Infinity, PAR), dw = dwells(k, PAR), mi: number[] = [], f: number[] = [];
     const stops = cutoffs[k].filter((q: any) => q.mile > 0 && q.mile < D - 0.01).map((q: any) => q.mile);
-    for (let i = 0; i < c.mi.length; i += 10) { const m = c.mi[i]; mi.push(+m.toFixed(3)); f.push(+((PAR.dwell * stops.filter((x: number) => x < m).length + mov * c.e[i]) / T).toFixed(5)); }
-    for (const st of stops) { const t0 = arrive(k, T, st, PAR) / T; mi.push(st, st); f.push(+t0.toFixed(5), +(t0 + PAR.dwell / T).toFixed(5)); }
+    for (let i = 0; i < c.mi.length; i += 10) { const m = c.mi[i]; mi.push(+m.toFixed(3)); f.push(+((dwellBefore(k, m, PAR) + mov * c.e[i]) / T).toFixed(5)); }
+    stops.forEach((st: number, j: number) => { const t0 = arrive(k, T, st, PAR) / T; mi.push(st, st); f.push(+t0.toFixed(5), +(t0 + dw[j] / T).toFixed(5)); });
     const ord = mi.map((m, i) => [m, f[i]]).sort((a, b) => a[1] - b[1] || a[0] - b[0]); ord.push([D, 1]);
     out[s] = { mi: ord.map((x) => x[0]), f: ord.map((x) => x[1]) };
   }
@@ -171,8 +177,12 @@ for (const k of ORDER) {
     for (const c of cuts) { if (c.mile === 0 || (r.stop != null && c.mile > r.stop)) continue; const t = S0 + r.T * fracAt(k, c.mile, r.T), b = Math.floor((t - T0) / BIN); if (b >= 0 && b < nb) { stBins[c.station][b] += W8[k]; (stByCourse[k][c.station] ??= bins(nb))[b] += W8[k]; } }
   }
   const pass = cuts.map((c: any) => ({ station: c.station, mile: c.mile, cutoff: c.cutoff, first: S0 + arrive(k, D.finish_s[0] / 60, c.mile, PAR), median: S0 + arrive(k, D.q50 / 60, c.mile, PAR), last: S0 + arrive(k, D.finish_s[D.finish_s.length - 1] / 60, c.mile, PAR) }));
+  // course record: fastest finish on this course. 35K/55K/100K were new in 2026 (2026 only); 10K/20K kept their names and courses 2019-2026
+  const recYears = RS.events.filter((e: any) => evKey(e.name) === k && e.year < 2027 && (e.year >= 2026 || ['10K', '20K'].includes(k)) && e.result_sets[0]?.finish_s.length);
+  const rec = recYears.map((e: any) => ({ s: e.result_sets[0].finish_s[0], year: e.year })).sort((a: any, b: any) => a.s - b.s)[0];
+  const record = { ...rec, years: recYears.map((e: any) => e.year).sort() };
   onCourse.forEach((v, i) => (onCourse[i] = Math.round(v)));
-  out.courses[k] = { start: S0, distance_mi: total, ...Object.fromEntries(Object.entries(D).filter(([kk]) => kk !== 'finish_s')), finish_s: D.finish_s, on_course: onCourse, passes: pass, curves: curvesFor(k) };
+  out.courses[k] = { start: S0, distance_mi: total, ...Object.fromEntries(Object.entries(D).filter(([kk]) => kk !== 'finish_s')), finish_s: D.finish_s, on_course: onCourse, record, passes: pass, curves: curvesFor(k) };
 }
 const parseHours = (h: string) => { const t = (s: string) => { const m = s.trim().match(/^(\d+)(?::(\d\d))?([ap])$/)!; let H = Number(m[1]) % 12 + (m[3] === 'p' ? 12 : 0); return H * 60 + Number(m[2] ?? 0); }; const [a, b] = h.split('-').map(t); return [a, b < a ? b + 1440 : b]; };
 const rnd = (a: number[]) => a.forEach((v, i) => (a[i] = Math.round(v)));
@@ -191,7 +201,7 @@ out.assumptions = [
   'Finish-time distributions per 2027 distance = 2026 RunSignup results for the identically named event (same start times); one simulated runner per 2026 finisher.',
   'Expected 2027 starters = 2026 starters (finishers + DNF): 2027 registrant counts are not public (RunSignup participants endpoint returns Permission Denied). 2027 caps from RunSignup are shown for reference only.',
   'Pre-2026 years ran 50M / 50K / 30K (plus 10K, 20K) on different courses: used for volume history only, not for times.',
-  `Pace along the course: grade-adjusted curve on the 0.25 mi-smoothed profile (see pace_model.params), deviation from flat scaled by fitness (avg pace / 20 min/mi)^beta; fatigue on 100K/55K; ${PAR.dwell} min dwell per aid-station visit; each runner normalised to their real 2026 finish time. Parameters tuned by grid search against 2026 Waterhole timing-mat splits (pace_model.validation).`,
+  `Pace along the course: grade-adjusted curve on the 0.25 mi-smoothed profile (see pace_model.params), deviation from flat scaled by fitness (avg pace / 20 min/mi)^beta; fatigue on 100K/55K; climb fatigue ${PAR.climbFat} per 10,000 ft gained; aid-station dwell ${PAR.dwell} min base, scaled 0.5× (start) to 1.5× (finish) by race position and halved when the previous visit was < 3 mi earlier; each runner normalised to their real 2026 finish time. Parameters tuned by grid search against 2026 Waterhole timing-mat splits (pace_model.validation).`,
   'DNF runners follow the 2026 median finisher pace and stop at the middle aid-station visit of their course.',
   'Start times and station hours/cutoffs from the race sheet (content/); Start times match RunSignup 2027 (race 163892): 100K 5:30a, 55K 7a, 35K 8a, 20K 8:30a, 10K 9a.',
 ];
@@ -203,3 +213,10 @@ for (const s of stations.order) { const o = out.stations[s]; console.log(s, o.na
 
 console.log('params', JSON.stringify(PAR), 'err', best!.err.toFixed(1), 'beta0', noFitnessErr.toFixed(1), 'old', baselineErr.toFixed(1), 'ref20', JSON.stringify(pace20));
 console.table(validation);
+// soft check: modelled sunrise/sunset vs the race calendar's Sunrise/Sunset events (content/checks.json from content.ts)
+{ const ck = J('content/checks.json'), cs = ck.calendar_sun ?? {}, GH = !!process.env.GITHUB_ACTIONS;
+  for (const [n, mine] of [['Sunrise', d17.sunrise], ['Sunset', d17.sunset]] as [string, number][]) {
+    if (cs[n] == null) { console.warn('SOFT CHECK: race calendar has no ' + n + ' event'); continue; }
+    if (Math.abs(cs[n] - mine) > 3) { const m = `${n}: race calendar ${hm(cs[n])} vs computed ${hm(mine)}`; console.warn((GH ? '::warning title=Sun check::' : 'SOFT CHECK: ') + m); ck.soft.push(m); }
+  }
+  fs.writeFileSync(path.join(ROOT, 'content/checks.json'), JSON.stringify(ck) + '\n'); }

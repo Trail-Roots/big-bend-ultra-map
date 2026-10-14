@@ -20,7 +20,7 @@ export function renderTimeline(c: Ctx) {
   let s = `<rect width="${f1(W)}" height="${f1(H)}" fill="#fff"/>`;
   // sky: night / civil twilight / daylight
   const sun = T.sun, d17 = sun.jan17, d18 = sun.jan18;
-  const night = '#1f2a44', band = (a: number, b: number, op: number) => (b > a ? `<rect x="${f1(X(Math.max(a, t0)))}" y="0" width="${f1(X(Math.min(b, t1)) - X(Math.max(a, t0)))}" height="${f1(H)}" fill="${night}" fill-opacity="${op}"/>` : '');
+  const night = "#1f2a44", band = (a: number, b: number, op: number) => (Math.min(b, t1) > Math.max(a, t0) ? `<rect x="${f1(X(Math.max(a, t0)))}" y="0" width="${f1(X(Math.min(b, t1)) - X(Math.max(a, t0)))}" height="${f1(H)}" fill="${night}" fill-opacity="${op}"/>` : '');
   s += `<g class="sky">${band(t0, d17.dawn, 0.16)}${band(d17.dawn, d17.sunrise, 0.07)}${band(d17.sunset, d17.dusk, 0.07)}${band(d17.dusk, d18.dawn, 0.16)}${band(d18.dawn, d18.sunrise, 0.07)}</g>`;
   // hour grid + axis
   for (let t = Math.ceil(t0 / 60) * 60; t <= t1; t += 60) {
@@ -53,12 +53,18 @@ export function renderTimeline(c: Ctx) {
     s += `<g class="tlrow" data-course="${k}">${g}</g>`;
   });
   // stations
-  s += `<text x="${PADL}" y="${f1(sTop - 6)}" font-size="17" font-weight="700" fill="${ink}">Busiest times</text>`;
+  s += `<text x="${PADL}" y="${f1(sTop - 6)}" font-size="17" font-weight="700" fill="${ink}">Busiest times</text><path d="M${PADL + 172},${f1(sTop - 20)}v16" stroke="#2f8a3a" stroke-width="2.4"/><text x="${PADL + 178}" y="${f1(sTop - 6)}" font-size="14" fill="${col.mute}">opens</text><path d="M${PADL + 230},${f1(sTop - 20)}v16" stroke="#7a1a14" stroke-width="2.4"/><text x="${PADL + 236}" y="${f1(sTop - 6)}" font-size="14" fill="${col.mute}">cutoff</text>`;
     sts.forEach((k, r) => {
     const FC = T.finish_crowd, sf = k === 'S/F' && FC, S = sf ? { name: 'Start / Finish', passes15: FC.present15, window: null, peak15: FC.peak15 } : T.stations[k], maxP = Math.max(...S.passes15), y0 = sTop + r * SR, base = y0 + SR - 6, hgt = SR - 12, B = T.bin_min;
     const ms = Math.min(950, (SR - 4) ** 2 / 1.8), mr = Math.sqrt(ms * 1.8) / 2, lt = station(PADL + mr, y0 + SR / 2, k, c.stations.stations[k].spectator, { s: ms, fs: Math.sqrt(ms / 950) * 24, badge: false, colors: c.colors }) + `<text x="${f1(PADL + 2 * mr + 8)}" y="${f1(y0 + SR / 2)}" font-size="19" fill="${ink}" dominant-baseline="central">${esc(S.name)}</text>`;
     let g = gmapLink(c.stations.stations[k].place ?? c.stations.stations[k].link_lonlat ?? c.stations.stations[k].lonlat, S.name, lt);
     S.passes15.forEach((v: number, i: number) => { if (!v) return; const x = X(t0 + i * B); g += `<rect x="${f1(x)}" y="${f1(y0 + 5)}" width="${f1(X(t0 + B) - X(t0) + 0.3)}" height="${f1(SR - 10)}" fill="#b3261e" fill-opacity="${(0.06 + 0.9 * Math.sqrt(v / maxP)).toFixed(2)}"/>`; }); // single-hue intensity ramp, no outlines
+    // simple lines: station opening (green) and every cutoff at this station, all courses (red)
+    const win = T.stations[k]?.window as [number, number] | null, cuts = new Set<number>();
+    for (const kk of order) { const C = T.courses[kk]; for (const q of C.passes) { if (q.station !== k || q.mile === 0) continue; const tm = cutMin(q.cutoff); if (tm != null) cuts.add(tm < C.start ? tm + 1440 : tm); } }
+    const vl = (t: number, colr: string, title: string) => t >= t0 && t <= t1 ? `<path d="M${f1(X(t))},${f1(y0 + 3)}V${f1(y0 + SR - 3)}" stroke="${colr}" stroke-width="2.4"><title>${title}</title></path>` : '';
+    if (win) g += vl(win[0], '#2f8a3a', `${S.name} opens ${clock(win[0], false)}`);
+    for (const t of cuts) g += vl(t, '#7a1a14', `${S.name} cutoff ${clock(t, false)}`);
     s += `<g class="tlst" data-station="${esc(k)}">${g}</g>`;
   });
   s += `<g class="tlcursor" style="display:none;pointer-events:none"><path d="M0,${AX}V${f1(bottom)}" stroke="#111" stroke-width="1.5" stroke-dasharray="4 3"/><rect class="tlbox" fill="#fff" fill-opacity=".92" stroke="#bbb" rx="4"/><text class="tlread" font-size="17" font-weight="700"></text></g>`;

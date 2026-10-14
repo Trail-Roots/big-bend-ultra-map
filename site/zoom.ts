@@ -32,8 +32,17 @@ function apply(z: Z) {
     it.el.setAttribute('transform', `${it.base} translate(${it.cx} ${it.cy}) scale(${1 / k}) translate(${-it.cx} ${-it.cy})`);
   }
   for (const t of z.texts) { t.el.setAttribute('font-size', String(t.fs / k)); if (t.sw) t.el.setAttribute('stroke-width', String(t.sw / k)); }
+  scaleBar(z);
   z.svg.dispatchEvent(new CustomEvent('zoomchange'));
   const ctl = z.svg.parentElement?.querySelector('.zctl'); ctl?.classList.toggle('zoomed', k > 1);
+}
+/** scale bar follows the zoom: longest "nice" length (miles) that fits the bar's original width */
+function scaleBar(z: Z) {
+  const g = z.svg.querySelector<SVGGElement>('g.scalebar'); if (!g) return;
+  const sx = +g.dataset.sx!, sy = +g.dataset.sy!, ppmi = +g.dataset.ppmi! * z.k, tick = +g.dataset.tick!, max = +g.dataset.max!;
+  const L = [10, 5, 2, 1, 0.5, 0.25, 0.1].find((m) => m * ppmi <= max * 1.05) ?? 0.1, w = L * ppmi;
+  g.querySelector('path')!.setAttribute('d', `M${sx},${sy}h${w}M${sx},${sy}v${-tick}M${sx + w / 2},${sy}v${-tick}M${sx + w},${sy}v${-tick}`);
+  const t = g.querySelectorAll('text'); t[1].setAttribute('x', String(sx + w)); t[1].textContent = `${L} mi`;
 }
 function toSvg(z: Z, cx: number, cy: number) { const m = z.svg.getScreenCTM()!; const p = new DOMPoint(cx, cy).matrixTransform(m.inverse()); return [p.x, p.y]; }
 function zoomAt(z: Z, f: number, px: number, py: number) {

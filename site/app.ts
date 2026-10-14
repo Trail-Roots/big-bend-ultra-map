@@ -34,6 +34,9 @@ if (hdEl && prof) {
     const p = new DOMPoint(ev.clientX, ev.clientY).matrixTransform(ctm.inverse());
     show(x0 + (p.x / W) * (x1 - x0));
   };
+  // average pace from the start needed to make the next cutoff at or beyond this mile
+  const pace = (mpm: number) => { const s = Math.round(mpm * 60); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; };
+  const cutPace = (c: any, mile: number) => { const n = (c.cut as [number, number][]).find(([m]) => m >= mile - 1e-6 && m > 0); return n ? ` · cutoff pace ${pace(n[1] / n[0])}/mi` : ''; };
   const show = (mile: number) => {
     if (mile < 0) return hide();
     // every course that reaches this mile gets a marker; shorter courses show nothing
@@ -49,7 +52,7 @@ if (hdEl && prof) {
     for (const k in HD.courses) glide.set(k, hits.some((h) => h.k === k) ? mile : null);
     // readout: one line per course, longest first: course · mile · cumulative gain from the start
     lab.textContent = '';
-    const rows = hits.map(({ k, c, v }) => ({ k, bib: (c as any).bib, t: `mi ${v[0].toFixed(1)} · +${Math.round(v[6]).toLocaleString('en-US')} ft gain` }));
+    const rows = hits.map(({ k, c, v }) => ({ k, bib: (c as any).bib, t: `mi ${v[0].toFixed(1)} · +${Math.round(v[6]).toLocaleString('en-US')} ft gain${cutPace(c, v[0])}` }));
     const right = px < W * 0.7, lx = px + (right ? 16 + BW + 8 : -16), ly = 14;
     rows.forEach((r, i) => { const ts = el('tspan', { x: lx, y: ly + 13 + i * 30, fill: '#1a1a1a' }, lab); ts.textContent = r.t; });
     lab.setAttribute('text-anchor', right ? 'start' : 'end');
@@ -69,12 +72,27 @@ if (hdEl && prof) {
   const dotLayer = main.querySelector('g.layer[data-layer="dots"]');
   const dots2: { k: string; T: number; stop: number; c: SVGCircleElement; j: number; cv: any }[] = [];
   if (dotLayer) for (const [k, C] of Object.entries(TM.courses) as [string, any][]) C.T.forEach((T: number, i: number) => { const c = el('circle', { r: 3.4, fill: HD.courses[k].color, stroke: '#fff', 'stroke-width': 0.9, style: 'display:none' }, dotLayer) as SVGCircleElement; dots2.push({ k, T, stop: C.stop[i], c, j: (dots2.length * 2.399) % 6.283, cv: C.curves[C.fit[i]] }); });
-  // leader ring: one per course, a course-colour ring around the leader's standard dot (small gap)
-  const leadRing: Record<string, SVGCircleElement> = {};
-  if (dotLayer) for (const k of Object.keys(TM.courses)) leadRing[k] = el('circle', { fill: 'none', stroke: HD.courses[k].color, style: 'display:none;pointer-events:none' }, dotLayer) as SVGCircleElement;
+  // leader = the course's eventual first finisher (fastest 2026 time), not whoever is in front right now: course-colour ring around their dot.
+  // course record = a ghost runner at course-record pace: course-colour dot with a heavier dark ring. "You" = bib-lookup runner (black ring).
+  const leadRing: Record<string, SVGCircleElement> = {}, leadIdx: Record<string, number> = {}, recDot: Record<string, SVGGElement> = {};
+  if (dotLayer) for (const [k, C] of Object.entries(TM.courses) as [string, any][]) {
+    leadRing[k] = el('circle', { fill: 'none', stroke: HD.courses[k].color, style: 'display:none;pointer-events:none' }, dotLayer) as SVGCircleElement;
+    let bi = -1; dots2.forEach((d, i) => { if (d.k === k && d.stop < 0 && (bi < 0 || d.T < dots2[bi].T)) bi = i; }); leadIdx[k] = bi;
+    const g = el('g', { style: 'display:none;pointer-events:none' }, dotLayer) as SVGGElement; el('circle', { fill: 'none', stroke: '#111' }, g); el('circle', { fill: 'none', stroke: HD.courses[k].color }, g); el('circle', { fill: HD.courses[k].color, stroke: '#fff' }, g); recDot[k] = g;
+  }
+  const youRing = dotLayer ? el('circle', { fill: 'none', stroke: '#111', style: 'display:none;pointer-events:none' }, dotLayer) as SVGCircleElement : null;
+  let you: number = -1; // index into dots2
+  (window as any).bbuSetYou = (k: string | null, Tmin: number) => { you = -1; if (k) { let best = Infinity; dots2.forEach((d, i) => { if (d.k === k && d.stop < 0 && Math.abs(d.T - Tmin) < best) { best = Math.abs(d.T - Tmin); you = i; } }); } if (tShown >= 0) setTime(tShown); else if (youRing) youRing.style.display = 'none'; };
   let tShown = -1;
+  // day / night indicator on the big map during the race-day simulation: badge (sun / twilight / moon + clock) and a light night tint
+  const sky = TM.sun as { dawn: number; sunrise: number; sunset: number; dusk: number };
+  const tint = dotLayer ? el('rect', { x: -5000, y: -5000, width: 20000, height: 20000, fill: '#1f2a44', 'fill-opacity': 0, style: 'pointer-events:none' }, dotLayer) as SVGRectElement : null;
+  if (tint) dotLayer!.insertBefore(tint, dotLayer!.firstChild);
+  const badge = document.createElement('div'); badge.className = 'daynight ui'; badge.style.display = 'none'; main.parentElement!.appendChild(badge);
+  const phase = (t: number) => { const m = ((t % 1440) + 1440) % 1440; return m < sky.dawn || m >= sky.dusk ? 'night' : m < sky.sunrise || m >= sky.sunset ? 'twilight' : 'day'; };
   const setTime = (t: number) => {
     tShown = t; const z = 1 / zoomOf(main);
+    { const ph = phase(t); badge.style.display = ''; badge.dataset.phase = ph; badge.textContent = `${ph === 'day' ? '☀' : ph === 'twilight' ? '◐' : '☾'} ${fmt(t)} · ${ph === 'day' ? 'daylight' : ph === 'twilight' ? 'twilight' : 'dark'}`; if (tint) tint.setAttribute('fill-opacity', ph === 'night' ? '0.22' : ph === 'twilight' ? '0.1' : '0'); }
     const ends: Record<string, { lead?: [number, any]; last?: [number, any] }> = {};
     for (const d of dots2) {
       const C = TM.courses[d.k], f = (t - C.start) / d.T; const mile = effAt(d.cv, f);
@@ -82,16 +100,24 @@ if (hdEl && prof) {
       // spread runners slightly so a crowd reads as a crowd, not one dot
       const p = ptAt(d.k, mile), j = d.j;
       d.c.style.display = ''; d.c.setAttribute('cx', String(p[2] + Math.cos(j) * 3)); d.c.setAttribute('cy', String(p[3] + Math.sin(j) * 3)); d.c.setAttribute('r', String(3.4 * z)); d.c.setAttribute('fill', HD.courses[d.k].color); d.c.setAttribute('stroke', '#fff'); d.c.setAttribute('stroke-width', String(0.9 * z));
-      const E = (ends[d.k] ??= {}); if (!E.lead || mile > E.lead[0]) E.lead = [mile, d]; if (!E.last || mile < E.last[0]) E.last = [mile, d];
+      const E = (ends[d.k] ??= {}); if (!E.last || mile < E.last[0]) E.last = [mile, d];
+    }
+    for (const k in leadIdx) { const d = dots2[leadIdx[k]]; if (d && d.c.style.display !== 'none') (ends[k] ??= {}).lead = [0, d]; }
+    for (const [k, g] of Object.entries(recDot)) {
+      const C = TM.courses[k], f = (t - C.start) / C.rec.T; if (f < 0 || f > 1) { g.style.display = 'none'; continue; }
+      const p = ptAt(k, effAt(C.curves[C.rec.fit], f)), cs = g.querySelectorAll('circle'); g.style.display = ''; g.setAttribute('transform', `translate(${p[2]} ${p[3]})`);
+      cs[0].setAttribute('r', String(8.4 * z)); cs[0].setAttribute('stroke-width', String(1.6 * z)); cs[1].setAttribute('r', String(6.2 * z)); cs[1].setAttribute('stroke-width', String(2.6 * z)); cs[2].setAttribute('r', String(3.4 * z)); cs[2].setAttribute('stroke-width', String(0.9 * z));
+      g.parentNode!.appendChild(g);
     }
     for (const k in leadRing) leadRing[k].style.display = 'none';
     // leader = standard dot + course-colour ring with a small gap; last runner = hollow ring (white fill, course-colour stroke). Small, drawn on top.
     for (const [k, E] of Object.entries(ends)) for (const [q, lead] of [[E.last, false], [E.lead, true]] as const) {
       if (!q) continue; const c = q[1].c as SVGCircleElement, col = HD.courses[k].color;
-      if (lead) { const R = leadRing[k]; R.setAttribute('cx', c.getAttribute('cx')!); R.setAttribute('cy', c.getAttribute('cy')!); R.setAttribute('r', String(6.4 * z)); R.setAttribute('stroke-width', String(1.5 * z)); R.style.display = ''; c.parentNode!.appendChild(c); c.parentNode!.appendChild(R); continue; }
+      if (lead) { const R = leadRing[k]; R.setAttribute('cx', c.getAttribute('cx')!); R.setAttribute('cy', c.getAttribute('cy')!); R.setAttribute('r', String(6.6 * z)); R.setAttribute('stroke-width', String(2.2 * z)); R.style.display = ''; c.parentNode!.appendChild(c); c.parentNode!.appendChild(R); continue; }
       c.setAttribute('r', String(4.2 * z)); c.setAttribute('fill', '#fff'); c.setAttribute('stroke', col); c.setAttribute('stroke-width', String(2 * z));
       if (c.nextSibling) c.parentNode!.appendChild(c);
     }
+    if (youRing) { const d = dots2[you]; if (d && d.c.style.display !== 'none') { youRing.setAttribute('cx', d.c.getAttribute('cx')!); youRing.setAttribute('cy', d.c.getAttribute('cy')!); youRing.setAttribute('r', String(9 * z)); youRing.setAttribute('stroke-width', String(2.4 * z)); youRing.style.display = ''; youRing.parentNode!.appendChild(youRing); } else youRing.style.display = 'none'; }
     glide.clear(); // no median-runner markers during time play (profile distance-hover markers are separate)
     if (tl) {
       const t0 = +tl.dataset.t0!, t1 = +tl.dataset.t1!, lx = +tl.dataset.lx!, rx = +tl.dataset.rx!, x = lx + ((t - t0) / (t1 - t0)) * (rx - lx);
@@ -106,7 +132,7 @@ if (hdEl && prof) {
       const bb = (txt as SVGTextElement).getBBox(); bx.setAttribute('x', String(bb.x - 6)); bx.setAttribute('y', String(bb.y - 3)); bx.setAttribute('width', String(bb.width + 12)); bx.setAttribute('height', String(bb.height + 6));
     }
   };
-  const clearTime = () => { tShown = -1; dots2.forEach((d) => (d.c.style.display = 'none')); glide.clear(); const cur = tl?.querySelector<SVGGElement>('g.tlcursor'); if (cur) cur.style.display = 'none'; };
+  const clearTime = () => { tShown = -1; badge.style.display = 'none'; tint?.setAttribute('fill-opacity', '0'); if (youRing) youRing.style.display = 'none'; Object.values(recDot).forEach((g) => (g.style.display = 'none')); Object.values(leadRing).forEach((g) => (g.style.display = 'none')); dots2.forEach((d) => (d.c.style.display = 'none')); glide.clear(); const cur = tl?.querySelector<SVGGElement>('g.tlcursor'); if (cur) cur.style.display = 'none'; };
   main.addEventListener('zoomchange', () => { glide.redraw(); if (tShown >= 0) setTime(tShown); });
   document.querySelectorAll('svg.mini').forEach((m) => m.addEventListener('zoomchange', () => glide.redraw()));
   // auto-play (web only): slow sweep of the race-day clock, looping; off for reduced motion; pause persisted
@@ -127,7 +153,7 @@ if (hdEl && prof) {
   const label = () => { btn.textContent = paused ? '▶ Play race day' : '❚❚ Pause'; btn.setAttribute('aria-label', paused ? 'Play race-day animation' : 'Pause race-day animation'); btn.setAttribute('aria-pressed', String(!paused)); };
   if (!reduced) { label(); prof.parentElement!.appendChild(btn); }
   // key for the runner-dot markers (web only, like the dots themselves)
-  if (dotLayer && tl) { const key = document.createElement('div'); key.className = 'runkey ui'; key.innerHTML = '<svg width="16" height="16" viewBox="-8 -8 16 16" aria-hidden="true"><circle r="3.4" fill="#666" stroke="#fff" stroke-width=".9"/><circle r="6.4" fill="none" stroke="#666" stroke-width="1.5"/></svg> Leader <svg width="12" height="12" viewBox="-6 -6 12 12" aria-hidden="true"><circle r="4" fill="#fff" stroke="#666" stroke-width="2"/></svg> Last runner <span>(course color)</span>'; tl.insertAdjacentElement('afterend', key); }
+  if (dotLayer && tl) { const key = document.createElement('div'); key.className = 'runkey ui'; key.innerHTML = '<svg width="16" height="16" viewBox="-8 -8 16 16" aria-hidden="true"><circle r="3.4" fill="#666" stroke="#fff" stroke-width=".9"/><circle r="6.6" fill="none" stroke="#666" stroke-width="2.2"/></svg> Leader (first finisher) <svg width="20" height="20" viewBox="-10 -10 20 20" aria-hidden="true"><circle r="8.4" fill="none" stroke="#111" stroke-width="1.6"/><circle r="6.2" fill="none" stroke="#666" stroke-width="2.6"/><circle r="3.4" fill="#666" stroke="#fff" stroke-width=".9"/></svg> Course record pace <svg width="12" height="12" viewBox="-6 -6 12 12" aria-hidden="true"><circle r="4" fill="#fff" stroke="#666" stroke-width="2"/></svg> Last runner <span>(course color)</span>'; tl.insertAdjacentElement('afterend', key); }
   btn.addEventListener('click', () => { paused = !paused; localStorage.setItem(KEY, paused ? '1' : '0'); label(); if (paused) { stop(); clearTime(); } else start(); });
   const suspend = () => { user = true; stop(); };
   const resume = () => { user = false; start(); };
@@ -161,3 +187,26 @@ addEventListener('beforeprint', () => { if (mapLogo) { mapLogo.setAttribute('wid
 addEventListener('afterprint', syncLogo);
 
 initZoom();
+
+// ---- bib lookup: year + bib -> your finish, place, pace; 2026 runners get a "you" ring on the map ----
+{
+  const form = document.querySelector<HTMLFormElement>('form.biblookup'), dataEl = document.getElementById('bibdata');
+  if (form && dataEl) {
+    const D = JSON.parse(dataEl.textContent || '{}'), out = form.querySelector('output')!;
+    const hms = (s: number) => `${Math.floor(s / 3600)}:${String(Math.floor((s % 3600) / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
+    const ord = (n: number) => n + (['th', 'st', 'nd', 'rd'][(n % 100 >= 11 && n % 100 <= 13) ? 0 : n % 10] ?? 'th');
+    const go = () => {
+      const y = (form.elements.namedItem('y') as HTMLSelectElement).value, b = Number((form.elements.namedItem('b') as HTMLInputElement).value);
+      (window as any).bbuSetYou?.(null, 0);
+      if (!b) { out.textContent = ''; return; }
+      const hit = Object.entries(D.years[y] as Record<string, [number, number | null, string][]>).map(([ev, rows]) => ({ ev, rows, r: rows.find((x) => x[0] === b) })).find((h) => h.r);
+      if (!hit) { out.textContent = `No ${y} result for bib ${b}.`; return; }
+      const [, t, st] = hit.r!, ev = hit.ev.replace(/K$/, 'K').toUpperCase(), fins = hit.rows.filter((x) => x[1] != null).map((x) => x[1]!).sort((a, b2) => a - b2);
+      if (t == null) { out.textContent = `${y} ${ev} · bib ${b} · ${st}`; return; }
+      const place = fins.indexOf(t) + 1, D2 = y === '2026' ? D.dist[ev] : null;
+      out.textContent = `${y} ${ev} · bib ${b} · ${hms(t)} · ${ord(place)} of ${fins.length} finishers${D2 ? ` · ${(() => { const p = Math.round(t / D2); return `${Math.floor(p / 60)}:${String(p % 60).padStart(2, '0')}`; })()}/mi avg` : ''}${D2 ? ' · ringed in black on the map during playback' : ''}`;
+      if (D2) (window as any).bbuSetYou?.(ev, Math.round(t / 6) / 10);
+    };
+    form.addEventListener('submit', go); form.elements.namedItem('y')!.addEventListener('change', go);
+  }
+}

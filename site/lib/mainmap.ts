@@ -75,8 +75,8 @@ export function renderMain(c) {
   for (const f of c.poiLabels.features) add('pois', poiLabel(f, V.p, 10.2));
   // frame furniture: scale bar, north arrow, logo, legend
   const sb = c.layout.scalebar, sx = (sb.x - c.layout.views.main.x[0]) * V.ppm, sy = (c.layout.views.main.y[1] - sb.y) * V.ppm, m5 = sb.m5 * V.ppm, tick = H * 0.006;
-  let fur = `<g class="scalebar" stroke="${col.ink}" stroke-width="3"><path d="M${f1(sx)},${f1(sy)}h${f1(m5)}M${f1(sx)},${f1(sy)}v${f1(-tick)}M${f1(sx + m5 / 2)},${f1(sy)}v${f1(-tick)}M${f1(sx + m5)},${f1(sy)}v${f1(-tick)}" fill="none"/></g>`;
-  fur += `<text x="${f1(sx)}" y="${f1(sy + H * .008)}" font-size="26" text-anchor="middle" dominant-baseline="hanging" fill="${col.ink}">0</text><text x="${f1(sx + m5)}" y="${f1(sy + H * .008)}" font-size="26" text-anchor="middle" dominant-baseline="hanging" fill="${col.ink}">5m</text>`;
+  let fur = `<g class="scalebar" data-sx="${f1(sx)}" data-sy="${f1(sy)}" data-ppmi="${(m5 / 5).toFixed(3)}" data-tick="${f1(tick)}" data-max="${f1(m5)}"><path stroke="${col.ink}" stroke-width="3" d="M${f1(sx)},${f1(sy)}h${f1(m5)}M${f1(sx)},${f1(sy)}v${f1(-tick)}M${f1(sx + m5 / 2)},${f1(sy)}v${f1(-tick)}M${f1(sx + m5)},${f1(sy)}v${f1(-tick)}" fill="none"/>`;
+  fur += `<text x="${f1(sx)}" y="${f1(sy + H * .008)}" font-size="26" text-anchor="middle" dominant-baseline="hanging" fill="${col.ink}">0</text><text x="${f1(sx + m5)}" y="${f1(sy + H * .008)}" font-size="26" text-anchor="middle" dominant-baseline="hanging" fill="${col.ink}">5 mi</text></g>`;
   // north arrow: small and subtle
   const nx = W * 0.05, ny = H * 0.04, na = H * 0.012, nc = col.mute;
   fur += `<g class="north" opacity=".8"><line x1="${f1(nx)}" y1="${f1(ny + na)}" x2="${f1(nx)}" y2="${f1(ny - na)}" stroke="${nc}" stroke-width="1.6"/><path d="M${f1(nx - 5)},${f1(ny - na + 6)}L${f1(nx)},${f1(ny - na - 3)}L${f1(nx + 5)},${f1(ny - na + 6)}z" fill="${nc}"/><text x="${f1(nx)}" y="${f1(ny + na + 14)}" class="f-serif" font-size="17" text-anchor="middle" fill="${nc}">N</text></g>`;

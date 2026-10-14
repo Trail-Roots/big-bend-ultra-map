@@ -1,3 +1,4 @@
+import { cutMin } from './timeline';
 // Data for the elevation-profile hover: per course, samples every 0.05 mi of
 // [mile, ft, main-map x, y, mini-map x, y, cumulative gain ft] in each SVG's own viewBox units.
 import { SHEET, viewProjection } from './util';
@@ -35,12 +36,14 @@ export function hoverData(c: Ctx) {
     }
     const g = cumGain(s.map((q) => lerp(q[0], pr.mi, pr.ft)));
     s.forEach((q, i) => q.push(g[i]));
-    courses[k] = { color: c.courses.colors[k], dist, s, bib: miniBib(k, c.courses.colors[k], 0, 0, c.colors, 0.85) } as any;
+    courses[k] = { color: c.courses.colors[k], dist, s, bib: miniBib(k, c.courses.colors[k], 0, 0, c.colors, 0.85),
+      // cutoffs as [mile, minutes after the start] for the "pace to make the next cutoff" readout
+      cut: (() => { const st = cutMin(c.courses.courses[k].start)!; return c.cutoffs[k].slice(1).map((q: any) => { let m = cutMin(q.cutoff); if (m == null) return null; if (m < st) m += 1440; return [q.mile, m - st]; }).filter(Boolean); })() } as any;
   }
   (courses as any)._bibw = MINIBIB.w * 0.85; (courses as any)._bibh = MINIBIB.h * 0.85;
   const W = L.elev[2] * SHEET.w, H = L.elev[3] * SHEET.h;
   // time model for the race-day timeline / auto-play / runner dots (content/timeline.json)
-  const TL = c.timeline, time = { t0: TL.window[0], t1: TL.window[1], bin: TL.bin_min, courses: Object.fromEntries(c.courses.order.map((k) => {
+  const TL = c.timeline, time = { t0: TL.window[0], t1: TL.window[1], bin: TL.bin_min, sun: TL.sun.jan17, courses: Object.fromEntries(c.courses.order.map((k) => {
     const C = TL.courses[k], fin = C.finish_s.map((v: number) => Math.round(v / 6) / 10), mid = C.passes[Math.floor(C.passes.length / 2)].mile;
     const midFit = C.curves.fitOf[Math.floor(C.curves.fitOf.length / 2)];
     let T: number[] = [...fin, ...new Array(C.dnf).fill(Math.round(C.q50 / 6) / 10)], stop: number[] = [...fin.map(() => -1), ...new Array(C.dnf).fill(mid)], fit: number[] = [...C.curves.fitOf, ...new Array(C.dnf).fill(midFit)];
@@ -48,7 +51,7 @@ export function hoverData(c: Ctx) {
     const N = C.expected_starters ?? T.length;
     if (N !== T.length) { const r = rng(k), idx = Array.from({ length: N }, (_, i) => (i < T.length && N > T.length ? i : Math.floor(r() * T.length)));
       T = idx.map((i, j) => (j < T.length && N > T.length ? T[i] : Math.round(T[i] * (1 + (r() - 0.5) * 0.02) * 10) / 10)); stop = idx.map((i) => stop[i]); fit = idx.map((i) => fit[i]); }
-    return [k, { start: C.start, T, stop, fit, curves: C.curves.byFit, med: C.q50 / 60, medFit: midFit, on: C.on_course }];
+    return [k, { start: C.start, T, stop, fit, curves: C.curves.byFit, med: C.q50 / 60, medFit: midFit, on: C.on_course, rec: { T: C.record.s / 60, year: C.record.year, fit: C.curves.fitOf[0] }, fin }];
   })) };
   return { profile: { W, H, x: L.elev_xlim, y: L.elev_ylim }, courses, time };
 }
