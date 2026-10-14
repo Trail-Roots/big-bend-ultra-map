@@ -23,7 +23,7 @@ const RINCON: XY = [-103.8572918, 29.4076521];
 const PACE = (st: string) => (st === '1' || st === '2' ? 4 : 5);
 const SF_HOURS = '4:30a - 1a'; // opens 1 h before the earliest start (100K 5:30a per RunSignup)
 // sheet station names -> station ids
-const SHEET_ID: Record<string, string> = { 'Barton Warnock': 'S/F', Finish: 'S/F', Waterhole: '1', 'Whit Roy': '2', 'Right Hand Shutup': '3', 'Paso al Solitario': '4', Contrabando: '5', Contabando: '5' };
+const SHEET_ID: Record<string, string> = { 'Barton Warnock': 'S/F', Finish: 'S/F', Waterhole: '1', 'Whit Roy': '2', 'Whit Roy Mine': '2', 'Right Hand Shutup': '3', 'Paso al Solitario': '4', Contrabando: '5', Contabando: '5' };
 
 // ---------- official stations sheet (CSV export of the Google Sheet) ----------
 function csvRows(t: string): string[][] {

@@ -3,14 +3,14 @@
 100K,Mileage,To Next,Time,Hours,Cutoff Min/Mile,Drop Bags
 Barton Warnock,0.00,5.10,5:30 AM,,,
 Waterhole,5.10,2.40,,,0.0,NO
-Whit Roy,7.50,10.30,,,0.0,YES
-Right Hand Shutup,17.80,6.75,9:45 AM,4.75,16.0,YES
-Paso al Solitario,24.55,11.05,1:15 PM,7.75,20.0,NO
-Right Hand Shutup,35.60,9.30,3:45 PM,10.75,18.0,YES
-Whit Roy,44.90,8.25,6:45 PM,13.75,18.4,YES
-Contabando,53.15,4.30,9:30 PM,16.50,18.6,NO
+Whit Roy Mine,7.50,10.30,,,0.0,YES
+Right Hand Shutup,17.80,6.75,10:30 AM,5.00,16.9,YES
+Paso al Solitario,24.55,11.05,1:45 PM,8.25,20.2,NO
+Right Hand Shutup,35.60,9.30,4:30 PM,11.00,18.5,YES
+Whit Roy Mine,44.90,8.25,7:15 PM,13.75,18.4,YES
+Contabando,53.15,4.30,9:30 PM,16.00,18.1,NO
 Waterhole,57.45,5.10,11:00 PM,18.00,18.8,NO
-Finish,62.55,,1:00 AM,20.00,19.2,
+Finish ,62.55,,1:00 AM,20.00,19.2,
 ,,,,,,
 55K,Mileage,To Next,Time,Hours,Cutoff Min/Mile,Drop Bags
 Barton Warnock,0.00,5.10,7:00 AM,,,
@@ -38,4 +38,3 @@ Barton Warnock,12.30,,4:30 PM,8.00,39.0,
 Barton Warnock,0.00,3.06,9:00 AM,,,
 Turn Around ** No Aid Station **,3.06,3.05,,,0.0,NO
 Barton Warnock,6.11,,4:30 PM,7.50,73.6,
-,,,,,,
