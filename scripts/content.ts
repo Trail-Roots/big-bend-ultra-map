@@ -120,10 +120,26 @@ function routeMiles(k: Course, rt: XY[]) {
   return cum.map((v) => interp(v, kn.map((a) => a[0]), kn.map((a) => a[1])));
 }
 const G = {} as Record<Course, { lat: number[]; lon: number[]; d: number[]; el: number[] }>;
+const P0 = {} as Record<Course, ReturnType<typeof gpx>>;
 for (const k of ORDER) {
-  const p = gpx(k);
+  const p = gpx(k); P0[k] = p;
   const d = [0]; for (let i = 1; i < p.length; i++) d.push(d[i - 1] + hav([p[i - 1].lat, p[i - 1].lon], [p[i].lat, p[i].lon]));
   G[k] = { lat: p.map((q) => q.lat), lon: p.map((q) => q.lon), d, el: p.map((q) => q.ele ?? 0) };
+}
+// ---------- GPX is the source of truth for mileage ----------
+// Each sheet stop (order, station, cutoff time) is located on the GPX track (nearest passes, in order); its mile is the GPX
+// cumulative distance there. The sheet's own mileage column is only compared (soft check, printed as a warning).
+const SHEET_MI = {} as Record<Course, number[]>, MI_WARN: string[] = [];
+for (const k of ORDER) {
+  const g = G[k], d0 = g.d.map((v) => v / 1609.34), q = g.lat.map((la, i) => merc([g.lon[i], la]));
+  SHEET_MI[k] = S[k].map((x) => x[1]);
+  const mid = S[k].slice(1, -1), gm = S[k].map(() => 0); gm[gm.length - 1] = d0[d0.length - 1];
+  for (const lab of new Set(mid.map((x) => x[0]))) { const at = mid.map((x, i) => [x, i + 1] as const).filter(([x]) => x[0] === lab).map(([, i]) => i); passes(q, merc(SLL[lab]), at.length).idx.forEach((ix, j) => (gm[at[j]] = d0[ix])); }
+  S[k].forEach((x, i) => { const m = Math.round(gm[i] * 100) / 100; if (Math.abs(m - x[1]) > 0.1) MI_WARN.push(`${k} ${x[0]} sheet ${x[1]} mi vs GPX ${m} mi`); x[1] = m; });
+}
+if (MI_WARN.length) console.warn('SOFT CHECK (mileage, sheet vs GPX — GPX wins):\n  ' + MI_WARN.join('\n  '));
+for (const k of ORDER) {
+  const p = P0[k];
   const dist = S[k][S[k].length - 1][1];
   const rt = cleanCourse(p); RT[k] = rt; RMI[k] = routeMiles(k, rt);
   w(`courses/${k}.geojson`, fc([{ type: 'Feature', properties: { course: k, color: C[k], distance_mi: dist, mi: RMI[k].map((v) => Math.round(v * 1e4) / 1e4) }, geometry: { type: 'LineString', coordinates: ll(rt) } }]));
@@ -166,7 +182,7 @@ for (const k of ORDER) {
   let kn: [number, number][] = [[0, 0], [d0[d0.length - 1], S[k][S[k].length - 1][1]]];
   for (const lab of labs) { const mis = mid.filter((x) => x[0] === lab).map((x) => x[1]); const { idx } = passes(q, merc(SLL[lab]), mis.length); idx.forEach((i, j) => kn.push([d0[i], mis[j]])); }
   kn.sort((a, b) => a[0] - b[0] || a[1] - b[1]);
-  const d = d0.map((v) => interp(v, kn.map((a) => a[0]), kn.map((a) => a[1])));
+  void kn; const d = d0; // GPX distance as is (source of truth)
   for (const lab of labs) { const { idx } = passes(q, merc(SLL[lab]), mid.filter((x) => x[0] === lab).length); for (const i of idx) EVP.push([d[i], STEL[lab], lab]); }
   if (k === '100K') { const { idx } = passes(q, merc(SLL.RIN), 1); rincon = [{ mi: Math.round(d[idx[0]] * 100) / 100, ft: Math.round(STEL.RIN) }]; }
   const n = Math.min(d.length, 1500), ii = [...new Set(Array.from({ length: n }, (_, j) => Math.trunc(n === 1 ? 0 : (j * (d.length - 1)) / (n - 1))))];
