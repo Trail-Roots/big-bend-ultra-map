@@ -86,6 +86,6 @@ function setup(svg: SVGSVGElement) {
 }
 export function initZoom() {
   if (matchMedia('print').matches) return;
-  document.querySelectorAll<SVGSVGElement>('svg.mainmap, svg.mini').forEach(setup);
+  document.querySelectorAll<SVGSVGElement>('svg.mainmap').forEach(setup); // mini maps are static (no zoom/pan)
   addEventListener('beforeprint', resetAllZoom);
 }
