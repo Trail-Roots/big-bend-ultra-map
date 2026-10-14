@@ -102,8 +102,6 @@ svg.mainmap,svg.mini{touch-action:pan-x pan-y}svg.panning{cursor:grabbing}
 @media print{.cuttab{font-size:9pt}.course-cut{margin-bottom:6pt}}
 .daynight{position:absolute;left:50%;top:8px;transform:translateX(-50%);padding:3px 10px;border-radius:12px;font:700 13px/1.3 system-ui,sans-serif;background:#fff8e1;color:#7a5a00;border:1px solid #e9c46a;pointer-events:none}
 .daynight[data-phase=twilight]{background:#e8e4f0;color:#3c3a5a;border-color:#a9a3c4}.daynight[data-phase=night]{background:#1f2a44;color:#e6ecff;border-color:#1f2a44}
-.biblookup{display:flex;flex-wrap:wrap;gap:.3rem .7rem;align-items:center;font:500 .85rem/1.3 system-ui,sans-serif;background:#fff;border:1px solid #ddd;border-radius:6px;padding:.4rem .7rem}
-.biblookup input,.biblookup select,.biblookup button{font:inherit;padding:.1rem .3rem}.biblookup output{font-weight:700}.biblookup .bibnote{flex-basis:100%;font-size:.75rem;color:#888}
 /* ---------- course pages ---------- */
 .cpnav{display:flex;gap:.5rem;align-items:center;max-width:1200px;margin:1rem auto 0;padding:0 1rem}
 .coursepage{max-width:1200px}.cphead{display:flex;align-items:center;justify-content:space-between;gap:1rem}.cphead h2{margin:.2rem 0}
@@ -129,9 +127,16 @@ svg.mainmap,svg.mini{touch-action:pan-x pan-y}svg.panning{cursor:grabbing}
 }
 /* ---------- small screens: timeline + profile up, mini maps lower ---------- */
 @media screen and (max-width:1000px){
-  .hdr{order:0}.stripsbox{order:1}.profilebox{order:2}.biblookup{order:3}.minis{order:4}
+  .hdr{order:0}.stripsbox{order:1}.profilebox{order:2}.minis{order:3}
 }
-/* ---------- ?embed=1 ---------- */
+/* ---------- ?view=embed ---------- */
 .embed .topnav,.embed .maplogo,.embed .sec:not(.sec-map),.embed .sec-links,.embed .hdr .titles{display:none!important}
 .embed .hdr{grid-template-columns:1fr}
 .cprofile{margin:.4rem 0 .8rem}
+/* ---------- wide / desktop: whole main map visible, fitted to the screen height ---------- */
+@media screen and (min-width:1001px){
+  .sheet{grid-template-columns:auto minmax(0,1fr);align-items:start}
+  .main{justify-self:start}
+  .main svg.mainmap{height:calc(100vh - 140px);min-height:520px;width:auto;max-width:min(62vw,100%)}
+  .embed .main svg.mainmap{height:calc(100vh - 90px)}
+}

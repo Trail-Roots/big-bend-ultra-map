@@ -74,29 +74,45 @@ if (hdEl && prof) {
   if (dotLayer) for (const [k, C] of Object.entries(TM.courses) as [string, any][]) C.T.forEach((T: number, i: number) => { const c = el('circle', { r: 3.4, fill: HD.courses[k].color, stroke: '#fff', 'stroke-width': 0.9, style: 'display:none' }, dotLayer) as SVGCircleElement; dots2.push({ k, T, stop: C.stop[i], c, j: (dots2.length * 2.399) % 6.283, cv: C.curves[C.fit[i]] }); });
   // leader = the course's eventual first finisher (fastest 2026 time), not whoever is in front right now: course-colour ring around their dot.
   // course record = a ghost runner at course-record pace: course-colour dot with a heavier dark ring. "You" = bib-lookup runner (black ring).
-  const leadRing: Record<string, SVGCircleElement> = {}, leadIdx: Record<string, number> = {}, recDot: Record<string, SVGGElement> = {};
+  const dupLead = new Set<number>(), leadRing: Record<string, SVGCircleElement> = {}, leadIdx: Record<string, number> = {}, recDot: Record<string, SVGGElement> = {};
   if (dotLayer) for (const [k, C] of Object.entries(TM.courses) as [string, any][]) {
     leadRing[k] = el('circle', { fill: 'none', stroke: HD.courses[k].color, style: 'display:none;pointer-events:none' }, dotLayer) as SVGCircleElement;
     let bi = -1; dots2.forEach((d, i) => { if (d.k === k && d.stop < 0 && (bi < 0 || d.T < dots2[bi].T)) bi = i; }); leadIdx[k] = bi;
+    if (bi >= 0 && C.rec.year === 2026 && Math.abs(dots2[bi].T - C.rec.T) < 0.2) { dupLead.add(bi); leadIdx[k] = -1; } // same performance: course-record dot only
     const g = el('g', { style: 'display:none;pointer-events:none' }, dotLayer) as SVGGElement; el('circle', { fill: 'none', stroke: '#111' }, g); el('circle', { fill: 'none', stroke: HD.courses[k].color }, g); el('circle', { fill: HD.courses[k].color, stroke: '#fff' }, g); recDot[k] = g;
   }
-  const youRing = dotLayer ? el('circle', { fill: 'none', stroke: '#111', style: 'display:none;pointer-events:none' }, dotLayer) as SVGCircleElement : null;
-  let you: number = -1; // index into dots2
-  (window as any).bbuSetYou = (k: string | null, Tmin: number) => { you = -1; if (k) { let best = Infinity; dots2.forEach((d, i) => { if (d.k === k && d.stop < 0 && Math.abs(d.T - Tmin) < best) { best = Math.abs(d.T - Tmin); you = i; } }); } if (tShown >= 0) setTime(tShown); else if (youRing) youRing.style.display = 'none'; };
-  let tShown = -1;
+  let tShown = -1, hovY = -1; // hovY: pointer y in the timeline (−1 = auto-play: time only)
+  const pc = (mpm: number) => { const v = Math.round(mpm * 60); return `${Math.floor(v / 60)}:${String(v % 60).padStart(2, '0')}`; };
+  // modelled median-runner pace at time t (min/mi), from the median fitness-class curve
+  const medPace = (k: string, t: number) => { const C = TM.courses[k], cv = C.curves[C.medFit], f = (t - C.start) / C.med; if (f <= 0 || f >= 1) return null; const a = effAt(cv, (t - 6 - C.start) / C.med), b2 = effAt(cv, (t + 6 - C.start) / C.med); return b2 - a > 0.02 ? 12 / (b2 - a) : null; };
+  // next cutoff after t for course k (optionally at one station): [mile, minutes after start, station]
+  const nextCut = (k: string, t: number, st?: string) => ((HD.courses[k] as any).cut as [number, number, string][]).find(([, m, s2]) => TM.courses[k].start + m >= t && (!st || s2 === st));
+  const paceRows = (t: number): string[] => {
+    if (!tl || hovY < 0) return [];
+    const sTop = +tl.dataset.stop!, sr = +tl.dataset.sr!, order = Object.keys(TM.courses);
+    if (hovY >= sTop) { // busiest-times row: that station's next cutoff per course + required pace
+      const st = (tl.dataset.stations || '').split(',')[Math.floor((hovY - sTop) / sr)]; if (!st) return [];
+      return order.flatMap((k) => { const n = nextCut(k, t, st); return n ? [`${k} cutoff ${fmt(TM.courses[k].start + n[1])} · ${pc(n[1] / n[0])}/mi needed`] : []; });
+    }
+    return order.flatMap((k) => { const mp = medPace(k, t), n = nextCut(k, t); if (mp == null && !n) return []; if (t < TM.courses[k].start) return [];
+      return [`${k}${mp != null ? ` median ${pc(mp)}/mi` : ''}${n ? ` · cutoff pace ${pc(n[1] / n[0])}/mi` : ''}`]; });
+  };
   // day / night indicator on the big map during the race-day simulation: badge (sun / twilight / moon + clock) and a light night tint
   const sky = TM.sun as { dawn: number; sunrise: number; sunset: number; dusk: number };
   const tint = dotLayer ? el('rect', { x: -5000, y: -5000, width: 20000, height: 20000, fill: '#1f2a44', 'fill-opacity': 0, style: 'pointer-events:none' }, dotLayer) as SVGRectElement : null;
   if (tint) dotLayer!.insertBefore(tint, dotLayer!.firstChild);
   const badge = document.createElement('div'); badge.className = 'daynight ui'; badge.style.display = 'none'; main.parentElement!.appendChild(badge);
+  // darkness 0..1 blended through civil twilight (dawn -> sunrise, sunset -> dusk), smoothstep for a gradual change
+  const ss = (a: number, b: number, x: number) => { const u = Math.min(1, Math.max(0, (x - a) / (b - a))); return u * u * (3 - 2 * u); };
+  const dark = (t: number) => { const m = ((t % 1440) + 1440) % 1440; return 0.24 * (m < 720 ? 1 - ss(sky.dawn - 20, sky.sunrise + 10, m) : ss(sky.sunset - 10, sky.dusk + 20, m)); };
   const phase = (t: number) => { const m = ((t % 1440) + 1440) % 1440; return m < sky.dawn || m >= sky.dusk ? 'night' : m < sky.sunrise || m >= sky.sunset ? 'twilight' : 'day'; };
   const setTime = (t: number) => {
     tShown = t; const z = 1 / zoomOf(main);
-    { const ph = phase(t); badge.style.display = ''; badge.dataset.phase = ph; badge.textContent = `${ph === 'day' ? '☀' : ph === 'twilight' ? '◐' : '☾'} ${fmt(t)} · ${ph === 'day' ? 'daylight' : ph === 'twilight' ? 'twilight' : 'dark'}`; if (tint) tint.setAttribute('fill-opacity', ph === 'night' ? '0.22' : ph === 'twilight' ? '0.1' : '0'); }
+    { const ph = phase(t); badge.style.display = ''; badge.dataset.phase = ph; badge.textContent = `${ph === 'day' ? '☀' : ph === 'twilight' ? '◐' : '☾'} ${fmt(t)} · ${ph === 'day' ? 'daylight' : ph === 'twilight' ? 'twilight' : 'dark'}`; if (tint) tint.setAttribute('fill-opacity', dark(t).toFixed(3)); }
     const ends: Record<string, { lead?: [number, any]; last?: [number, any] }> = {};
     for (const d of dots2) {
       const C = TM.courses[d.k], f = (t - C.start) / d.T; const mile = effAt(d.cv, f);
-      if (f < 0 || f > 1 || (d.stop >= 0 && mile >= d.stop)) { d.c.style.display = 'none'; continue; } // not started / finished / dropped (DNF)
+      if (f < 0 || f > 1 || (d.stop >= 0 && mile >= d.stop) || dupLead.has(dots2.indexOf(d))) { d.c.style.display = 'none'; continue; } // not started / finished / dropped (DNF)
       // spread runners slightly so a crowd reads as a crowd, not one dot
       const p = ptAt(d.k, mile), j = d.j;
       d.c.style.display = ''; d.c.setAttribute('cx', String(p[2] + Math.cos(j) * 3)); d.c.setAttribute('cy', String(p[3] + Math.sin(j) * 3)); d.c.setAttribute('r', String(3.4 * z)); d.c.setAttribute('fill', HD.courses[d.k].color); d.c.setAttribute('stroke', '#fff'); d.c.setAttribute('stroke-width', String(0.9 * z));
@@ -117,22 +133,20 @@ if (hdEl && prof) {
       c.setAttribute('r', String(4.2 * z)); c.setAttribute('fill', '#fff'); c.setAttribute('stroke', col); c.setAttribute('stroke-width', String(2 * z));
       if (c.nextSibling) c.parentNode!.appendChild(c);
     }
-    if (youRing) { const d = dots2[you]; if (d && d.c.style.display !== 'none') { youRing.setAttribute('cx', d.c.getAttribute('cx')!); youRing.setAttribute('cy', d.c.getAttribute('cy')!); youRing.setAttribute('r', String(9 * z)); youRing.setAttribute('stroke-width', String(2.4 * z)); youRing.style.display = ''; youRing.parentNode!.appendChild(youRing); } else youRing.style.display = 'none'; }
     glide.clear(); // no median-runner markers during time play (profile distance-hover markers are separate)
     if (tl) {
       const t0 = +tl.dataset.t0!, t1 = +tl.dataset.t1!, lx = +tl.dataset.lx!, rx = +tl.dataset.rx!, x = lx + ((t - t0) / (t1 - t0)) * (rx - lx);
       const cur = tl.querySelector<SVGGElement>('g.tlcursor')!, txt = cur.querySelector('text')!, bx = cur.querySelector('rect')!;
       cur.style.display = ''; cur.querySelector('path')!.setAttribute('transform', `translate(${x} 0)`);
-      const b = Math.floor((t - TM.t0) / TM.bin), rows = [fmt(t)]; void b; // time of day only
+      const rows = [fmt(t), ...paceRows(t)];
       txt.textContent = ''; const right = x < rx - 260;
       rows.forEach((r, i) => { const ts = document.createElementNS(NS, 'tspan'); ts.setAttribute('x', String(x + (right ? 10 : -10))); ts.setAttribute('dx', '0'); ts.textContent = i === 0 ? String(r) : String(r); if (i) ts.setAttribute('dx', '8'); ts.setAttribute('y', '23'); if (i === 0) ts.setAttribute('font-size', '19'); txt.appendChild(ts); });
-      // lay the readout out on one line
-      txt.querySelectorAll('tspan').forEach((ts, i) => { if (i) ts.removeAttribute('x'); });
+      txt.querySelectorAll('tspan').forEach((ts, i) => { if (i) { ts.removeAttribute('dx'); ts.setAttribute('y', String(23 + i * 21)); ts.setAttribute('font-size', '15'); ts.setAttribute('font-weight', '600'); } });
       txt.setAttribute('text-anchor', right ? 'start' : 'end');
       const bb = (txt as SVGTextElement).getBBox(); bx.setAttribute('x', String(bb.x - 6)); bx.setAttribute('y', String(bb.y - 3)); bx.setAttribute('width', String(bb.width + 12)); bx.setAttribute('height', String(bb.height + 6));
     }
   };
-  const clearTime = () => { tShown = -1; badge.style.display = 'none'; tint?.setAttribute('fill-opacity', '0'); if (youRing) youRing.style.display = 'none'; Object.values(recDot).forEach((g) => (g.style.display = 'none')); Object.values(leadRing).forEach((g) => (g.style.display = 'none')); dots2.forEach((d) => (d.c.style.display = 'none')); glide.clear(); const cur = tl?.querySelector<SVGGElement>('g.tlcursor'); if (cur) cur.style.display = 'none'; };
+  const clearTime = () => { tShown = -1; hovY = -1; badge.style.display = 'none'; tint?.setAttribute('fill-opacity', '0'); Object.values(recDot).forEach((g) => (g.style.display = 'none')); Object.values(leadRing).forEach((g) => (g.style.display = 'none')); dots2.forEach((d) => (d.c.style.display = 'none')); glide.clear(); const cur = tl?.querySelector<SVGGElement>('g.tlcursor'); if (cur) cur.style.display = 'none'; };
   main.addEventListener('zoomchange', () => { glide.redraw(); if (tShown >= 0) setTime(tShown); });
   document.querySelectorAll('svg.mini').forEach((m) => m.addEventListener('zoomchange', () => glide.redraw()));
   // auto-play (web only): slow sweep of the race-day clock, looping; off for reduced motion; pause persisted
@@ -152,8 +166,6 @@ if (hdEl && prof) {
   const btn = document.createElement('button'); btn.type = 'button'; btn.className = 'autoplay ui';
   const label = () => { btn.textContent = paused ? '▶ Play race day' : '❚❚ Pause'; btn.setAttribute('aria-label', paused ? 'Play race-day animation' : 'Pause race-day animation'); btn.setAttribute('aria-pressed', String(!paused)); };
   if (!reduced) { label(); prof.parentElement!.appendChild(btn); }
-  // key for the runner-dot markers (web only, like the dots themselves)
-  if (dotLayer && tl) { const key = document.createElement('div'); key.className = 'runkey ui'; key.innerHTML = '<svg width="16" height="16" viewBox="-8 -8 16 16" aria-hidden="true"><circle r="3.4" fill="#666" stroke="#fff" stroke-width=".9"/><circle r="6.6" fill="none" stroke="#666" stroke-width="2.2"/></svg> Leader (first finisher) <svg width="20" height="20" viewBox="-10 -10 20 20" aria-hidden="true"><circle r="8.4" fill="none" stroke="#111" stroke-width="1.6"/><circle r="6.2" fill="none" stroke="#666" stroke-width="2.6"/><circle r="3.4" fill="#666" stroke="#fff" stroke-width=".9"/></svg> Course record pace <svg width="12" height="12" viewBox="-6 -6 12 12" aria-hidden="true"><circle r="4" fill="#fff" stroke="#666" stroke-width="2"/></svg> Last runner <span>(course color)</span>'; tl.insertAdjacentElement('afterend', key); }
   btn.addEventListener('click', () => { paused = !paused; localStorage.setItem(KEY, paused ? '1' : '0'); label(); if (paused) { stop(); clearTime(); } else start(); });
   const suspend = () => { user = true; stop(); };
   const resume = () => { user = false; start(); };
@@ -164,7 +176,7 @@ if (hdEl && prof) {
   prof.addEventListener('pointerup', (e) => { if (e.pointerType !== 'mouse') setTimeout(() => { hide(); resume(); }, 1500); });
   // timeline: scrub the clock
   if (tl) {
-    const tmove = (e: PointerEvent) => { const ctm = tl.getScreenCTM(); if (!ctm) return; const p = new DOMPoint(e.clientX, e.clientY).matrixTransform(ctm.inverse()), lx = +tl.dataset.lx!, rx = +tl.dataset.rx!; const t = TM.t0 + ((p.x - lx) / (rx - lx)) * (TM.t1 - TM.t0); if (t < TM.t0 || t > TM.t1) return; hide(); setTime(t); };
+    const tmove = (e: PointerEvent) => { const ctm = tl.getScreenCTM(); if (!ctm) return; const p = new DOMPoint(e.clientX, e.clientY).matrixTransform(ctm.inverse()), lx = +tl.dataset.lx!, rx = +tl.dataset.rx!; const t = TM.t0 + ((p.x - lx) / (rx - lx)) * (TM.t1 - TM.t0); if (t < TM.t0 || t > TM.t1) return; hovY = p.y; hide(); setTime(t); };
     tl.style.cursor = 'crosshair';
     tl.addEventListener('pointerenter', suspend); tl.addEventListener('pointermove', tmove); tl.addEventListener('pointerdown', (e) => { suspend(); tmove(e); });
     tl.addEventListener('pointerleave', (e) => { if (e.pointerType === 'mouse') { clearTime(); resume(); } });
@@ -188,28 +200,6 @@ addEventListener('afterprint', syncLogo);
 
 initZoom();
 
-// ---- bib lookup: year + bib -> your finish, place, pace; 2026 runners get a "you" ring on the map ----
-{
-  const form = document.querySelector<HTMLFormElement>('form.biblookup'), dataEl = document.getElementById('bibdata');
-  if (form && dataEl) {
-    const D = JSON.parse(dataEl.textContent || '{}'), out = form.querySelector('output')!;
-    const hms = (s: number) => `${Math.floor(s / 3600)}:${String(Math.floor((s % 3600) / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
-    const ord = (n: number) => n + (['th', 'st', 'nd', 'rd'][(n % 100 >= 11 && n % 100 <= 13) ? 0 : n % 10] ?? 'th');
-    const go = () => {
-      const y = (form.elements.namedItem('y') as HTMLSelectElement).value, b = Number((form.elements.namedItem('b') as HTMLInputElement).value);
-      (window as any).bbuSetYou?.(null, 0);
-      if (!b) { out.textContent = ''; return; }
-      const hit = Object.entries(D.years[y] as Record<string, [number, number | null, string][]>).map(([ev, rows]) => ({ ev, rows, r: rows.find((x) => x[0] === b) })).find((h) => h.r);
-      if (!hit) { out.textContent = `No ${y} result for bib ${b}.`; return; }
-      const [, t, st] = hit.r!, ev = hit.ev.replace(/K$/, 'K').toUpperCase(), fins = hit.rows.filter((x) => x[1] != null).map((x) => x[1]!).sort((a, b2) => a - b2);
-      if (t == null) { out.textContent = `${y} ${ev} · bib ${b} · ${st}`; return; }
-      const place = fins.indexOf(t) + 1, D2 = y === '2026' ? D.dist[ev] : null;
-      out.textContent = `${y} ${ev} · bib ${b} · ${hms(t)} · ${ord(place)} of ${fins.length} finishers${D2 ? ` · ${(() => { const p = Math.round(t / D2); return `${Math.floor(p / 60)}:${String(p % 60).padStart(2, '0')}`; })()}/mi avg` : ''}${D2 ? ' · ringed in black on the map during playback' : ''}`;
-      if (D2) (window as any).bbuSetYou?.(ev, Math.round(t / 6) / 10);
-    };
-    form.addEventListener('submit', go); form.elements.namedItem('y')!.addEventListener('change', go);
-  }
-}
 
 // ---- course pages: print one course only ----
 document.querySelectorAll<HTMLButtonElement>('button.printone').forEach((b) => b.addEventListener('click', () => {

@@ -4,15 +4,6 @@ import { esc, SHEET } from '../lib/util';
 export const meta = { id: 'map', title: 'Course & Access Map' };
 import type { Ctx } from '../lib/types';
 import { hoverData } from '../lib/hover';
-import fs from 'node:fs';
-import path from 'node:path';
-// bib lookup (web only): RunSignup results by year / event, [bib, finish s | null, status]; no names stored (scripts/fetch-bibs.ts)
-const BIBS = JSON.parse(fs.readFileSync(path.join(import.meta.dir, '..', '..', 'sources', 'results', 'bibs-163892.json'), 'utf8'));
-function bibLookup(c: Ctx) {
-  const years = Object.keys(BIBS.years).filter((y) => Object.values(BIBS.years[y]).some((r: any) => r.length)).sort().reverse();
-  const data = { years: Object.fromEntries(years.map((y) => [y, Object.fromEntries(Object.entries(BIBS.years[y]).filter(([, r]: any) => r.length))])), dist: Object.fromEntries(c.courses.order.map((k) => [k, c.courses.courses[k].distance_mi])) };
-  return `<form class="biblookup ui" onsubmit="return false"><strong>Find your result</strong> <label>Year <select name="y">${years.map((y) => `<option>${y}</option>`).join('')}</select></label> <label>Bib <input name="b" inputmode="numeric" pattern="[0-9]*" size="5" autocomplete="off"></label> <button type="submit">Look up</button><output></output><span class="bibnote">RunSignup results, years available: ${[...years].reverse().join(', ')}. 2026 runners are highlighted on the map during race-day playback (35K/55K/100K courses were new in 2026).</span></form><script type="application/json" id="bibdata">${JSON.stringify(data)}</script>`;
-}
 import { renderTimeline } from '../lib/timeline';
 // Print = US Letter portrait, 2 pages: p1 the main map, p2 the side panel (header, mini maps, timelines, profile).
 // Panels keep their 36x24 in design-sheet geometry (inches) and each page is uniformly zoomed to fit the printable area.
@@ -56,7 +47,7 @@ export function render(c: Ctx) {
     </header>
     <div class="minis">${minis}</div>
     <div class="stripsbox" id="pb-strips">${renderTimeline(c)}<div class="minilinks callinks"><span class="calnote">Save race day to your phone (times + GPS, works offline):</span><a href="https://calendar.google.com/calendar/u/0?cid=Njc1ZWZhYmI1ZmY0MDE1OTZlNDk5Mzg5YWRiNzdiZTU4YTUxODhkMWFkOTc1MjE1MzgxZDUzNjI1OWVlMTU0NkBncm91cC5jYWxlbmRhci5nb29nbGUuY29t" target="_blank" rel="noopener" title="Subscribe to the Race: Big Bend Ultra Google Calendar"><span class="calico" aria-hidden="true">+</span>Google Calendar</a><a href="webcal://calendar.google.com/calendar/ical/675efabb5ff401596e499389adb77be58a5188d1ad975215381d536259ee1546%40group.calendar.google.com/public/basic.ics" title="Subscribe in Apple / iCal (public calendar feed)">iCal / Apple</a></div></div>
-    ${bibLookup(c)}<div class="profilebox" id="pb-prof">${renderProfile(c)}</div>
+    <div class="profilebox" id="pb-prof">${renderProfile(c)}</div>
   </aside>
   <script type="application/json" id="hoverdata">${JSON.stringify(hoverData(c))}</script>
 </div>`;
