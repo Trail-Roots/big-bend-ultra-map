@@ -3,7 +3,7 @@ import { chaikin, mergeChains, simplifyPts, leaderLine, poiDot, SHEET, viewProje
 // user-toggleable layers (off-course roads, access styles, arrows, aid stations, distances and all labels are always shown)
 const LAYERS: [string, string, boolean][] = [
   ['topo', 'Topo shading', true], ['park', 'Park boundary', true],
-  ['courses', 'Route colors', false], ['zoom', 'Zoom boxes', true], ['pois', 'POIs', true], ['dots', 'Runner dots', true],
+  ['zoom', 'Zoom boxes', true], ['pois', 'POIs', true], ['dots', 'Runner dots', true],
 ];
 export const mainLayers = LAYERS;
 /** logo width in sheet pt — identical to the header logo above the mini maps (1.45 in) */
@@ -46,8 +46,6 @@ export function renderMain(c) {
     pat += `<path d="${d}" class="ln" stroke="${col.ink}" stroke-width="${s.lw}" stroke-dasharray="${dash(s.pat, s.lw)}" stroke-linecap="butt"/>` + (s.rail ? `<path d="${d}" class="ln" stroke="#fff" stroke-width="${s.rail}" stroke-linecap="butt"/>` : '');
   }
   add('access', cas + pat);
-  // optional colored course overlays (off by default; PDF shows access styles)
-  for (const k of c.courses.order) add('courses', `<g class="course" data-course="${k}"><path d="${V.path(c.courseGeo[k].features[0])}" class="ln" stroke="${c.courses.colors[k]}" stroke-width="5" stroke-opacity=".85"/></g>`);
   // zoom boxes
   for (const f of c.zoom.features) add('zoom', `<path d="${V.path(f)}" fill="none" stroke="${f.properties.color}" stroke-width="2.4" stroke-dasharray="${dash([5, 3], 2.4)}"/>`);
   // arrows
@@ -55,7 +53,7 @@ export function renderMain(c) {
   // stations
   for (const k of c.stations.order) {
     const s = c.stations.stations[k], [x, y] = V.p(s.lonlat);
-    add('stations', gmapLink(s.link_lonlat ?? s.lonlat, k === 'S/F' ? s.name : `Aid station ${k} · ${s.name}`, station(x, y, k, s.spectator, k === 'S/F' ? { s: 2900, fs: 34, colors: col } : { colors: col })));
+    add('stations', gmapLink(s.place ?? s.link_lonlat ?? s.lonlat, k === 'S/F' ? s.name : `Aid station ${k} · ${s.name}`, station(x, y, k, s.spectator, k === 'S/F' ? { s: 2900, fs: 34, colors: col } : { colors: col })));
   }
   // POIs
   for (const f of c.pois.features) if (f.geometry.type === 'Point') { const [x, y] = V.p(f.geometry.coordinates); add('pois', gmapLink(f.geometry.coordinates, f.properties.name ?? 'Point of interest', poiDot(x, y))); }
@@ -128,7 +126,7 @@ function legend(c, W, H) {
     else if (kk === 'rin') s += poiDot(x + sw / 2, y, 0.85);
     else if (kk === 'ring') s += station(x + sw / 2, y, '', true, { s: 420, badge: false, colors: col });
     else if (kk === 'aid') s += station(x + sw / 2, y, '', false, { s: 420, colors: col });
-    else if (kk.startsWith('st')) { const k = kk.slice(2); s += gmapLink(c.stations.stations[k].link_lonlat ?? c.stations.stations[k].lonlat, c.stations.stations[k].name, station(x + sw / 2, y, k, c.stations.stations[k].spectator, { s: 520, fs: 17, badge: false, colors: col })); }
+    else if (kk.startsWith('st')) { const k = kk.slice(2); s += gmapLink(c.stations.stations[k].place ?? c.stations.stations[k].link_lonlat ?? c.stations.stations[k].lonlat, c.stations.stations[k].name, station(x + sw / 2, y, k, c.stations.stations[k].spectator, { s: 520, fs: 17, badge: false, colors: col })); }
     s += `<text x="${f1(x0 + 0.25 * w)}" y="${f1(y)}" font-size="21" dominant-baseline="central" fill="${col.ink}">${esc(txt)}</text>`;
   });
   return s + '</g>';

@@ -3,6 +3,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { alongRoute, type ArrowsFile } from './lib/arrows';
+import { loadCalendar, inRaceYear, raceMin, CAL_ICS } from './lib/calendar';
 import { type XY, merc, unmerc, ll, r6, hyp, cumlen, interpolate, simplify, simplifyTP, chaikin, hav, interp, fc } from './lib/geo';
 
 const ROOT = path.resolve(import.meta.dir, '..');
@@ -16,6 +17,8 @@ export const ORDER = ['100K', '55K', '35K', '20K', '10K'] as const;
 type Course = (typeof ORDER)[number];
 const C: Record<Course, string> = { '100K': '#d6336c', '55K': '#e8891c', '35K': '#3d8b3d', '20K': '#1f6fb2', '10K': '#7b3fa0' };
 const NAME: Record<string, string> = { 'S/F': 'Start / Finish', '1': 'Waterhole', '2': 'Mines', '3': 'Shutup', '4': 'Solitario', '5': 'Contrabando' };
+// long (full) names: official race-sheet names; Start/Finish from the race calendar location
+const LONG: Record<string, string> = { 'S/F': 'Barton Warnock Visitor Center', '1': 'Waterhole', '2': 'Whit Roy Mine', '3': 'Right Hand Shutup', '4': 'Paso al Solitario', '5': 'Contrabando' };
 const KN: Record<string, string> = { 'S/F': 'Start / Finish Line', '1': 'Waterhole Aid', '2': 'Whit Roy Aid', '3': 'Right Hand Shutup Aid', '4': 'Solitario Aid', '5': 'Contrabando Aid' };
 const SPEC = new Set(['S/F', '5']);
 const RINCON: XY = [-103.8572918, 29.4076521];
@@ -157,9 +160,38 @@ for (const k of ORDER) {
 const HRS: Record<string, string> = {};
 for (const l in OPEN) if (l in CLOSE) HRS[l] = `${hmx(OPEN[l])} - ${CLOSE[l].replace(':00', '')}`;
 HRS['S/F'] = SF_HOURS;
-const CAL: Record<string, { lat: number; lon: number }> = rj('curated/calendar_coords.json').stations; // Google Maps links use the race calendar's exact coordinates where published
+// ---------- race calendar (authoritative for places and times) ----------
+const CALD = await loadCalendar(SRC), EV = CALD.events.filter(inRaceYear);
+const GH = !!process.env.GITHUB_ACTIONS, soft: string[] = [], hard: string[] = [];
+const warn = (m: string) => { soft.push(m); console.warn((GH ? '::warning title=Data check::' : 'SOFT CHECK: ') + m); };
+const fail = (m: string) => { hard.push(m); console.error((GH ? '::error title=Timing check::' : 'TIMING CHECK FAILED: ') + m); };
+// station <- calendar events (by summary); place = the event LOCATION text (place name / address, or coordinates when that is all it gives)
+const ST_RE: Record<string, RegExp> = { 'S/F': /Race Start|Finish/, '1': /Waterhole|Alpha/i, '2': /Whit ?Roy|Bravo/i, '3': /Right ?hand Shutup/i, '4': /Solitario/i, '5': /Contrabando|Delta/i };
+const CAL: Record<string, { place?: string; lat?: number; lon?: number }> = {};
+for (const [k, re] of Object.entries(ST_RE)) {
+  const locs = EV.filter((e) => re.test(e.summary) && e.location).map((e) => e.location), uniq = [...new Set(locs)];
+  if (!uniq.length) { warn(`calendar: no location for station ${k} (${NAME[k]})`); continue; }
+  if (uniq.length > 1) warn(`calendar: several locations for station ${k}: ${uniq.join(' | ')} — using the most frequent`);
+  const loc = uniq.sort((a, b) => locs.filter((x) => x === b).length - locs.filter((x) => x === a).length)[0], m = loc.match(/^(-?\d+\.\d+)\s*,\s*(-?\d+\.\d+)$/);
+  CAL[k] = m ? { lat: +m[1], lon: +m[2] } : { place: loc };
+}
+// timing checks: starts and finishes are HARD (build fails), cutoffs and sun times are soft
+const clk = (m: number) => { m = ((Math.round(m) % 1440) + 1440) % 1440; return `${Math.floor(m / 60) % 12 || 12}:${String(m % 60).padStart(2, '0')} ${m < 720 ? 'AM' : 'PM'}`; };
+for (const k of ORDER) {
+  const st = EV.find((e) => new RegExp(`\\b${k} Race Start`).test(e.summary)), fi = EV.find((e) => new RegExp(`\\b${k} Finish`).test(e.summary));
+  const sStart = t2(S[k][0][2]), sFin = tm(S[k][S[k].length - 1][2]);
+  if (!st) fail(`${k}: no start event in the race calendar`); else if (Math.round(raceMin(st.start!)) !== sStart) fail(`${k} start: calendar ${clk(raceMin(st.start!))} vs race sheet ${S[k][0][2]}`);
+  if (!fi) fail(`${k}: no finish event in the race calendar`); else if (Math.round(raceMin(fi.start!)) !== sFin) fail(`${k} finish cutoff: calendar ${clk(raceMin(fi.start!))} vs race sheet ${S[k][S[k].length - 1][2]}`);
+  for (const e of EV.filter((e) => new RegExp(`\\b${k} Cutoff@`).test(e.summary))) {
+    const where = e.summary.split('@')[1], sid = Object.entries(ST_RE).find(([id, re]) => id !== 'S/F' && re.test(where))?.[0];
+    if (!sid) { warn(`calendar cutoff '${e.summary}' does not name a known aid station`); continue; }
+    const t = Math.round(raceMin(e.start!)), sheet = S[k].slice(1, -1).filter((x) => x[0] === sid);
+    if (!sheet.some((x) => x[2] !== 'TBD' && tm(x[2]) === t)) warn(`${k} cutoff at ${LONG[sid]}: calendar ${clk(t)} vs race sheet ${sheet.map((x) => x[2]).join(' / ') || 'none'}`);
+  }
+}
+const CAL_SUN = Object.fromEntries(['Sunrise', 'Sunset'].map((n) => [n, EV.find((e) => e.summary.includes(n))?.start]).filter(([, d]) => d).map(([n, d]) => [n, raceMin(d as Date)]));
 
-w('stations.json', { order: ['S/F', '1', '2', '3', '4', '5'], stations: Object.fromEntries(['S/F', '1', '2', '3', '4', '5'].map((k) => [k, { name: NAME[k], kml: KN[k], lonlat: ll([merc(SLL[k])])[0], ...(CAL[k] ? { link_lonlat: [CAL[k].lon, CAL[k].lat] } : {}), hours: HRS[k] ?? null, spectator: SPEC.has(k), elevation_ft: Math.round(STEL[k] ?? 0) }])) });
+w('stations.json', { order: ['S/F', '1', '2', '3', '4', '5'], stations: Object.fromEntries(['S/F', '1', '2', '3', '4', '5'].map((k) => [k, { name: NAME[k], kml: KN[k], lonlat: ll([merc(SLL[k])])[0], long: LONG[k], ...(CAL[k]?.place ? { place: CAL[k].place } : {}), ...(CAL[k]?.lat != null ? { link_lonlat: [CAL[k].lon, CAL[k].lat] } : {}), hours: HRS[k] ?? null, spectator: SPEC.has(k), elevation_ft: Math.round(STEL[k] ?? 0) }])) });
 w('cutoffs.json', Object.fromEntries(ORDER.map((k) => [k, S[k].map(([station, mile, cutoff]) => ({ station, mile, cutoff }))])));
 // Strava route URL: only taken from the source GPX metadata (<link href="https://www.strava.com/routes/...">); never invented
 const strava = (k: Course) => { const m = fs.readFileSync(path.join(SRC, 'gpx', `${k}.gpx`), 'utf8').match(/https?:\/\/(?:www\.)?strava\.com\/routes\/\d+/); return m ? m[0].replace(/^http:/, 'https:') : null; };
@@ -233,3 +265,6 @@ fs.cpSync(path.join(SRC, 'logos'), OUT, { recursive: true });
 
 // station labels (sources/curated/station_labels.geojson) only hold position/alignment; name + hours text comes from stations.json
 console.log('content written:', Object.entries(HRS).map(([k, v]) => `${k} ${v}`).join(' | '));
+if (GH) for (const m of MI_WARN) console.warn('::warning title=Mileage check::' + m);
+w('checks.json', { calendar: CAL_ICS, calendar_fetched: CALD.fetched, calendar_sun: CAL_SUN, soft: [...MI_WARN.map((m) => 'mileage (sheet vs GPX, GPX used): ' + m), ...soft], hard });
+if (hard.length) { console.error(`${hard.length} timing conflict(s) between the race sheet and the race calendar — fix before publishing.`); process.exit(1); }

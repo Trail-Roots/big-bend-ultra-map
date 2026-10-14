@@ -1,5 +1,0 @@
-{
-  "_note": "Exact coordinates published in the public 'Race: Big Bend Ultra' Google Calendar (event LOCATION). Used for Google Maps links only; map markers keep their surveyed KML positions. Stations without a calendar coordinate are omitted.",
-  "source": "https://calendar.google.com/calendar/ical/675efabb5ff401596e499389adb77be58a5188d1ad975215381d536259ee1546%40group.calendar.google.com/public/basic.ics",
-  "stations": { "1": { "event": "100K Cutoff@Waterhole", "lat": 29.31797692590845, "lon": -103.79533238192568 } }
-}

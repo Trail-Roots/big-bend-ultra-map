@@ -147,7 +147,8 @@ export function mergeChains(L: [number, number][][], eps = 0.5): [number, number
 }
 
 /** wrap SVG content in a Google Maps link to an exact [lon, lat] (new tab; also a live link in the PDF) */
-export const gmapLink = (lonlat: [number, number], title: string, inner: string) => `<a class="gmap" href="https://www.google.com/maps/search/?api=1&amp;query=${lonlat[1].toFixed(6)},${lonlat[0].toFixed(6)}" target="_blank" rel="noopener" style="cursor:pointer" aria-label="${esc(title)} on Google Maps"><title>${esc(title)} · open in Google Maps</title>${inner}</a>`;
+// where: a calendar place name / address (preferred) or [lon, lat]
+export const gmapLink = (where: [number, number] | string, title: string, inner: string) => `<a class="gmap" href="https://www.google.com/maps/search/?api=1&amp;query=${typeof where === "string" ? esc(encodeURIComponent(where)) : `${where[1].toFixed(6)},${where[0].toFixed(6)}`}" target="_blank" rel="noopener" style="cursor:pointer" aria-label="${esc(title)} on Google Maps"><title>${esc(title)} · open in Google Maps</title>${inner}</a>`;
 /** checkered finish flag (same pole / size as the start flag): pole from (x, base) up to top, 14×10 flag in a 4×3 checker */
 export const finishFlag = (x: number, base: number, top: number, ink = '#2a2a2a') => {
   let s = `<path d="M${f1(x)},${f1(base)}V${f1(top)}" stroke="${ink}" stroke-width="2"/><rect x="${f1(x)}" y="${f1(top)}" width="14" height="10.5" fill="#fff" stroke="${ink}" stroke-width="1"/>`;

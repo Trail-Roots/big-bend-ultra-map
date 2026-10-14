@@ -65,12 +65,7 @@ export function renderMini(c, k) {
   if (pv) s += `<path d="${V.path(c.courseGeo[pv].features[0])}" class="ln" stroke="${c.courses.colors[pv]}" stroke-opacity=".5" stroke-width="3.5"/>`;
   const d = V.path(c.courseGeo[k].features[0]);
   s += `<path d="${d}" class="ln" stroke="#fff" stroke-width="10.5"/><path d="${d}" class="ln" stroke="${c.courses.colors[k]}" stroke-width="7.5"/>`;
-  if (nx) {
-    const zb = c.zoom.features.find(f => f.properties.course === nx);
-    s += `<g class="zoombox"><path d="${V.path(zb)}" fill="none" stroke="${zb.properties.color}" stroke-width="1.8" stroke-dasharray="${dash([4, 2], 1.8)}"/>`;
-    const ring = zb.geometry.coordinates[0], [bx, by] = V.p(ring[2]);
-    s += `<text x="${f1(bx)}" y="${f1(by - 2)}" font-size="14" font-weight="700" text-anchor="end" fill="${zb.properties.color}" stroke="${col.cream}" stroke-width="4" paint-order="stroke">${nx}</text></g>`;
-  }
+  // (no zoom boxes on mini maps)
   for (const f of c.arrows.features.filter(f => f.properties.map === k)) s += chevron(f, V, col);
   if (k === '10K') s += turnaround(c, V);
   for (const st of c.cutoffs[k]) { const [x, y] = V.p(c.stations.stations[st.station].lonlat); s += station(x, y, st.station, c.stations.stations[st.station].spectator, { s: 1280, fs: 23, badge: false, colors: col }); }
