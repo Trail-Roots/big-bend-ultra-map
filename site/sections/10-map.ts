@@ -57,9 +57,7 @@ export function render(c: Ctx) {
     <div class="minis">${minis}</div>
     <div class="stripsbox" id="pb-strips">${renderTimeline(c)}<div class="minilinks callinks"><span class="calnote">Save race day to your phone (times + GPS, works offline):</span><a href="https://calendar.google.com/calendar/u/0?cid=Njc1ZWZhYmI1ZmY0MDE1OTZlNDk5Mzg5YWRiNzdiZTU4YTUxODhkMWFkOTc1MjE1MzgxZDUzNjI1OWVlMTU0NkBncm91cC5jYWxlbmRhci5nb29nbGUuY29t" target="_blank" rel="noopener" title="Subscribe to the Race: Big Bend Ultra Google Calendar"><span class="calico" aria-hidden="true">+</span>Google Calendar</a><a href="webcal://calendar.google.com/calendar/ical/675efabb5ff401596e499389adb77be58a5188d1ad975215381d536259ee1546%40group.calendar.google.com/public/basic.ics" title="Subscribe in Apple / iCal (public calendar feed)">iCal / Apple</a></div></div>
     ${bibLookup(c)}<div class="profilebox" id="pb-prof">${renderProfile(c)}</div>
-    <div class="printfoot">trailroots.com/big-bend-ultra</div>
   </aside>
   <script type="application/json" id="hoverdata">${JSON.stringify(hoverData(c))}</script>
-  <a class="footlink" href="https://trailroots.com/big-bend-ultra" target="_blank" rel="noopener">trailroots.com/big-bend-ultra</a>
 </div>`;
 }

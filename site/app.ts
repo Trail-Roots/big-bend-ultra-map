@@ -210,3 +210,9 @@ initZoom();
     form.addEventListener('submit', go); form.elements.namedItem('y')!.addEventListener('change', go);
   }
 }
+
+// ---- course pages: print one course only ----
+document.querySelectorAll<HTMLButtonElement>('button.printone').forEach((b) => b.addEventListener('click', () => {
+  document.body.classList.add('printone'); document.querySelectorAll('.coursepage').forEach((p) => p.classList.toggle('on', (p as HTMLElement).dataset.course === b.dataset.course));
+  const done = () => { document.body.classList.remove('printone'); removeEventListener('afterprint', done); }; addEventListener('afterprint', done); print();
+}));

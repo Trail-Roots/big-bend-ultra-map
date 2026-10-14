@@ -9,5 +9,11 @@ try {
   const p = await b.newPage(); await p.goto(`http://localhost:${srv.port}/`, { waitUntil: 'networkidle' });
   await p.evaluate(() => document.fonts.ready); await p.emulateMedia({ media: 'print' });
   await p.pdf({ path: OUT, preferCSSPageSize: true, printBackground: true });
+  // one PDF per course page (same CSS as "Print this course")
+  for (const k of await p.$$eval('.coursepage', (e) => e.map((x) => (x as HTMLElement).dataset.course!))) {
+    await p.evaluate((k) => { document.body.classList.add('printone'); document.querySelectorAll('.coursepage').forEach((x) => x.classList.toggle('on', (x as HTMLElement).dataset.course === k)); }, k);
+    await p.pdf({ path: path.join(D, `course-${k}.pdf`), preferCSSPageSize: true, printBackground: true });
+  }
+  await p.evaluate(() => document.body.classList.remove('printone'));
 } finally { await b.close(); srv.stop(true); }
 console.log('pdf', path.relative(process.cwd(), OUT), (fs.statSync(OUT).size / 1024 / 1024).toFixed(2) + ' MB');
