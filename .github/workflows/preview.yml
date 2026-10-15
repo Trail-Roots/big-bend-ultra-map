@@ -1,0 +1,20 @@
+name: Preview build (stacked-timeline, not deployed)
+on:
+  push:
+    branches: [stacked-timeline]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --frozen-lockfile
+      - run: bunx playwright install --with-deps chromium
+      - run: bun run build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: preview-site
+          path: dist

@@ -36,25 +36,31 @@ export function renderTimeline(c: Ctx) {
   // sunrise / sunset markers
   const sunMark = (t: number, lab: string) => { const x = X(t), y = bottom + 14, up = lab === 'Sunrise'; let rays = ''; for (let i = 0; i < 5; i++) { const a = Math.PI * (i / 4); rays += `M${f1(x + Math.cos(a) * 9)},${f1(y - Math.sin(a) * 9)}L${f1(x + Math.cos(a) * 13)},${f1(y - Math.sin(a) * 13)}`; } return `<path d="M${f1(x)},${AX}V${f1(bottom)}" stroke="#d08a1e" stroke-width="2" stroke-dasharray="6 4"/><g class="sun"><title>${lab} ${clock(t, false)}</title><path d="M${f1(x - 7)},${f1(y)}a7,7 0 0 1 14,0z" fill="#f2a93b"/><path d="${rays}" stroke="#f2a93b" stroke-width="2" stroke-linecap="round"/><path d="M${f1(x - 14)},${f1(y)}h28" stroke="#a86a10" stroke-width="1.5"/><text x="${f1(x + 17)}" y="${f1(y)}" font-size="17" font-weight="700" fill="#a86a10" stroke="#fff" stroke-width="4" paint-order="stroke">${up ? '↑' : '↓'}${clock(t, false)}</text></g>`; };
   s += sunMark(d17.sunrise, 'Sunrise') + sunMark(d17.sunset, 'Sunset');
-  // course rows
-  
-  order.forEach((k, r) => {
-    const C = T.courses[k], maxOn = Math.max(...C.on_course), y0 = cTop + r * CR, base = y0 + CR - 8, hgt = CR - 16, cc = c.courses.colors[k], B = T.bin_min;
-    let g = miniBib(k, cc, PADL, y0 + CR / 2 - MINIBIB.h / 2, c.colors);
-    const pts = C.on_course.map((v: number, i: number) => [X(t0 + (i + 0.5) * B), base - (v / maxOn) * hgt, t0 + (i + 0.5) * B]).filter((p: number[]) => p[2] > C.start); // nobody on course before the start
-    g += `<path d="M${f1(X(C.start))},${f1(base)}V${f1(pts[0][1])}L${pts.map((p: number[]) => `${f1(p[0])},${f1(p[1])}`).join('L')}L${f1(X(t1))},${f1(base)}Z" fill="${cc}" fill-opacity=".28" stroke="${cc}" stroke-width="1.6" stroke-linejoin="round"/>`;
-    g += `<path d="M${f1(X(C.start))},${f1(base)}H${f1(X(t1))}" stroke="${cc}" stroke-width="1" stroke-opacity=".5"/>`;
-    // start flag
-    g += `<path d="M${f1(X(C.start))},${f1(base)}V${f1(y0 + 4)}" stroke="${ink}" stroke-width="2"/><path d="M${f1(X(C.start))},${f1(y0 + 4)}h14l-4,5 4,5h-14z" fill="${ink}"/><text x="${f1(X(C.start) - 5)}" y="${f1(y0 + 12)}" font-size="17" font-weight="700" text-anchor="end" fill="${ink}" stroke="#fff" stroke-width="4" paint-order="stroke">${clock(C.start)}</text>`;
-    // cutoffs (station number + time) and finish cutoff
-    for (const q of C.passes) {
-      const tm = cutMin(q.cutoff); if (tm == null || q.mile === 0) continue;
-      const t = tm < C.start ? tm + 1440 : tm, x = X(t), fin = q === C.passes[C.passes.length - 1];
-      if (fin) g += finishFlag(x, base, y0 + 4, ink); else g += `<path d="M${f1(x)},${f1(base + 2)}V${f1(base - hgt - 2)}" stroke="#b3261e" stroke-width="2"/>`;
-      g += `${fin ? `<text x="${f1(x + 18)}" y="${f1(y0 + 12)}" font-size="17" font-weight="700" fill="${ink}" stroke="#fff" stroke-width="4" paint-order="stroke">${clock(t)}</text>` : `<text x="${f1(x)}" y="${f1(base - hgt - 4)}" font-size="14" font-weight="700" text-anchor="middle" fill="#b3261e" stroke="#fff" stroke-width="3" paint-order="stroke">${q.station} ${clock(t)}</text>`}`;
-    }
-    s += `<g class="tlrow" data-course="${k}">${g}</g>`;
-  });
+  {
+    const B = T.bin_min, n = T.courses[order[0]].on_course.length, top = cTop + 36, base = cTop + order.length * CR - 6, hgt = base - top;
+    const acc = new Array(n).fill(0), tot = acc.map((_, i) => order.reduce((q, k) => q + (T.courses[k].on_course[i] || 0), 0)), maxT = Math.max(...tot);
+    const xs = acc.map((_, i) => X(t0 + (i + 0.5) * B)), Y = (v: number) => base - (v / maxT) * hgt;
+    s += `<path d="M${f1(LX)},${f1(base)}H${f1(RX)}" stroke="${ink}" stroke-width="1"/>`;
+    for (let v = 0; v <= maxT; v += maxT > 400 ? 200 : 100) s += `<path d="M${f1(LX)},${f1(Y(v))}H${f1(RX)}" stroke="#ece8e0" stroke-width="1"/><text x="${f1(LX - 6)}" y="${f1(Y(v) + 5)}" font-size="13" text-anchor="end" fill="${col.mute}">${v}</text>`;
+    let bands = '';
+    order.forEach((k) => {
+      const C = T.courses[k], cc = c.courses.colors[k], lo = acc.slice();
+      C.on_course.forEach((v: number, i: number) => { acc[i] += t0 + (i + 0.5) * B > C.start ? v : 0; });
+      const upper = xs.map((x, i) => `${f1(x)},${f1(Y(acc[i]))}`), lower = xs.map((x, i) => `${f1(x)},${f1(Y(lo[i]))}`).reverse();
+      bands += `<g class="tlrow" data-course="${k}"><path d="M${upper.join('L')}L${lower.join('L')}Z" fill="${cc}" fill-opacity=".55" stroke="none"/><path d="M${upper.join('L')}" class="ln" stroke="${cc}" stroke-width="1.8"/></g>`;
+    });
+    s += bands + `<text x="${PADL}" y="${f1(top - 8)}" font-weight="700" font-size="14" fill="${col.mute}">Runners on course</text>`;
+    // legend: mini bibs, top = last in the stack
+    const lh = (base - top) / order.length;
+    [...order].reverse().forEach((k, r) => { s += miniBib(k, c.courses.colors[k], PADL, top + r * lh + lh / 2 - MINIBIB.h / 2, c.colors); });
+    // starts (flag + time) and final cutoffs (finish flag + time), one label per distinct time
+    const rowEnd = [-1e9, -1e9]; // start labels on two staggered rows so no two touch
+    order.forEach((k) => { const C = T.courses[k], x = X(C.start), ri = rowEnd[0] < x ? 0 : 1, ry = top - 30 + ri * 15; rowEnd[ri] = x + 14 + clock(C.start).length * 8 + 4; s += `<path d="M${f1(x)},${f1(base)}V${f1(ry - 8)}" stroke="${ink}" stroke-width="1.2" stroke-dasharray="3 3"/><path d="M${f1(x)},${f1(ry - 9)}h12l-4,4 4,4h-12z" fill="${c.courses.colors[k]}"/>`;
+      s += `<text x="${f1(x + 14)}" y="${f1(ry + 4)}" font-size="13" font-weight="700" fill="${ink}" stroke="#fff" stroke-width="3" paint-order="stroke">${clock(C.start)}</text>`; });
+    const fins = new Map<number, string[]>();
+    order.forEach((k) => { const C = T.courses[k], q = C.passes[C.passes.length - 1], tm = cutMin(q.cutoff); if (tm == null) return; const t = tm < C.start ? tm + 1440 : tm; fins.set(t, [...(fins.get(t) ?? []), k]); });
+    for (const [t, ks] of fins) { const x = X(t); s += `<path d="M${f1(x)},${f1(base)}V${f1(top - 2)}" stroke="${ink}" stroke-width="1.6"><title>${ks.join(', ')} final cutoff ${clock(t, false)}</title></path>` + finishFlag(x, top - 2, top - 18, ink) + `<text x="${f1(x + 16)}" y="${f1(top - 6)}" font-size="14" font-weight="700" fill="${ink}" stroke="#fff" stroke-width="3" paint-order="stroke">${clock(t)}</text>`; }
+  }
   // stations
   s += `<text x="${PADL}" y="${f1(sTop - 6)}" font-size="17" font-weight="700" fill="${ink}">Busiest times</text><path d="M${PADL + 172},${f1(sTop - 20)}v16" stroke="#111" stroke-width="4"/><path d="M${PADL + 172},${f1(sTop - 20)}v16" stroke="#fff" stroke-width="2"/><text x="${PADL + 178}" y="${f1(sTop - 6)}" font-size="14" fill="${col.mute}">opens</text><path d="M${PADL + 230},${f1(sTop - 20)}v16" stroke="#111" stroke-width="2.4"/><text x="${PADL + 236}" y="${f1(sTop - 6)}" font-size="14" fill="${col.mute}">cutoff</text>`;
   // one global intensity scale: share of all runners, normalized to the busiest aid station and 15-min slot (Waterhole); never per station
