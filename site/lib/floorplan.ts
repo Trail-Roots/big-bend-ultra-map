@@ -1,6 +1,6 @@
 // Finish-area floor plan (architectural look, true scale): footprints drawn in local ground meters from Erik's logistics
 // My Map points (content/logistics.json) + OSM roads / lot; no aerial. Sizes are assumptions (see ASSUME) until confirmed.
-import TR from './finish-trace.json';
+import { TR, V as TV, toLL, SURF_PX, REF_RESIDUAL_M } from './finish-trace';
 import { Scene, textOb, circleOb, lineOb, polyOb, type Pt } from './collide';
 import { esc, f1, textBlock, leaderLine, gmapLink, station } from './util';
 
@@ -14,10 +14,9 @@ export const ASSUME = {
   arch: { span: 24, along: 'parallel to Big Bend St Park Rd' }, gate: { span: 18 },
 };
 // picnic area: the section east of the visitor-center loop road, south of the entry road and north of the small outbuilding (OSM + aerial)
-const BW_OUT: [number, number][] = [[-103.757697, 29.270026], [-103.757117, 29.270026], [-103.757117, 29.26952], [-103.757697, 29.26952]];
-const BW_IN: [number, number][] = [[-103.757535, 29.269872], [-103.75728, 29.269872], [-103.75728, 29.269655], [-103.757535, 29.269655]];
+const BW_OUT = TR.BLD_OUT, BW_IN = TR.BLD_IN; // traced, rotated with the roof edge
 const FRAME = [-103.7593, 29.26935, -103.75645, 29.27078]; // lon/lat: tight around the finish-area features incl. the drop-off
-export const C = { ground: '#f8f6f1', grid: '#ebe6dc', road: '#c4c2bd', roadEdge: '#a39c90', lot: '#c4c2bd', bld: '#d9d2c4', bldEdge: '#3d3a35', ink: '#2a2a2a', dirt: '#efe8da', pave: '#c4c2bd', curb: '#9d978c', island: '#d5dfc2', islandEdge: '#8a9478', mute: '#7d776d', picnic: '#e2ecd6', picnicEdge: '#5f8a5a', rest: '#dce8f6', restEdge: '#2a62a8', rv: '#e9ebef', amber: '#d08a10', red: '#c4161c', blue: '#2a62a8' };
+export const C = { ground: '#f8f6f1', grid: '#ebe6dc', road: '#c4c2bd', roadEdge: '#a39c90', lot: '#c4c2bd', bld: '#d9d2c4', bldEdge: '#3d3a35', ink: '#2a2a2a', dirt: '#efe8da', pave: '#c4c2bd', curb: '#9d978c', island: '#d5dfc2', garden: '#e4dcc5', gardenEdge: '#b7ab8f', islandEdge: '#8a9478', mute: '#7d776d', picnic: '#e2ecd6', picnicEdge: '#5f8a5a', rest: '#dce8f6', restEdge: '#2a62a8', rv: '#e9ebef', amber: '#d08a10', red: '#c4161c', blue: '#2a62a8' };
 
 function makeBase(c, FRAME: number[], gridM: number, id = "fp", W = 1200, o: { ground?: string; road?: string; edge?: string; lot?: boolean; grid?: string; osmBld?: boolean; skipWays?: number[]; extraWays?: any[] } = {}) {
   const lat0 = 29.2702, lon0 = -103.7575, kx = Math.cos(lat0 * Math.PI / 180) * 111320, ky = 110574;
@@ -67,6 +66,36 @@ function checkAreasOffRoads(name: string, B, areas: { id: string; pts: number[][
       bad.push(`${A.id} overlaps ${near[0][3]} road at ${x.toFixed(0)},${y.toFixed(0)}`); break outer; } }
   if (bad.length) throw new Error(`[roads:${name}] ` + bad.join('; '));
   console.log(`  roads: ${name} OK (${areas.length} areas off the road bands)`); }
+/** park road: OSM way west of the traced stretch + the traced centerline + OSM east tail */
+function parkRd(c): [number, number][] { const w = c.logistics.osm.features.find((f) => f.properties.osm_id === 15134664).geometry.coordinates as [number, number][], T = TR.PARKRD_C;
+  const asc = w[0][0] < w[w.length - 1][0], ws = asc ? w : [...w].reverse(); return [...ws.filter((q) => q[0] < T[0][0] - 2e-5), ...T, ...ws.filter((q) => q[0] > T[T.length - 1][0] + 2e-5)]; }
+/** build check for the traced finish-area tiling (ground meters): (1) no two surfaces overlap, (2) every edge either is shared
+ *  exactly with a neighbor or stays >= 1 m from every other surface (no gaps/slivers), (3) every stall stripe lies on pavement. */
+function checkTiling(gm: (q: [number, number]) => [number, number], stallPts: [number, number][]) {
+  type R = [number, number][]; const G = (r: R) => r.map(gm), TOL = 0.05, GAP = 1.0;
+  const surf: { id: string; outer: R; holes: R[] }[] = [
+    { id: 'pavement', outer: G(TR.PAVE), holes: [G(TR.ISL_BIG), G(TR.ISL_W), G(TR.ISL_E)] }, { id: 'island-big', outer: G(TR.ISL_BIG), holes: [] }, { id: 'island-w', outer: G(TR.ISL_W), holes: [] },
+    { id: 'island-e', outer: G(TR.ISL_E), holes: [] }, { id: 'picnic', outer: G(TR.PICNIC), holes: [] }, { id: 'shelter', outer: G(TR.SHED), holes: [] }, { id: 'garden', outer: G(TR.GARDEN), holes: [] },
+    { id: 'building', outer: G(TR.BLD_OUT), holes: [] }];
+  const pip = (p: number[], poly: R) => { let ins = false; for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) { const [xi, yi] = poly[i], [xj, yj] = poly[j]; if (yi > p[1] !== yj > p[1] && p[0] < ((xj - xi) * (p[1] - yi)) / (yj - yi) + xi) ins = !ins; } return ins; };
+  const inS = (S: (typeof surf)[0], p: number[]) => pip(p, S.outer) && !S.holes.some((h) => pip(p, h));
+  const dseg = (p: number[], a: number[], b: number[]) => { const dx = b[0] - a[0], dy = b[1] - a[1], t = Math.max(0, Math.min(1, ((p[0] - a[0]) * dx + (p[1] - a[1]) * dy) / (dx * dx + dy * dy || 1))); return Math.hypot(p[0] - a[0] - dx * t, p[1] - a[1] - dy * t); };
+  const rings = (S: (typeof surf)[0]) => [S.outer, ...S.holes], edges = (S: (typeof surf)[0]) => rings(S).flatMap((r) => r.map((a, i) => [a, r[(i + 1) % r.length]] as [number[], number[]]));
+  const dB = (S: (typeof surf)[0], p: number[]) => Math.min(...edges(S).map(([a, b]) => dseg(p, a, b)));
+  const same = (a: number[], b: number[]) => Math.hypot(a[0] - b[0], a[1] - b[1]) < TOL, bad: string[] = [];
+  for (const S of surf) for (const [a, b] of edges(S)) { const L = Math.hypot(b[0] - a[0], b[1] - a[1]);
+    const shared = surf.some((Q) => Q !== S && edges(Q).some(([c, d]) => (same(a, c) && same(b, d)) || (same(a, d) && same(b, c))));
+    for (let t = 0.5; t < L - 0.5; t += 0.5) { const p = [a[0] + (b[0] - a[0]) * t / L, a[1] + (b[1] - a[1]) * t / L];
+      for (const Q of surf) { if (Q === S) continue; const dq = dB(Q, p); if ([a, b].some((e) => dB(Q, e) < TOL && Math.hypot(p[0] - e[0], p[1] - e[1]) < 2 * GAP)) continue; // diverging from a shared vertex
+        if (!shared && dq > TOL && dq < GAP && !(S.id === 'building' || Q.id === 'building') ) { bad.push(`gap/sliver ${dq.toFixed(2)} m between ${S.id} and ${Q.id} at ${p.map((v) => v.toFixed(1))}`); break; } } if (bad.length > 8) break; } }
+  // overlaps: sample a 0.5 m grid; a point (away from edges) may lie in at most one surface
+  const all = surf.flatMap((S) => S.outer), xs = all.map((q) => q[0]), ys = all.map((q) => q[1]);
+  for (let x = Math.min(...xs); x <= Math.max(...xs) && bad.length < 10; x += 0.5) for (let y = Math.min(...ys); y <= Math.max(...ys); y += 0.5) { const p = [x, y], hit = surf.filter((S) => inS(S, p));
+    if (hit.length > 1 && hit.every((S) => dB(S, p) > 0.15)) { bad.push(`overlap ${hit.map((S) => S.id).join(' + ')} at ${x.toFixed(1)},${y.toFixed(1)}`); break; } }
+  // stalls fully on pavement (not on islands / garden / picnic)
+  for (const p of stallPts) if (!inS(surf[0], p) || dB(surf[0], p) < 0.3) { bad.push(`stall stripe off pavement at ${p.map((v) => v.toFixed(1))}`); break; }
+  if (bad.length) throw new Error('[tiling:finish plan] ' + bad.join('; '));
+  console.log(`  tiling: finish plan OK (${surf.length} surfaces share edges, no gaps/overlaps; ${stallPts.length / 2} stall stripes on pavement; georef residual ${REF_RESIDUAL_M.toFixed(2)} m)`); }
 /** north arrow, ft scale bar, grid note, frame */
 function furniture(W: number, H: number, s: number, ft: number[], gridNote: string) {
   let out = '';
@@ -101,25 +130,29 @@ const RT = roadTools(B), ln = RT.lines[0], cs2 = RT.cum(ln.pts), pr = (drop.coor
     const band = 'M' + [...inn, ...out.reverse()].map((q) => pm(q).map(f1).join(',')).join('L') + 'Z', cx = drop.coords.reduce((t, q) => t + q[0], 0) / drop.coords.length, cy = drop.coords.reduce((t, q) => t + q[1], 0) / drop.coords.length;
   return { band, ring: [...inn, ...out], where: [cx, cy] as [number, number], anchor: pm(off((s0 + s1) / 2, (o1 + o2) / 2)) }; }
 export function renderFinishPlan(c, labels: Record<string, [number, number]>) {
-  const B = makeBase(c, FRAME, 10, 'fp', 1200, { ground: C.dirt, grid: '#e3dac8', road: C.pave, edge: C.curb, lot: false, osmBld: false, skipWays: [321566200, 1452473490, 15134664] /* lot-internal OSM ways + the OSM park road, replaced by traced geometry */, extraWays: [{ type: 'Feature', properties: { highway: 'service', osm_id: -1, name: 'Big Bend St Park Rd (traced)' }, geometry: { type: 'LineString', coordinates: (TR as any).PARKRD } }] }), { gm, pm, P, d, s, W, H, osm, L, pt, rect, poly, ang, way, RW } = B; let g = B.g;
+  const B = makeBase(c, FRAME, 10, 'fp', 1200, { ground: C.dirt, grid: '#e3dac8', road: C.pave, edge: C.curb, lot: false, osmBld: false, skipWays: [321566200, 1452473490, 15134664] /* lot-internal OSM ways + the OSM park road, replaced by traced geometry */, extraWays: [{ type: 'Feature', properties: { highway: 'service', osm_id: -1, name: 'Big Bend St Park Rd (traced)' }, geometry: { type: 'LineString', coordinates: parkRd(c) } }] }), { gm, pm, P, d, s, W, H, osm, L, pt, rect, poly, ang, way, RW } = B; let g = B.g;
   // surfaces traced from Erik's annotated satellite view (georeferenced on the My Map points, <1 m residual)
-  const TRc = TR as Record<string, [number, number][]>;
-  g += `<defs>${B.roadMask('fpmask')}</defs><path mask="url(#fpmask)" d="${d(TRc.LOT, true)}" fill="${C.pave}" stroke="${C.curb}" stroke-width="1.4" stroke-linejoin="round"/>`;
+  const TRc = TR;
+  // ONE pavement polygon (park road + lot + drive) with the islands cut out; garden + picnic + shelter + building share its edges
+  g += `<path d="${d(TRc.PAVE, true)}${d(TRc.ISL_BIG, true)}${d(TRc.ISL_W, true)}${d(TRc.ISL_E, true)}" fill="${C.pave}" fill-rule="evenodd" stroke="${C.curb}" stroke-width="1.2" stroke-linejoin="round"/>`;
+  g += `<path d="${d(TRc.GARDEN, true)}" fill="${C.garden}" stroke="${C.gardenEdge}" stroke-width="1" stroke-linejoin="round"/>`;
+  g += `<path d="${d(TRc.PARKRD_C)}" fill="none" stroke="#fff" stroke-width="1.2" stroke-dasharray="${f1(Math.max(3 * s, 6))} ${f1(Math.max(6 * s, 9))}"/>`;
   for (const k of ['ISL_BIG', 'ISL_W', 'ISL_E']) g += `<path d="${d(TRc[k], true)}" fill="${C.island}" stroke="${C.islandEdge}" stroke-width="2" stroke-linejoin="round"/>`;
   // simulated stall stripes (white on pavement, 9 ft o.c., 18 ft deep): a double row between the two small islands, and a
   // single head-in row along the paved edge in front of the Barton Warnock entrance (skipping the Medic tent footprint)
-  const stallZones: Pt[][] = [], SD = 18 * FT, SW = 9 * FT;
+  const stallZones: Pt[][] = [], stallPts: [number, number][] = [], SD = 18 * FT, SW = 9 * FT;
   const stallRow = (A: [number, number], Bp: [number, number], sides: number[], t0: number, t1: number, skip: (q: [number, number]) => boolean = () => false) => {
     const L0 = Math.hypot(Bp[0] - A[0], Bp[1] - A[1]), u = [(Bp[0] - A[0]) / L0, (Bp[1] - A[1]) / L0], n = [-u[1], u[0]]; let dd = '';
     const at2 = (t: number, o: number): [number, number] => [A[0] + u[0] * t + n[0] * o, A[1] + u[1] * t + n[1] * o];
-    for (const sd of sides) { for (let t = t0; t <= L0 - t1 + 1e-6; t += SW) { const p0 = at2(t, 0), p1 = at2(t, sd * SD); if (skip(p0) || skip(p1) || skip(at2(t, sd * SD / 2))) continue; dd += `M${pm(p0).map(f1)}L${pm(p1).map(f1)}`; }
+    for (const sd of sides) { for (let t = t0; t <= L0 - t1 + 1e-6; t += SW) { const p0 = at2(t, 0), p1 = at2(t, sd * SD); if (skip(p0) || skip(p1) || skip(at2(t, sd * SD / 2))) continue; dd += `M${pm(p0).map(f1)}L${pm(p1).map(f1)}`; stallPts.push(p0, p1); }
       stallZones.push([at2(t0, 0), at2(L0 - t1, 0), at2(L0 - t1, sd * SD), at2(t0, sd * SD)].map(pm) as Pt[]); }
     if (sides.length > 1) dd += `M${pm(at2(t0, 0)).map(f1)}L${pm(at2(L0 - t1, 0)).map(f1)}`;
     g += `<path d="${dd}" stroke="#fff" stroke-width="1.4" stroke-linecap="round" fill="none"/>`; };
   { const cW = TRc.ISL_W.map(gm), cE = TRc.ISL_E.map(gm), ctr = (v: [number, number][]) => [v.reduce((t, q) => t + q[0], 0) / v.length, v.reduce((t, q) => t + q[1], 0) / v.length] as [number, number];
     stallRow(ctr(cW), ctr(cE), [1, -1], 2.2, 2.2);
-    const lot = TRc.LOT.map(gm), med = gm(pt('Medic')), mr = (ASSUME.medic.w * FT) * 0.75 + 1;
-    stallRow(lot[10], lot[9], [-1], 4, 4, (q) => Math.hypot(q[0] - med[0], q[1] - med[1]) < mr + 2.5); }
+    // Barton Warnock entrance row: head-in stalls on the paved lot along its south edge, east of the plaza (garden stays clear)
+    { const a0 = gm(toLL(TV.l4)), b0 = gm(toLL(TV.g1)), L = Math.hypot(b0[0] - a0[0], b0[1] - a0[1]), nx = -(b0[1] - a0[1]) / L * 0.5, ny = (b0[0] - a0[0]) / L * 0.5; // 0.5 m in from the curb
+      stallRow([a0[0] + nx, a0[1] + ny], [b0[0] + nx, b0[1] + ny], [1], 1.2, 1.2); } }
   g += `<path d="${d(TRc.SHED, true)}" fill="${C.bld}" stroke="${C.bldEdge}" stroke-width="1.6"/>`;
   // course into the finish (100K GPX), clipped to the frame
   const cs = c.courseGeo['100K'].features[0].geometry.coordinates as [number, number][], tail: [number, number][] = [];
@@ -139,7 +172,7 @@ export function renderFinishPlan(c, labels: Record<string, [number, number]>) {
   { const PP = TRc.PICNIC, cx = PP.reduce((t, q) => t + q[0], 0) / PP.length, cy = PP.reduce((t, q) => t + q[1], 0) / PP.length;
     // gravel path across the picnic triangle to the shelter (distinct gravel tone, ~1.5 m wide)
     const gravel = `<path d="${d(TRc.GRAVEL)}" fill="none" stroke="#b9ab8e" stroke-width="${f1(1.8 * s + 2)}" stroke-linecap="round" stroke-linejoin="round"/><path d="${d(TRc.GRAVEL)}" fill="none" stroke="#e6dcc6" stroke-width="${f1(1.8 * s)}" stroke-linecap="round" stroke-linejoin="round"/>`;
-    items.push({ minor: true, key: 'picnic', label: 'Picnic area', where: pt('Picnic Area'), shape: `<path mask="url(#fpmask)" d="${d(PP, true)}" fill="${C.picnic}" fill-opacity=".75" stroke="${C.picnicEdge}" stroke-opacity=".6" stroke-width="1.4" stroke-dasharray="6 4" stroke-linejoin="round"/>${gravel}`, anchor: P([cx, cy]), r: 0 }); }
+    items.push({ minor: true, key: 'picnic', label: 'Picnic area', where: pt('Picnic Area'), shape: `<path d="${d(PP, true)}" fill="${C.picnic}" fill-opacity=".75" stroke="${C.picnicEdge}" stroke-opacity=".6" stroke-width="1.4" stroke-dasharray="6 4" stroke-linejoin="round"/>${gravel}`, anchor: P([cx, cy]), r: 0 }); }
   // orientations from nearby roads
   const aisle = way(1452473490), loop = way(321566200), aAisle = ang(aisle[0], aisle[1]), aWest = ang(loop[1], loop[2]), aSouth = ang(loop[2], loop[3]);
   // Radio Command: vehicle footprint parked against the southeast side of the large island, parallel to its curb (drive lane left clear)
@@ -208,7 +241,8 @@ export function renderFinishPlan(c, labels: Record<string, [number, number]>) {
   { const F = fmGeo(B, 0.5); if (F) { let ok = false; const a = F.an * Math.PI / 180;
     for (const t of [0, 40, -40, 80, -80, 120, -120]) { const x = F.x + Math.cos(a) * t, y = F.y + Math.sin(a) * t, ob = textOb('fmlabel', x, y, 'FM 170', 16, F.an); if (!sc.inFrame(ob) || sc.hit(ob, (q) => q.id === 'dropoff:icon')) continue; sc.add(ob); lbls += lbl(x, y, 'FM 170', { fs: 16, color: '#5d5850', rot: -F.an }); ok = true; break; }
     if (!ok) throw new Error('[collide:finish plan] no room for FM 170 label'); } }
-  checkAreasOffRoads('finish plan', B, [...['ISL_BIG', 'ISL_W', 'ISL_E', 'SHED'].map((k) => ({ id: k, pts: TRc[k].map(P) })), ...(dropRing ? [{ id: 'dropoff', pts: dropRing }] : [])]);
+  checkAreasOffRoads('finish plan', B, dropRing ? [{ id: 'dropoff', pts: dropRing }] : []);
+  checkTiling(gm, stallPts);
   const nOb = sc.audit((a, b) => a.id.split(':')[0] === b.id.split(':')[0] || (a.id === 'sf:icon' && b.id === 'route') || (a.id === 'fmlabel' && b.id === 'dropoff:icon') || (a.kind === 'zone' && b.kind === 'icon'));
   console.log(`  collide: finish plan OK (${nOb} objects, route buffered)`);
   let out = g + shapes + lbls + furniture(W, H, s, [0, 25, 50, 100], 'Grid 10 m (≈33 ft) · footprints to scale');
