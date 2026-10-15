@@ -1,11 +1,13 @@
-// Parking plan (letter page): from Erik's Google My Maps logistics map; see site/lib/siteplan.ts
-import { renderPlan, planLegend, sw, BLUE, AMBER } from '../lib/siteplan';
+// Parking plan (letter page): parking strips follow the road (KML polygons give extent + side only); see site/lib/floorplan.ts
+import { renderParkingPlan, pkSwatch, fpSwatch as S, C, PARK } from '../lib/floorplan';
+import { planLegend } from '../lib/siteplan';
 export const meta = { id: 'parking-plan', title: 'Parking plan' };
 const LABELS: Record<string, [number, number]> = {
-  'Parking1': [72, 12], 'Parking2': [74, 6], 'No Parking1': [0, -36], 'Start / Finish Line1': [-10, -44], 'Barton Warnock1': [0, 52], 'dropoff1': [-70, 0],
+  noPark: [-90, -70], strip1: [40, -28], strip2: [-90, 62], strip3: [0, 0], 'Parking1': [60, 20], 'Parking2': [60, 16], 'No Parking1': [0, -30], 'Start / Finish Line1': [0, -32], 'Barton Warnock1': [0, 40], dropoff: [-66, 6],
 };
 export function render(c) {
-  return `<article class="doc plan"><h2>Parking · Barton Warnock Visitor Center</h2>${renderPlan(c, { plan: 'parking', W: 1200, labels: LABELS, scaleFt: [0, 250, 500, 1000] })}
-${planLegend([[sw.area('#c9d6ea', BLUE), 'Parking area'], [sw.icon('parking'), 'Parking'], [sw.icon('noparking'), 'No parking'], [sw.area('#f6e2b0', AMBER, true), '5-minute drop-off'], [sw.sf(), 'Start / Finish line'], [sw.icon('building'), 'Barton Warnock Visitor Center'], [sw.line('#fff', 7, '#8f887c'), 'FM 170 / paved road'], [sw.line('#ece2cc', 5, '#b9ab8f'), 'Unpaved road / entrance']])}
-<p class="note">Click a marker for Google Maps. Locations: Big Bend Ultra logistics map (Google My Maps). Aerial: USGS The National Map. Roads: © OpenStreetMap contributors.</p></article>`;
+  return `<article class="doc plan"><h2>Parking · Barton Warnock Visitor Center</h2>${renderParkingPlan(c, LABELS)}
+${planLegend([[pkSwatch.strip(), `Parking strip (stalls ${PARK.stallFt} ft, simulated)`], [pkSwatch.p(), 'Parking'], [pkSwatch.p(true), 'No parking'], [pkSwatch.noPark(), 'No-parking shoulder (opposite side of FM 170)'], [S.area('#f6e2b0', C.amber, false, true), '5-minute drop-off'], [S.bld(), 'Building'], [S.road(), 'Paved road / lot']])}
+<p class="tow-notice" style="border-left:4px solid #c4161c;background:#fbeeee;padding:6px 10px;margin:8px 0;font-weight:600">Park fully off the pavement. If any part of your vehicle is over the pavement, it may be towed or ticketed.</p>
+<p class="note">Parking strips follow the road edge on the stretches marked in the logistics map; stall lines are simulated (lots are dirt). Space counts are estimates at ${PARK.stallFt} ft per car. Click any item for Google Maps. Roads: © OpenStreetMap contributors.</p></article>`;
 }
