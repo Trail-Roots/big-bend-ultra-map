@@ -4,6 +4,7 @@ import TR from './finish-trace.json';
 import { esc, f1, textBlock, leaderLine, gmapLink, station } from './util';
 
 export const FT = 0.3048;
+const GATE_EAST_M = 24; // gate set just past the Y in the entrance road (east of the KML point)
 const DROP_FT = 10; // drop-off lane width along the FM 170 edge
 /** assumed footprints (feet) and orientations — listed in the report for Erik */
 export const ASSUME = {
@@ -136,7 +137,7 @@ export function renderFinishPlan(c, labels: Record<string, [number, number]>) {
     for (let i = 0; i < n; i++) { const t0 = i / n, t1 = (i + 1) / n, p0 = [e1[0] + (e2[0] - e1[0]) * t0, e1[1] + (e2[1] - e1[1]) * t0], p1 = [e1[0] + (e2[0] - e1[0]) * t1, e1[1] + (e2[1] - e1[1]) * t1]; chk += `<path d="M${p0.map(f1)}L${p1.map(f1)}" stroke="${i % 2 ? '#fff' : C.ink}" stroke-width="5"/>`; }
     items.push({ key: 'sf', label: 'Start / Finish arch', where: sfPlace ?? q, shape: `<path d="M${e1.map(f1)}L${e2.map(f1)}" stroke="${C.ink}" stroke-width="8" stroke-linecap="butt"/>${chk}<rect x="${f1(e1[0] - 4)}" y="${f1(e1[1] - 4)}" width="8" height="8" fill="${C.ink}"/><rect x="${f1(e2[0] - 4)}" y="${f1(e2[1] - 4)}" width="8" height="8" fill="${C.ink}"/>`, anchor: pm(m), r: 10 }); }
   // Restricted access: gate across the nearest road
-  { const q = pt('Restricted Access'), [, foot, a0, hw] = nearestRoad(q), a = a0 + Math.PI / 2, half = hw / 2 + 0.6, ux = Math.cos(a), uy = Math.sin(a);
+  { const q0 = pt('Restricted Access'), q = q0, [, foot, a0, hw] = nearestRoad([q0[0] + GATE_EAST_M / 97100, q0[1]]), a = a0 + Math.PI / 2, half = hw / 2 + 0.6, ux = Math.cos(a), uy = Math.sin(a);
     const e1 = pm([foot[0] - ux * half, foot[1] - uy * half]), e2 = pm([foot[0] + ux * half, foot[1] + uy * half]), mid = pm(foot);
     // swing gate: two leaves meeting in the middle, posts at the ends, red/white barrier stripes
     let sh = `<path d="M${e1.map(f1)}L${e2.map(f1)}" stroke="${C.red}" stroke-width="5"/>`;
@@ -264,12 +265,19 @@ export function renderParkingPlan(c, labels: Record<string, [number, number]>) {
     const lab = p.name === 'Start / Finish Line' ? 'Start / Finish' : p.name === 'Barton Warnock' ? 'Barton Warnock\nVisitor Center' : p.name === 'No Parking' ? 'No parking' : 'Parking';
     const where = p.name === 'Start / Finish Line' || p.name === 'Barton Warnock' ? sfPlace ?? p.coords[0] : p.coords[0];
     if (p.name === 'Barton Warnock') { lbls += gmapLink(where, 'Barton Warnock Visitor Center', lbl(x + ox, y + oy, lab, { fs: 15 })); continue; }
-    if (p.name === 'No Parking') { // park entrance: whole drivable surface within ~35 m hatched as no-parking; sign set off to the side
-      const R = 35 * s, cid = `pknpz${seen[p.name]}`; let roads = '';
-      for (const f of osm) { const h = f.properties.highway; if (!['service', 'residential', 'track', 'unclassified'].includes(h) || f.geometry.type !== 'LineString') continue;
-        roads += `<path d="${d(f.geometry.coordinates)}" fill="none" stroke="#f3d6d6" stroke-width="${f1((B.RW[h] ?? 5) * s + 1)}" stroke-linejoin="round" stroke-linecap="round"/>`;
-        roads += `<path d="${d(f.geometry.coordinates)}" fill="none" stroke="url(#pknph)" stroke-width="${f1((h === 'secondary' ? 6 : (B.RW[h] ?? 5)) * s + 1)}" stroke-linejoin="round" stroke-linecap="round"/>`; }
-      g += `<defs><clipPath id="${cid}"><circle cx="${f1(x)}" cy="${f1(y)}" r="${f1(R)}"/></clipPath></defs><g clip-path="url(#${cid})" opacity=".9">${roads}</g>`;
+    if (p.name === 'No Parking') { // park entrance: the whole drivable entrance surface (union of the pavement within ~35 m) as ONE tinted no-parking shape; sign set off to the side
+      const R = 35 * s, cid = `pknpz${seen[p.name]}`, pts: number[][] = [], hw = 3.5 * s, inR = (q: number[]) => Math.hypot(q[0] - x, q[1] - y) <= R;
+      for (const f of osm) { const h = f.properties.highway, isLot = f.properties.amenity === 'parking' && f.geometry.type === 'Polygon';
+        if (!isLot && (!['service', 'residential', 'track', 'unclassified'].includes(h) || f.geometry.type !== 'LineString')) continue;
+        const cs = (isLot ? f.geometry.coordinates[0] : f.geometry.coordinates).map(P);
+        for (let i = 1; i < cs.length; i++) { const [a1, b1] = [cs[i - 1], cs[i]], L = Math.hypot(b1[0] - a1[0], b1[1] - a1[1]) || 1, nx = -(b1[1] - a1[1]) / L, ny = (b1[0] - a1[0]) / L;
+          for (let t = 0; t <= 1; t += 2 / L) { const q = [a1[0] + (b1[0] - a1[0]) * t, a1[1] + (b1[1] - a1[1]) * t]; if (!inR(q)) continue; const e = isLot ? 0 : hw; pts.push([q[0] + nx * e, q[1] + ny * e], [q[0] - nx * e, q[1] - ny * e]); } } }
+      // convex hull (monotone chain) -> one solid entrance shape
+      pts.sort((u, v) => u[0] - v[0] || u[1] - v[1]); const cr = (o: number[], u: number[], v: number[]) => (u[0] - o[0]) * (v[1] - o[1]) - (u[1] - o[1]) * (v[0] - o[0]); const lo: number[][] = [], up: number[][] = [];
+      for (const q of pts) { while (lo.length > 1 && cr(lo[lo.length - 2], lo[lo.length - 1], q) <= 0) lo.pop(); lo.push(q); }
+      for (const q of [...pts].reverse()) { while (up.length > 1 && cr(up[up.length - 2], up[up.length - 1], q) <= 0) up.pop(); up.push(q); }
+      const hull = [...lo.slice(0, -1), ...up.slice(0, -1)];
+      if (hull.length > 2) g += `<defs><clipPath id="${cid}"><circle cx="${f1(x)}" cy="${f1(y)}" r="${f1(R)}"/></clipPath></defs><path clip-path="url(#${cid})" d="M${hull.map((q) => q.map(f1).join(',')).join('L')}Z" fill="#f3d4d4" stroke="${C.red}" stroke-opacity=".55" stroke-width="1.4" stroke-linejoin="round"/>`;
       const sx = x + ox, sy = y + oy; marks += gmapLink(where, 'No parking — park entrance', `<g transform="translate(${f1(sx)} ${f1(sy)}) scale(.85)">${PICON(true)}</g>`);
       lbls += lbl(sx, sy - 22, 'No parking at park entrance', { fs: 13, color: C.red }); continue; }
     const [ix, iy] = labels[key + 'icon'] ?? [0, 0]; // optional icon nudge off the course route (leader drawn to the true point)
