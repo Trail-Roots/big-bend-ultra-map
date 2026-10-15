@@ -2,7 +2,6 @@
 // start, cutoffs and finish; one row per aid station with its open window and modelled runners passing per 15 min.
 // Data: content/timeline.json (scripts/timeline.ts). Night / civil twilight / daylight shading from the same file.
 import { SHEET, f1, esc, gmapLink, finishFlag, station } from './util';
-import { miniBib, MINIBIB } from './panels';
 import type { Ctx } from './types';
 
 export const clock = (m: number, short = true) => {
@@ -45,17 +44,16 @@ export function renderTimeline(c: Ctx) {
     const xs = acc.map((_, i) => X(t0 + (i + 0.5) * B)), Y = (v: number) => base - (v / maxT) * hgt;
     s += `<path d="M${f1(LX)},${f1(base)}H${f1(RX)}" stroke="${ink}" stroke-width="1"/>`;
     for (let v = 0; v <= maxT; v += maxT > 400 ? 200 : 100) s += `<path d="M${f1(LX)},${f1(Y(v))}H${f1(RX)}" stroke="#ece8e0" stroke-width="1"/><text x="${f1(LX - 6)}" y="${f1(Y(v) + 5)}" font-size="13" text-anchor="end" fill="${col.mute}">${v}</text>`;
-    let bands = '';
+    let bands = '', tops = '';
     order.forEach((k) => {
       const C = T.courses[k], cc = c.courses.colors[k], lo = acc.slice();
       C.on_course.forEach((v: number, i: number) => { acc[i] += t0 + (i + 0.5) * B > C.start ? v : 0; });
       const upper = xs.map((x, i) => `${f1(x)},${f1(Y(acc[i]))}`), lower = xs.map((x, i) => `${f1(x)},${f1(Y(lo[i]))}`).reverse();
-      bands += `<g class="tlrow" data-course="${k}"><path d="M${upper.join('L')}L${lower.join('L')}Z" fill="${cc}" fill-opacity=".55" stroke="none"/><path d="M${upper.join('L')}" class="ln" stroke="${cc}" stroke-width="1.8"/></g>`;
+      bands += `<g class="tlrow" data-course="${k}"><path d="M${upper.join('L')}L${lower.join('L')}Z" fill="${cc}" fill-opacity=".55" stroke="none"/></g>`;
+      // course-colour line along the top edge of this race's band, drawn after every fill so no band covers it
+      tops += `<path d="M${upper.join('L')}" class="ln" data-course="${k}" fill="none" stroke="${cc}" stroke-width="2.6" stroke-linejoin="round"/>`;
     });
-    s += bands + `<text x="${PADL}" y="${f1(top - 8)}" font-weight="700" font-size="14" fill="${col.mute}">Runners on course</text>`;
-    // legend: mini bibs, top = last in the stack
-    const lh = (base - top) / order.length;
-    [...order].reverse().forEach((k, r) => { s += miniBib(k, c.courses.colors[k], PADL, top + r * lh + lh / 2 - MINIBIB.h / 2, c.colors); });
+    s += bands + tops + `<text x="${PADL}" y="${f1(top - 8)}" font-weight="700" font-size="14" fill="${col.mute}">Runners on course</text>`;
   }
   // stations
   {
