@@ -8,8 +8,8 @@ const DROP_FT = 10; // drop-off lane width along the FM 170 edge
 /** assumed footprints (feet) and orientations — listed in the report for Erik */
 export const ASSUME = {
   radio: { w: 8.5, l: 35, along: 'southeast curb of the large island' }, restroom: { unit: 4, gap: 1, n: 12, along: 'west loop road' },
-  main: { w: 20, l: 20, along: 'parking aisle' }, medic: { w: 10, l: 10, along: 'south loop road' }, water: { w: 4, l: 4 },
-  arch: { span: 24 }, gate: { span: 18 },
+  medic: { w: 10, l: 10, along: 'south loop road' }, water: { w: 4, l: 4 },
+  arch: { span: 24, along: 'parallel to Big Bend St Park Rd' }, gate: { span: 18 },
 };
 // picnic area: the section east of the visitor-center loop road, south of the entry road and north of the small outbuilding (OSM + aerial)
 const BW_OUT: [number, number][] = [[-103.757697, 29.270026], [-103.757117, 29.270026], [-103.757117, 29.26952], [-103.757697, 29.26952]];
@@ -66,6 +66,18 @@ function fmLabel(B, t: number) { const ws = B.osm.filter((f) => f.properties.hig
   if (!best) return ''; const [a, b] = best; let an = Math.atan2(b[1] - a[1], b[0] - a[0]) * 180 / Math.PI; if (an > 90) an -= 180; if (an < -90) an += 180;
   return lbl(a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, 'FM 170', { fs: 16, color: '#5d5850', rot: -an }); }
 void fm170;
+/** 5-minute drop-off: clean lane along the FM 170 edge (KML polygon gives extent + side), trimmed short of entrance driveways */
+function dropBand(B, drop) { const { gm, pm, osm, RW } = B;
+const RT = roadTools(B), ln = RT.lines[0], cs2 = RT.cum(ln.pts), pr = (drop.coords as [number, number][]).map((q) => RT.project(ln.pts, cs2, gm(q)));
+    const S0 = Math.min(...pr.map((q) => q[1])), S1 = Math.max(...pr.map((q) => q[1])), side = Math.sign(pr.reduce((t, q) => t + q[2], 0)) || 1, o1 = RT.RWm.secondary / 2 + 0.3, o2 = o1 + DROP_FT * FT, inn: [number, number][] = [], out: [number, number][] = [];
+    const off = (sv: number, o: number): [number, number] => { const p = RT.at(ln.pts, cs2, sv), t = RT.tan(ln.pts, cs2, sv); return [p[0] - t[1] * o * side, p[1] + t[0] * o * side]; };
+    // trim both ends so the lane stops short of any entrance driveway (≥ 3 m clear of other roads' edges)
+    const others = osm.filter((f) => f.properties.highway in RW && f.properties.highway !== 'secondary' && f.geometry.type === 'LineString').map((f) => ({ w: RW[f.properties.highway], pts: (f.geometry.coordinates as [number, number][]).map(gm) }));
+    const clear = (sv: number) => [o1, o2].every((o) => { const p = off(sv, o); return others.every(({ w, pts }) => pts.every((_, i) => i === 0 || RT.project([pts[i - 1], pts[i]], [0, 1], p)[0] > w / 2 + 3)); });
+    let s0 = S0, s1 = S1; while (s1 > s0 && !clear(s1)) s1 -= 0.5; while (s0 < s1 && !clear(s0)) s0 += 0.5;
+    for (let sv = s0; sv <= s1 + 1e-6; sv += 1) { inn.push(off(sv, o1)); out.push(off(sv, o2)); }
+    const band = 'M' + [...inn, ...out.reverse()].map((q) => pm(q).map(f1).join(',')).join('L') + 'Z', cx = drop.coords.reduce((t, q) => t + q[0], 0) / drop.coords.length, cy = drop.coords.reduce((t, q) => t + q[1], 0) / drop.coords.length;
+  return { band, where: [cx, cy] as [number, number], anchor: pm(off((s0 + s1) / 2, (o1 + o2) / 2)) }; }
 export function renderFinishPlan(c, labels: Record<string, [number, number]>) {
   const B = makeBase(c, FRAME, 10, 'fp', 1200, { ground: C.dirt, grid: '#e3dac8', road: C.pave, edge: C.curb, lot: false, osmBld: false }), { gm, pm, P, d, s, W, H, osm, L, pt, rect, poly, ang, way, RW } = B; let g = B.g;
   // surfaces traced from Erik's annotated satellite view (georeferenced on the My Map points, <1 m residual)
@@ -84,12 +96,8 @@ export function renderFinishPlan(c, labels: Record<string, [number, number]>) {
   const sfPlace = c.stations.stations['S/F'].place;
   // drop-off area polygon
   const drop = L.placemarks.find((p) => p.name === '5 Min Dropoff Area');
-  if (drop) { const RT = roadTools(B), ln = RT.lines[0], cs2 = RT.cum(ln.pts), pr = (drop.coords as [number, number][]).map((q) => RT.project(ln.pts, cs2, gm(q)));
-    const s0 = Math.min(...pr.map((q) => q[1])), s1 = Math.max(...pr.map((q) => q[1])), side = Math.sign(pr.reduce((t, q) => t + q[2], 0)) || 1, o1 = RT.RWm.secondary / 2 + 0.3, o2 = o1 + DROP_FT * FT, inn: [number, number][] = [], out: [number, number][] = [];
-    const off = (sv: number, o: number): [number, number] => { const p = RT.at(ln.pts, cs2, sv), t = RT.tan(ln.pts, cs2, sv); return [p[0] - t[1] * o * side, p[1] + t[0] * o * side]; };
-    for (let sv = s0; sv <= s1 + 1e-6; sv += 1) { inn.push(off(sv, o1)); out.push(off(sv, o2)); }
-    const band = 'M' + [...inn, ...out.reverse()].map((q) => pm(q).map(f1).join(',')).join('L') + 'Z', cx = drop.coords.reduce((t, q) => t + q[0], 0) / drop.coords.length, cy = drop.coords.reduce((t, q) => t + q[1], 0) / drop.coords.length;
-    items.push({ key: 'dropoff', label: '5-minute drop-off', where: [cx, cy], shape: `<path d="${band}" fill="#f6e2b0" fill-opacity=".85"/><path d="${band}" fill="url(#fphatch)" stroke="${C.amber}" stroke-width="2" stroke-linejoin="round"/>`, anchor: pm(off((s0 + s1) / 2, (o1 + o2) / 2)), r: 0 }); }
+  if (drop) { const { band, where, anchor } = dropBand(B, drop);
+    items.push({ key: 'dropoff', label: '5-minute drop-off', where, shape: `<path d="${band}" fill="#f6e2b0" fill-opacity=".85"/><path d="${band}" fill="url(#fphatch)" stroke="${C.amber}" stroke-width="2" stroke-linejoin="round"/>`, anchor, r: 0 }); }
   // picnic area: the whole triangle of different-coloured ground east of the lot (low prominence)
   { const PP = TRc.PICNIC, cx = PP.reduce((t, q) => t + q[0], 0) / PP.length, cy = PP.reduce((t, q) => t + q[1], 0) / PP.length;
     items.push({ minor: true, key: 'picnic', label: 'Picnic area', where: pt('Picnic Area'), shape: `<path d="${d(PP, true)}" fill="${C.picnic}" fill-opacity=".75" stroke="${C.picnicEdge}" stroke-opacity=".6" stroke-width="1.4" stroke-dasharray="6 4" stroke-linejoin="round"/>`, anchor: P([cx, cy]), r: 0 }); }
@@ -101,8 +109,8 @@ export function renderFinishPlan(c, labels: Record<string, [number, number]>) {
     const m: [number, number] = [e0[0] + Math.cos(aI) * along + nx * gap, e0[1] + Math.sin(aI) * along + ny * gap], ps = rect(m, A.w * FT, A.l * FT, aI);
     const cab = rect([m[0] + Math.cos(aI) * (A.l * FT / 2 - 0.9), m[1] + Math.sin(aI) * (A.l * FT / 2 - 0.9)], A.w * FT - 0.5, 1.2, aI);
     items.push({ key: 'radio', label: 'Radio Command', where: pt('Radio Command'), shape: `<path d="${poly(ps)}" fill="${C.rv}" stroke="${C.ink}" stroke-width="1.6" stroke-linejoin="round"/><path d="${poly(cab)}" fill="#9aa3b0"/>`, anchor: pm(m), r: 8 }); }
-  // Main tent: canopy with the usual X ridge lines
-  for (const [key, name, A, a, fill, lab] of [['main', 'Main', ASSUME.main, aAisle, '#ffffff', 'Main tent'], ['medic', 'Medic', ASSUME.medic, aSouth, '#fdeeee', 'Medic']] as const) {
+  // Medic tent: canopy with the usual X ridge lines
+  for (const [key, name, A, a, fill, lab] of [['medic', 'Medic', ASSUME.medic, aSouth, '#fdeeee', 'Medic']] as const) {
     const m = gm(pt(name)), ps = rect(m, A.w * FT, A.l * FT, a);
     let sh = `<path d="${poly(ps)}" fill="${fill}" stroke="${C.ink}" stroke-width="1.6" stroke-linejoin="round"/><path d="M${ps[0].map(f1)}L${ps[2].map(f1)}M${ps[1].map(f1)}L${ps[3].map(f1)}" stroke="${C.ink}" stroke-width=".8" stroke-opacity=".5"/>`;
     if (key === 'medic') { const [x, y] = pm(m); sh += `<path d="M${f1(x - 1.6)},${f1(y - 5)}h3.2v3.4h3.4v3.2h-3.4v3.4h-3.2v-3.4h-3.4v-3.2h3.4z" fill="${C.red}"/>`; }
@@ -123,7 +131,7 @@ export function renderFinishPlan(c, labels: Record<string, [number, number]>) {
     return best; };
   // Start / Finish: arch across the course at the S/F point (posts + checkered banner), perpendicular to the course
   { const q = pt('Start / Finish Line'), m = gm(q); let k = 0, bd = Infinity; tail.forEach((t, i) => { const dd = Math.hypot(...(gm(t).map((v, j) => v - m[j]) as [number, number])); if (dd < bd) { bd = dd; k = i; } });
-    const a = ang(tail[Math.max(0, k - 2)], tail[Math.min(tail.length - 1, k + 2)]) + Math.PI / 2, half = (ASSUME.arch.span * FT) / 2, ux = Math.cos(a), uy = Math.sin(a);
+    void k; const a = nearestRoad(q)[2], half = (ASSUME.arch.span * FT) / 2, ux = Math.cos(a), uy = Math.sin(a);
     const e1 = pm([m[0] - ux * half, m[1] - uy * half]), e2 = pm([m[0] + ux * half, m[1] + uy * half]), n = 8; let chk = '';
     for (let i = 0; i < n; i++) { const t0 = i / n, t1 = (i + 1) / n, p0 = [e1[0] + (e2[0] - e1[0]) * t0, e1[1] + (e2[1] - e1[1]) * t0], p1 = [e1[0] + (e2[0] - e1[0]) * t1, e1[1] + (e2[1] - e1[1]) * t1]; chk += `<path d="M${p0.map(f1)}L${p1.map(f1)}" stroke="${i % 2 ? '#fff' : C.ink}" stroke-width="5"/>`; }
     items.push({ key: 'sf', label: 'Start / Finish arch', where: sfPlace ?? q, shape: `<path d="M${e1.map(f1)}L${e2.map(f1)}" stroke="${C.ink}" stroke-width="8" stroke-linecap="butt"/>${chk}<rect x="${f1(e1[0] - 4)}" y="${f1(e1[1] - 4)}" width="8" height="8" fill="${C.ink}"/><rect x="${f1(e2[0] - 4)}" y="${f1(e2[1] - 4)}" width="8" height="8" fill="${C.ink}"/>`, anchor: pm(m), r: 10 }); }
@@ -222,8 +230,8 @@ export function renderParkingPlan(c, labels: Record<string, [number, number]>) {
         let sv = sEnd; while (Math.abs(sv - (s0 + s1) / 2) > 1 && !inF(pm(off(sv + dir * 30, om)))) sv -= dir * 2; sv -= dir * 6;
         const a = pm(off(sv, o2 + 7)), b = pm(off(sv + dir * 14, o2 + 7)), an = Math.atan2(b[1] - a[1], b[0] - a[0]) * 180 / Math.PI;
         stripLbl += `<g transform="translate(${f1(b[0])} ${f1(b[1])}) rotate(${f1(an)})" opacity=".9"><path d="M-22,0H-2" stroke="${C.blue}" stroke-width="2"/><path d="M0,0L-8,-5L-8,5Z" fill="${C.blue}"/></g>`;
-        let ta = an; if (ta > 90) ta -= 180; if (ta < -90) ta += 180; const lp = pm(off(sv - dir * 4, o2 + 17));
-        stripLbl += lbl(lp[0], lp[1], 'Parking continues', { fs: 11, color: C.blue, style: 'italic', rot: ta }); } }
+        let ta = an; if (ta > 90) ta -= 180; if (ta < -90) ta += 180; const lp = pm(off(sv - dir * 30, o2 + 32));
+        stripLbl += lbl(lp[0], lp[1], 'Parking continues', { fs: 11, color: C.blue, style: 'italic' }); } }
     const mid = pm(off((s0 + s1) / 2, o2 + 9)), [ox, oy] = labels[`strip${k + 1}`] ?? [0, 0], t = tan(ln.pts, cs, (s0 + s1) / 2);
     let an = Math.atan2(-t[1], t[0]) * 180 / Math.PI; if (an > 90) an -= 180; if (an < -90) an += 180;
     stripLbl += lbl(mid[0] + ox, mid[1] + oy, `≈${n} spaces`, { fs: 14, color: C.blue, style: 'italic', rot: -an });
@@ -246,7 +254,7 @@ export function renderParkingPlan(c, labels: Record<string, [number, number]>) {
   // drop-off area (its KML polygon)
   const drop = L.placemarks.find((p) => p.name === '5 Min Dropoff Area');
   let marks = '', lbls = stripLbl;
-  if (drop) { g += gmapLink(drop.coords[0], '5-minute drop-off', `<path d="${d(drop.coords, true)}" fill="#f6e2b0" fill-opacity=".85"/><path d="${d(drop.coords, true)}" fill="url(#pkhatch)" stroke="${C.amber}" stroke-width="2" stroke-linejoin="round"/>`);
+  if (drop) { const DB = dropBand(B, drop); g += gmapLink(drop.coords[0], '5-minute drop-off', `<path d="${DB.band}" fill="#f6e2b0" fill-opacity=".85"/><path d="${DB.band}" fill="url(#pkhatch)" stroke="${C.amber}" stroke-width="2" stroke-linejoin="round"/>`);
     const cx = drop.coords.reduce((t, q) => t + q[0], 0) / drop.coords.length, cy = drop.coords.reduce((t, q) => t + q[1], 0) / drop.coords.length, [x, y] = P([cx, cy]), [ox, oy] = labels.dropoff ?? [-70, 0];
     lbls += lbl(x + ox, y + oy, '5-minute\ndrop-off', { color: '#8a5a00', style: 'italic' }); }
   // point markers: Parking, No parking, Start / Finish, Barton Warnock (reference)
@@ -264,13 +272,15 @@ export function renderParkingPlan(c, labels: Record<string, [number, number]>) {
       g += `<defs><clipPath id="${cid}"><circle cx="${f1(x)}" cy="${f1(y)}" r="${f1(R)}"/></clipPath></defs><g clip-path="url(#${cid})" opacity=".9">${roads}</g>`;
       const sx = x + ox, sy = y + oy; marks += gmapLink(where, 'No parking — park entrance', `<g transform="translate(${f1(sx)} ${f1(sy)}) scale(.85)">${PICON(true)}</g>`);
       lbls += lbl(sx, sy - 22, 'No parking at park entrance', { fs: 13, color: C.red }); continue; }
-    const icon = p.name === 'Start / Finish Line' ? station(x, y, 'S/F', true, { s: 1000, fs: 20, badge: false, colors: c.colors }) : `<g transform="translate(${f1(x)} ${f1(y)})">${PICON(p.name === 'No Parking')}</g>`;
+    const [ix, iy] = labels[key + 'icon'] ?? [0, 0]; // optional icon nudge off the course route (leader drawn to the true point)
+    if (ix || iy) marks += `<path d="M${f1(x)},${f1(y)}L${f1(x + ix)},${f1(y + iy)}" stroke="${C.blue}" stroke-width="1.4"/><circle cx="${f1(x)}" cy="${f1(y)}" r="2.5" fill="${C.blue}"/>`;
+    const icon = p.name === 'Start / Finish Line' ? station(x, y, 'S/F', true, { s: 1000, fs: 20, badge: false, colors: c.colors }) : `<g transform="translate(${f1(x + ix)} ${f1(y + iy)})">${PICON(p.name === 'No Parking')}</g>`;
     marks += gmapLink(where, lab, icon);
-    const r = 16; if (Math.hypot(ox, oy) > r + 26) lbls += leaderLine(x, y, x + ox, y + oy + (oy > 0 ? -10 : 10), r, 0);
+    const r = 16; if (Math.hypot(ox - ix, oy - iy) > r + 26) lbls += leaderLine(x + ix, y + iy, x + ox, y + oy + (oy > 0 ? -10 : 10), r, 0);
     lbls += lbl(x + ox, y + oy, lab);
   }
   g += `</g>`;
-  return `<svg class="siteplan floorplan" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Parking plan">${g}${marks}${lbls}${fmLabel(B, 0.45)}${furniture(W, H, s, [0, 250, 500, 1000], `Grid 50 m (≈164 ft) · parking strips ${PARK.depthFt} ft deep, stalls every ${PARK.stallFt} ft (simulated)`)}</svg>`;
+  return `<svg class="siteplan floorplan" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Parking plan">${g}${marks}${lbls}${fmLabel(B, 0.28)}${furniture(W, H, s, [0, 250, 500, 1000], `Grid 50 m (≈164 ft) · parking strips ${PARK.depthFt} ft deep, stalls every ${PARK.stallFt} ft (simulated)`)}</svg>`;
 }
 export const pkSwatch = {
   noPark: () => `<svg width="30" height="14"><defs><pattern id="swnp" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="5" stroke="${C.red}" stroke-width="1" stroke-opacity=".6"/></pattern></defs><rect x="1" y="3" width="28" height="8" fill="#f6dede"/><rect x="1" y="3" width="28" height="8" fill="url(#swnp)" stroke="${C.red}" stroke-width=".8"/></svg>`,

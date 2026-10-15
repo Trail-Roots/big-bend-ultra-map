@@ -26,7 +26,7 @@ export const ICONS: Record<string, string> = {
 };
 const ICON_R: Record<string, number> = { parking: 17, noparking: 17 };
 const ICON_FOR: Record<string, [string, string]> = { // KML name -> [icon, label]
-  'Main': ['main', 'Main tent'], 'Radio Command': ['radio', 'Radio Command'], 'Medic': ['medic', 'Medic'], 'Portable Restrooms': ['restroom', 'Portable restrooms'],
+  'Radio Command': ['radio', 'Radio Command'], 'Medic': ['medic', 'Medic'], 'Portable Restrooms': ['restroom', 'Portable restrooms'],
   'Picnic Area': ['picnic', 'Picnic area'], 'Water hose': ['water', 'Water hose'], 'Restricted Access': ['restricted', 'Restricted access'],
   'Parking': ['parking', 'Parking'], 'No Parking': ['noparking', 'No parking'], 'Barton Warnock': ['building', 'Barton Warnock\nVisitor Center'],
 };
@@ -95,7 +95,7 @@ export function renderPlan(c, o: Opts) {
   s += `</g>`;
   // markers + labels
   const pts = L.placemarks.filter((p) => p.kind === 'point'), marks: Mark[] = [];
-  const want = o.plan === 'finish' ? ['Start / Finish Line', 'Main', 'Radio Command', 'Medic', 'Portable Restrooms', 'Picnic Area', 'Water hose', 'Restricted Access', 'Barton Warnock'] : ['Parking', 'No Parking', 'Start / Finish Line', 'Barton Warnock'];
+  const want = o.plan === 'finish' ? ['Start / Finish Line', 'Radio Command', 'Medic', 'Portable Restrooms', 'Picnic Area', 'Water hose', 'Restricted Access', 'Barton Warnock'] : ['Parking', 'No Parking', 'Start / Finish Line', 'Barton Warnock'];
   for (const p of pts) if (want.includes(p.name)) marks.push({ name: p.name, lonlat: p.coords[0], icon: p.name === 'Start / Finish Line' ? 'sf' : ICON_FOR[p.name][0], label: p.name === 'Start / Finish Line' ? 'Start / Finish' : ICON_FOR[p.name][1] });
   // area labels (as marks without icons): drop-off zone; parking lots numbered by size
   for (const a of areas.filter((a) => a.name === '5 Min Dropoff Area')) { const cx = a.coords.reduce((t, q) => t + q[0], 0) / a.coords.length, cy = a.coords.reduce((t, q) => t + q[1], 0) / a.coords.length; marks.push({ name: 'dropoff', lonlat: [cx, cy], icon: '', label: '5-minute\ndrop-off' }); }
