@@ -181,9 +181,9 @@ const PICON = (slash: boolean) => slash
   : `<rect x="-14" y="-14" width="28" height="28" rx="5" fill="#fff"/><rect x="-12" y="-12" width="24" height="24" rx="4" fill="${C.blue}"/><text y="1" font-size="17" font-weight="700" fill="#fff" text-anchor="middle" dominant-baseline="central">P</text>`;
 /** every course's GPX line inside the frame, black with a white casing (runners on course near S/F) */
 function courseRoutes(c, B) { const { P, W, H } = B; let runs: string[] = [];
-  for (const k of Object.keys(c.courseGeo)) { let cur: string[] = []; for (const q of c.courseGeo[k].features[0].geometry.coordinates as [number, number][]) { const [x, y] = P(q);
+  for (const k of ['100K']) { let cur: string[] = []; for (const q of c.courseGeo[k].features[0].geometry.coordinates as [number, number][]) { const [x, y] = P(q);
     if (x > -60 && y > -60 && x < W + 60 && y < H + 60) cur.push(`${f1(x)},${f1(y)}`); else { if (cur.length > 1) runs.push('M' + cur.join('L')); cur = []; } } if (cur.length > 1) runs.push('M' + cur.join('L')); }
-  const dd = runs.join('');
+  const dd = runs[0] ?? ''; // outbound leg only: the return leg is the same path (GPX differences are routing noise)
   return `<path d="${dd}" fill="none" stroke="#fff" stroke-width="6" stroke-linejoin="round" stroke-linecap="round" stroke-opacity=".9"/><path d="${dd}" fill="none" stroke="#111" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"/>`; }
 type V = [number, number];
 function roadTools(B) {
