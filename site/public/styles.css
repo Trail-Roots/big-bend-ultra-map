@@ -107,14 +107,15 @@ svg.mainmap,svg.mini{touch-action:pan-x pan-y}svg.panning{cursor:grabbing}
 .cpnav{display:flex;gap:.5rem;align-items:center;max-width:1200px;margin:1rem auto 0;padding:0 1rem}
 .coursepage{max-width:1200px}.cphead{display:flex;align-items:center;justify-content:space-between;gap:1rem}.cphead h2{margin:.2rem 0}
 .cpbtns{display:flex;gap:.4rem}.cpbtns button,.cpbtns a{font:600 .8rem system-ui,sans-serif;padding:.25rem .6rem;border:1px solid #888;border-radius:4px;background:#fff;color:var(--ink);text-decoration:none;cursor:pointer}
-.cpgrid{display:grid;grid-template-columns:minmax(0,3fr) minmax(0,7fr);gap:1rem;align-items:start}.cpmap{margin:0}.cpmap svg{box-shadow:0 1px 3px #0002}
-@media (max-width:800px){.cpgrid{grid-template-columns:1fr}.cpmap{max-width:340px;margin:0 auto}}
+.coursepage{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:1.2rem;align-items:start}.cpmap{margin:0}.cpmap svg.racemap{box-shadow:0 1px 3px #0002;width:100%;height:auto}
+@media (max-width:800px){.coursepage{grid-template-columns:minmax(0,1fr)}.cpright{min-width:0;overflow-x:auto}.cpmap{max-width:520px;margin:0 auto;width:100%}}
+/* race pages print as landscape letter: race map left half, header + profile + matrix right half */
+@page race{size:letter landscape;margin:.4in}
+@media print{.sec-courses .coursepage{page:race;break-before:page;grid-template-columns:5in 5in;gap:.2in;height:7.7in;max-width:none;margin:0;padding:0;font-size:8.5pt;overflow:hidden}.sec-courses .coursepage:first-of-type{break-before:auto}.cpmap svg.racemap{height:7.7in;width:auto;max-width:5in;box-shadow:none;margin:0 auto}.cpright .cprofile{margin:.06in 0 .08in}.cpright .note{font-size:7pt}.cpright .cuttab{font-size:8pt}.cphead h2{font-size:15pt}}
 @media print{
   body.printone .sec:not(.sec-courses){display:none!important}
   body.printone .sec-courses{display:block!important;break-before:auto}
   body.printone .coursepage:not(.on){display:none}
-  body.printone .coursepage .cpgrid{grid-template-columns:2.6in 1fr;gap:.2in;margin-top:.15in}
-  body.printone .coursepage{font-size:9pt}
 }
 /* ---------- calendar + placeholders ---------- */
 .calview iframe{border:1px solid #ddd;border-radius:6px;background:#fff}
@@ -168,7 +169,7 @@ svg.mainmap,svg.mini{touch-action:pan-x pan-y}svg.panning{cursor:grabbing}
   html:not(.embed) .sec-map .pg1 .main svg.mainmap,html:not(.embed) .sec-map .pg1 .stripsbox svg.timeline,html:not(.embed) .sec-map .pg1 .profilebox svg{width:100%;height:100%;max-width:none;min-height:0;min-width:0;box-shadow:none}
   html:not(.embed) .sec-map .side{display:flex;width:8.5in;max-width:calc(100vw - 48px);min-height:11in;background:#fff;box-shadow:0 2px 10px #0004;padding:.4in}
   /* every other printed section = its own sheet(s) */
-  html:not(.embed) .sec:not(.noprint):not(.sec-map) > .doc{width:8.5in;max-width:none;min-height:11in;margin:28px auto;padding:.4in;box-shadow:0 2px 10px #0004;font-size:10.5pt}
+  html:not(.embed) .sec:not(.noprint):not(.sec-map):not(.sec-courses) > .doc{width:8.5in;max-width:none;min-height:11in;margin:28px auto;padding:.4in;box-shadow:0 2px 10px #0004;font-size:10.5pt}
   html:not(.embed) .sec.noprint{background:#f4f2ee;padding:1px 0}
 }
 /* one-page print: the header shares the right half with the charts; the main map already carries the logo */
@@ -179,4 +180,12 @@ svg.mainmap,svg.mini{touch-action:pan-x pan-y}svg.panning{cursor:grabbing}
   html:not(.embed) .sec-map .pg1 .hdr{position:absolute;margin:0;display:flex;justify-content:space-between;align-items:flex-start;gap:1cqw}
   html:not(.embed) .sec-map .pg1 .hdr h1{font-size:1.6cqw}html:not(.embed) .sec-map .pg1 .hdr .subtitle{font-size:1cqw}
   html:not(.embed) .sec-map .pg1 .hdr .notice{font-size:.78cqw;padding:.5cqw .7cqw;line-height:1.35}
+}
+/* paper view: each race page is a landscape letter sheet */
+@media screen and (min-width:1100px){
+  html:not(.embed) .sec-courses .coursepage{--S:min(calc(100vw - 48px),calc((100vh - 90px) * 11 / 8.5),1600px);width:var(--S);max-width:none;height:calc(var(--S) * 8.5 / 11);margin:28px auto;padding:calc(var(--S) * .03636);gap:calc(var(--S) * .018);font-size:calc(var(--S) * .009);align-items:start;overflow:hidden}
+  html:not(.embed) .sec-courses .coursepage .cpmap{display:flex;justify-content:center}
+  html:not(.embed) .sec-courses .coursepage svg.racemap{height:calc(var(--S) * .7);width:auto;max-width:100%;box-shadow:none}
+  html:not(.embed) .sec-courses .coursepage .cphead h2{font-size:calc(var(--S) * .018)}html:not(.embed) .sec-courses .coursepage .cpbtns *{font-size:calc(var(--S) * .009)}
+  html:not(.embed) .sec-courses .coursepage .note{font-size:calc(var(--S) * .008)}html:not(.embed) .sec-courses .coursepage .cuttab th{font-size:calc(var(--S) * .008)}
 }

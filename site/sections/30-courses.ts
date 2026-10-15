@@ -1,13 +1,13 @@
-// One page per course: its own mini map (full bib), its own elevation profile and its GPX distance / cutoff table.
-// Web: a section per course with "Print this course" + a prebuilt per-course PDF (scripts/pdf.ts). Not part of the main PDF
-// (the main PDF lists the aid stations; per-course matrices live on these pages).
+// One landscape letter page per race (100K -> 10K): left half its own race map (only that route), right half its header, elevation
+// profile and GPX distance / cutoff matrix. In the main PDF after page 1; each also prints alone as course-<k>.pdf.
 import { esc, f1, station } from '../lib/util';
-import { renderMini, miniBibSvg } from '../lib/panels';
-import { courseTable, TABLE_NOTE } from './20-stations';
-export const meta = { id: 'courses', title: 'Course pages', print: false };
+import { miniBibSvg } from '../lib/panels';
+import { courseTable, TABLE_NOTE } from '../lib/coursetable';
+import { renderRaceMap } from '../lib/racemap';
+export const meta = { id: 'courses', title: 'Race pages' };
 const uniq = (svg: string, k: string) => svg.replace(/\bid="([^"]+)"/g, `id="$1-cp${k}"`).replace(/url\(#([^)]+)\)/g, `url(#$1-cp${k})`).replace('class="mini"', 'class="mini mini-cp"').replace(/ data-mini="[^"]*"/, '');
 function profile(c, k: string) {
-  const p = c.profiles[k], col = c.colors, cc = c.courses.colors[k], D = c.courses.courses[k].distance_mi, W = 1400, H = 360, PL = 70, PB = 34;
+  const p = c.profiles[k], col = c.colors, cc = c.courses.colors[k], D = c.courses.courses[k].distance_mi, W = 900, H = 340, PL = 70, PB = 34;
   const lo = Math.floor((Math.min(...p.ft) - 150) / 500) * 500, hi = Math.ceil((Math.max(...p.ft) + 250) / 500) * 500;
   const X = (m: number) => PL + (m / D) * (W - PL - 10), Y = (ft: number) => 10 + (1 - (ft - lo) / (hi - lo)) * (H - PB - 10);
   let s = `<rect width="${W}" height="${H}" fill="${col.cream}"/>`;
@@ -24,8 +24,8 @@ export function render(c) {
   const nav = c.courses.order.map((k) => `<a href="#course-${k}" style="color:${c.courses.colors[k]}">${miniBibSvg(k, c.courses.colors[k], 0.7)}</a>`).join('');
   const pages = c.courses.order.map((k) => {
     const C = c.courses.courses[k];
-    return `<article class="doc coursepage" id="course-${k}" data-course="${k}"><header class="cphead"><h2 class="bibh" style="color:${c.courses.colors[k]}">${miniBibSvg(k, c.courses.colors[k], 1)} ${C.distance_mi.toFixed(1)} mi · start ${esc(C.start)}</h2><span class="ui cpbtns"><button type="button" class="printone" data-course="${k}">Print this course</button><a href="course-${k}.pdf" download aria-label="${k} course page (PDF)">PDF</a></span></header>
-${profile(c, k)}<div class="cpgrid"><figure class="cpmap">${uniq(renderMini(c, k), k)}</figure><div class="cpright"><p class="note">${TABLE_NOTE}</p>${courseTable(c, k)}</div></div></article>`;
+    return `<article class="doc coursepage" id="course-${k}" data-course="${k}"><figure class="cpmap">${renderRaceMap(c, k)}</figure><div class="cpright"><header class="cphead"><h2 class="bibh" style="color:${c.courses.colors[k]}">${miniBibSvg(k, c.courses.colors[k], 1)} ${C.distance_mi.toFixed(1)} mi · start ${esc(C.start)}</h2><span class="ui cpbtns"><button type="button" class="printone" data-course="${k}">Print this course</button><a href="course-${k}.pdf" download aria-label="${k} course page (PDF)">PDF</a></span></header>
+${profile(c, k)}<p class="note">${TABLE_NOTE}</p>${courseTable(c, k)}</div></article>`;
   }).join('');
   return `<nav class="ui cpnav"><strong>Course pages</strong> ${nav}</nav>${pages}`;
 }
