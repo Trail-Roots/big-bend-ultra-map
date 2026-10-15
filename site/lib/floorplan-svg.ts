@@ -4,13 +4,12 @@
 type View = { x: number; y: number; w: number; h: number };
 export const FINISH_VIEW: View = { x: 1010, y: 1690, w: 830, h: 650 }; // lot, picnic area, S/F, building front, gate + drop-off at the Y
 export const PARKING_VIEW: View = { x: 0, y: 0, w: 4100, h: 2900 }; // the whole drawing: every parking / no-parking stretch along FM 170
-// north pointer (arrow + N, no disc) sits in a strip ABOVE the map, so it never covers the drawing; zoom controls are web-only
-const NORTH = `<svg class="fp-north" viewBox="0 0 20 34" width="20" height="34" aria-label="North"><path d="M10,1L17,17L10,13L3,17Z" fill="#1e293b"/><text x="10" y="32" font-size="13" font-weight="700" text-anchor="middle" fill="#1e293b">N</text></svg>`;
-const ZOOM = `<div class="fp-zoomctl"><button type="button" data-z="in" aria-label="Zoom in">+</button><button type="button" data-z="out" aria-label="Zoom out">−</button><button type="button" data-z="reset" aria-label="Reset zoom">⟲</button></div>`;
-const img = (v: View, alt: string) =>
-  `<div class="fp-top">${NORTH}</div><div class="fp-zoom">${ZOOM}<div class="fp-stage"><img class="floorplan-img" src="plans/floorplan.svg#svgView(viewBox(${v.x},${v.y},${v.w},${v.h}))" width="${v.w}" height="${v.h}" alt="${alt}" style="display:block;width:100%;height:auto;aspect-ratio:${v.w}/${v.h};background:#fff" draggable="false"></div></div>`;
-export const renderFinishPlan = () => img(FINISH_VIEW, 'Finish area floor plan');
-export const renderParkingPlan = () => img(PARKING_VIEW, 'Parking plan');
+// classic split-needle north arrow, an overlay layer fixed in a map corner (outside the zoom stage, so it never scales or pans)
+const NORTH = (corner: 'tl' | 'tr') => `<svg class="fp-north fp-${corner}" viewBox="0 0 28 52" width="28" height="52" role="img" aria-label="North"><text x="14" y="13" font-family="Georgia,serif" font-size="15" font-weight="700" text-anchor="middle" fill="#1e293b">N</text><path d="M14,16L14,40L6,49Z" fill="#1e293b"/><path d="M14,16L22,49L14,40Z" fill="#fff" stroke="#1e293b" stroke-width="1.2" stroke-linejoin="round"/><path d="M14,16L6,49L14,40Z" fill="none" stroke="#1e293b" stroke-width="1.2" stroke-linejoin="round"/></svg>`;
+const img = (v: View, alt: string, corner: 'tl' | 'tr') =>
+  `<div class="fp-zoom" title="Wheel to zoom, drag to pan, double-click to reset"><div class="fp-stage"><img class="floorplan-img" src="plans/floorplan.svg#svgView(viewBox(${v.x},${v.y},${v.w},${v.h}))" width="${v.w}" height="${v.h}" alt="${alt}" style="display:block;width:100%;height:auto;aspect-ratio:${v.w}/${v.h};background:#fff" draggable="false"></div>${NORTH(corner)}</div>`;
+export const renderFinishPlan = () => img(FINISH_VIEW, 'Finish area floor plan', 'tr') // top-right is open ground;
+export const renderParkingPlan = () => img(PARKING_VIEW, 'Parking plan', 'tl') // top-left is open ground (property line runs down the right);
 
 // legend swatches drawn with the drawing's own fills/strokes (taken from sources/floorplan.svg)
 const box = (fill: string, stroke: string, sw = 1.6, extra = '') => `<svg viewBox="0 0 30 20" width="30" height="20" aria-hidden="true"><rect x="2" y="2" width="26" height="16" rx="2" style="fill:${fill};stroke:${stroke};stroke-width:${sw}px"/>${extra}</svg>`;

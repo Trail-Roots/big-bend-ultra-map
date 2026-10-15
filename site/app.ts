@@ -209,12 +209,12 @@ document.querySelectorAll<HTMLButtonElement>('button.printone').forEach((b) => b
   const done = () => { document.body.classList.remove('printone'); removeEventListener('afterprint', done); }; addEventListener('afterprint', done); print();
 }));
 
-// ---- floor plans: zoom (+/−, wheel, pinch) and pan; web only (controls hidden and transform reset in print) ----
+// ---- floor plans: wheel zoom toward the cursor, drag / touch pan, pinch, double-click reset; web only (reset in print) ----
 document.querySelectorAll<HTMLElement>('.fp-zoom').forEach((box) => {
   const st = box.querySelector<HTMLElement>('.fp-stage')!; let k = 1, x = 0, y = 0;
   const clamp = () => { k = Math.min(8, Math.max(1, k)); const w = box.clientWidth, h = box.clientHeight; x = Math.min(0, Math.max(w - w * k, x)); y = Math.min(0, Math.max(h - h * k, y)); st.style.transform = k === 1 ? '' : `translate(${x}px,${y}px) scale(${k})`; };
   const zoomAt = (f: number, cx: number, cy: number) => { const nk = Math.min(8, Math.max(1, k * f)); x = cx - ((cx - x) * nk) / k; y = cy - ((cy - y) * nk) / k; k = nk; clamp(); };
-  box.querySelectorAll<HTMLButtonElement>('.fp-zoomctl button').forEach((b) => b.addEventListener('click', () => { const z = b.dataset.z; if (z === 'reset') { k = 1; x = y = 0; clamp(); } else zoomAt(z === 'in' ? 1.5 : 1 / 1.5, box.clientWidth / 2, box.clientHeight / 2); }));
+  box.addEventListener('dblclick', () => { k = 1; x = y = 0; clamp(); });
   box.addEventListener('wheel', (e) => { e.preventDefault(); const r = box.getBoundingClientRect(); zoomAt(Math.exp(-e.deltaY * 0.0015), e.clientX - r.left, e.clientY - r.top); }, { passive: false });
   const pts = new Map<number, { x: number; y: number }>(); let last: { x: number; y: number; d: number } | null = null;
   const state = () => { const p = [...pts.values()], r = box.getBoundingClientRect(), cx = p.reduce((s, q) => s + q.x, 0) / p.length - r.left, cy = p.reduce((s, q) => s + q.y, 0) / p.length - r.top; return { x: cx, y: cy, d: p.length > 1 ? Math.hypot(p[0].x - p[1].x, p[0].y - p[1].y) : 0 }; };

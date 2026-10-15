@@ -147,7 +147,6 @@ svg.mainmap,svg.mini{touch-action:pan-x pan-y}svg.panning{cursor:grabbing}
 @media print{.plan h2{margin:0 0 .08in}.planlegend{grid-template-columns:repeat(3,1fr);font-size:8.5pt;gap:2pt 8pt}.planlegend svg{height:15pt!important;width:auto!important}.plan .note{font-size:7.5pt}}
 
 /* floor plans: Erik's drawing as an untouched <img>; north pointer above it; web-only zoom/pan */
-.fp-top{display:flex;justify-content:flex-end;margin:0 0 2px}.fp-zoom{position:relative;overflow:hidden;border:1px solid #000;background:#fff;touch-action:none}.fp-stage{transform-origin:0 0;cursor:grab}.fp-stage.drag{cursor:grabbing}.fp-zoom img{user-select:none;-webkit-user-drag:none}
-.fp-zoomctl{position:absolute;right:8px;bottom:8px;z-index:2;display:flex;flex-direction:column;gap:4px}.fp-zoomctl button{width:30px;height:30px;font:700 18px/1 system-ui,sans-serif;background:#fff;border:1px solid #64748b;border-radius:4px;cursor:pointer}
-@media print{.fp-zoomctl{display:none!important}.fp-stage{transform:none!important}.fp-top{margin:0}}
-.plan svg.fp-north{width:20px!important;height:34px!important;max-width:none;flex:none}@media print{.plan svg.fp-north{width:14pt!important;height:24pt!important}}
+.fp-zoom{position:relative;overflow:hidden;border:1px solid #000;background:#fff;touch-action:none}.fp-stage{transform-origin:0 0;cursor:grab}.fp-stage.drag{cursor:grabbing}.fp-zoom img{user-select:none;-webkit-user-drag:none}
+@media print{.fp-stage{transform:none!important}}
+.plan svg.fp-north{position:absolute;top:8px;width:28px!important;height:52px!important;pointer-events:none;z-index:2}.plan svg.fp-tr{right:10px}.plan svg.fp-tl{left:10px}@media print{.plan svg.fp-north{width:16pt!important;height:30pt!important;top:5pt}}
