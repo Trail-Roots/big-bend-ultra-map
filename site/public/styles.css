@@ -23,6 +23,7 @@ svg .stnum{fill:#fff;font-weight:700}
 .sheet{display:grid;grid-template-columns:minmax(0,44fr) minmax(0,51fr);gap:1.5vw;padding:0 1rem 1rem;max-width:2400px;margin:0 auto}
 .main svg{background:#fff;box-shadow:0 1px 4px #0002}
 .side{display:flex;flex-direction:column;gap:1.2vw;min-width:0}
+@media screen{.pg1,.charts{display:contents}}
 .hdr{display:grid;grid-template-columns:auto 1fr auto;gap:1rem;align-items:start}
 .logo img{width:clamp(56px,6vw,120px);display:block}
 .hdr h1{font-family:"DejaVu Serif",serif;font-weight:400;font-size:clamp(1.4rem,2.4vw,2.6rem);margin:0}
@@ -51,7 +52,7 @@ svg .stnum{fill:#fff;font-weight:700}
   html,body{background:#fff;margin:0}
   main{margin:0}
   .sheet{display:block;padding:0;margin:0;max-width:none;gap:0;background:#fff}
-  .main{position:relative;margin:0 auto;break-after:page;overflow:hidden}
+  .pg1{position:relative;break-after:page;overflow:visible}.pg1 .main{position:absolute;margin:0;overflow:hidden}.charts{display:contents}
   .side{display:block;position:relative;margin:0 auto;gap:0;break-inside:avoid}
   .minis{display:contents}
   .minibox,.hdr,.stripsbox,.profilebox{position:absolute}
@@ -87,7 +88,7 @@ svg.mainmap,svg.mini{touch-action:pan-x pan-y}svg.panning{cursor:grabbing}
 .draftbanner{display:none}
 .draftnote{font:700 .75rem/1 system-ui,sans-serif;letter-spacing:.04em;text-transform:uppercase;color:#b3261e;border:1px solid #b3261e;border-radius:4px;padding:.25rem .5rem;background:#fff5f4}
 @media print{
-  body.draft .main::after,body.draft .side::after{content:'DRAFT';position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) rotate(-35deg);font:900 3.2in/1 system-ui,sans-serif;letter-spacing:.08em;color:#b3261e;opacity:.13;pointer-events:none;z-index:999;white-space:nowrap}
+  body.draft .pg1::after,body.draft .side::after{content:'DRAFT';position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) rotate(-35deg);font:900 3.2in/1 system-ui,sans-serif;letter-spacing:.08em;color:#b3261e;opacity:.13;pointer-events:none;z-index:999;white-space:nowrap}
 }
 .runkey{justify-content:flex-end;flex-wrap:wrap;margin:2px 8px 0;font:600 11px/1 system-ui,sans-serif;color:#555;background:#fffffff0;padding:3px 6px;border-radius:4px;display:flex;gap:4px;align-items:center}
 .runkey svg{width:12px!important;height:12px!important;flex:none}
@@ -127,7 +128,7 @@ svg.mainmap,svg.mini{touch-action:pan-x pan-y}svg.panning{cursor:grabbing}
 }
 /* ---------- small screens: timeline + profile up, mini maps lower ---------- */
 @media screen and (max-width:1000px){
-  .hdr{order:0}.stripsbox{order:1}.profilebox{order:2}.minis{order:3}
+  .sheet .side{display:contents}.hdr{order:0}.stripsbox{order:1}.profilebox{order:2}.minis{order:3}
 }
 /* ---------- ?view=embed ---------- */
 .embed .topnav,.embed .maplogo,.embed .sec:not(.sec-map),.embed .sec-links,.embed .hdr .titles{display:none!important}
@@ -135,7 +136,8 @@ svg.mainmap,svg.mini{touch-action:pan-x pan-y}svg.panning{cursor:grabbing}
 .cprofile{margin:.4rem 0 .8rem}
 /* ---------- wide / desktop: whole main map visible, fitted to the screen height ---------- */
 @media screen and (min-width:1001px){
-  .sheet{grid-template-columns:auto minmax(0,1fr);align-items:start}
+  .sheet{grid-template-columns:auto minmax(0,1fr);grid-template-rows:auto auto auto 1fr;align-items:start;column-gap:1.5vw;row-gap:1.2vw}
+  .sheet .side{display:contents}.sheet .main{grid-column:1;grid-row:1/5}.sheet .hdr,.sheet .minis,.sheet .stripsbox,.sheet .profilebox{grid-column:2}.sheet .hdr{grid-row:1}.sheet .minis{grid-row:2}.sheet .stripsbox{grid-row:3}.sheet .profilebox{grid-row:4}
   .main{justify-self:start}
   .main svg.mainmap{height:calc(100vh - 140px);min-height:520px;width:auto;max-width:min(62vw,100%)}
   .embed .main svg.mainmap{height:calc(100vh - 90px)}
@@ -159,11 +161,12 @@ svg.mainmap,svg.mini{touch-action:pan-x pan-y}svg.panning{cursor:grabbing}
 @media screen and (min-width:1100px){
   html:not(.embed) body{background:#c9c6c0}
   html:not(.embed) .topnav{position:relative;z-index:1}
-  /* map section = print pages 1 (main map) and 2 (side panel), side by side */
-  html:not(.embed) .sec-map .sheet{grid-template-columns:auto auto;justify-content:center;gap:28px;padding:24px 1rem;max-width:none}
-  html:not(.embed) .sec-map .main{height:calc(100vh - 110px);min-height:640px;aspect-ratio:8.5/11;background:#fff;box-shadow:0 2px 10px #0004;padding:calc((100vh - 110px) * .4 / 11);display:flex;align-items:center;justify-content:center}
-  html:not(.embed) .sec-map .main svg.mainmap{height:100%;width:auto;max-width:100%;min-height:0;box-shadow:none}
-  html:not(.embed) .sec-map .side{width:calc((100vh - 110px) * 8.5 / 11);min-width:495px;min-height:calc(100vh - 110px);background:#fff;box-shadow:0 2px 10px #0004;padding:calc((100vh - 110px) * .4 / 11)}
+  /* map section = page 1 (landscape: map + charts, positioned like the PDF) and page 2 (portrait: header + mini maps), one sheet per row */
+  html:not(.embed) .sec-map .sheet{display:flex;flex-direction:column;align-items:center;gap:28px;padding:24px 1rem;max-width:none}
+  html:not(.embed) .sec-map .pg1{display:block;position:relative;flex:none;width:min(calc(100vw - 48px),calc((100vh - 90px) * 11 / 8.5),1600px);aspect-ratio:11/8.5;background:#fff;box-shadow:0 2px 10px #0004}
+  html:not(.embed) .sec-map .pg1 .main,html:not(.embed) .sec-map .pg1 .stripsbox,html:not(.embed) .sec-map .pg1 .profilebox{position:absolute;margin:0}
+  html:not(.embed) .sec-map .pg1 .main svg.mainmap,html:not(.embed) .sec-map .pg1 .stripsbox svg.timeline,html:not(.embed) .sec-map .pg1 .profilebox svg{width:100%;height:100%;max-width:none;min-height:0;min-width:0;box-shadow:none}
+  html:not(.embed) .sec-map .side{display:flex;width:8.5in;max-width:calc(100vw - 48px);min-height:11in;background:#fff;box-shadow:0 2px 10px #0004;padding:.4in}
   /* every other printed section = its own sheet(s) */
   html:not(.embed) .sec:not(.noprint):not(.sec-map) > .doc{width:8.5in;max-width:none;min-height:11in;margin:28px auto;padding:.4in;box-shadow:0 2px 10px #0004;font-size:10.5pt}
   html:not(.embed) .sec.noprint{background:#f4f2ee;padding:1px 0}

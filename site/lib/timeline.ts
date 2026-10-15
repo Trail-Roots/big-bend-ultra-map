@@ -37,7 +37,7 @@ export function renderTimeline(c: Ctx) {
   const sunMark = (t: number, lab: string) => { const x = X(t), y = bottom + 14, up = lab === 'Sunrise'; let rays = ''; for (let i = 0; i < 5; i++) { const a = Math.PI * (i / 4); rays += `M${f1(x + Math.cos(a) * 9)},${f1(y - Math.sin(a) * 9)}L${f1(x + Math.cos(a) * 13)},${f1(y - Math.sin(a) * 13)}`; } return `<path d="M${f1(x)},${AX}V${f1(bottom)}" stroke="#d08a1e" stroke-width="2" stroke-dasharray="6 4"/><g class="sun"><title>${lab} ${clock(t, false)}</title><path d="M${f1(x - 7)},${f1(y)}a7,7 0 0 1 14,0z" fill="#f2a93b"/><path d="${rays}" stroke="#f2a93b" stroke-width="2" stroke-linecap="round"/><path d="M${f1(x - 14)},${f1(y)}h28" stroke="#a86a10" stroke-width="1.5"/><text x="${f1(x + 17)}" y="${f1(y)}" font-size="17" font-weight="700" fill="#a86a10" stroke="#fff" stroke-width="4" paint-order="stroke">${up ? '↑' : '↓'}${clock(t, false)}</text></g>`; };
   s += sunMark(d17.sunrise, 'Sunrise') + sunMark(d17.sunset, 'Sunset');
   {
-    const B = T.bin_min, n = T.courses[order[0]].on_course.length, top = cTop + 36, base = cTop + order.length * CR - 6, hgt = base - top;
+    const B = T.bin_min, n = T.courses[order[0]].on_course.length, top = cTop + 58, base = cTop + order.length * CR - 6, hgt = base - top;
     const acc = new Array(n).fill(0), tot = acc.map((_, i) => order.reduce((q, k) => q + (T.courses[k].on_course[i] || 0), 0)), maxT = Math.max(...tot);
     const xs = acc.map((_, i) => X(t0 + (i + 0.5) * B)), Y = (v: number) => base - (v / maxT) * hgt;
     s += `<path d="M${f1(LX)},${f1(base)}H${f1(RX)}" stroke="${ink}" stroke-width="1"/>`;
@@ -53,13 +53,22 @@ export function renderTimeline(c: Ctx) {
     // legend: mini bibs, top = last in the stack
     const lh = (base - top) / order.length;
     [...order].reverse().forEach((k, r) => { s += miniBib(k, c.courses.colors[k], PADL, top + r * lh + lh / 2 - MINIBIB.h / 2, c.colors); });
-    // starts (flag + time) and final cutoffs (finish flag + time), one label per distinct time
-    const rowEnd = [-1e9, -1e9]; // start labels on two staggered rows so no two touch
-    order.forEach((k) => { const C = T.courses[k], x = X(C.start), ri = rowEnd[0] < x ? 0 : 1, ry = top - 30 + ri * 15; rowEnd[ri] = x + 14 + clock(C.start).length * 8 + 4; s += `<path d="M${f1(x)},${f1(base)}V${f1(ry - 8)}" stroke="${ink}" stroke-width="1.2" stroke-dasharray="3 3"/><path d="M${f1(x)},${f1(ry - 9)}h12l-4,4 4,4h-12z" fill="${c.courses.colors[k]}"/>`;
-      s += `<text x="${f1(x + 14)}" y="${f1(ry + 4)}" font-size="13" font-weight="700" fill="${ink}" stroke="#fff" stroke-width="3" paint-order="stroke">${clock(C.start)}</text>`; });
-    const fins = new Map<number, string[]>();
-    order.forEach((k) => { const C = T.courses[k], q = C.passes[C.passes.length - 1], tm = cutMin(q.cutoff); if (tm == null) return; const t = tm < C.start ? tm + 1440 : tm; fins.set(t, [...(fins.get(t) ?? []), k]); });
-    for (const [t, ks] of fins) { const x = X(t); s += `<path d="M${f1(x)},${f1(base)}V${f1(top - 2)}" stroke="${ink}" stroke-width="1.6"><title>${ks.join(', ')} final cutoff ${clock(t, false)}</title></path>` + finishFlag(x, top - 2, top - 18, ink) + `<text x="${f1(x + 16)}" y="${f1(top - 6)}" font-size="14" font-weight="700" fill="${ink}" stroke="#fff" stroke-width="3" paint-order="stroke">${clock(t)}</text>`; }
+    // lane above the chart: race starts (flag + time) and every cutoff (aid-station number icon in the legend marker style + time;
+    // a race-colour bar under the icon per race). Items are placed left to right on up to 3 staggered rows so nothing touches.
+    type It = { x: number; w: number; draw: (ry: number) => string };
+    const items: It[] = [], tw = (t: string) => t.length * 13 * 0.62;
+    order.forEach((k) => { const C = T.courses[k], x = X(C.start), lab = clock(C.start);
+      items.push({ x, w: 14 + tw(lab) + 6, draw: (ry) => `<path d="M${f1(x)},${f1(base)}V${f1(ry - 8)}" stroke="${ink}" stroke-width="1.2" stroke-dasharray="3 3"/><path d="M${f1(x)},${f1(ry - 9)}h12l-4,4 4,4h-12z" fill="${c.courses.colors[k]}"/><text x="${f1(x + 14)}" y="${f1(ry + 4)}" font-size="13" font-weight="700" fill="${ink}">${lab}</text>` }); });
+    const cuts = new Map<string, { t: number; st: string; ks: string[]; fin: boolean }>();
+    order.forEach((k) => { const C = T.courses[k]; C.passes.forEach((q: any, i: number) => { if (q.mile === 0) return; const tm = cutMin(q.cutoff); if (tm == null) return; const t = tm < C.start ? tm + 1440 : tm, key = q.station + '@' + t, e = cuts.get(key) ?? { t, st: q.station, ks: [], fin: i === C.passes.length - 1 }; e.ks.push(k); cuts.set(key, e); }); });
+    const IR = 7.5, ms = (IR * 2) ** 2 / 1.8;
+    for (const e of cuts.values()) { const x = X(e.t), lab = clock(e.t);
+      items.push({ x: x - IR, w: IR * 2 + 3 + tw(lab) + 6, draw: (ry) => (e.fin ? `<path d="M${f1(x)},${f1(base)}V${f1(ry + IR)}" stroke="${ink}" stroke-width="1.6"/>` : `<path d="M${f1(x)},${f1(top - 1)}V${f1(ry + IR)}" stroke="${ink}" stroke-width="1.2"/>`)
+        + e.ks.map((k, j) => `<rect x="${f1(x - IR + j * (IR * 2 / e.ks.length))}" y="${f1(ry + IR + 1)}" width="${f1(IR * 2 / e.ks.length)}" height="3" fill="${c.courses.colors[k]}"/>`).join('')
+        + station(x, ry, e.st, false, { s: ms, fs: e.st.length > 1 ? 15 : 11, badge: false, colors: c.colors }) + `<text x="${f1(x + IR + 3)}" y="${f1(ry + 4)}" font-size="13" font-weight="700" fill="${ink}">${lab}</text>` }); }
+    items.sort((a, b) => a.x - b.x);
+    const rowEnd = [-1e9, -1e9, -1e9];
+    for (const it of items) { let ri = rowEnd.findIndex((e) => e + 3 < it.x); if (ri < 0) ri = rowEnd.indexOf(Math.min(...rowEnd)); rowEnd[ri] = it.x + it.w; s += `<g class="tlmk">${it.draw(cTop + 9 + ri * 17)}</g>`; }
   }
   // stations
   s += `<text x="${PADL}" y="${f1(sTop - 6)}" font-size="17" font-weight="700" fill="${ink}">Busiest times</text><path d="M${PADL + 172},${f1(sTop - 20)}v16" stroke="#111" stroke-width="4"/><path d="M${PADL + 172},${f1(sTop - 20)}v16" stroke="#fff" stroke-width="2"/><text x="${PADL + 178}" y="${f1(sTop - 6)}" font-size="14" fill="${col.mute}">opens</text><path d="M${PADL + 230},${f1(sTop - 20)}v16" stroke="#111" stroke-width="2.4"/><text x="${PADL + 236}" y="${f1(sTop - 6)}" font-size="14" fill="${col.mute}">cutoff</text>`;
