@@ -213,3 +213,13 @@ html.embed,html.embed body,html.embed .sec.noprint{background:transparent!import
 @media print{.cplinks{gap:4pt}.cplinks a{font-size:7pt;padding:1.5pt 4pt;border:.8pt solid #c8c2b8;border-radius:3px;color:#555;gap:2pt}}
 @media screen{.cphead{flex-wrap:wrap;justify-content:flex-start;row-gap:.35rem;column-gap:.4rem}.cphead h2{flex:1 0 100%;white-space:nowrap}.cphead .cplinks{margin-left:0}.cplinks a,.cpbtns a,.cpbtns button{white-space:nowrap}}
 @media screen and (max-width:699px){.cphead h2{font-size:1.35rem}}
+/* one icon set on every action button (site/lib/icons.ts); icons are web-only */
+svg.ic{width:1.15em;height:1.15em;flex:none;display:inline-block;vertical-align:-.2em;box-shadow:none;stroke-width:2}
+.cpbtns button,.cpbtns a,.cplinks a,.printctl a,.printctl button,.callinks a,.autoplay{display:inline-flex;align-items:center;gap:.35em}
+.zctl button,.fp-zoomctl button{display:inline-flex;align-items:center;justify-content:center}.zctl button svg.ic{width:15px;height:15px}.fp-zoomctl button svg.ic{width:17px;height:17px}
+.zctl button[data-z=reset]{visibility:visible!important}
+@media screen and (max-width:1099px){.cphead h2{white-space:normal}}
+
+html body svg.ic{width:1.15em!important;height:1.15em!important;max-width:none!important;min-width:0!important;min-height:0!important;background:none!important;box-shadow:none!important;margin:0!important}html body .zctl button svg.ic{width:15px!important;height:15px!important}html body .fp-zoomctl button svg.ic{width:17px!important;height:17px!important}
+@media print{html body svg.ic{display:none!important}}
+@media print{.cphead{flex-wrap:nowrap}html body .cphead h2{white-space:nowrap;font-size:13pt;flex:0 1 auto;min-width:0}.cphead h2 svg{flex:none}.cphead .cplinks{flex:none}}

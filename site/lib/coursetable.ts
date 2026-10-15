@@ -7,12 +7,17 @@ import { cumGain, lerp } from './hover';
 export const paceStr = (minPerMi: number) => { const s = Math.round(minPerMi * 60); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')} /mi`; };
 // Distances are GPX-derived (content/cutoffs.json miles = cumulative GPX distance); cutoffs from the revised race sheet.
 /** GPX distance matrix + cutoffs for one course */
+/** cumulative gain series (0.05 mi steps) of one race's GPX profile; last value = total gain (the matrix's Finish row) */
+function gainSeries(c, k: string) {
+  const pr = c.profiles[k], dist = c.courseGeo[k].features[0].properties.distance_mi, ms: number[] = []; for (let m = 0; m <= dist + 1e-9; m += 0.05) ms.push(Math.round(m * 100) / 100);
+  return cumGain(ms.map((m) => lerp(m, pr.mi, pr.ft)));
+}
+export const totalGain = (c, k: string) => { const g = gainSeries(c, k); return g[g.length - 1]; };
 export function courseTable(c, k: string) {
   const S = c.stations.stations, C = c.courses.courses[k], q = c.cutoffs[k], st = cutMin(C.start)!;
   // cumulative gain from the start: this race's GPX profile sampled every 0.05 mi, then cumGain (±0.25 mi moving average + 10 ft hysteresis),
   // exactly as the hover gain readout, so the Finish row equals the race's total gain
-  const pr = c.profiles[k], dist = c.courseGeo[k].features[0].properties.distance_mi, ms: number[] = []; for (let m = 0; m <= dist + 1e-9; m += 0.05) ms.push(Math.round(m * 100) / 100);
-  const g = cumGain(ms.map((m) => lerp(m, pr.mi, pr.ft))), gainAt = (mi: number, last: boolean) => g[last ? g.length - 1 : Math.min(g.length - 1, Math.round(mi / 0.05))];
+  const g = gainSeries(c, k), gainAt = (mi: number, last: boolean) => g[last ? g.length - 1 : Math.min(g.length - 1, Math.round(mi / 0.05))];
   console.log(`  gain ${k}: ${gainAt(0, true)} ft total`);
   const body = q.map((x, i) => {
     const prev = i ? (x.mile - q[i - 1].mile).toFixed(1) : '—', next = i < q.length - 1 ? (q[i + 1].mile - x.mile).toFixed(1) : '—';

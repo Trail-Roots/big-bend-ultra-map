@@ -1,5 +1,6 @@
 import { initZoom, zoomOf } from './zoom';
 import { makeGlide, routeAt } from './glide';
+import { icon } from './lib/icons';
 import { placeTip } from './tip';
 // Layer toggles. No framework; the map is static inline SVG.
 const show = (sel: string, on: boolean) => document.querySelectorAll<SVGGElement>(sel).forEach((g) => (g.style.display = on ? '' : 'none'));
@@ -198,7 +199,7 @@ if (hdEl && prof) {
   const start = () => { if (!raf && running()) { t0 = 0; raf = requestAnimationFrame(tick); } };
   const stop = () => { if (raf) cancelAnimationFrame(raf); raf = 0; };
   const btn = document.createElement('button'); btn.type = 'button'; btn.className = 'autoplay ui';
-  const label = () => { btn.textContent = paused ? '▶ Play race day' : '❚❚ Pause'; btn.setAttribute('aria-label', paused ? 'Play race-day animation' : 'Pause race-day animation'); btn.setAttribute('aria-pressed', String(!paused)); };
+  const label = () => { btn.innerHTML = paused ? `${icon('play')}Play race day` : `${icon('pause')}Pause`; btn.setAttribute('aria-label', paused ? 'Play race-day animation' : 'Pause race-day animation'); btn.setAttribute('aria-pressed', String(!paused)); };
   if (!reduced) { label(); prof.parentElement!.appendChild(btn); }
   btn.addEventListener('click', () => { paused = !paused; localStorage.setItem(KEY, paused ? '1' : '0'); label(); if (paused) { stop(); clearTime(); } else start(); });
   const suspend = () => { user = true; stop(); };
@@ -252,7 +253,7 @@ document.querySelectorAll<HTMLElement>('.fp-zoom').forEach((box) => {
   const st = box.querySelector<HTMLElement>('.fp-stage')!; let k = 1, x = 0, y = 0;
   const clamp = () => { k = Math.min(8, Math.max(1, k)); const w = box.clientWidth, h = box.clientHeight; x = Math.min(0, Math.max(w - w * k, x)); y = Math.min(0, Math.max(h - h * k, y)); st.style.transform = k === 1 ? '' : `translate(${x}px,${y}px) scale(${k})`; };
   const zoomAt = (f: number, cx: number, cy: number) => { const nk = Math.min(8, Math.max(1, k * f)); x = cx - ((cx - x) * nk) / k; y = cy - ((cy - y) * nk) / k; k = nk; clamp(); };
-  box.querySelectorAll<HTMLButtonElement>('.fp-zoomctl button').forEach((b) => { b.addEventListener('click', () => zoomAt(b.dataset.z === 'in' ? 1.5 : 1 / 1.5, box.clientWidth / 2, box.clientHeight / 2)); b.addEventListener('dblclick', (e) => e.stopPropagation()); });
+  box.querySelectorAll<HTMLButtonElement>('.fp-zoomctl button').forEach((b) => { b.addEventListener('click', () => { if (b.dataset.z === 'reset') { k = 1; x = y = 0; clamp(); } else zoomAt(b.dataset.z === 'in' ? 1.5 : 1 / 1.5, box.clientWidth / 2, box.clientHeight / 2); }); b.addEventListener('dblclick', (e) => e.stopPropagation()); });
   box.addEventListener('dblclick', () => { k = 1; x = y = 0; clamp(); });
   box.addEventListener('wheel', (e) => { e.preventDefault(); const r = box.getBoundingClientRect(); zoomAt(Math.exp(-e.deltaY * 0.0015), e.clientX - r.left, e.clientY - r.top); }, { passive: false });
   const pts = new Map<number, { x: number; y: number }>(); let last: { x: number; y: number; d: number } | null = null;

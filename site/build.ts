@@ -1,5 +1,6 @@
 // Static build (Bun): reads /content, stacks every site/sections/*.ts module into one page (dist/index.html), bundles site/app.ts.
 import fs from 'node:fs';
+import { icon } from './lib/icons';
 import path from 'node:path';
 import type { Ctx, Section } from './lib/types';
 import { markerDefs } from './lib/util';
@@ -30,7 +31,7 @@ const site = J('site.json'), draft = site.draft === true;
 const gen = new Date().toLocaleDateString('en-US', { timeZone: 'America/Chicago', year: 'numeric', month: 'short', day: 'numeric' });
 let html = tpl.replace('{{bodyclass}}', draft ? 'draft' : '')
   .replace('{{draftbanner}}', draft ? WATERMARK + `<style>@page{@top-center{content:"DRAFT — NOT FINAL · Subject to change · Generated ${gen}";font:800 8pt system-ui,sans-serif;letter-spacing:.06em;color:#fff;background:#b3261e;margin:.05in 0 .05in;width:100%;-webkit-print-color-adjust:exact;print-color-adjust:exact}}</style>` : '')
-  .replace('{{draftnote}}', draft ? `<span class="draftnote" title="Generated ${gen}">Draft · subject to change</span>` : '').replace('{{base}}', './').replace(/{{title}}/g, sections[0].meta.title).replace('{{defs}}', markerDefs(ctx.colors)).replace('{{body}}', body).replace(/{{year}}/g, '2027');
+  .replace('{{draftnote}}', draft ? `<span class="draftnote" title="Generated ${gen}">Draft · subject to change</span>` : '').replace('{{base}}', './').replace(/{{ic:(\w+)}}/g, (_: string, n: string) => icon(n)).replace(/{{title}}/g, sections[0].meta.title).replace('{{defs}}', markerDefs(ctx.colors)).replace('{{body}}', body).replace(/{{year}}/g, '2027');
 // ---- link footnotes: every clickable link on the page, collected from the rendered HTML (same data the links come from) ----
 const { SITE_URL } = await import('./sections/10-map');
 const strip = (t: string) => t.replace(/<title>[\s\S]*?<\/title>/g, '').replace(/<[^>]+>/g, ' ').replace(/&amp;/g, '&').replace(/\s+/g, ' ').trim();

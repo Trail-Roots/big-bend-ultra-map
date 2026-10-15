@@ -1,6 +1,7 @@
 // Web-only zoom & pan for the main map and the mini maps.
 // The map content sits in <g class="zv">; legend, logo, bib and frame stay outside and never move.
 // Markers, arrows and labels are counter-scaled about their anchor so they keep a constant on-screen size.
+import { icon } from './lib/icons';
 const MAX = 8, MIN = 1;
 type Z = { svg: SVGSVGElement; g: SVGGElement; W: number; H: number; k: number; tx: number; ty: number; items: { el: SVGGraphicsElement; base: string; cx: number; cy: number }[]; texts: { el: SVGTextElement; fs: number; sw: number }[] };
 const Zs = new Map<SVGSVGElement, Z>();
@@ -58,7 +59,7 @@ function setup(svg: SVGSVGElement) {
   collect(z); Zs.set(svg, z);
   const host = svg.parentElement!; host.classList.add('zhost');
   const ctl = document.createElement('div'); ctl.className = 'zctl ui';
-  ctl.innerHTML = '<button type="button" data-z="in" aria-label="Zoom in">+</button><button type="button" data-z="out" aria-label="Zoom out">−</button><button type="button" data-z="reset" aria-label="Reset zoom">⟲</button>';
+  ctl.innerHTML = `<button type="button" data-z="in" aria-label="Zoom in">${icon('plus')}</button><button type="button" data-z="out" aria-label="Zoom out">${icon('minus')}</button><button type="button" data-z="reset" aria-label="Reset zoom">${icon('reset')}</button>`;
   host.appendChild(ctl);
   ctl.addEventListener('click', (e) => { const b = (e.target as HTMLElement).closest('button'); if (!b) return; const c = [z.W / 2, z.H / 2]; if (b.dataset.z === 'in') zoomAt(z, 1.6, c[0], c[1]); else if (b.dataset.z === 'out') zoomAt(z, 1 / 1.6, c[0], c[1]); else reset(z); });
   svg.addEventListener('wheel', (e) => { e.preventDefault(); const [x, y] = toSvg(z, e.clientX, e.clientY); zoomAt(z, Math.exp(-e.deltaY * (e.ctrlKey ? 0.01 : 0.0015)), x, y); }, { passive: false });
