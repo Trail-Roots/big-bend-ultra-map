@@ -106,7 +106,9 @@ export function renderFinishPlan(c, labels: Record<string, [number, number]>) {
     items.push({ key: 'dropoff', label: '5-minute drop-off', where, shape: `<path d="${band}" fill="#f6e2b0" fill-opacity=".85"/><path d="${band}" fill="url(#fphatch)" stroke="${C.amber}" stroke-width="2" stroke-linejoin="round"/>`, anchor, r: 0 }); }
   // picnic area: the whole triangle of different-coloured ground east of the lot (low prominence)
   { const PP = TRc.PICNIC, cx = PP.reduce((t, q) => t + q[0], 0) / PP.length, cy = PP.reduce((t, q) => t + q[1], 0) / PP.length;
-    items.push({ minor: true, key: 'picnic', label: 'Picnic area', where: pt('Picnic Area'), shape: `<path d="${d(PP, true)}" fill="${C.picnic}" fill-opacity=".75" stroke="${C.picnicEdge}" stroke-opacity=".6" stroke-width="1.4" stroke-dasharray="6 4" stroke-linejoin="round"/>`, anchor: P([cx, cy]), r: 0 }); }
+    // gravel path across the picnic triangle to the shelter (distinct gravel tone, ~1.5 m wide)
+    const gravel = `<path d="${d(TRc.GRAVEL)}" fill="none" stroke="#b9ab8e" stroke-width="${f1(1.8 * s + 2)}" stroke-linecap="round" stroke-linejoin="round"/><path d="${d(TRc.GRAVEL)}" fill="none" stroke="#e6dcc6" stroke-width="${f1(1.8 * s)}" stroke-linecap="round" stroke-linejoin="round"/>`;
+    items.push({ minor: true, key: 'picnic', label: 'Picnic area', where: pt('Picnic Area'), shape: `<path d="${d(PP, true)}" fill="${C.picnic}" fill-opacity=".75" stroke="${C.picnicEdge}" stroke-opacity=".6" stroke-width="1.4" stroke-dasharray="6 4" stroke-linejoin="round"/>${gravel}`, anchor: P([cx, cy]), r: 0 }); }
   // orientations from nearby roads
   const aisle = way(1452473490), loop = way(321566200), aAisle = ang(aisle[0], aisle[1]), aWest = ang(loop[1], loop[2]), aSouth = ang(loop[2], loop[3]);
   // Radio Command: vehicle footprint parked against the southeast side of the large island, parallel to its curb (drive lane left clear)
