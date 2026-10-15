@@ -3,6 +3,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { alongRoute, type ArrowsFile } from './lib/arrows';
+import { loadMyMap, MYMAP_KML } from './lib/mymap';
 import { loadCalendar, inRaceYear, raceMin, CAL_ICS } from './lib/calendar';
 import { type XY, merc, unmerc, ll, r6, hyp, cumlen, interpolate, simplify, simplifyTP, chaikin, hav, interp, fc } from './lib/geo';
 
@@ -266,5 +267,11 @@ fs.cpSync(path.join(SRC, 'logos'), OUT, { recursive: true });
 // station labels (sources/curated/station_labels.geojson) only hold position/alignment; name + hours text comes from stations.json
 console.log('content written:', Object.entries(HRS).map(([k, v]) => `${k} ${v}`).join(' | '));
 if (GH) for (const m of MI_WARN) console.warn('::warning title=Mileage check::' + m);
+// ---------- logistics site plans (Erik's Google My Maps KML + OSM basemap snapshot) ----------
+{ const MM = await loadMyMap(SRC), FA = [-103.7640, 29.2660, -103.7500, 29.2760]; // Barton Warnock area
+  const near = (p: { coords: [number, number][] }) => p.coords.every(([x, y]) => x >= FA[0] && x <= FA[2] && y >= FA[1] && y <= FA[3]);
+  const keep = MM.placemarks.filter((p) => near(p) && !/proposed parking|bus route/i.test(p.name) && ['Aid', 'Transportation'].includes(p.folder));
+  w('logistics.json', { source: MYMAP_KML, fetched: MM.fetched, placemarks: keep, osm: rj('curated/finish_osm.geojson') });
+  console.log('logistics:', keep.map((p) => p.name).join(', ')); }
 w('checks.json', { calendar: CAL_ICS, calendar_fetched: CALD.fetched, calendar_sun: CAL_SUN, soft: [...MI_WARN.map((m) => 'mileage (sheet vs GPX, GPX used): ' + m), ...soft], hard });
 if (hard.length) { console.error(`${hard.length} timing conflict(s) between the race sheet and the race calendar — fix before publishing.`); process.exit(1); }

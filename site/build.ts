@@ -13,6 +13,7 @@ const ctx: Ctx = {
   network: J('network.geojson'), park: J('park.geojson'), pois: J('pois.geojson'), zoom: J('zoomboxes.geojson'),
   arrows: J('arrows.geojson'), labels: J('labels.geojson'), areaLabels: J('area_labels.geojson'), timeline: J('timeline.json'), stationLabels: J('station_labels.geojson'), poiLabels: J('poi_labels.geojson'),
   courseGeo: Object.fromEntries(courses.order.map((k: string) => [k, J(`courses/${k}.geojson`)])),
+  logistics: J('logistics.json'),
   profiles: { ...Object.fromEntries(courses.order.map((k: string) => [k, J(`profiles/${k}.json`)])), callouts: J('profiles/callouts.json') },
 };
 fs.rmSync(D, { recursive: true, force: true }); fs.mkdirSync(D, { recursive: true });
@@ -55,3 +56,6 @@ fs.cpSync(path.join(C, 'hillshade'), path.join(D, 'hillshade'), { recursive: tru
 fs.mkdirSync(path.join(D, 'gpx'), { recursive: true });
 for (const k of ctx.courses.order) fs.copyFileSync(path.join(here, '..', 'sources', 'gpx', `${k}.gpx`), path.join(D, ctx.courses.courses[k].gpx));
 for (const f of ['logo_ink_crop.png', 'logo_white_crop.png']) fs.copyFileSync(path.join(C, f), path.join(D, f));
+// site-plan aerial backdrops (USGS, public domain)
+fs.mkdirSync(path.join(D, 'plans'), { recursive: true });
+for (const f of ['finish_muted.jpg', 'parking_muted.jpg']) fs.copyFileSync(path.join(root, 'sources', 'curated', 'aerial', f), path.join(D, 'plans', f));

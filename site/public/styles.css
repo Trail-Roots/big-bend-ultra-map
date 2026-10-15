@@ -140,3 +140,8 @@ svg.mainmap,svg.mini{touch-action:pan-x pan-y}svg.panning{cursor:grabbing}
   .main svg.mainmap{height:calc(100vh - 140px);min-height:520px;width:auto;max-width:min(62vw,100%)}
   .embed .main svg.mainmap{height:calc(100vh - 90px)}
 }
+/* ---------- site plans ---------- */
+.plan svg.siteplan{border-radius:2px}
+.planlegend{list-style:none;margin:.6rem 0 .2rem;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:.3rem .9rem;font-size:.85rem}
+.planlegend li{display:flex;align-items:center;gap:.45rem}.planlegend svg{flex:none;width:auto;display:inline-block}
+@media print{.plan h2{margin:0 0 .08in}.planlegend{grid-template-columns:repeat(3,1fr);font-size:8.5pt;gap:2pt 8pt}.planlegend svg{height:15pt!important;width:auto!important}.plan .note{font-size:7.5pt}}
