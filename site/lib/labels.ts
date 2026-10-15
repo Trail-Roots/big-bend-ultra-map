@@ -40,7 +40,10 @@ export function stationLabel(c: Ctx, f: Feature, p: (ll: [number, number]) => [n
   const T = STATION_TPL, q = f.properties, s = c.stations.stations[q.station];
   const [x, y] = p(f.geometry.coordinates);
   const nameLines = String(q.name ?? s.name).split('\n');
-  const info = [...(q.location ? [q.location] : []), ...(s.hours ? [s.hours] : [])];
+  // subtitle: the station's full name (like Start/Finish's 'Barton Warnock'); a long one wraps after ' / ' onto a second line
+  const loc: string | undefined = q.location ?? (s.long && s.long !== s.name ? s.long : undefined);
+  const locLines = loc ? (loc.length > 22 && loc.includes(' / ') ? [loc.slice(0, loc.indexOf(' / ') + 2), loc.slice(loc.indexOf(' / ') + 3)] : [loc]) : [];
+  const info = [...locLines, ...(s.hours ? [s.hours] : [])];
   const lines: Line[] = [
     ...nameLines.map((t) => ({ text: t, size: T.name.size, serif: true, color: T.name.color, weight: 400, italic: false, halo: T.name.halo })),
     ...info.map((t) => ({ text: t, size: T.info.size, serif: false, color: T.info.color, weight: 400, italic: false, halo: T.info.halo })),

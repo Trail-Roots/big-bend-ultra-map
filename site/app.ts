@@ -225,3 +225,9 @@ document.querySelectorAll<HTMLElement>('.fp-zoom').forEach((box) => {
   st.addEventListener('pointerup', up); st.addEventListener('pointercancel', up);
   addEventListener('beforeprint', () => { k = 1; x = y = 0; clamp(); });
 });
+
+// ---- ?view=embed inside an iframe (dist/embed.js): report the content height to the parent so it can size the iframe ----
+if (document.documentElement.classList.contains('embed') && parent !== window) {
+  let last = 0; const post = () => { const h = document.documentElement.scrollHeight; if (Math.abs(h - last) > 1) { last = h; parent.postMessage({ type: 'bbu-embed-height', height: h }, '*'); } };
+  new ResizeObserver(post).observe(document.body); addEventListener('load', post); post();
+}

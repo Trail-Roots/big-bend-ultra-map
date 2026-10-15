@@ -49,12 +49,12 @@
    "type": "Feature",
    "properties": {
     "station": "3",
-    "align": "center"
+    "align": "left"
    },
    "geometry": {
     "type": "Point",
     "coordinates": [
-     -103.839991,
+     -103.8532,
      29.446004
     ]
    }
@@ -68,8 +68,8 @@
    "geometry": {
     "type": "Point",
     "coordinates": [
-     -103.791733,
-     29.510569
+     -103.787233,
+     29.512569
     ]
    }
   },
@@ -83,7 +83,7 @@
     "type": "Point",
     "coordinates": [
      -103.88017,
-     29.308409
+     29.305609
     ]
    }
   }

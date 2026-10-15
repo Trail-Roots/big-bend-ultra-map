@@ -1,6 +1,6 @@
 // One page per course: its own mini map (full bib), its own elevation profile and its GPX distance / cutoff table.
 // Web: a section per course with "Print this course" + a prebuilt per-course PDF (scripts/pdf.ts). Not part of the main PDF
-// (the consolidated table is in "Aid stations, distances & cutoffs").
+// (the main PDF lists the aid stations; per-course matrices live on these pages).
 import { esc, f1, station } from '../lib/util';
 import { renderMini, miniBibSvg } from '../lib/panels';
 import { courseTable, TABLE_NOTE } from './20-stations';
