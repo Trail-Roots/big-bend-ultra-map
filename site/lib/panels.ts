@@ -106,7 +106,7 @@ export function renderProfile(c) {
   const L = c.layout, W = L.elev[2] * SHEET.w, H = L.elev[3] * SHEET.h, [x0, x1] = L.elev_xlim, [y0, y1] = L.elev_ylim, col = c.colors;
   const X = v => (v - x0) / (x1 - x0) * W, Y = v => (1 - (v - y0) / (y1 - y0)) * H;
   let s = `<rect width="${f1(W)}" height="${f1(H)}" fill="${col.cream}"/>`;
-  for (const t of [2500, 3500, 4500]) s += `<path d="M0,${f1(Y(t))}H${f1(W)}" stroke="#d8d0c0" stroke-width="1"/><text x="12" y="${f1(Y(t) - 6)}" font-size="24" fill="${col.ink}">${t.toLocaleString('en-US')} ft</text>`;
+  for (const t of [2500, 3500, 4500]) s += `<path d="M0,${f1(Y(t))}H${f1(W)}" stroke="#d8d0c0" stroke-width="1"/><text x="0" y="${f1(Y(t) - 6)}" font-size="24" fill="${col.ink}">${t.toLocaleString('en-US')} ft</text>`;
   s += `<path d="M0,${f1(H)}H${f1(W)}" stroke="${col.ink}" stroke-width="1"/>`;
   for (let v = 1; v < x1; v++) if (v % 10) s += `<path d="M${f1(X(v))},${f1(H)}v6" stroke="#c9c2b6" stroke-width="1"/>`; // minor 1 mi ticks
   for (let v = 0; v <= 60; v += 10) s += `<path d="M${f1(X(v))},${f1(H)}v10" stroke="${col.ink}" stroke-width="1"/><text class="dist" x="${f1(X(v))}" y="${f1(H + 10)}" font-size="24" text-anchor="middle" dominant-baseline="hanging" fill="${col.ink}">${v}m</text>`;
@@ -115,7 +115,8 @@ export function renderProfile(c) {
   const p100 = pts('100K'); s += `<path d="${lineD(p100)}L${f1(p100[p100.length - 1][0])},${f1(Y(2200))}L${f1(p100[0][0])},${f1(Y(2200))}z" fill="#888" fill-opacity=".10"/>`;
   for (const k of O) s += `<path class="ln prof" data-course="${k}" d="${lineD(pts(k))}" stroke="${c.courses.colors[k]}" stroke-width="${k === '100K' ? 4 : 3}"/>`;
   // legend upper right
-  const lgx = W - 140, lgy = 16; s += `<rect x="${lgx - 10}" y="${lgy - 6}" width="140" height="${O.length * 32 + 10}" fill="#fff" fill-opacity=".9"/>`;
+  // legend flush with the chart's right edge: its bibs end exactly at x = W, background box spans to W
+  const lgx = W - 46 - MINIBIB.w, lgy = 16; s += `<rect x="${lgx - 10}" y="${lgy - 6}" width="${W - lgx + 10}" height="${O.length * 32 + 10}" fill="#fff" fill-opacity=".9"/>`;
   O.forEach((k, i) => { s += `<path d="M${lgx},${lgy + 14 + i * 32}h36" stroke="${c.courses.colors[k]}" stroke-width="4"/>` + miniBib(k, c.courses.colors[k], lgx + 46, lgy + 14 + i * 32 - 13, col); });
   for (const q of pr.callouts.callouts) {
     for (const x of q.xs) s += leaderLine(X(q.bx), Y(q.by), X(x), Y(q.y), Math.sqrt(950) / 2, 3) + `<circle cx="${f1(X(x))}" cy="${f1(Y(q.y))}" r="3" fill="${col.ink}"/>`;

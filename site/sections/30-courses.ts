@@ -11,7 +11,7 @@ function profile(c, k: string) {
   const lo = Math.floor((Math.min(...p.ft) - 150) / 500) * 500, hi = Math.ceil((Math.max(...p.ft) + 250) / 500) * 500;
   const X = (m: number) => PL + (m / D) * (W - PL - 10), Y = (ft: number) => 10 + (1 - (ft - lo) / (hi - lo)) * (H - PB - 10);
   let s = `<rect width="${W}" height="${H}" fill="${col.cream}"/>`;
-  for (let t = lo; t <= hi; t += 500) s += `<path d="M${PL},${f1(Y(t))}H${W - 10}" stroke="#d8d0c0"/><text x="4" y="${f1(Y(t) + 6)}" font-size="17" text-anchor="start" fill="${col.ink}">${t.toLocaleString('en-US')}</text>`;
+  for (let t = lo; t <= hi; t += 500) s += `<path d="M${PL},${f1(Y(t))}H${W - 10}" stroke="#d8d0c0"/><text x="0" y="${f1(Y(t) + 6)}" font-size="17" text-anchor="start" fill="${col.ink}">${t.toLocaleString('en-US')}</text>`;
   const step = D > 30 ? 10 : D > 15 ? 5 : 1;
   for (let v = 0; v <= D + 1e-6; v += step) s += `<path d="M${f1(X(v))},${H - PB}v8" stroke="${col.ink}"/><text x="${f1(X(v))}" y="${H - 8}" font-size="17" text-anchor="middle" fill="${col.ink}">${v} mi</text>`;
   const pts = p.mi.map((m: number, i: number) => `${f1(X(m))},${f1(Y(p.ft[i]))}`);

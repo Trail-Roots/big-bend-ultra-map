@@ -81,7 +81,7 @@ svg.mainmap,svg.mini{touch-action:pan-x pan-y}svg.panning{cursor:grabbing}
 .minilinks a:hover{color:#111;border-color:#888}.minibox .minilinks svg.dlico{width:.8em;height:.8em;flex:none;box-shadow:none}
 @media print{/* side page is zoomed ~0.42: these print at ~6pt */.minilinks{position:absolute;top:100%;right:0;margin-top:4pt;font-size:14pt;gap:4pt}.minilinks a{padding:2pt 6pt;border-width:1.2pt;gap:3pt}.minibox .minilinks svg.dlico{width:.8em;height:.8em}}
 @media screen{.profilebox{position:relative}}
-.autoplay{position:absolute;left:8px;top:6px;padding:2px 8px;border:1px solid #ccc;border-radius:4px;background:#fffffff0;color:#555;font:600 11px/1.4 system-ui,sans-serif;cursor:pointer}
+.autoplay{position:absolute;left:0;top:6px;padding:2px 8px;border:1px solid #ccc;border-radius:4px;background:#fffffff0;color:#555;font:600 11px/1.4 system-ui,sans-serif;cursor:pointer}
 .autoplay:hover{color:#111;border-color:#888}
 @media print{.autoplay{display:none!important}}
 /* draft markings (content/site.json "draft": true) */
@@ -132,8 +132,8 @@ svg.mainmap,svg.mini{touch-action:pan-x pan-y}svg.panning{cursor:grabbing}
   .sheet .side{display:contents}.hdr{order:0}.stripsbox{order:1}.profilebox{order:2}.minis{order:3}
 }
 /* ---------- ?view=embed ---------- */
-.embed .topnav,.embed .maplogo,.embed .sec:not(.sec-map),.embed .sec-links,.embed .hdr .titles{display:none!important}
-.embed .hdr{grid-template-columns:1fr}
+/* ?view=embed renders exactly the same paper layout; only the background behind the sheets is neutral (transparent) */
+html.embed,html.embed body,html.embed .sec.noprint{background:transparent!important}
 .cprofile{margin:.4rem 0 .8rem}
 /* ---------- wide / desktop: whole main map visible, fitted to the screen height ---------- */
 @media screen and (min-width:1001px){
@@ -141,7 +141,6 @@ svg.mainmap,svg.mini{touch-action:pan-x pan-y}svg.panning{cursor:grabbing}
   .sheet .side{display:contents}.sheet .main{grid-column:1;grid-row:1/5}.sheet .hdr,.sheet .minis,.sheet .stripsbox,.sheet .profilebox{grid-column:2}.sheet .hdr{grid-row:1}.sheet .minis{grid-row:2}.sheet .stripsbox{grid-row:3}.sheet .profilebox{grid-row:4}
   .main{justify-self:start}
   .main svg.mainmap{height:calc(100vh - 140px);min-height:520px;width:auto;max-width:min(62vw,100%)}
-  .embed .main svg.mainmap{height:calc(100vh - 90px)}
 }
 /* ---------- site plans ---------- */
 .plan svg.siteplan{border-radius:2px}
@@ -157,35 +156,37 @@ svg.mainmap,svg.mini{touch-action:pan-x pan-y}svg.panning{cursor:grabbing}
 @media print{.fp-zoomctl{display:none!important}}
 /* ?view=embed&h=auto (dist/embed.js): the iframe takes the page's height, so size the map from the width, not the viewport height */
 @media screen and (min-width:1001px){.autoh .sheet{grid-template-columns:minmax(0,44fr) minmax(0,51fr)}.autoh .main{justify-self:stretch}.autoh .main svg.mainmap{height:auto!important;min-height:0!important;width:100%!important;max-width:none!important}}
-/* ---------- screen "paper" view: every printed page shown as a letter sheet (portrait, 8.5 x 11) on a gray desk.
-   Screen-only (@media screen), so print / PDF are untouched; narrow screens and ?view=embed keep the normal flow. ---------- */
+/* ---------- screen "paper" view: every printed page shown as a letter sheet (portrait, 8.5 x 11) on a subtle neutral gray background.
+   Screen-only (@media screen), so print / PDF are untouched; narrow screens keep the normal flow; ?view=embed is identical (transparent background). ---------- */
 @media screen and (min-width:1100px){
-  html:not(.embed) body{background:#c9c6c0}
-  html:not(.embed) .topnav{position:relative;z-index:1}
+  html body{background:#f4f4f4}
+  /* navbar: full-width bar, items constrained to the landscape sheet width and centred */
+  html .topnav{padding-inline:max(1rem,calc((100vw - min(calc(100vw - 48px),calc((100vh - 90px) * 11 / 8.5),1600px)) / 2))}
+  html .topnav{position:relative;z-index:1}
   /* map section = page 1 (landscape: map + charts, positioned like the PDF) and page 2 (portrait: header + mini maps), one sheet per row */
-  html:not(.embed) .sec-map .sheet{display:flex;flex-direction:column;align-items:center;gap:28px;padding:24px 1rem;max-width:none}
-  html:not(.embed) .sec-map .pg1{display:block;position:relative;flex:none;width:min(calc(100vw - 48px),calc((100vh - 90px) * 11 / 8.5),1600px);aspect-ratio:11/8.5;background:#fff;box-shadow:0 2px 10px #0004}
-  html:not(.embed) .sec-map .pg1 .main,html:not(.embed) .sec-map .pg1 .stripsbox,html:not(.embed) .sec-map .pg1 .profilebox{position:absolute;margin:0}
-  html:not(.embed) .sec-map .pg1 .main svg.mainmap,html:not(.embed) .sec-map .pg1 .stripsbox svg.timeline,html:not(.embed) .sec-map .pg1 .profilebox svg{width:100%;height:100%;max-width:none;min-height:0;min-width:0;box-shadow:none}
-  html:not(.embed) .sec-map .side{display:flex;width:8.5in;max-width:calc(100vw - 48px);min-height:11in;background:#fff;box-shadow:0 2px 10px #0004;padding:.28in}
+  html .sec-map .sheet{display:flex;flex-direction:column;align-items:center;gap:28px;padding:24px 1rem;max-width:none}
+  html .sec-map .pg1{display:block;position:relative;flex:none;width:min(calc(100vw - 48px),calc((100vh - 90px) * 11 / 8.5),1600px);aspect-ratio:11/8.5;background:#fff;box-shadow:0 1px 6px #0000001f}
+  html .sec-map .pg1 .main,html .sec-map .pg1 .stripsbox,html .sec-map .pg1 .profilebox{position:absolute;margin:0}
+  html .sec-map .pg1 .main svg.mainmap,html .sec-map .pg1 .stripsbox svg.timeline,html .sec-map .pg1 .profilebox svg{width:100%;height:100%;max-width:none;min-height:0;min-width:0;box-shadow:none}
+  html .sec-map .side{display:flex;width:8.5in;max-width:calc(100vw - 48px);min-height:11in;background:#fff;box-shadow:0 1px 6px #0000001f;padding:.28in}
   /* every other printed section = its own sheet(s) */
-  html:not(.embed) .sec:not(.noprint):not(.sec-map):not(.sec-courses) > .doc{width:8.5in;max-width:none;min-height:11in;margin:28px auto;padding:.28in;box-shadow:0 2px 10px #0004;font-size:10.5pt}
-  html:not(.embed) .sec.noprint{background:#f4f2ee;padding:1px 0}
+  html .sec:not(.noprint):not(.sec-map):not(.sec-courses) > .doc{width:8.5in;max-width:none;min-height:11in;margin:28px auto;padding:.28in;box-shadow:0 1px 6px #0000001f;font-size:10.5pt}
+  html .sec.noprint{background:#f4f2ee;padding:1px 0}
 }
 /* one-page print: the header shares the right half with the charts; the main map already carries the logo */
 @media print{.pg1 .hdr .logo{display:none}.pg1 .hdr .titles{left:0}.pg1 .hdr h1{font-size:30pt}.pg1 .hdr .subtitle{font-size:18pt;margin-top:.08in}.pg1 .notice{font-size:14pt;top:0;padding:9pt}}
 /* paper view: the header sits in its page-1 box like in the PDF; text sized relative to the sheet width */
 @media screen and (min-width:1100px){
-  html:not(.embed) .sec-map .pg1{container-type:inline-size}
-  html:not(.embed) .sec-map .pg1 .hdr{position:absolute;margin:0;display:flex;justify-content:space-between;align-items:flex-start;gap:1cqw}
-  html:not(.embed) .sec-map .pg1 .hdr h1{font-size:1.6cqw}html:not(.embed) .sec-map .pg1 .hdr .subtitle{font-size:1cqw}
-  html:not(.embed) .sec-map .pg1 .hdr .notice{font-size:.78cqw;padding:.5cqw .7cqw;line-height:1.35}
+  html .sec-map .pg1{container-type:inline-size}
+  html .sec-map .pg1 .hdr{position:absolute;margin:0;display:flex;justify-content:space-between;align-items:flex-start;gap:1cqw}
+  html .sec-map .pg1 .hdr h1{font-size:1.6cqw}html .sec-map .pg1 .hdr .subtitle{font-size:1cqw}
+  html .sec-map .pg1 .hdr .notice{font-size:.78cqw;padding:.5cqw .7cqw;line-height:1.35}
 }
 /* paper view: each race page is a landscape letter sheet */
 @media screen and (min-width:1100px){
-  html:not(.embed) .sec-courses .coursepage{--S:min(calc(100vw - 48px),calc((100vh - 90px) * 11 / 8.5),1600px);width:var(--S);max-width:none;height:calc(var(--S) * 8.5 / 11);margin:28px auto;padding:calc(var(--S) * .02545);gap:calc(var(--S) * .018);font-size:calc(var(--S) * .009);align-items:start;overflow:hidden}
-  html:not(.embed) .sec-courses .coursepage .cpmap{display:flex;justify-content:center}
-  html:not(.embed) .sec-courses .coursepage svg.racemap{height:calc(var(--S) * .72);width:auto;max-width:100%;box-shadow:none}
-  html:not(.embed) .sec-courses .coursepage .cphead h2{font-size:calc(var(--S) * .018)}html:not(.embed) .sec-courses .coursepage .cpbtns *{font-size:calc(var(--S) * .009)}
-  html:not(.embed) .sec-courses .coursepage .note{font-size:calc(var(--S) * .008)}html:not(.embed) .sec-courses .coursepage .cuttab th{font-size:calc(var(--S) * .008)}
+  html .sec-courses .coursepage{--S:min(calc(100vw - 48px),calc((100vh - 90px) * 11 / 8.5),1600px);width:var(--S);max-width:none;height:calc(var(--S) * 8.5 / 11);margin:28px auto;padding:calc(var(--S) * .02545);gap:calc(var(--S) * .018);font-size:calc(var(--S) * .009);align-items:start;overflow:hidden}
+  html .sec-courses .coursepage .cpmap{display:flex;justify-content:center}
+  html .sec-courses .coursepage svg.racemap{height:calc(var(--S) * .72);width:auto;max-width:100%;box-shadow:none}
+  html .sec-courses .coursepage .cphead h2{font-size:calc(var(--S) * .018)}html .sec-courses .coursepage .cpbtns *{font-size:calc(var(--S) * .009)}
+  html .sec-courses .coursepage .note{font-size:calc(var(--S) * .008)}html .sec-courses .coursepage .cuttab th{font-size:calc(var(--S) * .008)}
 }

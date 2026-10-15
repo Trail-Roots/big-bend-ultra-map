@@ -43,7 +43,7 @@ export function render(c: Ctx) {
   // screen paper view: the same page-1 geometry in % of the 11 x 8.5 in sheet (margins included), so the screen sheet mirrors the PDF page
   const M = LETTER.margin, pct = (q: { l: number; t: number; w: number; h: number }) => `{left:${((M + P1.mx + q.l * P1.z) / LETTER.h * 100).toFixed(3)}%;top:${((M + P1.my + q.t * P1.z) / LETTER.w * 100).toFixed(3)}%;width:${(q.w * P1.z / LETTER.h * 100).toFixed(3)}%;height:${(q.h * P1.z / LETTER.w * 100).toFixed(3)}%}`;
   const css = pg('.pg1', 'pmain', w1, h1, P1) + `@media print{${p1.map(([id, q]) => `#${id}${id === 'pb-hdr' ? hdrCss(q) : px(q)}`).join('')}}`
-    + `@media screen and (min-width:1100px){${p1.map(([id, q]) => `html:not(.embed) #${id}${pct(q)}`).join('')}}`;
+    + `@media screen and (min-width:1100px){${p1.map(([id, q]) => `html #${id}${pct(q)}`).join('')}}`;
   return `<style>${css}</style>
 <details class="ui layers" open><summary>Map layers</summary><div class="toggles">${toggles}</div></details>
 <div class="sheet">

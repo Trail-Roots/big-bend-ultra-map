@@ -18,7 +18,7 @@ Paste this where the map should appear (any web page or site builder that accept
 ```html
 <script src="https://trail-roots.github.io/big-bend-ultra-map/embed.js" async></script>
 ```
-It inserts an iframe of the embed view (`?view=embed`: map, timeline and profile, no page header or extra sections) right at that spot, full width, and resizes its height automatically to fit the content. Optional: `data-height="700"` on the script tag sets the height used before the map loads.
+It inserts an iframe of the embed view (`?view=embed`: the same paper-page layout as the site, on a transparent background) right at that spot, full width, and resizes its height automatically to fit the content. Optional: `data-height="700"` on the script tag sets the height used before the map loads.
 
 Plain iframe (no script, fixed height):
 ```html

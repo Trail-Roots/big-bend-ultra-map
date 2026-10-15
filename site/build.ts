@@ -4,6 +4,9 @@ import path from 'node:path';
 import type { Ctx, Section } from './lib/types';
 import { markerDefs } from './lib/util';
 
+// big semi-transparent red diagonal DRAFT watermark: on every printed page (fixed element repeats per page) and on every web paper sheet
+const WM_SVG = `url("data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"><text x="500" y="500" transform="rotate(-35 500 500)" text-anchor="middle" dominant-baseline="central" font-family="system-ui,sans-serif" font-weight="900" font-size="300" fill="#b3261e" fill-opacity=".16" letter-spacing="20">DRAFT</text></svg>')}")`;
+const WATERMARK = `<style>.wm{display:none}@media print{.wm{display:block;position:fixed;inset:0;background:${WM_SVG} center/100% no-repeat;pointer-events:none;z-index:9999}}@media screen and (min-width:1100px){html .sec-map .pg1,html .sec-courses .coursepage,html .sec:not(.noprint):not(.sec-map):not(.sec-courses)>.doc{position:relative}html .sec-map .pg1::after,html .sec-courses .coursepage::after,html .sec:not(.noprint):not(.sec-map):not(.sec-courses)>.doc::after{content:"";position:absolute;inset:0;background:${WM_SVG} center/contain no-repeat;pointer-events:none;z-index:60}}</style><div class="wm" aria-hidden="true"></div>`;
 const here = import.meta.dir, root = path.resolve(here, '..');
 const C = path.join(root, 'content'), D = path.join(root, 'dist');
 const J = (p: string) => JSON.parse(fs.readFileSync(path.join(C, p), 'utf8'));
@@ -26,7 +29,7 @@ const body = sections.map((s) => `<section class="sec sec-${s.meta.id}${s.meta.p
 const site = J('site.json'), draft = site.draft === true;
 const gen = new Date().toLocaleDateString('en-US', { timeZone: 'America/Chicago', year: 'numeric', month: 'short', day: 'numeric' });
 let html = tpl.replace('{{bodyclass}}', draft ? 'draft' : '')
-  .replace('{{draftbanner}}', draft ? `<style>@page{@top-center{content:"DRAFT — NOT FINAL · Subject to change · Generated ${gen}";font:800 8pt system-ui,sans-serif;letter-spacing:.06em;color:#fff;background:#b3261e;margin:.05in 0 .05in;width:100%;-webkit-print-color-adjust:exact;print-color-adjust:exact}}</style>` : '')
+  .replace('{{draftbanner}}', draft ? WATERMARK + `<style>@page{@top-center{content:"DRAFT — NOT FINAL · Subject to change · Generated ${gen}";font:800 8pt system-ui,sans-serif;letter-spacing:.06em;color:#fff;background:#b3261e;margin:.05in 0 .05in;width:100%;-webkit-print-color-adjust:exact;print-color-adjust:exact}}</style>` : '')
   .replace('{{draftnote}}', draft ? `<span class="draftnote" title="Generated ${gen}">Draft · subject to change</span>` : '').replace('{{base}}', './').replace(/{{title}}/g, sections[0].meta.title).replace('{{defs}}', markerDefs(ctx.colors)).replace('{{body}}', body).replace(/{{year}}/g, '2027');
 // ---- link footnotes: every clickable link on the page, collected from the rendered HTML (same data the links come from) ----
 const { SITE_URL } = await import('./sections/10-map');

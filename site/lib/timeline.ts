@@ -88,7 +88,7 @@ export function renderTimeline(c: Ctx) {
         return `<path d="M${f1(tx)},${f1(ya)}V${f1(yb)}" stroke="#fff" stroke-width="${CW + 2}"/><path d="M${f1(tx)},${f1(ya)}V${f1(yb)}" stroke="${c.courses.colors[kk]}" stroke-width="${CW}"/>`; }).join('') + '</g>'; }
     // station number icon INSET at the row's left edge, over the first (early, light) cells on an opaque white disc; nudged along the row
     // until it clears every cutoff mark in this row (icons may sit on heat cells, never on cutoff marks; the build fails otherwise)
-    const iy = y0 + SR / 2, mine = cplaced.filter((P) => P.row[0] === y0 + 3); let ix = LX + mr + 2;
+    const iy = y0 + SR / 2, mine = cplaced.filter((P) => P.row[0] === y0 + 3); let ix = LX + mr + 1 + 5.5; // disc edge ~3-4 px (5.5 units) in from the chart's left edge
     const clear = (x: number) => mine.every((P) => P.b.x1 + 2 < x - mr - 1 || P.b.x0 - 2 > x + mr + 1);
     while (!clear(ix) && ix < RX - mr) ix += 1; if (!clear(ix)) throw new Error(`[timeline] no clear spot for the ${k} row icon`);
     ticons.push({ x0: ix - mr - 1, x1: ix + mr + 1, y0: iy - mr - 1, y1: iy + mr + 1 });

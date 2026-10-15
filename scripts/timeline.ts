@@ -62,7 +62,9 @@ for (const k of ORDER) {
 // ---------- pace model along each course ----------
 // Grade-adjusted pace on the 0.25 mi-smoothed profile. Factor vs flat pace for a reference (~20 min/mi average) runner:
 //   uphill   1 + up·g (g ≤ 0.15), then + steepUp·(g − 0.15) (power-hiking steep climbs)
-//   downhill max(downFloor, 1 + down·g); beyond −20 % it slows again (+2·(−g − 0.2)) for technical descents
+//   downhill max(downFloor, 1 + down·g); beyond −10 % it slows again (+3·(−g − 0.1)) for steep / technical descents
+// The grade terms are deliberately strong (uphill ≥ 14 per unit grade, steep-up ≥ 6) so the elevation profile visibly drives dot pace;
+// totals stay anchored because every runner is normalised to their real finish time.
 // Fitness: a runner's deviation from flat is scaled by s = (avg pace / 20 min/mi)^beta, clamped 0.4–1.5 (faster runners less affected).
 // Fatigue (100K/55K only): × (1 + fatigue · mile/total). Climb fatigue (all courses): × (1 + climbFat · cumulative gain / 10,000 ft),
 // so pace slows with elevation gained, not just with distance.
@@ -80,7 +82,7 @@ for (const k of ORDER) {
   const cg = [0]; for (let i = 1; i < n; i++) cg.push(cg[i - 1] + Math.max(0, sm[i] - sm[i - 1]));
   grade[k] = { mi, g, cg } as any;
 }
-const baseF = (g: number, P: Params) => g >= 0 ? (g <= 0.15 ? 1 + P.up * g : 1 + P.up * 0.15 + P.steepUp * (g - 0.15)) : Math.max(P.downFloor, 1 + P.down * g) + (g < -0.2 ? 2 * (-g - 0.2) : 0);
+const baseF = (g: number, P: Params) => g >= 0 ? (g <= 0.15 ? 1 + P.up * g : 1 + P.up * 0.15 + P.steepUp * (g - 0.15)) : Math.max(P.downFloor, 1 + P.down * g) + (g < -0.1 ? 3 * (-g - 0.1) : 0); // steep descents slow again (braking, technical footing) beyond −10 %
 const fit = (paceMinMi: number, P: Params) => Math.min(1.5, Math.max(0.4, (paceMinMi / 20) ** P.beta));
 const cache = new Map<string, { mi: number[]; e: number[] }>();
 /** moving-time fraction reached at each profile sample (0..1), for fitness s */
@@ -117,7 +119,7 @@ for (const k of ORDER) {
   void D;
 }
 const score = (P: Params) => { let s = 0, n = 0; for (const v of VAL) for (const [m, a] of v.pts) { s += Math.abs(arrive(v.k, v.T, m, P) - a); n++; } return s / n; };
-const GRID = { up: [7, 8, 9, 10], steepUp: [2, 4], down: [2.5, 3.5, 4.5], downFloor: [0.62], beta: [0.5, 1, 1.5], fatigue: [0, 0.2, 0.4, 0.6, 0.8, 1.0, 1.2], climbFat: [0, 0.05, 0.1, 0.2], dwell: [0, 2, 4, 6, 8] };
+const GRID = { up: [14, 16, 18], steepUp: [6, 8], down: [2.5, 3.5, 4.5], downFloor: [0.62], beta: [0.5, 1, 1.5], fatigue: [0, 0.2, 0.4, 0.6, 0.8, 1.0, 1.2], climbFat: [0, 0.05, 0.1, 0.2], dwell: [0, 2, 4, 6, 8] };
 let best: { P: Params; err: number } | null = null;
 for (const up of GRID.up) for (const steepUp of GRID.steepUp) for (const down of GRID.down) for (const beta of GRID.beta) for (const fatigue of GRID.fatigue) for (const climbFat of GRID.climbFat) for (const dwell of GRID.dwell) {
   const P = { up, steepUp, down, downFloor: 0.62, beta, fatigue, climbFat, dwell }, err = score(P); if (!best || err < best.err) best = { P, err };

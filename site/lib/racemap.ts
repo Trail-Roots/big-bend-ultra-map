@@ -62,11 +62,26 @@ export function renderRaceMap(c, k: string) {
     const nx = Math.max(best.b.x0, Math.min(x, best.b.x1)), ny = Math.max(best.b.y0, Math.min(y, best.b.y1)), far = Math.hypot(nx - x, ny - y) > r + 30;
     labels += `<g class="stlabel" data-station="${esc(st)}">${far ? leaderLine(nx, ny, x, y, 2, r) : ''}${txt}</g>`;
   }
+  // cutoff flags: at each aid station with a cutoff on this race, a small flag + its cutoff time(s), auto-placed clear of everything
+  const shc = (t: string) => t.replace(/ ?([AP])M$/, (_, a) => a.toLowerCase());
+  let nflags = 0;
+  for (const st of sts) {
+    const times = [...new Set(c.cutoffs[k].filter((q) => q.station === st && q.mile > 0 && q.cutoff && q.cutoff !== 'TBD').map((q) => shc(q.cutoff)))]; if (!times.length) continue;
+    const S = c.stations.stations[st], [x, y] = V.p(S.lonlat), r = R(st), t = times.join(' · '), FS = 22, FW = 20, bw = FW + 6 + wEst(t, FS) * 1.08, bh = 26;
+    let best: Bx | null = null;
+    outer2: for (let dist = r + 6; dist <= r + 260; dist += 6) for (const [dx, dy] of dirs) {
+      const cx = x + dx * dist, cy = y + dy * dist, x0 = dx > 0 ? cx : dx < 0 ? cx - bw : cx - bw / 2, y0 = dy < 0 ? cy - bh : dy > 0 ? cy : cy - bh / 2, b = { x0, x1: x0 + bw, y0, y1: y0 + bh };
+      if (free(b)) { best = b; break outer2; } }
+    if (!best) throw new Error(`[racemap ${k}] no clear spot for the cutoff flag at station ${st}`);
+    placed.push(best); nflags++;
+    const fx = best.x0 + 3, fy = best.y1 - 3, nx = Math.max(best.x0, Math.min(x, best.x1)), ny = Math.max(best.y0, Math.min(y, best.y1)), far = Math.hypot(nx - x, ny - y) > r + 30;
+    labels += `<g class="cutflag" data-station="${esc(st)}">${far ? leaderLine(nx, ny, x, y, 2, r) : ''}<rect x="${f1(best.x0)}" y="${f1(best.y0)}" width="${f1(bw)}" height="${f1(bh)}" rx="4" fill="#fff" fill-opacity=".92"/><path d="M${f1(fx)},${f1(fy)}V${f1(fy - 20)}" stroke="#111" stroke-width="2.4"/><path d="M${f1(fx + 1)},${f1(fy - 20)}h15l-4,5 4,5h-15z" fill="#b3261e"/><text x="${f1(best.x0 + FW + 6)}" y="${f1(best.y0 + bh * 0.76)}" class="f-sans" font-size="${FS}" font-weight="700" fill="#111">${esc(t)}</text></g>`;
+  }
   // 10K turnaround label
   if (k === '10K') { const m = s.match(/data-at="([\d.]+),([\d.]+)"/)!, x = +m[1], y = +m[2], t = '10K turnaround', bw = wEst(t, 22) * 1.05, bh = 24;
     let done = false; for (let dist = 16; dist < 200 && !done; dist += 6) for (const [dx, dy] of dirs) { const al = dx > 0 ? 'start' : dx < 0 ? 'end' : 'middle', cx = x + dx * dist, cy = y + dy * dist, x0 = al === 'start' ? cx : al === 'end' ? cx - bw : cx - bw / 2, y0 = dy < 0 ? cy - bh : dy > 0 ? cy : cy - bh / 2, b = { x0, x1: x0 + bw, y0, y1: y0 + bh };
       if (free(b)) { placed.push(b); labels += `<text x="${f1(al === 'start' ? x0 : al === 'end' ? x0 + bw : x0 + bw / 2)}" y="${f1(y0 + bh * 0.78)}" class="f-serif" font-size="22" font-style="italic" font-weight="700" fill="${cc}" text-anchor="${al}" stroke="#fff" stroke-width="6" paint-order="stroke">${t}</text>`; done = true; break; } }
     if (!done) throw new Error('[racemap 10K] no clear spot for the turnaround label'); }
-  console.log(`  racemap ${k}: ${placed.length} labels placed clear of ${pts.length} line samples, ${ob.length} symbols`);
+  console.log(`  racemap ${k}: ${placed.length} labels (incl. ${nflags} cutoff flags) placed clear of ${pts.length} line samples, ${ob.length} symbols`);
   return `<svg class="racemap" data-race="${k}" data-f="${RACE_F}" viewBox="0 0 ${f1(W)} ${f1(H)}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${k} course map"><defs><clipPath id="rc${k}"><rect width="${f1(W)}" height="${f1(H)}"/></clipPath></defs><rect width="${f1(W)}" height="${f1(H)}" fill="#fff"/><g clip-path="url(#rc${k})">${s}${labels}</g>${bibSvg}<rect width="${f1(W)}" height="${f1(H)}" fill="none" stroke="#c8c2b8" stroke-width="2"/></svg>`;
 }
