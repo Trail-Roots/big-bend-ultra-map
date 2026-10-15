@@ -15,7 +15,7 @@ export const ASSUME = {
 const BW_OUT: [number, number][] = [[-103.757697, 29.270026], [-103.757117, 29.270026], [-103.757117, 29.26952], [-103.757697, 29.26952]];
 const BW_IN: [number, number][] = [[-103.757535, 29.269872], [-103.75728, 29.269872], [-103.75728, 29.269655], [-103.757535, 29.269655]];
 const FRAME = [-103.7593, 29.26935, -103.75645, 29.27078]; // lon/lat: tight around the finish-area features incl. the drop-off
-export const C = { ground: '#f8f6f1', grid: '#ebe6dc', road: '#ffffff', roadEdge: '#a39c90', lot: '#efece5', bld: '#d9d2c4', bldEdge: '#3d3a35', ink: '#2a2a2a', dirt: '#efe8da', pave: '#dddbd6', curb: '#9d978c', island: '#d5dfc2', islandEdge: '#8a9478', mute: '#7d776d', picnic: '#e2ecd6', picnicEdge: '#5f8a5a', rest: '#dce8f6', restEdge: '#2a62a8', rv: '#e9ebef', amber: '#d08a10', red: '#c4161c', blue: '#2a62a8' };
+export const C = { ground: '#f8f6f1', grid: '#ebe6dc', road: '#c4c2bd', roadEdge: '#a39c90', lot: '#c4c2bd', bld: '#d9d2c4', bldEdge: '#3d3a35', ink: '#2a2a2a', dirt: '#efe8da', pave: '#c4c2bd', curb: '#9d978c', island: '#d5dfc2', islandEdge: '#8a9478', mute: '#7d776d', picnic: '#e2ecd6', picnicEdge: '#5f8a5a', rest: '#dce8f6', restEdge: '#2a62a8', rv: '#e9ebef', amber: '#d08a10', red: '#c4161c', blue: '#2a62a8' };
 
 function makeBase(c, FRAME: number[], gridM: number, id = "fp", W = 1200, o: { ground?: string; road?: string; edge?: string; lot?: boolean; grid?: string; osmBld?: boolean } = {}) {
   const lat0 = 29.2702, lon0 = -103.7575, kx = Math.cos(lat0 * Math.PI / 180) * 111320, ky = 110574;
@@ -42,7 +42,7 @@ function makeBase(c, FRAME: number[], gridM: number, id = "fp", W = 1200, o: { g
   const RW: Record<string, number> = { secondary: 10, service: 5.5, track: 3.5, residential: 6.5 };
   for (const pass of [0, 1]) for (const f of osm) { const h = f.properties.highway; if (!(h in RW) || f.geometry.type !== 'LineString') continue;
     const w = RW[h] * s; g += `<path d="${d(f.geometry.coordinates)}" fill="none" stroke="${pass ? (o.road ?? C.road) : (o.edge ?? C.roadEdge)}" stroke-width="${f1(pass ? w : w + 2.4)}" stroke-linejoin="round" stroke-linecap="${pass ? 'round' : 'butt'}"/>`; }
-  for (const f of osm) if (f.properties.highway === 'secondary') g += `<path d="${d(f.geometry.coordinates)}" fill="none" stroke="#e0b422" stroke-width="1.6" stroke-dasharray="${f1(3 * s)} ${f1(9 * s)}"/>`;
+  for (const f of osm) { const h = f.properties.highway; if (!['secondary', 'service', 'residential'].includes(h) || f.geometry.type !== 'LineString') continue; const dl = Math.max(3 * s, 6), gp = Math.max(6 * s, 9); g += `<path d="${d(f.geometry.coordinates)}" fill="none" stroke="#fff" stroke-width="${h === 'secondary' ? 1.8 : 1.2}" stroke-dasharray="${f1(dl)} ${f1(gp)}"/>`; } // white dashed centerlines
   for (const f of osm) if (f.properties.highway === 'path') g += `<path d="${d(f.geometry.coordinates)}" fill="none" stroke="#a39782" stroke-width="1.6" stroke-dasharray="1 4" stroke-linecap="round"/>`;
   // buildings
   if (o.osmBld !== false) for (const f of osm) if (f.properties.building && f.geometry.type === 'Polygon') g += `<path d="${d(f.geometry.coordinates[0], true)}" fill="${C.bld}" stroke="${C.bldEdge}" stroke-width="1.6"/>`;
@@ -77,9 +77,9 @@ export function renderFinishPlan(c, labels: Record<string, [number, number]>) {
   const cs = c.courseGeo['100K'].features[0].geometry.coordinates as [number, number][], tail: [number, number][] = [];
   for (let i = cs.length - 1; i >= 0; i--) { tail.unshift(cs[i]); const [x, y] = P(cs[i]); if (x < -30 || y < -30 || x > W + 30 || y > H + 30) break; }
   const col = c.courses.colors['100K'];
-  g += `<path d="${d(tail)}" fill="none" stroke="${col}" stroke-width="${f1(1.6 * s)}" stroke-opacity=".85" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="${f1(4 * s)} ${f1(2.5 * s)}"/>`;
+  g += `<path d="${d(tail)}" fill="none" stroke="#fff" stroke-width="${f1(1.6 * s + 4)}" stroke-linejoin="round" stroke-linecap="round" stroke-opacity=".9"/><path d="${d(tail)}" fill="none" stroke="#111" stroke-width="${f1(1.6 * s)}" stroke-linejoin="round" stroke-linecap="round"/>`;
   { const n = tail.length, i = Math.max(0, Math.min(n - 2, Math.floor(n * 0.5))), [ax, ay] = P(tail[i]), [bx, by] = P(tail[i + 1]), a = Math.atan2(by - ay, bx - ax) * 180 / Math.PI;
-    g += `<g transform="translate(${f1(ax)} ${f1(ay)}) rotate(${f1(a)})"><path d="M-8,-9L8,0L-8,9L-4,0Z" fill="${col}" stroke="#fff" stroke-width="2" paint-order="stroke"/></g>`; }
+    g += `<g transform="translate(${f1(ax)} ${f1(ay)}) rotate(${f1(a)})"><path d="M-8,-9L8,0L-8,9L-4,0Z" fill="#111" stroke="#fff" stroke-width="2" paint-order="stroke"/></g>`; }
   const items: { minor?: boolean; key: string; label: string; where: [number, number] | string; shape: string; anchor: [number, number]; r: number }[] = [];
   const sfPlace = c.stations.stations['S/F'].place;
   // drop-off area polygon
@@ -154,9 +154,9 @@ export const fpSwatch = {
   restrooms: () => `<svg viewBox="0 0 30 20" width="30" height="20" aria-hidden="true">${[0, 1, 2, 3].map((i) => `<rect x="${2 + i * 7}" y="6" width="6" height="8" fill="${C.rest}" stroke="${C.restEdge}" stroke-width="1"/>`).join('')}</svg>`,
   arch: () => `<svg viewBox="0 0 30 20" width="30" height="20" aria-hidden="true"><path d="M3,10H27" stroke="${C.ink}" stroke-width="7"/>${[0, 1, 2, 3, 4, 5].map((i) => `<path d="M${3 + i * 4},10h4" stroke="${i % 2 ? '#fff' : C.ink}" stroke-width="4"/>`).join('')}</svg>`,
   gate: () => `<svg viewBox="0 0 30 20" width="30" height="20" aria-hidden="true"><path d="M4,10H26" stroke="${C.red}" stroke-width="5"/><path d="M8,10h4M16,10h4" stroke="#fff" stroke-width="5"/><circle cx="4" cy="10" r="3.5" fill="${C.ink}"/><circle cx="26" cy="10" r="3.5" fill="${C.ink}"/></svg>`,
-  course: (col: string) => `<svg viewBox="0 0 30 20" width="30" height="20" aria-hidden="true"><path d="M2,10H28" stroke="${col}" stroke-width="4" stroke-dasharray="7 4"/></svg>`,
+  course: (col: string) => `<svg viewBox="0 0 30 20" width="30" height="20" aria-hidden="true"><path d="M2,10H28" stroke="#fff" stroke-width="6"/><path d="M2,10H28" stroke="${col}" stroke-width="3"/></svg>`,
   area: (fill: string, stroke: string, dash = false, hatch = false) => `<svg viewBox="0 0 30 20" width="30" height="20" aria-hidden="true"><rect x="2" y="2" width="26" height="16" rx="2" fill="${fill}" stroke="${stroke}" stroke-width="1.8"${dash ? ' stroke-dasharray="4 2.5"' : ''}/>${hatch ? `<path d="M6,18L18,2M14,18L26,2" stroke="${stroke}" stroke-width="1.5" stroke-opacity=".6"/>` : ''}</svg>`,
-  road: () => `<svg viewBox="0 0 30 20" width="30" height="20" aria-hidden="true"><path d="M2,10H28" stroke="${C.roadEdge}" stroke-width="9"/><path d="M2,10H28" stroke="#fff" stroke-width="7"/></svg>`,
+  road: () => `<svg viewBox="0 0 30 20" width="30" height="20" aria-hidden="true"><path d="M2,10H28" stroke="${C.roadEdge}" stroke-width="9"/><path d="M2,10H28" stroke="${C.road}" stroke-width="7"/><path d="M3,10H28" stroke="#fff" stroke-width="1.2" stroke-dasharray="4 4"/></svg>`,
   water: () => `<svg viewBox="0 0 30 20" width="30" height="20" aria-hidden="true"><circle cx="15" cy="10" r="6" fill="none" stroke="${C.blue}" stroke-width="1.6"/><rect x="12.5" y="7.5" width="5" height="5" fill="${C.blue}"/></svg>`,
   bld: () => `<svg viewBox="0 0 30 20" width="30" height="20" aria-hidden="true"><rect x="2" y="2" width="26" height="16" fill="${C.bld}" stroke="${C.bldEdge}" stroke-width="2"/></svg>`,
 };
@@ -171,6 +171,12 @@ const PICON = (slash: boolean) => slash
   // standard No Parking sign: white disc, black P, red ring + red diagonal slash over the P
   ? `<circle r="13" fill="#fff" stroke="${C.red}" stroke-width="3.2"/><text y="1" font-size="17" font-weight="800" fill="#111" text-anchor="middle" dominant-baseline="central" font-family="Arial, Helvetica, sans-serif">P</text><path d="M-9.2,-9.2L9.2,9.2" stroke="${C.red}" stroke-width="3.2"/>`
   : `<rect x="-14" y="-14" width="28" height="28" rx="5" fill="#fff"/><rect x="-12" y="-12" width="24" height="24" rx="4" fill="${C.blue}"/><text y="1" font-size="17" font-weight="700" fill="#fff" text-anchor="middle" dominant-baseline="central">P</text>`;
+/** every course's GPX line inside the frame, black with a white casing (runners on course near S/F) */
+function courseRoutes(c, B) { const { P, W, H } = B; let runs: string[] = [];
+  for (const k of Object.keys(c.courseGeo)) { let cur: string[] = []; for (const q of c.courseGeo[k].features[0].geometry.coordinates as [number, number][]) { const [x, y] = P(q);
+    if (x > -60 && y > -60 && x < W + 60 && y < H + 60) cur.push(`${f1(x)},${f1(y)}`); else { if (cur.length > 1) runs.push('M' + cur.join('L')); cur = []; } } if (cur.length > 1) runs.push('M' + cur.join('L')); }
+  const dd = runs.join('');
+  return `<path d="${dd}" fill="none" stroke="#fff" stroke-width="6" stroke-linejoin="round" stroke-linecap="round" stroke-opacity=".9"/><path d="${dd}" fill="none" stroke="#111" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"/>`; }
 type V = [number, number];
 function roadTools(B) {
   const { gm, osm } = B;
@@ -223,6 +229,7 @@ export function renderParkingPlan(c, labels: Record<string, [number, number]>) {
     stripLbl += lbl(mid[0] + ox, mid[1] + oy, `≈${n} spaces`, { fs: 14, color: C.blue, style: 'italic', rot: -an });
   });
   g += strips;
+  g += courseRoutes(c, B);
   // No-parking shoulder: full length of FM 170 on the side opposite the venue / parking
   { const ln = lines[0], cs = cum(ln.pts), sd = -(fmSide || 1), o1 = RWm.secondary / 2 + PARK.gapFt * FT, o2 = o1 + PARK.depthFt * FT, inner: V[] = [], outer: V[] = [], tot = cs[cs.length - 1];
     const off = (sv: number, o: number): V => { const p = at(ln.pts, cs, sv), t = tan(ln.pts, cs, sv); return [p[0] - t[1] * o * sd, p[1] + t[0] * o * sd]; };
