@@ -97,10 +97,10 @@ function checkTiling(gm: (q: [number, number]) => [number, number], stallPts: [n
   if (bad.length) throw new Error('[tiling:finish plan] ' + bad.join('; '));
   console.log(`  tiling: finish plan OK (${surf.length} surfaces share edges, no gaps/overlaps; ${stallPts.length / 2} stall stripes on pavement; georef residual ${REF_RESIDUAL_M.toFixed(2)} m)`); }
 /** north arrow, ft scale bar, grid note, frame */
-function furniture(W: number, H: number, s: number, ft: number[], gridNote: string) {
+export function furniture(W: number, H: number, s: number, ft: number[], gridNote: string, right = W) {
   let out = '';
   const nx = W - 38, ny = 44; out += `<g><circle cx="${nx}" cy="${ny}" r="21" fill="#fff" stroke="${C.grid}"/><path d="M${nx},${ny - 15}L${nx + 7},${ny + 9}L${nx},${ny + 4}L${nx - 7},${ny + 9}Z" fill="${C.ink}"/><text x="${nx}" y="${ny + 34}" class="f-serif" font-size="15" text-anchor="middle" fill="${C.ink}">N</text></g>`;
-  const fpx = (v: number) => v * FT * s, sw = fpx(ft[ft.length - 1]), sx = W - 34 - sw, sy = H - 26;
+  const fpx = (v: number) => v * FT * s, sw = fpx(ft[ft.length - 1]), sx = right - 34 - sw, sy = H - 26;
   out += `<rect x="${f1(sx - 12)}" y="${f1(sy - 30)}" width="${f1(sw + 44)}" height="42" rx="4" fill="#fff" stroke="${C.grid}"/>`;
   ft.slice(0, -1).forEach((v, i) => { out += `<rect x="${f1(sx + fpx(v))}" y="${sy - 6}" width="${f1(fpx(ft[i + 1]) - fpx(v))}" height="6" fill="${i % 2 ? '#fff' : C.ink}" stroke="${C.ink}" stroke-width="1.1"/>`; });
   ft.forEach((v, i) => { out += `<text x="${f1(sx + fpx(v))}" y="${sy - 11}" font-size="13" text-anchor="middle" fill="${C.ink}">${v}${i === ft.length - 1 ? ' ft' : ''}</text>`; });

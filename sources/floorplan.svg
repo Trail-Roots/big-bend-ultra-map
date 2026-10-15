@@ -1,0 +1,1007 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg width="100%" height="100%" viewBox="0 0 4100 2900" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:affinity="https://www.affinity.studio/" style="fill-rule:evenodd;clip-rule:evenodd;">
+    <g transform="matrix(1,0,0,1,650,1650)">
+        <rect x="-10000" y="-10000" width="24000" height="24000" style="fill:none;"/>
+    </g>
+    <g id="terrain" transform="matrix(1,0,0,1,650,1650)">
+        <g transform="matrix(1,0,0,1,-96,53)">
+            <path d="M-48,626C-24,596 10,566 48,536C78,512 108,490 132,482C142,479 148,486 142,496C128,520 102,550 70,576C36,604 -2,630 -34,642C-50,646 -56,636 -48,626Z" style="fill:rgb(214,201,174);fill-rule:nonzero;stroke:rgb(189,169,136);stroke-width:1px;"/>
+        </g>
+        <g transform="matrix(1,0,0,1,-96,53)">
+            <path d="M-28,616C-2,590 30,564 62,538C86,518 108,502 122,496C116,514 92,540 62,564C32,588 0,610 -22,620C-32,624 -34,620 -28,616Z" style="fill:rgb(199,185,154);fill-opacity:0.75;fill-rule:nonzero;"/>
+        </g>
+    </g>
+    <g id="roads-and-asphalt" transform="matrix(1,0,0,1,650,1650)">
+        <path d="M-950,1226L0,476L182,333L215,286L602,0L1398,-614C1422,-634 1438,-678 1442,-726L1446,-768C1447.333,-780 1454,-790 1466,-798L1546,-858C1556.667,-866 1567.333,-866 1578,-858L1646,-806C1668,-790 1696,-796 1728,-814C1839.333,-876.667 1968.333,-931.333 2115,-978C2248.333,-1020.667 2388.333,-1046 2535,-1054C2728.333,-1062 2945,-1053.333 3185,-1028C3385,-1006.667 3576.667,-979 3760,-945L3752,-902C3569.333,-935.333 3378.667,-962.667 3180,-984C2950,-1008 2738.333,-1016.667 2545,-1010C2465,-1006 2409.333,-1000 2378,-992C2363.333,-988 2361.333,-976 2372,-956C2418,-868 2492,-758 2558,-652C2616,-558 2652,-442 2668,-308C2684,-174 2688,-18 2690,168C2692,354 2690,528 2688,662C2687.333,676.667 2695.333,686 2712,690L2845,712L3290,835L3740,975L3732,995L3284,855L2840,732L1654,534L1384,481L1112,419L921,376L895,496L883,597L845,592L638,557L622,554L641,432L639,355C637.667,337 631.333,324.667 620,318C576.667,312 518.333,309 445,309C386.59,310.217 332.622,313.655 283.096,319.314C278.357,319.856 273.658,320.418 269,321L0,533L-950,1283L-950,1226ZM663,0L1468,-620L1748,-774C1857.333,-834 1984,-887.333 2128,-934C2192.667,-954.667 2252.667,-970.667 2308,-982C2325.333,-985.333 2338.667,-978 2348,-960C2396,-868 2472,-754 2538,-646C2594,-554 2630,-438 2646,-304C2662,-170 2666,-15 2668,170C2670,352 2668,524 2666,656C2665.333,672 2656.667,678.667 2640,676L1658,514L1384,461L1115,398L906,349L638,308C594,300 554,285.333 518,264C490,242.667 470.333,220.667 459,198L462,148L663,0Z" style="fill:rgb(139,146,154);stroke:rgb(71,82,94);stroke-width:1.8px;stroke-linejoin:round;"/>
+    </g>
+    <g id="parcel-satellite-shrubs" transform="matrix(1,0,0,1,650,1650)">
+        <g id="tree-med" transform="matrix(1,0,0,1,34,543)">
+            <circle cx="0" cy="0" r="6.8" style="fill:rgb(79,119,59);stroke:rgb(37,56,27);stroke-width:1.3px;"/>
+            <circle cx="0" cy="0" r="3.1" style="fill:rgb(57,87,42);"/>
+        </g>
+        <g id="shrub-dot" transform="matrix(1,0,0,1,5,567)">
+            <circle cx="0" cy="0" r="3.6" style="fill:rgb(107,136,68);stroke:rgb(54,72,34);stroke-width:1px;"/>
+            <circle cx="0" cy="0" r="1.3" style="fill:rgb(82,107,50);"/>
+        </g>
+        <g id="shrub-dot1" affinity:id="shrub-dot" transform="matrix(1,0,0,1,104,543)">
+            <circle cx="0" cy="0" r="3.6" style="fill:rgb(107,136,68);stroke:rgb(54,72,34);stroke-width:1px;"/>
+            <circle cx="0" cy="0" r="1.3" style="fill:rgb(82,107,50);"/>
+        </g>
+        <g id="tree-med1" affinity:id="tree-med" transform="matrix(1,0,0,1,-21,589)">
+            <circle cx="0" cy="0" r="6.8" style="fill:rgb(79,119,59);stroke:rgb(37,56,27);stroke-width:1.3px;"/>
+            <circle cx="0" cy="0" r="3.1" style="fill:rgb(57,87,42);"/>
+        </g>
+        <g id="shrub-dot2" affinity:id="shrub-dot" transform="matrix(1,0,0,1,-46,610)">
+            <circle cx="0" cy="0" r="3.6" style="fill:rgb(107,136,68);stroke:rgb(54,72,34);stroke-width:1px;"/>
+            <circle cx="0" cy="0" r="1.3" style="fill:rgb(82,107,50);"/>
+        </g>
+        <g id="shrub-dot3" affinity:id="shrub-dot" transform="matrix(1,0,0,1,64,576)">
+            <circle cx="0" cy="0" r="3.6" style="fill:rgb(107,136,68);stroke:rgb(54,72,34);stroke-width:1px;"/>
+            <circle cx="0" cy="0" r="1.3" style="fill:rgb(82,107,50);"/>
+        </g>
+        <g id="tree-med2" affinity:id="tree-med" transform="matrix(1,0,0,1,-76,632)">
+            <circle cx="0" cy="0" r="6.8" style="fill:rgb(79,119,59);stroke:rgb(37,56,27);stroke-width:1.3px;"/>
+            <circle cx="0" cy="0" r="3.1" style="fill:rgb(57,87,42);"/>
+        </g>
+        <g id="shrub-dot4" affinity:id="shrub-dot" transform="matrix(1,0,0,1,-101,654)">
+            <circle cx="0" cy="0" r="3.6" style="fill:rgb(107,136,68);stroke:rgb(54,72,34);stroke-width:1px;"/>
+            <circle cx="0" cy="0" r="1.3" style="fill:rgb(82,107,50);"/>
+        </g>
+        <g id="shrub-dot5" affinity:id="shrub-dot" transform="matrix(1,0,0,1,-124,673)">
+            <circle cx="0" cy="0" r="3.6" style="fill:rgb(107,136,68);stroke:rgb(54,72,34);stroke-width:1px;"/>
+            <circle cx="0" cy="0" r="1.3" style="fill:rgb(82,107,50);"/>
+        </g>
+        <g transform="matrix(1,0,0,1,-46,16)">
+            <g id="shrub-dot6" affinity:id="shrub-dot" transform="matrix(1,0,0,1,-24,662)">
+                <circle cx="0" cy="0" r="3.6" style="fill:rgb(107,136,68);stroke:rgb(54,72,34);stroke-width:1px;"/>
+                <circle cx="0" cy="0" r="1.3" style="fill:rgb(82,107,50);"/>
+            </g>
+            <g id="shrub-dot7" affinity:id="shrub-dot" transform="matrix(1,0,0,1,-52,675)">
+                <circle cx="0" cy="0" r="3.6" style="fill:rgb(107,136,68);stroke:rgb(54,72,34);stroke-width:1px;"/>
+                <circle cx="0" cy="0" r="1.3" style="fill:rgb(82,107,50);"/>
+            </g>
+            <g id="shrub-dot8" affinity:id="shrub-dot" transform="matrix(1,0,0,1,-38,696)">
+                <circle cx="0" cy="0" r="3.6" style="fill:rgb(107,136,68);stroke:rgb(54,72,34);stroke-width:1px;"/>
+                <circle cx="0" cy="0" r="1.3" style="fill:rgb(82,107,50);"/>
+            </g>
+            <g id="shrub-dot9" affinity:id="shrub-dot" transform="matrix(1,0,0,1,-66,704)">
+                <circle cx="0" cy="0" r="3.6" style="fill:rgb(107,136,68);stroke:rgb(54,72,34);stroke-width:1px;"/>
+                <circle cx="0" cy="0" r="1.3" style="fill:rgb(82,107,50);"/>
+            </g>
+            <g id="shrub-dot10" affinity:id="shrub-dot" transform="matrix(1,0,0,1,-78,732)">
+                <circle cx="0" cy="0" r="3.6" style="fill:rgb(107,136,68);stroke:rgb(54,72,34);stroke-width:1px;"/>
+                <circle cx="0" cy="0" r="1.3" style="fill:rgb(82,107,50);"/>
+            </g>
+            <g id="shrub-dot11" affinity:id="shrub-dot" transform="matrix(1,0,0,1,-92,768)">
+                <circle cx="0" cy="0" r="3.6" style="fill:rgb(107,136,68);stroke:rgb(54,72,34);stroke-width:1px;"/>
+                <circle cx="0" cy="0" r="1.3" style="fill:rgb(82,107,50);"/>
+            </g>
+            <g id="shrub-dot12" affinity:id="shrub-dot" transform="matrix(1,0,0,1,-112,810)">
+                <circle cx="0" cy="0" r="3.6" style="fill:rgb(107,136,68);stroke:rgb(54,72,34);stroke-width:1px;"/>
+                <circle cx="0" cy="0" r="1.3" style="fill:rgb(82,107,50);"/>
+            </g>
+        </g>
+        <g id="tree-med3" affinity:id="tree-med" transform="matrix(1,0,0,1,416,381)">
+            <circle cx="0" cy="0" r="6.8" style="fill:rgb(79,119,59);stroke:rgb(37,56,27);stroke-width:1.3px;"/>
+            <circle cx="0" cy="0" r="3.1" style="fill:rgb(57,87,42);"/>
+        </g>
+        <g id="shrub-dot13" affinity:id="shrub-dot" transform="matrix(1,0,0,1,342,421)">
+            <circle cx="0" cy="0" r="3.6" style="fill:rgb(107,136,68);stroke:rgb(54,72,34);stroke-width:1px;"/>
+            <circle cx="0" cy="0" r="1.3" style="fill:rgb(82,107,50);"/>
+        </g>
+        <g id="shrub-dot14" affinity:id="shrub-dot" transform="matrix(1,0,0,1,416,461)">
+            <circle cx="0" cy="0" r="3.6" style="fill:rgb(107,136,68);stroke:rgb(54,72,34);stroke-width:1px;"/>
+            <circle cx="0" cy="0" r="1.3" style="fill:rgb(82,107,50);"/>
+        </g>
+        <g id="tree-med4" affinity:id="tree-med" transform="matrix(1,0,0,1,528,450)">
+            <circle cx="0" cy="0" r="6.8" style="fill:rgb(79,119,59);stroke:rgb(37,56,27);stroke-width:1.3px;"/>
+            <circle cx="0" cy="0" r="3.1" style="fill:rgb(57,87,42);"/>
+        </g>
+        <g id="shrub-dot15" affinity:id="shrub-dot" transform="matrix(1,0,0,1,491,490)">
+            <circle cx="0" cy="0" r="3.6" style="fill:rgb(107,136,68);stroke:rgb(54,72,34);stroke-width:1px;"/>
+            <circle cx="0" cy="0" r="1.3" style="fill:rgb(82,107,50);"/>
+        </g>
+        <g id="shrub-dot16" affinity:id="shrub-dot" transform="matrix(1,0,0,1,367,498)">
+            <circle cx="0" cy="0" r="3.6" style="fill:rgb(107,136,68);stroke:rgb(54,72,34);stroke-width:1px;"/>
+            <circle cx="0" cy="0" r="1.3" style="fill:rgb(82,107,50);"/>
+        </g>
+        <g id="shrub-dot17" affinity:id="shrub-dot" transform="matrix(1,0,0,1,263,533)">
+            <circle cx="0" cy="0" r="3.6" style="fill:rgb(107,136,68);stroke:rgb(54,72,34);stroke-width:1px;"/>
+            <circle cx="0" cy="0" r="1.3" style="fill:rgb(82,107,50);"/>
+        </g>
+        <g id="shrub-dot18" affinity:id="shrub-dot" transform="matrix(1,0,0,1,383,562)">
+            <circle cx="0" cy="0" r="3.6" style="fill:rgb(107,136,68);stroke:rgb(54,72,34);stroke-width:1px;"/>
+            <circle cx="0" cy="0" r="1.3" style="fill:rgb(82,107,50);"/>
+        </g>
+        <g id="tree-med5" affinity:id="tree-med" transform="matrix(1,0,0,1,300,597)">
+            <circle cx="0" cy="0" r="6.8" style="fill:rgb(79,119,59);stroke:rgb(37,56,27);stroke-width:1.3px;"/>
+            <circle cx="0" cy="0" r="3.1" style="fill:rgb(57,87,42);"/>
+        </g>
+        <g id="shrub-dot19" affinity:id="shrub-dot" transform="matrix(1,0,0,1,478,578)">
+            <circle cx="0" cy="0" r="3.6" style="fill:rgb(107,136,68);stroke:rgb(54,72,34);stroke-width:1px;"/>
+            <circle cx="0" cy="0" r="1.3" style="fill:rgb(82,107,50);"/>
+        </g>
+        <g id="shrub-dot20" affinity:id="shrub-dot" transform="matrix(1,0,0,1,531,185)">
+            <circle cx="0" cy="0" r="3.6" style="fill:rgb(107,136,68);stroke:rgb(54,72,34);stroke-width:1px;"/>
+            <circle cx="0" cy="0" r="1.3" style="fill:rgb(82,107,50);"/>
+        </g>
+        <g id="shrub-dot21" affinity:id="shrub-dot" transform="matrix(1,0,0,1,684,284)">
+            <circle cx="0" cy="0" r="3.6" style="fill:rgb(107,136,68);stroke:rgb(54,72,34);stroke-width:1px;"/>
+            <circle cx="0" cy="0" r="1.3" style="fill:rgb(82,107,50);"/>
+        </g>
+        <g id="shrub-dot22" affinity:id="shrub-dot" transform="matrix(1,0,0,1,748,277)">
+            <circle cx="0" cy="0" r="3.6" style="fill:rgb(107,136,68);stroke:rgb(54,72,34);stroke-width:1px;"/>
+            <circle cx="0" cy="0" r="1.3" style="fill:rgb(82,107,50);"/>
+        </g>
+        <g id="shrub-dot23" affinity:id="shrub-dot" transform="matrix(1,0,0,1,835,266)">
+            <circle cx="0" cy="0" r="3.6" style="fill:rgb(107,136,68);stroke:rgb(54,72,34);stroke-width:1px;"/>
+            <circle cx="0" cy="0" r="1.3" style="fill:rgb(82,107,50);"/>
+        </g>
+        <g id="tree-med6" affinity:id="tree-med" transform="matrix(1,0,0,1,864,258)">
+            <circle cx="0" cy="0" r="6.8" style="fill:rgb(79,119,59);stroke:rgb(37,56,27);stroke-width:1.3px;"/>
+            <circle cx="0" cy="0" r="3.1" style="fill:rgb(57,87,42);"/>
+        </g>
+        <g id="tree-med7" affinity:id="tree-med" transform="matrix(1,0,0,1,1051,163)">
+            <circle cx="0" cy="0" r="6.8" style="fill:rgb(79,119,59);stroke:rgb(37,56,27);stroke-width:1.3px;"/>
+            <circle cx="0" cy="0" r="3.1" style="fill:rgb(57,87,42);"/>
+        </g>
+        <g id="shrub-dot24" affinity:id="shrub-dot" transform="matrix(1,0,0,1,1002,47)">
+            <circle cx="0" cy="0" r="3.6" style="fill:rgb(107,136,68);stroke:rgb(54,72,34);stroke-width:1px;"/>
+            <circle cx="0" cy="0" r="1.3" style="fill:rgb(82,107,50);"/>
+        </g>
+        <g id="shrub-dot25" affinity:id="shrub-dot" transform="matrix(1,0,0,1,1028,5)">
+            <circle cx="0" cy="0" r="3.6" style="fill:rgb(107,136,68);stroke:rgb(54,72,34);stroke-width:1px;"/>
+            <circle cx="0" cy="0" r="1.3" style="fill:rgb(82,107,50);"/>
+        </g>
+        <g id="shrub-dot26" affinity:id="shrub-dot" transform="matrix(1,0,0,1,1088,-63)">
+            <circle cx="0" cy="0" r="3.6" style="fill:rgb(107,136,68);stroke:rgb(54,72,34);stroke-width:1px;"/>
+            <circle cx="0" cy="0" r="1.3" style="fill:rgb(82,107,50);"/>
+        </g>
+        <g id="shrub-dot27" affinity:id="shrub-dot" transform="matrix(1,0,0,1,1575,-50)">
+            <circle cx="0" cy="0" r="3.6" style="fill:rgb(107,136,68);stroke:rgb(54,72,34);stroke-width:1px;"/>
+            <circle cx="0" cy="0" r="1.3" style="fill:rgb(82,107,50);"/>
+        </g>
+        <g id="shrub-dot28" affinity:id="shrub-dot" transform="matrix(1,0,0,1,1586,-141)">
+            <circle cx="0" cy="0" r="3.6" style="fill:rgb(107,136,68);stroke:rgb(54,72,34);stroke-width:1px;"/>
+            <circle cx="0" cy="0" r="1.3" style="fill:rgb(82,107,50);"/>
+        </g>
+        <g id="tree-med8" affinity:id="tree-med" transform="matrix(1,0,0,1,1630,-628)">
+            <circle cx="0" cy="0" r="6.8" style="fill:rgb(79,119,59);stroke:rgb(37,56,27);stroke-width:1.3px;"/>
+            <circle cx="0" cy="0" r="3.1" style="fill:rgb(57,87,42);"/>
+        </g>
+        <g id="tree-med9" affinity:id="tree-med" transform="matrix(1,0,0,1,1670,-562)">
+            <circle cx="0" cy="0" r="6.8" style="fill:rgb(79,119,59);stroke:rgb(37,56,27);stroke-width:1.3px;"/>
+            <circle cx="0" cy="0" r="3.1" style="fill:rgb(57,87,42);"/>
+        </g>
+        <g id="shrub-dot29" affinity:id="shrub-dot" transform="matrix(1,0,0,1,1778,-552)">
+            <circle cx="0" cy="0" r="3.6" style="fill:rgb(107,136,68);stroke:rgb(54,72,34);stroke-width:1px;"/>
+            <circle cx="0" cy="0" r="1.3" style="fill:rgb(82,107,50);"/>
+        </g>
+        <g id="shrub-dot30" affinity:id="shrub-dot" transform="matrix(1,0,0,1,1646,-502)">
+            <circle cx="0" cy="0" r="3.6" style="fill:rgb(107,136,68);stroke:rgb(54,72,34);stroke-width:1px;"/>
+            <circle cx="0" cy="0" r="1.3" style="fill:rgb(82,107,50);"/>
+        </g>
+        <g id="tree-med10" affinity:id="tree-med" transform="matrix(1,0,0,1,1689,-404)">
+            <circle cx="0" cy="0" r="6.8" style="fill:rgb(79,119,59);stroke:rgb(37,56,27);stroke-width:1.3px;"/>
+            <circle cx="0" cy="0" r="3.1" style="fill:rgb(57,87,42);"/>
+        </g>
+        <g id="tree-med11" affinity:id="tree-med" transform="matrix(1,0,0,1,1714,-397)">
+            <circle cx="0" cy="0" r="6.8" style="fill:rgb(79,119,59);stroke:rgb(37,56,27);stroke-width:1.3px;"/>
+            <circle cx="0" cy="0" r="3.1" style="fill:rgb(57,87,42);"/>
+        </g>
+        <g id="shrub-dot31" affinity:id="shrub-dot" transform="matrix(1,0,0,1,1696,-379)">
+            <circle cx="0" cy="0" r="3.6" style="fill:rgb(107,136,68);stroke:rgb(54,72,34);stroke-width:1px;"/>
+            <circle cx="0" cy="0" r="1.3" style="fill:rgb(82,107,50);"/>
+        </g>
+        <g id="tree-med12" affinity:id="tree-med" transform="matrix(1,0,0,1,1868,-240)">
+            <circle cx="0" cy="0" r="6.8" style="fill:rgb(79,119,59);stroke:rgb(37,56,27);stroke-width:1.3px;"/>
+            <circle cx="0" cy="0" r="3.1" style="fill:rgb(57,87,42);"/>
+        </g>
+        <g id="shrub-dot32" affinity:id="shrub-dot" transform="matrix(1,0,0,1,1886,-214)">
+            <circle cx="0" cy="0" r="3.6" style="fill:rgb(107,136,68);stroke:rgb(54,72,34);stroke-width:1px;"/>
+            <circle cx="0" cy="0" r="1.3" style="fill:rgb(82,107,50);"/>
+        </g>
+        <g id="tree-med13" affinity:id="tree-med" transform="matrix(-0.569688,-0.821861,0.821861,-0.569688,1318.001293,-712.487084)">
+            <circle cx="0" cy="0" r="6.8" style="fill:rgb(79,119,59);stroke:rgb(37,56,27);stroke-width:1.3px;"/>
+            <circle cx="0" cy="0" r="3.1" style="fill:rgb(57,87,42);"/>
+        </g>
+        <g id="shrub-dot33" affinity:id="shrub-dot" transform="matrix(-0.569688,-0.821861,0.821861,-0.569688,1264.693551,-806.944931)">
+            <circle cx="0" cy="0" r="3.6" style="fill:rgb(107,136,68);stroke:rgb(54,72,34);stroke-width:1px;"/>
+            <circle cx="0" cy="0" r="1.3" style="fill:rgb(82,107,50);"/>
+        </g>
+        <g id="shrub-dot34" affinity:id="shrub-dot" transform="matrix(-0.569688,-0.821861,0.821861,-0.569688,1380.98546,-726.943731)">
+            <circle cx="0" cy="0" r="3.6" style="fill:rgb(107,136,68);stroke:rgb(54,72,34);stroke-width:1px;"/>
+            <circle cx="0" cy="0" r="1.3" style="fill:rgb(82,107,50);"/>
+        </g>
+        <g id="tree-med14" affinity:id="tree-med" transform="matrix(-0.569688,-0.821861,0.821861,-0.569688,1437.031213,-818.113208)">
+            <circle cx="0" cy="0" r="6.8" style="fill:rgb(79,119,59);stroke:rgb(37,56,27);stroke-width:1.3px;"/>
+            <circle cx="0" cy="0" r="3.1" style="fill:rgb(57,87,42);"/>
+        </g>
+        <g id="tree-med15" affinity:id="tree-med" transform="matrix(-0.569688,-0.821861,0.821861,-0.569688,1428.542028,-842.647546)">
+            <circle cx="0" cy="0" r="6.8" style="fill:rgb(79,119,59);stroke:rgb(37,56,27);stroke-width:1.3px;"/>
+            <circle cx="0" cy="0" r="3.1" style="fill:rgb(57,87,42);"/>
+        </g>
+        <g id="shrub-dot35" affinity:id="shrub-dot" transform="matrix(-0.569688,-0.821861,0.821861,-0.569688,1453.589913,-838.108444)">
+            <circle cx="0" cy="0" r="3.6" style="fill:rgb(107,136,68);stroke:rgb(54,72,34);stroke-width:1px;"/>
+            <circle cx="0" cy="0" r="1.3" style="fill:rgb(82,107,50);"/>
+        </g>
+        <g id="tree-med16" affinity:id="tree-med" transform="matrix(-0.569688,-0.821861,0.821861,-0.569688,1469.842151,-1058.655184)">
+            <circle cx="0" cy="0" r="6.8" style="fill:rgb(79,119,59);stroke:rgb(37,56,27);stroke-width:1.3px;"/>
+            <circle cx="0" cy="0" r="3.1" style="fill:rgb(57,87,42);"/>
+        </g>
+        <g id="shrub-dot36" affinity:id="shrub-dot" transform="matrix(-0.569688,-0.821861,0.821861,-0.569688,1480.95614,-1088.260577)">
+            <circle cx="0" cy="0" r="3.6" style="fill:rgb(107,136,68);stroke:rgb(54,72,34);stroke-width:1px;"/>
+            <circle cx="0" cy="0" r="1.3" style="fill:rgb(82,107,50);"/>
+        </g>
+    </g>
+    <g id="barton-warnock-original-floorplan" transform="matrix(1,0,0,1,650,1650)">
+        <g id="entrance-splitter-island">
+            <path d="M439.2,225.8C443.4,222.6 447.8,223.8 451,228.4C462.2,245.2 476.8,263.6 494.8,278.4C499.4,282.2 497.6,286.8 490.4,286.5C453.2,284.6 416.8,283.8 381.2,283.2C374.2,283 373,278.4 378.8,273.6C399,257.2 419.2,241.4 439.2,225.8Z" style="fill:rgb(233,238,244);fill-rule:nonzero;stroke:rgb(90,101,114);stroke-width:1.2px;stroke-linejoin:round;"/>
+            <path d="M440.4,230.2C443.2,228 446.2,228.8 448.5,232C459,247.4 472.4,264 488.6,277.4C491.8,280 490.4,283 485.6,282.8C451.8,281.2 418.4,280.4 385.6,279.8C380.4,279.6 379.8,276.6 383.8,273.2C402.8,258.4 421.6,244.2 440.4,230.2Z" style="fill:rgb(228,218,196);fill-rule:nonzero;stroke:rgb(123,134,148);stroke-width:0.9px;stroke-linejoin:round;"/>
+            <g id="shrub-dot37" affinity:id="shrub-dot" transform="matrix(1,0,0,1,425,272)">
+                <circle cx="0" cy="0" r="3.6" style="fill:rgb(107,136,68);stroke:rgb(54,72,34);stroke-width:1px;"/>
+                <circle cx="0" cy="0" r="1.3" style="fill:rgb(82,107,50);"/>
+            </g>
+            <g id="shrub-dot38" affinity:id="shrub-dot" transform="matrix(1,0,0,1,470,274)">
+                <circle cx="0" cy="0" r="3.6" style="fill:rgb(107,136,68);stroke:rgb(54,72,34);stroke-width:1px;"/>
+                <circle cx="0" cy="0" r="1.3" style="fill:rgb(82,107,50);"/>
+            </g>
+        </g>
+        <g id="north-trees">
+            <g id="tree-med17" affinity:id="tree-med" transform="matrix(1,0,0,1,682,134)">
+                <circle cx="0" cy="0" r="6.8" style="fill:rgb(79,119,59);stroke:rgb(37,56,27);stroke-width:1.3px;"/>
+                <circle cx="0" cy="0" r="3.1" style="fill:rgb(57,87,42);"/>
+            </g>
+            <g id="tree-med18" affinity:id="tree-med" transform="matrix(1,0,0,1,552,206)">
+                <circle cx="0" cy="0" r="6.8" style="fill:rgb(79,119,59);stroke:rgb(37,56,27);stroke-width:1.3px;"/>
+                <circle cx="0" cy="0" r="3.1" style="fill:rgb(57,87,42);"/>
+            </g>
+            <g id="tree-med19" affinity:id="tree-med" transform="matrix(1,0,0,1,634,201)">
+                <circle cx="0" cy="0" r="6.8" style="fill:rgb(79,119,59);stroke:rgb(37,56,27);stroke-width:1.3px;"/>
+                <circle cx="0" cy="0" r="3.1" style="fill:rgb(57,87,42);"/>
+            </g>
+            <g id="tree-med20" affinity:id="tree-med" transform="matrix(1,0,0,1,658,290)">
+                <circle cx="0" cy="0" r="6.8" style="fill:rgb(79,119,59);stroke:rgb(37,56,27);stroke-width:1.3px;"/>
+                <circle cx="0" cy="0" r="3.1" style="fill:rgb(57,87,42);"/>
+            </g>
+        </g>
+        <g id="parking-islands">
+            <g id="long-north-island">
+                <path d="M727.5,336.5C758,342 848,359 881.5,365.8C888.5,367.2 892.5,373.2 891,379.5C889.5,385.8 883.5,389.2 876.5,387.8C843,381 753,364 723,358.2C716.2,356.8 712.2,350.8 713.6,344.5C715,338.2 720.8,335.2 727.5,336.5Z" style="fill:rgb(233,238,244);fill-rule:nonzero;stroke:rgb(90,101,114);stroke-width:1.2px;stroke-linejoin:round;"/>
+                <path d="M727,339.7C757,345.2 847,362.2 880.2,368.8C885.4,369.8 888.4,374.2 887.3,378.8C886.2,383.4 881.8,385.8 876.8,384.8C843.5,378.2 753.5,361.2 723.8,355.2C718.8,354.2 715.8,349.8 716.8,345.2C717.8,340.6 722.2,338.7 727,339.7Z" style="fill:rgb(228,218,196);fill-rule:nonzero;stroke:rgb(123,134,148);stroke-width:0.9px;stroke-linejoin:round;"/>
+                <g id="shrub-dot39" affinity:id="shrub-dot" transform="matrix(1,0,0,1,734,348)">
+                    <circle cx="0" cy="0" r="3.6" style="fill:rgb(107,136,68);stroke:rgb(54,72,34);stroke-width:1px;"/>
+                    <circle cx="0" cy="0" r="1.3" style="fill:rgb(82,107,50);"/>
+                </g>
+                <g id="shrub-dot40" affinity:id="shrub-dot" transform="matrix(1,0,0,1,766,354)">
+                    <circle cx="0" cy="0" r="3.6" style="fill:rgb(107,136,68);stroke:rgb(54,72,34);stroke-width:1px;"/>
+                    <circle cx="0" cy="0" r="1.3" style="fill:rgb(82,107,50);"/>
+                </g>
+                <g id="shrub-dot41" affinity:id="shrub-dot" transform="matrix(1,0,0,1,798,360)">
+                    <circle cx="0" cy="0" r="3.6" style="fill:rgb(107,136,68);stroke:rgb(54,72,34);stroke-width:1px;"/>
+                    <circle cx="0" cy="0" r="1.3" style="fill:rgb(82,107,50);"/>
+                </g>
+                <g id="shrub-dot42" affinity:id="shrub-dot" transform="matrix(1,0,0,1,831,367)">
+                    <circle cx="0" cy="0" r="3.6" style="fill:rgb(107,136,68);stroke:rgb(54,72,34);stroke-width:1px;"/>
+                    <circle cx="0" cy="0" r="1.3" style="fill:rgb(82,107,50);"/>
+                </g>
+                <g id="shrub-dot43" affinity:id="shrub-dot" transform="matrix(1,0,0,1,869,374)">
+                    <circle cx="0" cy="0" r="3.6" style="fill:rgb(107,136,68);stroke:rgb(54,72,34);stroke-width:1px;"/>
+                    <circle cx="0" cy="0" r="1.3" style="fill:rgb(82,107,50);"/>
+                </g>
+            </g>
+            <g id="middle-left-island">
+                <path d="M695.2,403.5C700.2,403 704.8,411.5 706.2,424.8C707.6,438.2 705.2,448.2 700.2,448.8C695.2,449.4 691.2,439.8 689.8,426.5C688.4,413.2 690.4,404 695.2,403.5Z" style="fill:rgb(233,238,244);fill-rule:nonzero;stroke:rgb(90,101,114);stroke-width:1.2px;stroke-linejoin:round;"/>
+                <path d="M695.5,406.5C699,406.1 702.4,413.5 703.5,425C704.6,436.5 702.8,445.2 699.8,445.6C696.4,446 693.6,437.8 692.5,426.2C691.4,414.6 692.2,406.9 695.5,406.5Z" style="fill:rgb(228,218,196);fill-rule:nonzero;stroke:rgb(123,134,148);stroke-width:0.9px;stroke-linejoin:round;"/>
+                <g id="shrub-dot44" affinity:id="shrub-dot" transform="matrix(1,0,0,1,697,417.5)">
+                    <circle cx="0" cy="0" r="3.6" style="fill:rgb(107,136,68);stroke:rgb(54,72,34);stroke-width:1px;"/>
+                    <circle cx="0" cy="0" r="1.3" style="fill:rgb(82,107,50);"/>
+                </g>
+                <g id="shrub-dot45" affinity:id="shrub-dot" transform="matrix(1,0,0,1,699,434.5)">
+                    <circle cx="0" cy="0" r="3.6" style="fill:rgb(107,136,68);stroke:rgb(54,72,34);stroke-width:1px;"/>
+                    <circle cx="0" cy="0" r="1.3" style="fill:rgb(82,107,50);"/>
+                </g>
+            </g>
+            <g id="middle-right-island">
+                <path d="M840.2,428C845.2,427.4 849.8,436 851.2,448.2C852.6,460.4 850.4,469.8 845.5,470.4C840.6,471 836.4,462 835,449.8C833.6,437.6 835.4,428.6 840.2,428Z" style="fill:rgb(233,238,244);fill-rule:nonzero;stroke:rgb(90,101,114);stroke-width:1.2px;stroke-linejoin:round;"/>
+                <path d="M840.5,431C844,430.6 847.4,438 848.5,448.5C849.6,459 847.8,466.8 845,467.2C841.8,467.6 838.8,460 837.7,449.5C836.6,439 837.2,431.4 840.5,431Z" style="fill:rgb(228,218,196);fill-rule:nonzero;stroke:rgb(123,134,148);stroke-width:0.9px;stroke-linejoin:round;"/>
+                <g id="shrub-dot46" affinity:id="shrub-dot" transform="matrix(1,0,0,1,842,441.5)">
+                    <circle cx="0" cy="0" r="3.6" style="fill:rgb(107,136,68);stroke:rgb(54,72,34);stroke-width:1px;"/>
+                    <circle cx="0" cy="0" r="1.3" style="fill:rgb(82,107,50);"/>
+                </g>
+                <g id="shrub-dot47" affinity:id="shrub-dot" transform="matrix(1,0,0,1,844,456.5)">
+                    <circle cx="0" cy="0" r="3.6" style="fill:rgb(107,136,68);stroke:rgb(54,72,34);stroke-width:1px;"/>
+                    <circle cx="0" cy="0" r="1.3" style="fill:rgb(82,107,50);"/>
+                </g>
+            </g>
+        </g>
+        <g id="center-parking-striping">
+            <path d="M723,406L730,451" style="fill:none;fill-rule:nonzero;stroke:white;stroke-width:1.6px;stroke-linecap:round;"/>
+            <path d="M745,410L752,455" style="fill:none;fill-rule:nonzero;stroke:white;stroke-width:1.6px;stroke-linecap:round;"/>
+            <path d="M767,414L774,459" style="fill:none;fill-rule:nonzero;stroke:white;stroke-width:1.6px;stroke-linecap:round;"/>
+            <path d="M789,418L796,463" style="fill:none;fill-rule:nonzero;stroke:white;stroke-width:1.6px;stroke-linecap:round;"/>
+            <path d="M811,422L818,467" style="fill:none;fill-rule:nonzero;stroke:white;stroke-width:1.6px;stroke-linecap:round;"/>
+        </g>
+        <g id="main-building-assembly" transform="matrix(0.986429,0.164187,-0.164187,0.986429,725.5,667)">
+            <g id="front-parking-stalls">
+                <g>
+                    <path d="M-104,-142.5L-104,-170" style="fill:none;fill-rule:nonzero;stroke:white;stroke-width:1.6px;stroke-linecap:round;"/>
+                    <path d="M-85.5,-142.5L-85.5,-170" style="fill:none;fill-rule:nonzero;stroke:white;stroke-width:1.6px;stroke-linecap:round;"/>
+                    <path d="M-67,-142.5L-67,-170" style="fill:none;fill-rule:nonzero;stroke:white;stroke-width:1.6px;stroke-linecap:round;"/>
+                    <path d="M-48.5,-142.5L-48.5,-170" style="fill:none;fill-rule:nonzero;stroke:white;stroke-width:1.6px;stroke-linecap:round;"/>
+                    <path d="M-30,-142.5L-30,-170" style="fill:none;fill-rule:nonzero;stroke:white;stroke-width:1.6px;stroke-linecap:round;"/>
+                </g>
+                <g>
+                    <path d="M-101,-145.5L-90,-145.5" style="fill:none;fill-rule:nonzero;stroke:rgb(234,179,8);stroke-width:2.6px;stroke-linecap:round;"/>
+                    <path d="M-82.5,-145.5L-71.5,-145.5" style="fill:none;fill-rule:nonzero;stroke:rgb(234,179,8);stroke-width:2.6px;stroke-linecap:round;"/>
+                    <path d="M-64,-145.5L-53,-145.5" style="fill:none;fill-rule:nonzero;stroke:rgb(234,179,8);stroke-width:2.6px;stroke-linecap:round;"/>
+                    <path d="M-45.5,-145.5L-34.5,-145.5" style="fill:none;fill-rule:nonzero;stroke:rgb(234,179,8);stroke-width:2.6px;stroke-linecap:round;"/>
+                    <path d="M-27,-145.5L-20,-145.5" style="fill:none;fill-rule:nonzero;stroke:rgb(234,179,8);stroke-width:2.6px;stroke-linecap:round;"/>
+                </g>
+                <g>
+                    <path d="M44,-142.5L44,-170" style="fill:none;fill-rule:nonzero;stroke:white;stroke-width:1.6px;stroke-linecap:round;"/>
+                    <path d="M64,-142.5L64,-170" style="fill:none;fill-rule:nonzero;stroke:white;stroke-width:1.6px;stroke-linecap:round;"/>
+                    <path d="M84,-142.5L84,-170" style="fill:none;fill-rule:nonzero;stroke:white;stroke-width:1.6px;stroke-linecap:round;"/>
+                    <path d="M104,-142.5L104,-170" style="fill:none;fill-rule:nonzero;stroke:white;stroke-width:1.6px;stroke-linecap:round;"/>
+                </g>
+                <g>
+                    <path d="M27,-145.5L39,-145.5" style="fill:none;fill-rule:nonzero;stroke:rgb(234,179,8);stroke-width:2.6px;stroke-linecap:round;"/>
+                    <path d="M48,-145.5L59,-145.5" style="fill:none;fill-rule:nonzero;stroke:rgb(234,179,8);stroke-width:2.6px;stroke-linecap:round;"/>
+                    <path d="M68,-145.5L79,-145.5" style="fill:none;fill-rule:nonzero;stroke:rgb(234,179,8);stroke-width:2.6px;stroke-linecap:round;"/>
+                    <path d="M88,-145.5L100,-145.5" style="fill:none;fill-rule:nonzero;stroke:rgb(234,179,8);stroke-width:2.6px;stroke-linecap:round;"/>
+                </g>
+            </g>
+            <path d="M-105,-142.5L-18,-142.5C-18,-153.472 -8.972,-162.5 2,-162.5C12.972,-162.5 22,-153.472 22,-142.5L105,-142.5L105,-108.5L-105,-108.5L-105,-142.5Z" style="fill:rgb(230,223,209);fill-rule:nonzero;stroke:rgb(90,98,106);stroke-width:1.2px;"/>
+            <path d="M9.1,-148.5C10.149,-148.5 11,-147.649 11,-146.6C11,-145.551 10.149,-144.7 9.1,-144.7L-5.1,-144.7C-6.149,-144.7 -7,-145.551 -7,-146.6C-7,-147.649 -6.149,-148.5 -5.1,-148.5L9.1,-148.5Z" style="fill:rgb(107,100,88);stroke:rgb(62,58,53);stroke-width:0.9px;"/>
+            <rect x="-105" y="-135.5" width="85" height="19" style="fill:rgb(216,203,176);stroke:rgb(124,116,103);stroke-width:1px;"/>
+            <g id="shrub-dot48" affinity:id="shrub-dot" transform="matrix(1,0,0,1,-88,-126)">
+                <circle cx="0" cy="0" r="3.6" style="fill:rgb(107,136,68);stroke:rgb(54,72,34);stroke-width:1px;"/>
+                <circle cx="0" cy="0" r="1.3" style="fill:rgb(82,107,50);"/>
+            </g>
+            <g id="shrub-dot49" affinity:id="shrub-dot" transform="matrix(1,0,0,1,-67,-126)">
+                <circle cx="0" cy="0" r="3.6" style="fill:rgb(107,136,68);stroke:rgb(54,72,34);stroke-width:1px;"/>
+                <circle cx="0" cy="0" r="1.3" style="fill:rgb(82,107,50);"/>
+            </g>
+            <g id="shrub-dot50" affinity:id="shrub-dot" transform="matrix(1,0,0,1,-46,-126)">
+                <circle cx="0" cy="0" r="3.6" style="fill:rgb(107,136,68);stroke:rgb(54,72,34);stroke-width:1px;"/>
+                <circle cx="0" cy="0" r="1.3" style="fill:rgb(82,107,50);"/>
+            </g>
+            <g id="shrub-dot51" affinity:id="shrub-dot" transform="matrix(1,0,0,1,-29,-126)">
+                <circle cx="0" cy="0" r="3.6" style="fill:rgb(107,136,68);stroke:rgb(54,72,34);stroke-width:1px;"/>
+                <circle cx="0" cy="0" r="1.3" style="fill:rgb(82,107,50);"/>
+            </g>
+            <rect x="24" y="-135.5" width="81" height="19" style="fill:rgb(216,203,176);stroke:rgb(124,116,103);stroke-width:1px;"/>
+            <g id="shrub-dot52" affinity:id="shrub-dot" transform="matrix(1,0,0,1,42,-126)">
+                <circle cx="0" cy="0" r="3.6" style="fill:rgb(107,136,68);stroke:rgb(54,72,34);stroke-width:1px;"/>
+                <circle cx="0" cy="0" r="1.3" style="fill:rgb(82,107,50);"/>
+            </g>
+            <g id="shrub-dot53" affinity:id="shrub-dot" transform="matrix(1,0,0,1,65,-126)">
+                <circle cx="0" cy="0" r="3.6" style="fill:rgb(107,136,68);stroke:rgb(54,72,34);stroke-width:1px;"/>
+                <circle cx="0" cy="0" r="1.3" style="fill:rgb(82,107,50);"/>
+            </g>
+            <g id="shrub-dot54" affinity:id="shrub-dot" transform="matrix(1,0,0,1,88,-126)">
+                <circle cx="0" cy="0" r="3.6" style="fill:rgb(107,136,68);stroke:rgb(54,72,34);stroke-width:1px;"/>
+                <circle cx="0" cy="0" r="1.3" style="fill:rgb(82,107,50);"/>
+            </g>
+            <rect x="-105" y="-108.5" width="210" height="15" style="fill:rgb(145,61,34);stroke:rgb(62,74,89);stroke-width:1.4px;"/>
+            <rect x="105" y="62" width="13" height="26" style="fill:rgb(245,248,252);stroke:rgb(62,74,89);stroke-width:1.4px;"/>
+            <path d="M111.5,62L111.5,88" style="fill:none;fill-rule:nonzero;stroke:rgb(176,190,205);stroke-width:0.9px;"/>
+            <rect x="-105" y="-93.5" width="210" height="187" style="fill:rgb(248,250,252);stroke:rgb(62,74,89);stroke-width:1.6px;"/>
+            <path d="M105,-93.5L105,93.5L83,73L83,-73L105,-93.5Z" style="fill:rgb(239,244,249);fill-rule:nonzero;"/>
+            <path d="M-105,93.5L105,93.5L83,73L-83,73L-105,93.5Z" style="fill:rgb(235,241,247);fill-rule:nonzero;"/>
+            <path d="M-83,-73L83,-73L68,-60L-68,-60L-83,-73Z" style="fill:rgb(239,244,249);fill-rule:nonzero;"/>
+            <path d="M-83,-73L-83,73L-68,60L-68,-60L-83,-73Z" style="fill:rgb(235,241,247);fill-rule:nonzero;"/>
+            <rect x="-83" y="-73" width="166" height="146" style="fill:none;stroke:rgb(176,190,205);stroke-width:1px;"/>
+            <path d="M-105,-93.5L-83,-73" style="fill:none;fill-rule:nonzero;stroke:rgb(176,190,205);stroke-width:1px;"/>
+            <path d="M105,-93.5L83,-73" style="fill:none;fill-rule:nonzero;stroke:rgb(176,190,205);stroke-width:1px;"/>
+            <path d="M-105,93.5L-83,73" style="fill:none;fill-rule:nonzero;stroke:rgb(176,190,205);stroke-width:1px;"/>
+            <path d="M105,93.5L83,73" style="fill:none;fill-rule:nonzero;stroke:rgb(176,190,205);stroke-width:1px;"/>
+            <path d="M-83,-73L-68,-60" style="fill:none;fill-rule:nonzero;stroke:rgb(176,190,205);stroke-width:1px;"/>
+            <path d="M83,-73L68,-60" style="fill:none;fill-rule:nonzero;stroke:rgb(176,190,205);stroke-width:1px;"/>
+            <path d="M-83,73L-68,60" style="fill:none;fill-rule:nonzero;stroke:rgb(176,190,205);stroke-width:1px;"/>
+            <path d="M83,73L68,60" style="fill:none;fill-rule:nonzero;stroke:rgb(176,190,205);stroke-width:1px;"/>
+            <rect x="-68" y="-60" width="136" height="120" style="fill:rgb(197,206,217);stroke:rgb(62,74,89);stroke-width:1.4px;"/>
+            <rect x="-60.5" y="-53" width="121" height="106" style="fill:none;stroke:rgb(139,153,168);stroke-width:0.9px;"/>
+            <path d="M-68,-60L-53,-46" style="fill:none;fill-rule:nonzero;stroke:rgb(90,103,120);stroke-width:1.1px;"/>
+            <path d="M68,-60L53,-46" style="fill:none;fill-rule:nonzero;stroke:rgb(90,103,120);stroke-width:1.1px;"/>
+            <path d="M-68,60L-53,46" style="fill:none;fill-rule:nonzero;stroke:rgb(90,103,120);stroke-width:1.1px;"/>
+            <path d="M68,60L53,46" style="fill:none;fill-rule:nonzero;stroke:rgb(90,103,120);stroke-width:1.1px;"/>
+            <rect x="-53" y="-46" width="106" height="92" style="fill:rgb(220,208,182);stroke:rgb(62,74,89);stroke-width:1.4px;"/>
+            <g id="courtyard-contoured-pathways">
+                <path d="M7.5,-46L23.5,-46C19.5,-32 14.5,-19.5 14,-11C18.5,-6.5 21,-0.5 20.2,6C19.4,11.5 16.5,16 13.8,19.8C19.5,28.5 26.8,37.5 34,46L17.5,46C11.8,37.2 6.5,28.2 1.2,21.5C-4.8,22.8 -11.2,20.5 -15.5,15.2C-17.2,13.2 -18.2,10.8 -19,8.5C-30,12.2 -41.5,17.2 -53,23L-53,10.2C-41.2,6.5 -29.2,3.2 -18.8,-0.8C-17.5,-8.5 -11.5,-14.8 -3.5,-16.2C0.2,-16.8 3.2,-15.8 5.2,-14.2C6.8,-23.5 7.2,-34.8 7.5,-46ZM0.8,-5.4C-3.8,-5.4 -7.5,-1.7 -7.5,2.8C-7.5,7.4 -3.8,11 0.8,11C5.4,11 9,7.4 9,2.8C9,-1.7 5.4,-5.4 0.8,-5.4Z" style="fill:rgb(236,229,213);stroke:rgb(181,170,150);stroke-width:0.8px;stroke-linejoin:round;"/>
+                <circle cx="0.8" cy="2.8" r="3.8" style="fill:rgb(199,186,161);stroke:rgb(124,114,100);stroke-width:0.8px;"/>
+                <circle cx="0.8" cy="2.8" r="1.5" style="fill:rgb(82,107,50);"/>
+            </g>
+            <rect x="-53" y="-46" width="106" height="92" style="fill:none;stroke:rgb(62,74,89);stroke-width:1.4px;"/>
+            <g id="shrub-dot55" affinity:id="shrub-dot" transform="matrix(1,0,0,1,-33,-31)">
+                <circle cx="0" cy="0" r="3.6" style="fill:rgb(107,136,68);stroke:rgb(54,72,34);stroke-width:1px;"/>
+                <circle cx="0" cy="0" r="1.3" style="fill:rgb(82,107,50);"/>
+            </g>
+            <g id="shrub-dot56" affinity:id="shrub-dot" transform="matrix(1,0,0,1,-14,-26)">
+                <circle cx="0" cy="0" r="3.6" style="fill:rgb(107,136,68);stroke:rgb(54,72,34);stroke-width:1px;"/>
+                <circle cx="0" cy="0" r="1.3" style="fill:rgb(82,107,50);"/>
+            </g>
+            <g id="shrub-dot57" affinity:id="shrub-dot" transform="matrix(1,0,0,1,27,-19)">
+                <circle cx="0" cy="0" r="3.6" style="fill:rgb(107,136,68);stroke:rgb(54,72,34);stroke-width:1px;"/>
+                <circle cx="0" cy="0" r="1.3" style="fill:rgb(82,107,50);"/>
+            </g>
+            <g id="shrub-dot58" affinity:id="shrub-dot" transform="matrix(1,0,0,1,-31,2)">
+                <circle cx="0" cy="0" r="3.6" style="fill:rgb(107,136,68);stroke:rgb(54,72,34);stroke-width:1px;"/>
+                <circle cx="0" cy="0" r="1.3" style="fill:rgb(82,107,50);"/>
+            </g>
+            <g id="shrub-dot59" affinity:id="shrub-dot" transform="matrix(1,0,0,1,-17,27)">
+                <circle cx="0" cy="0" r="3.6" style="fill:rgb(107,136,68);stroke:rgb(54,72,34);stroke-width:1px;"/>
+                <circle cx="0" cy="0" r="1.3" style="fill:rgb(82,107,50);"/>
+            </g>
+            <g id="shrub-dot60" affinity:id="shrub-dot" transform="matrix(1,0,0,1,21,27)">
+                <circle cx="0" cy="0" r="3.6" style="fill:rgb(107,136,68);stroke:rgb(54,72,34);stroke-width:1px;"/>
+                <circle cx="0" cy="0" r="1.3" style="fill:rgb(82,107,50);"/>
+            </g>
+        </g>
+        <g id="east-fenced-garden">
+            <path d="M921,380C921.667,376 924,374.667 928,376L1112,419L1098,459L883,597L895,496L921,380Z" style="fill:rgb(105,90,70);fill-opacity:0.75;fill-rule:nonzero;stroke:rgb(74,55,40);stroke-width:1.6px;stroke-linejoin:round;"/>
+            <path d="M897.6,477.5C914.5,485.5 931,496.5 944.8,510.8C955.2,521.5 963.2,532.5 968.8,542.4L950.4,554.2C944.2,542.8 935.2,530.5 923.8,520.2C912.2,509.8 902.5,504.2 894,502L897.6,477.5Z" style="fill:rgb(229,220,200);fill-rule:nonzero;stroke:rgb(89,73,56);stroke-width:0.9px;stroke-linejoin:round;"/>
+            <g id="tree-med21" affinity:id="tree-med" transform="matrix(1,0,0,1,998,416)">
+                <circle cx="0" cy="0" r="6.8" style="fill:rgb(79,119,59);stroke:rgb(37,56,27);stroke-width:1.3px;"/>
+                <circle cx="0" cy="0" r="3.1" style="fill:rgb(57,87,42);"/>
+            </g>
+            <g id="tree-med22" affinity:id="tree-med" transform="matrix(1,0,0,1,1050,446)">
+                <circle cx="0" cy="0" r="6.8" style="fill:rgb(79,119,59);stroke:rgb(37,56,27);stroke-width:1.3px;"/>
+                <circle cx="0" cy="0" r="3.1" style="fill:rgb(57,87,42);"/>
+            </g>
+            <g id="tree-lg" transform="matrix(1,0,0,1,899,557)">
+                <circle cx="0" cy="0" r="8.8" style="fill:rgb(79,119,59);stroke:rgb(37,56,27);stroke-width:1.4px;"/>
+                <circle cx="0" cy="0" r="4.2" style="fill:rgb(57,87,42);"/>
+            </g>
+            <path d="M883,597L931,566.2L946.9,591L1015.9,546.8L1000,522L1098,459" style="fill:none;fill-rule:nonzero;stroke:rgb(43,27,16);stroke-width:3.2px;stroke-linecap:round;stroke-linejoin:round;"/>
+            <path d="M883,597L931,566.2L946.9,591L1015.9,546.8L1000,522L1098,459" style="fill:none;fill-rule:nonzero;stroke:rgb(184,155,122);stroke-width:1.3px;stroke-linejoin:round;stroke-dasharray:9,7;"/>
+            <g id="fence-post" transform="matrix(1,0,0,1,899,586.7)">
+                <circle cx="0" cy="0" r="2.2" style="fill:rgb(139,98,59);stroke:rgb(43,27,16);stroke-width:1px;"/>
+            </g>
+            <g id="fence-post1" affinity:id="fence-post" transform="matrix(1,0,0,1,915,576.5)">
+                <circle cx="0" cy="0" r="2.2" style="fill:rgb(139,98,59);stroke:rgb(43,27,16);stroke-width:1px;"/>
+            </g>
+            <g id="fence-post2" affinity:id="fence-post" transform="matrix(1,0,0,1,931,566.2)">
+                <circle cx="0" cy="0" r="2.2" style="fill:rgb(139,98,59);stroke:rgb(43,27,16);stroke-width:1px;"/>
+            </g>
+            <g id="fence-post3" affinity:id="fence-post" transform="matrix(1,0,0,1,946.9,591)">
+                <circle cx="0" cy="0" r="2.2" style="fill:rgb(139,98,59);stroke:rgb(43,27,16);stroke-width:1px;"/>
+            </g>
+            <g id="fence-post4" affinity:id="fence-post" transform="matrix(1,0,0,1,981.4,568.9)">
+                <circle cx="0" cy="0" r="2.2" style="fill:rgb(139,98,59);stroke:rgb(43,27,16);stroke-width:1px;"/>
+            </g>
+            <g id="fence-post5" affinity:id="fence-post" transform="matrix(1,0,0,1,1015.9,546.8)">
+                <circle cx="0" cy="0" r="2.2" style="fill:rgb(139,98,59);stroke:rgb(43,27,16);stroke-width:1px;"/>
+            </g>
+            <g id="fence-post6" affinity:id="fence-post" transform="matrix(1,0,0,1,1000,522)">
+                <circle cx="0" cy="0" r="2.2" style="fill:rgb(139,98,59);stroke:rgb(43,27,16);stroke-width:1px;"/>
+            </g>
+            <g id="fence-post7" affinity:id="fence-post" transform="matrix(1,0,0,1,1024.5,506.2)">
+                <circle cx="0" cy="0" r="2.2" style="fill:rgb(139,98,59);stroke:rgb(43,27,16);stroke-width:1px;"/>
+            </g>
+            <g id="fence-post8" affinity:id="fence-post" transform="matrix(1,0,0,1,1049,490.5)">
+                <circle cx="0" cy="0" r="2.2" style="fill:rgb(139,98,59);stroke:rgb(43,27,16);stroke-width:1px;"/>
+            </g>
+            <g id="fence-post9" affinity:id="fence-post" transform="matrix(1,0,0,1,1073.5,474.7)">
+                <circle cx="0" cy="0" r="2.2" style="fill:rgb(139,98,59);stroke:rgb(43,27,16);stroke-width:1px;"/>
+            </g>
+            <g id="fence-post10" affinity:id="fence-post" transform="matrix(1,0,0,1,1098,459)">
+                <circle cx="0" cy="0" r="2.2" style="fill:rgb(139,98,59);stroke:rgb(43,27,16);stroke-width:1px;"/>
+            </g>
+            <g id="fence-post11" affinity:id="fence-post">
+            </g>
+            <path d="M845,592L883,597" style="fill:none;fill-rule:nonzero;stroke:rgb(62,74,89);stroke-width:1.6px;"/>
+            <circle cx="845" cy="592" r="2.6" style="fill:white;stroke:rgb(62,74,89);stroke-width:1.2px;"/>
+            <circle cx="883" cy="597" r="2.6" style="fill:white;stroke:rgb(62,74,89);stroke-width:1.2px;"/>
+            <g transform="matrix(0.841511,-0.54024,0.54024,0.841511,973.3,556.3)">
+                <path d="M40,-15C40.552,-15 41,-14.552 41,-14L41,14C41,14.552 40.552,15 40,15L-40,15C-40.552,15 -41,14.552 -41,14L-41,-14C-41,-14.552 -40.552,-15 -40,-15L40,-15Z" style="fill:rgb(226,232,240);stroke:rgb(62,74,89);stroke-width:1px;"/>
+                <rect x="-39" y="-13" width="78" height="26" style="fill:rgb(158,27,27);stroke:rgb(43,18,18);stroke-width:1px;"/>
+                <path d="M-27,0L27,0" style="fill:none;fill-rule:nonzero;stroke:rgb(74,16,16);stroke-width:1.1px;"/>
+                <path d="M-39,-13L-27,0" style="fill:none;fill-rule:nonzero;stroke:rgb(74,16,16);stroke-width:1px;"/>
+                <path d="M-39,13L-27,0" style="fill:none;fill-rule:nonzero;stroke:rgb(74,16,16);stroke-width:1px;"/>
+                <path d="M39,-13L27,0" style="fill:none;fill-rule:nonzero;stroke:rgb(74,16,16);stroke-width:1px;"/>
+                <path d="M39,13L27,0" style="fill:none;fill-rule:nonzero;stroke:rgb(74,16,16);stroke-width:1px;"/>
+            </g>
+        </g>
+    </g>
+    <g id="highway-and-perimeter-fencing" transform="matrix(1,0,0,1,650,1650)">
+        <g id="stone-pillar-fence-south-of-y">
+            <path d="M622,554L641,432L634,362L565,344L502,334L440,333L380,335L324,340L152,496L-28,640" style="fill:none;fill-rule:nonzero;stroke:rgb(43,27,16);stroke-width:3px;stroke-linecap:round;stroke-linejoin:round;"/>
+            <path d="M622,554L641,432L634,362L565,344L502,334L440,333L380,335L324,340L152,496L-28,640" style="fill:none;fill-rule:nonzero;stroke:rgb(184,155,122);stroke-width:1.2px;stroke-linejoin:round;stroke-dasharray:8,6;"/>
+            <g id="stone-pillar" transform="matrix(1,0,0,1,622,554)">
+                <path d="M2.4,-3.2C2.842,-3.2 3.2,-2.842 3.2,-2.4L3.2,2.4C3.2,2.842 2.842,3.2 2.4,3.2L-2.4,3.2C-2.842,3.2 -3.2,2.842 -3.2,2.4L-3.2,-2.4C-3.2,-2.842 -2.842,-3.2 -2.4,-3.2L2.4,-3.2Z" style="fill:rgb(239,232,216);stroke:rgb(62,53,43);stroke-width:1.1px;"/>
+                <rect x="-1.6" y="-1.6" width="3.2" height="3.2" style="fill:rgb(216,204,180);"/>
+            </g>
+            <g id="stone-pillar1" affinity:id="stone-pillar" transform="matrix(1,0,0,1,626.8,523.5)">
+                <path d="M2.4,-3.2C2.842,-3.2 3.2,-2.842 3.2,-2.4L3.2,2.4C3.2,2.842 2.842,3.2 2.4,3.2L-2.4,3.2C-2.842,3.2 -3.2,2.842 -3.2,2.4L-3.2,-2.4C-3.2,-2.842 -2.842,-3.2 -2.4,-3.2L2.4,-3.2Z" style="fill:rgb(239,232,216);stroke:rgb(62,53,43);stroke-width:1.1px;"/>
+                <rect x="-1.6" y="-1.6" width="3.2" height="3.2" style="fill:rgb(216,204,180);"/>
+            </g>
+            <g id="stone-pillar2" affinity:id="stone-pillar" transform="matrix(1,0,0,1,631.5,493)">
+                <path d="M2.4,-3.2C2.842,-3.2 3.2,-2.842 3.2,-2.4L3.2,2.4C3.2,2.842 2.842,3.2 2.4,3.2L-2.4,3.2C-2.842,3.2 -3.2,2.842 -3.2,2.4L-3.2,-2.4C-3.2,-2.842 -2.842,-3.2 -2.4,-3.2L2.4,-3.2Z" style="fill:rgb(239,232,216);stroke:rgb(62,53,43);stroke-width:1.1px;"/>
+                <rect x="-1.6" y="-1.6" width="3.2" height="3.2" style="fill:rgb(216,204,180);"/>
+            </g>
+            <g id="stone-pillar3" affinity:id="stone-pillar" transform="matrix(1,0,0,1,636.2,462.5)">
+                <path d="M2.4,-3.2C2.842,-3.2 3.2,-2.842 3.2,-2.4L3.2,2.4C3.2,2.842 2.842,3.2 2.4,3.2L-2.4,3.2C-2.842,3.2 -3.2,2.842 -3.2,2.4L-3.2,-2.4C-3.2,-2.842 -2.842,-3.2 -2.4,-3.2L2.4,-3.2Z" style="fill:rgb(239,232,216);stroke:rgb(62,53,43);stroke-width:1.1px;"/>
+                <rect x="-1.6" y="-1.6" width="3.2" height="3.2" style="fill:rgb(216,204,180);"/>
+            </g>
+            <g id="stone-pillar4" affinity:id="stone-pillar" transform="matrix(1,0,0,1,641,432)">
+                <path d="M2.4,-3.2C2.842,-3.2 3.2,-2.842 3.2,-2.4L3.2,2.4C3.2,2.842 2.842,3.2 2.4,3.2L-2.4,3.2C-2.842,3.2 -3.2,2.842 -3.2,2.4L-3.2,-2.4C-3.2,-2.842 -2.842,-3.2 -2.4,-3.2L2.4,-3.2Z" style="fill:rgb(239,232,216);stroke:rgb(62,53,43);stroke-width:1.1px;"/>
+                <rect x="-1.6" y="-1.6" width="3.2" height="3.2" style="fill:rgb(216,204,180);"/>
+            </g>
+            <g id="stone-pillar5" affinity:id="stone-pillar" transform="matrix(1,0,0,1,637.5,397)">
+                <path d="M2.4,-3.2C2.842,-3.2 3.2,-2.842 3.2,-2.4L3.2,2.4C3.2,2.842 2.842,3.2 2.4,3.2L-2.4,3.2C-2.842,3.2 -3.2,2.842 -3.2,2.4L-3.2,-2.4C-3.2,-2.842 -2.842,-3.2 -2.4,-3.2L2.4,-3.2Z" style="fill:rgb(239,232,216);stroke:rgb(62,53,43);stroke-width:1.1px;"/>
+                <rect x="-1.6" y="-1.6" width="3.2" height="3.2" style="fill:rgb(216,204,180);"/>
+            </g>
+            <g id="stone-pillar6" affinity:id="stone-pillar" transform="matrix(1,0,0,1,634,362)">
+                <path d="M2.4,-3.2C2.842,-3.2 3.2,-2.842 3.2,-2.4L3.2,2.4C3.2,2.842 2.842,3.2 2.4,3.2L-2.4,3.2C-2.842,3.2 -3.2,2.842 -3.2,2.4L-3.2,-2.4C-3.2,-2.842 -2.842,-3.2 -2.4,-3.2L2.4,-3.2Z" style="fill:rgb(239,232,216);stroke:rgb(62,53,43);stroke-width:1.1px;"/>
+                <rect x="-1.6" y="-1.6" width="3.2" height="3.2" style="fill:rgb(216,204,180);"/>
+            </g>
+            <g id="stone-pillar7" affinity:id="stone-pillar" transform="matrix(1,0,0,1,599.5,353)">
+                <path d="M2.4,-3.2C2.842,-3.2 3.2,-2.842 3.2,-2.4L3.2,2.4C3.2,2.842 2.842,3.2 2.4,3.2L-2.4,3.2C-2.842,3.2 -3.2,2.842 -3.2,2.4L-3.2,-2.4C-3.2,-2.842 -2.842,-3.2 -2.4,-3.2L2.4,-3.2Z" style="fill:rgb(239,232,216);stroke:rgb(62,53,43);stroke-width:1.1px;"/>
+                <rect x="-1.6" y="-1.6" width="3.2" height="3.2" style="fill:rgb(216,204,180);"/>
+            </g>
+            <g id="stone-pillar8" affinity:id="stone-pillar" transform="matrix(1,0,0,1,565,344)">
+                <path d="M2.4,-3.2C2.842,-3.2 3.2,-2.842 3.2,-2.4L3.2,2.4C3.2,2.842 2.842,3.2 2.4,3.2L-2.4,3.2C-2.842,3.2 -3.2,2.842 -3.2,2.4L-3.2,-2.4C-3.2,-2.842 -2.842,-3.2 -2.4,-3.2L2.4,-3.2Z" style="fill:rgb(239,232,216);stroke:rgb(62,53,43);stroke-width:1.1px;"/>
+                <rect x="-1.6" y="-1.6" width="3.2" height="3.2" style="fill:rgb(216,204,180);"/>
+            </g>
+            <g id="stone-pillar9" affinity:id="stone-pillar" transform="matrix(1,0,0,1,533.5,339)">
+                <path d="M2.4,-3.2C2.842,-3.2 3.2,-2.842 3.2,-2.4L3.2,2.4C3.2,2.842 2.842,3.2 2.4,3.2L-2.4,3.2C-2.842,3.2 -3.2,2.842 -3.2,2.4L-3.2,-2.4C-3.2,-2.842 -2.842,-3.2 -2.4,-3.2L2.4,-3.2Z" style="fill:rgb(239,232,216);stroke:rgb(62,53,43);stroke-width:1.1px;"/>
+                <rect x="-1.6" y="-1.6" width="3.2" height="3.2" style="fill:rgb(216,204,180);"/>
+            </g>
+            <g id="stone-pillar10" affinity:id="stone-pillar" transform="matrix(1,0,0,1,502,334)">
+                <path d="M2.4,-3.2C2.842,-3.2 3.2,-2.842 3.2,-2.4L3.2,2.4C3.2,2.842 2.842,3.2 2.4,3.2L-2.4,3.2C-2.842,3.2 -3.2,2.842 -3.2,2.4L-3.2,-2.4C-3.2,-2.842 -2.842,-3.2 -2.4,-3.2L2.4,-3.2Z" style="fill:rgb(239,232,216);stroke:rgb(62,53,43);stroke-width:1.1px;"/>
+                <rect x="-1.6" y="-1.6" width="3.2" height="3.2" style="fill:rgb(216,204,180);"/>
+            </g>
+            <g id="stone-pillar11" affinity:id="stone-pillar" transform="matrix(1,0,0,1,471,333.5)">
+                <path d="M2.4,-3.2C2.842,-3.2 3.2,-2.842 3.2,-2.4L3.2,2.4C3.2,2.842 2.842,3.2 2.4,3.2L-2.4,3.2C-2.842,3.2 -3.2,2.842 -3.2,2.4L-3.2,-2.4C-3.2,-2.842 -2.842,-3.2 -2.4,-3.2L2.4,-3.2Z" style="fill:rgb(239,232,216);stroke:rgb(62,53,43);stroke-width:1.1px;"/>
+                <rect x="-1.6" y="-1.6" width="3.2" height="3.2" style="fill:rgb(216,204,180);"/>
+            </g>
+            <g id="stone-pillar12" affinity:id="stone-pillar" transform="matrix(1,0,0,1,440,333)">
+                <path d="M2.4,-3.2C2.842,-3.2 3.2,-2.842 3.2,-2.4L3.2,2.4C3.2,2.842 2.842,3.2 2.4,3.2L-2.4,3.2C-2.842,3.2 -3.2,2.842 -3.2,2.4L-3.2,-2.4C-3.2,-2.842 -2.842,-3.2 -2.4,-3.2L2.4,-3.2Z" style="fill:rgb(239,232,216);stroke:rgb(62,53,43);stroke-width:1.1px;"/>
+                <rect x="-1.6" y="-1.6" width="3.2" height="3.2" style="fill:rgb(216,204,180);"/>
+            </g>
+            <g id="stone-pillar13" affinity:id="stone-pillar" transform="matrix(1,0,0,1,410,334)">
+                <path d="M2.4,-3.2C2.842,-3.2 3.2,-2.842 3.2,-2.4L3.2,2.4C3.2,2.842 2.842,3.2 2.4,3.2L-2.4,3.2C-2.842,3.2 -3.2,2.842 -3.2,2.4L-3.2,-2.4C-3.2,-2.842 -2.842,-3.2 -2.4,-3.2L2.4,-3.2Z" style="fill:rgb(239,232,216);stroke:rgb(62,53,43);stroke-width:1.1px;"/>
+                <rect x="-1.6" y="-1.6" width="3.2" height="3.2" style="fill:rgb(216,204,180);"/>
+            </g>
+            <g id="stone-pillar14" affinity:id="stone-pillar" transform="matrix(1,0,0,1,380,335)">
+                <path d="M2.4,-3.2C2.842,-3.2 3.2,-2.842 3.2,-2.4L3.2,2.4C3.2,2.842 2.842,3.2 2.4,3.2L-2.4,3.2C-2.842,3.2 -3.2,2.842 -3.2,2.4L-3.2,-2.4C-3.2,-2.842 -2.842,-3.2 -2.4,-3.2L2.4,-3.2Z" style="fill:rgb(239,232,216);stroke:rgb(62,53,43);stroke-width:1.1px;"/>
+                <rect x="-1.6" y="-1.6" width="3.2" height="3.2" style="fill:rgb(216,204,180);"/>
+            </g>
+            <g id="stone-pillar15" affinity:id="stone-pillar" transform="matrix(1,0,0,1,352,337.5)">
+                <path d="M2.4,-3.2C2.842,-3.2 3.2,-2.842 3.2,-2.4L3.2,2.4C3.2,2.842 2.842,3.2 2.4,3.2L-2.4,3.2C-2.842,3.2 -3.2,2.842 -3.2,2.4L-3.2,-2.4C-3.2,-2.842 -2.842,-3.2 -2.4,-3.2L2.4,-3.2Z" style="fill:rgb(239,232,216);stroke:rgb(62,53,43);stroke-width:1.1px;"/>
+                <rect x="-1.6" y="-1.6" width="3.2" height="3.2" style="fill:rgb(216,204,180);"/>
+            </g>
+            <g id="stone-pillar16" affinity:id="stone-pillar" transform="matrix(1,0,0,1,324,340)">
+                <path d="M2.4,-3.2C2.842,-3.2 3.2,-2.842 3.2,-2.4L3.2,2.4C3.2,2.842 2.842,3.2 2.4,3.2L-2.4,3.2C-2.842,3.2 -3.2,2.842 -3.2,2.4L-3.2,-2.4C-3.2,-2.842 -2.842,-3.2 -2.4,-3.2L2.4,-3.2Z" style="fill:rgb(239,232,216);stroke:rgb(62,53,43);stroke-width:1.1px;"/>
+                <rect x="-1.6" y="-1.6" width="3.2" height="3.2" style="fill:rgb(216,204,180);"/>
+            </g>
+            <g id="stone-pillar17" affinity:id="stone-pillar" transform="matrix(1,0,0,1,281,379)">
+                <path d="M2.4,-3.2C2.842,-3.2 3.2,-2.842 3.2,-2.4L3.2,2.4C3.2,2.842 2.842,3.2 2.4,3.2L-2.4,3.2C-2.842,3.2 -3.2,2.842 -3.2,2.4L-3.2,-2.4C-3.2,-2.842 -2.842,-3.2 -2.4,-3.2L2.4,-3.2Z" style="fill:rgb(239,232,216);stroke:rgb(62,53,43);stroke-width:1.1px;"/>
+                <rect x="-1.6" y="-1.6" width="3.2" height="3.2" style="fill:rgb(216,204,180);"/>
+            </g>
+            <g id="stone-pillar18" affinity:id="stone-pillar" transform="matrix(1,0,0,1,238,418)">
+                <path d="M2.4,-3.2C2.842,-3.2 3.2,-2.842 3.2,-2.4L3.2,2.4C3.2,2.842 2.842,3.2 2.4,3.2L-2.4,3.2C-2.842,3.2 -3.2,2.842 -3.2,2.4L-3.2,-2.4C-3.2,-2.842 -2.842,-3.2 -2.4,-3.2L2.4,-3.2Z" style="fill:rgb(239,232,216);stroke:rgb(62,53,43);stroke-width:1.1px;"/>
+                <rect x="-1.6" y="-1.6" width="3.2" height="3.2" style="fill:rgb(216,204,180);"/>
+            </g>
+            <g id="stone-pillar19" affinity:id="stone-pillar" transform="matrix(1,0,0,1,195,457)">
+                <path d="M2.4,-3.2C2.842,-3.2 3.2,-2.842 3.2,-2.4L3.2,2.4C3.2,2.842 2.842,3.2 2.4,3.2L-2.4,3.2C-2.842,3.2 -3.2,2.842 -3.2,2.4L-3.2,-2.4C-3.2,-2.842 -2.842,-3.2 -2.4,-3.2L2.4,-3.2Z" style="fill:rgb(239,232,216);stroke:rgb(62,53,43);stroke-width:1.1px;"/>
+                <rect x="-1.6" y="-1.6" width="3.2" height="3.2" style="fill:rgb(216,204,180);"/>
+            </g>
+            <g id="stone-pillar20" affinity:id="stone-pillar" transform="matrix(1,0,0,1,152,496)">
+                <path d="M2.4,-3.2C2.842,-3.2 3.2,-2.842 3.2,-2.4L3.2,2.4C3.2,2.842 2.842,3.2 2.4,3.2L-2.4,3.2C-2.842,3.2 -3.2,2.842 -3.2,2.4L-3.2,-2.4C-3.2,-2.842 -2.842,-3.2 -2.4,-3.2L2.4,-3.2Z" style="fill:rgb(239,232,216);stroke:rgb(62,53,43);stroke-width:1.1px;"/>
+                <rect x="-1.6" y="-1.6" width="3.2" height="3.2" style="fill:rgb(216,204,180);"/>
+            </g>
+            <g id="stone-pillar21" affinity:id="stone-pillar" transform="matrix(1,0,0,1,107,532)">
+                <path d="M2.4,-3.2C2.842,-3.2 3.2,-2.842 3.2,-2.4L3.2,2.4C3.2,2.842 2.842,3.2 2.4,3.2L-2.4,3.2C-2.842,3.2 -3.2,2.842 -3.2,2.4L-3.2,-2.4C-3.2,-2.842 -2.842,-3.2 -2.4,-3.2L2.4,-3.2Z" style="fill:rgb(239,232,216);stroke:rgb(62,53,43);stroke-width:1.1px;"/>
+                <rect x="-1.6" y="-1.6" width="3.2" height="3.2" style="fill:rgb(216,204,180);"/>
+            </g>
+            <g id="stone-pillar22" affinity:id="stone-pillar" transform="matrix(1,0,0,1,62,568)">
+                <path d="M2.4,-3.2C2.842,-3.2 3.2,-2.842 3.2,-2.4L3.2,2.4C3.2,2.842 2.842,3.2 2.4,3.2L-2.4,3.2C-2.842,3.2 -3.2,2.842 -3.2,2.4L-3.2,-2.4C-3.2,-2.842 -2.842,-3.2 -2.4,-3.2L2.4,-3.2Z" style="fill:rgb(239,232,216);stroke:rgb(62,53,43);stroke-width:1.1px;"/>
+                <rect x="-1.6" y="-1.6" width="3.2" height="3.2" style="fill:rgb(216,204,180);"/>
+            </g>
+            <g id="stone-pillar23" affinity:id="stone-pillar" transform="matrix(1,0,0,1,17,604)">
+                <path d="M2.4,-3.2C2.842,-3.2 3.2,-2.842 3.2,-2.4L3.2,2.4C3.2,2.842 2.842,3.2 2.4,3.2L-2.4,3.2C-2.842,3.2 -3.2,2.842 -3.2,2.4L-3.2,-2.4C-3.2,-2.842 -2.842,-3.2 -2.4,-3.2L2.4,-3.2Z" style="fill:rgb(239,232,216);stroke:rgb(62,53,43);stroke-width:1.1px;"/>
+                <rect x="-1.6" y="-1.6" width="3.2" height="3.2" style="fill:rgb(216,204,180);"/>
+            </g>
+            <g id="stone-pillar24" affinity:id="stone-pillar" transform="matrix(1,0,0,1,-28,640)">
+                <path d="M2.4,-3.2C2.842,-3.2 3.2,-2.842 3.2,-2.4L3.2,2.4C3.2,2.842 2.842,3.2 2.4,3.2L-2.4,3.2C-2.842,3.2 -3.2,2.842 -3.2,2.4L-3.2,-2.4C-3.2,-2.842 -2.842,-3.2 -2.4,-3.2L2.4,-3.2Z" style="fill:rgb(239,232,216);stroke:rgb(62,53,43);stroke-width:1.1px;"/>
+                <rect x="-1.6" y="-1.6" width="3.2" height="3.2" style="fill:rgb(216,204,180);"/>
+            </g>
+        </g>
+        <g id="partial-nice-fence-north-of-y">
+            <path d="M468,188L612,76" style="fill:none;fill-rule:nonzero;stroke:rgb(43,27,16);stroke-width:3.2px;stroke-linecap:round;"/>
+            <path d="M468,188L612,76" style="fill:none;fill-rule:nonzero;stroke:rgb(184,155,122);stroke-width:1.3px;stroke-dasharray:9,7;"/>
+            <g id="fence-post12" affinity:id="fence-post" transform="matrix(1,0,0,1,468,188)">
+                <circle cx="0" cy="0" r="2.2" style="fill:rgb(139,98,59);stroke:rgb(43,27,16);stroke-width:1px;"/>
+            </g>
+            <g id="fence-post13" affinity:id="fence-post" transform="matrix(1,0,0,1,496.8,165.6)">
+                <circle cx="0" cy="0" r="2.2" style="fill:rgb(139,98,59);stroke:rgb(43,27,16);stroke-width:1px;"/>
+            </g>
+            <g id="fence-post14" affinity:id="fence-post" transform="matrix(1,0,0,1,525.6,143.2)">
+                <circle cx="0" cy="0" r="2.2" style="fill:rgb(139,98,59);stroke:rgb(43,27,16);stroke-width:1px;"/>
+            </g>
+            <g id="fence-post15" affinity:id="fence-post" transform="matrix(1,0,0,1,554.4,120.8)">
+                <circle cx="0" cy="0" r="2.2" style="fill:rgb(139,98,59);stroke:rgb(43,27,16);stroke-width:1px;"/>
+            </g>
+            <g id="fence-post16" affinity:id="fence-post" transform="matrix(1,0,0,1,583.2,98.4)">
+                <circle cx="0" cy="0" r="2.2" style="fill:rgb(139,98,59);stroke:rgb(43,27,16);stroke-width:1px;"/>
+            </g>
+            <g id="fence-post17" affinity:id="fence-post" transform="matrix(1,0,0,1,612,76)">
+                <circle cx="0" cy="0" r="2.2" style="fill:rgb(139,98,59);stroke:rgb(43,27,16);stroke-width:1px;"/>
+            </g>
+        </g>
+        <g id="barbed-wire-fence-parallel-roadway">
+            <path d="M612,76L702,18L1476,-582" style="fill:none;fill-rule:nonzero;stroke:rgb(61,49,36);stroke-width:1.7px;stroke-linejoin:round;"/>
+            <path d="M612,76L702,18L1476,-582" style="fill:none;fill-rule:nonzero;stroke:rgb(43,27,16);stroke-width:5.5px;stroke-dasharray:1.6,26;"/>
+            <g id="barb-post" transform="matrix(1,0,0,1,702,18)">
+                <circle cx="0" cy="0" r="1.7" style="fill:rgb(74,63,49);stroke:rgb(244,239,225);stroke-width:0.6px;"/>
+            </g>
+            <g id="barb-post1" affinity:id="barb-post" transform="matrix(1,0,0,1,856,-102)">
+                <circle cx="0" cy="0" r="1.7" style="fill:rgb(74,63,49);stroke:rgb(244,239,225);stroke-width:0.6px;"/>
+            </g>
+            <g id="barb-post2" affinity:id="barb-post" transform="matrix(1,0,0,1,1010,-221)">
+                <circle cx="0" cy="0" r="1.7" style="fill:rgb(74,63,49);stroke:rgb(244,239,225);stroke-width:0.6px;"/>
+            </g>
+            <g id="barb-post3" affinity:id="barb-post" transform="matrix(1,0,0,1,1165,-341)">
+                <circle cx="0" cy="0" r="1.7" style="fill:rgb(74,63,49);stroke:rgb(244,239,225);stroke-width:0.6px;"/>
+            </g>
+            <g id="barb-post4" affinity:id="barb-post" transform="matrix(1,0,0,1,1320,-461)">
+                <circle cx="0" cy="0" r="1.7" style="fill:rgb(74,63,49);stroke:rgb(244,239,225);stroke-width:0.6px;"/>
+            </g>
+            <g id="barb-post5" affinity:id="barb-post" transform="matrix(1,0,0,1,1476,-582)">
+                <circle cx="0" cy="0" r="1.7" style="fill:rgb(74,63,49);stroke:rgb(244,239,225);stroke-width:0.6px;"/>
+            </g>
+            <path d="M1502,-598L1768,-743C1876,-802.333 2000.667,-855 2142,-901C2204,-921 2264,-937 2322,-949L2367,-914" style="fill:none;fill-rule:nonzero;stroke:rgb(61,49,36);stroke-width:1.7px;stroke-linejoin:round;"/>
+            <path d="M1502,-598L1768,-743C1876,-802.333 2000.667,-855 2142,-901C2204,-921 2264,-937 2322,-949L2367,-914" style="fill:none;fill-rule:nonzero;stroke:rgb(43,27,16);stroke-width:5.5px;stroke-dasharray:1.6,26;"/>
+            <g id="barb-post6" affinity:id="barb-post" transform="matrix(1,0,0,1,1502,-598)">
+                <circle cx="0" cy="0" r="1.7" style="fill:rgb(74,63,49);stroke:rgb(244,239,225);stroke-width:0.6px;"/>
+            </g>
+            <g id="barb-post7" affinity:id="barb-post" transform="matrix(1,0,0,1,1635,-670)">
+                <circle cx="0" cy="0" r="1.7" style="fill:rgb(74,63,49);stroke:rgb(244,239,225);stroke-width:0.6px;"/>
+            </g>
+            <g id="barb-post8" affinity:id="barb-post" transform="matrix(1,0,0,1,1768,-743)">
+                <circle cx="0" cy="0" r="1.7" style="fill:rgb(74,63,49);stroke:rgb(244,239,225);stroke-width:0.6px;"/>
+            </g>
+            <g id="barb-post9" affinity:id="barb-post" transform="matrix(1,0,0,1,1952,-828)">
+                <circle cx="0" cy="0" r="1.7" style="fill:rgb(74,63,49);stroke:rgb(244,239,225);stroke-width:0.6px;"/>
+            </g>
+            <g id="barb-post10" affinity:id="barb-post" transform="matrix(1,0,0,1,2142,-901)">
+                <circle cx="0" cy="0" r="1.7" style="fill:rgb(74,63,49);stroke:rgb(244,239,225);stroke-width:0.6px;"/>
+            </g>
+            <g id="barb-post11" affinity:id="barb-post" transform="matrix(1,0,0,1,2322,-949)">
+                <circle cx="0" cy="0" r="1.7" style="fill:rgb(74,63,49);stroke:rgb(244,239,225);stroke-width:0.6px;"/>
+            </g>
+        </g>
+        <g id="comanche-creek-north-gate-and-east-fence">
+            <g transform="matrix(0.865388,-0.501102,0.501102,0.865388,784.030468,1075.608366)">
+                <path d="M2368,-928L2394,-922" style="fill:none;fill-rule:nonzero;stroke:rgb(30,41,59);stroke-width:3.6px;stroke-linecap:round;"/>
+            </g>
+            <g transform="matrix(0.865388,-0.501102,0.501102,0.865388,784.030468,1075.608366)">
+                <path d="M2368,-928L2394,-922" style="fill:none;fill-rule:nonzero;stroke:rgb(248,250,252);stroke-width:1.6px;stroke-dasharray:3.5,3.5;"/>
+            </g>
+            <g transform="matrix(1,0,0,1,-1,14)">
+                <circle cx="2368" cy="-928" r="3" style="fill:rgb(239,232,216);stroke:rgb(43,27,16);stroke-width:1.2px;"/>
+            </g>
+            <circle cx="2394" cy="-922" r="3" style="fill:rgb(239,232,216);stroke:rgb(43,27,16);stroke-width:1.2px;"/>
+            <path d="M2394,-922L2430,-962C2468.667,-968 2507.333,-972 2546,-974C2738.667,-980.667 2948.667,-972 3176,-948C3368.667,-928 3559.333,-901.333 3748,-868" style="fill:none;fill-rule:nonzero;stroke:rgb(61,49,36);stroke-width:1.7px;stroke-linejoin:round;"/>
+            <path d="M2394,-922L2430,-962C2468.667,-968 2507.333,-972 2546,-974C2738.667,-980.667 2948.667,-972 3176,-948C3368.667,-928 3559.333,-901.333 3748,-868" style="fill:none;fill-rule:nonzero;stroke:rgb(43,27,16);stroke-width:5.5px;stroke-dasharray:1.6,26;"/>
+            <g id="barb-post12" affinity:id="barb-post" transform="matrix(1,0,0,1,2430,-962)">
+                <circle cx="0" cy="0" r="1.7" style="fill:rgb(74,63,49);stroke:rgb(244,239,225);stroke-width:0.6px;"/>
+            </g>
+            <g id="barb-post13" affinity:id="barb-post" transform="matrix(1,0,0,1,2546,-974)">
+                <circle cx="0" cy="0" r="1.7" style="fill:rgb(74,63,49);stroke:rgb(244,239,225);stroke-width:0.6px;"/>
+            </g>
+            <g id="barb-post14" affinity:id="barb-post" transform="matrix(1,0,0,1,2740,-977)">
+                <circle cx="0" cy="0" r="1.7" style="fill:rgb(74,63,49);stroke:rgb(244,239,225);stroke-width:0.6px;"/>
+            </g>
+            <g id="barb-post15" affinity:id="barb-post" transform="matrix(1,0,0,1,2955,-967)">
+                <circle cx="0" cy="0" r="1.7" style="fill:rgb(74,63,49);stroke:rgb(244,239,225);stroke-width:0.6px;"/>
+            </g>
+            <g id="barb-post16" affinity:id="barb-post" transform="matrix(1,0,0,1,3176,-948)">
+                <circle cx="0" cy="0" r="1.7" style="fill:rgb(74,63,49);stroke:rgb(244,239,225);stroke-width:0.6px;"/>
+            </g>
+            <g id="barb-post17" affinity:id="barb-post">
+            </g>
+            <g id="barb-post18" affinity:id="barb-post">
+            </g>
+        </g>
+    </g>
+    <g id="event-overlays" transform="matrix(1,0,0,1,650,1650)">
+        <g id="layer-property-boundaries">
+            <path d="M-180,1280L-562,980L0,546L276,334L468,188L612,76L702,18L1476,-582L1768,-743C1876,-802.333 2000.667,-855 2142,-901C2204,-921 2264,-937 2322,-949L2430,-962C2468.667,-968 2507.333,-972 2546,-974C2738.667,-980.667 2931.667,-974 3125,-954L3165,802L3182,1280" style="fill:none;fill-rule:nonzero;stroke:rgb(220,38,38);stroke-width:2.6px;stroke-linejoin:round;stroke-dasharray:18,7,4,7;"/>
+            <path d="M3125,-954L3121,-1062L3091,-1653" style="fill:none;fill-rule:nonzero;stroke:rgb(220,38,38);stroke-width:2.4px;stroke-linejoin:round;stroke-dasharray:18,7,4,7;"/>
+            <path d="M-185,595L-950,-310" style="fill:none;fill-rule:nonzero;stroke:rgb(220,38,38);stroke-width:2.2px;stroke-linejoin:round;stroke-dasharray:18,7,4,7;"/>
+            <g transform="matrix(0.022687,0.999743,-0.999743,0.022687,3118,-120)">
+                <text x="-89.458px" y="0px" style="font-family:'Helvetica-Bold', 'Helvetica';font-weight:700;font-size:20px;fill:rgb(185,28,28);">Property boundary</text>
+            </g>
+            <g transform="matrix(0.785857,0.618408,-0.618408,0.785857,-395,1142)">
+                <text x="-84.985px" y="0px" style="font-family:'Helvetica-Bold', 'Helvetica';font-weight:700;font-size:19px;fill:rgb(185,28,28);">Property boundary</text>
+            </g>
+        </g>
+        <g id="layer-no-parking-zone">
+            <path d="M-950,1223C-950,1223 -750.288,1066.543 -649.932,987.315C-539.952,900.488 -113.051,563.31 -113.051,563.31L181,332L214,285L601,-1L1402,-617C1402,-617 1416.658,-634.362 1421.546,-644.28C1427.533,-656.429 1435,-681.653 1435,-681.653C1435,-681.653 1376.181,-634.054 1374.271,-632.581C1328.92,-597.599 584,-23 584,-23L196,264L163,310L-16,452L-966,1202L-950,1223Z" style="fill:rgb(239,68,68);fill-rule:nonzero;"/>
+            <path d="M-937.35,1179.381L-927.435,1191.939L-931.297,1194.988L-924.812,1203.262C-940.584,1215.623 -950,1223 -950,1223L-959.698,1210.272L-956.012,1207.384L-962.466,1199.21L-937.35,1179.381ZM-899.629,1183.519L-909.501,1170.928L-905.642,1167.902L-912.233,1159.553L-887.117,1139.724L-877.203,1152.282L-881.067,1155.333L-874.448,1163.773C-883.42,1170.81 -891.866,1177.433 -899.629,1183.519ZM-849.269,1144.024L-859.145,1131.435L-855.283,1128.405L-862.001,1119.895L-836.885,1100.067L-826.97,1112.625L-830.837,1115.678L-824.094,1124.27C-832.694,1131.019 -841.116,1137.627 -849.269,1144.024ZM-798.922,1104.513L-808.802,1091.927L-804.937,1088.892L-811.769,1080.238L-786.652,1060.41L-776.738,1072.968L-780.608,1076.023L-773.754,1084.75C-782.174,1091.363 -790.589,1097.97 -798.922,1104.513ZM-748.591,1064.981L-758.477,1052.4L-754.607,1049.359L-761.536,1040.581L-736.42,1020.753L-726.506,1033.311L-730.381,1036.37L-723.433,1045.205C-731.695,1051.701 -740.107,1058.314 -748.591,1064.981ZM-698.283,1025.419L-708.179,1012.846L-704.301,1009.794L-711.304,1000.924L-686.188,981.095L-676.273,993.654L-680.157,996.72L-673.143,1005.621C-681.167,1011.945 -689.583,1018.572 -698.283,1025.419ZM-648.018,985.803L-657.932,973.245L-654.04,970.172L-661.071,961.267L-635.955,941.438L-626.041,953.996L-629.934,957.07L-622.903,965.974C-632.4,973.473 -640.834,980.132 -648.018,985.803ZM-597.789,946.143L-607.705,933.586L-603.811,930.511L-610.839,921.61L-585.723,901.781L-575.808,914.339L-579.702,917.413L-572.675,926.311C-581.465,933.253 -589.859,939.881 -597.789,946.143ZM-547.562,906.479L-557.478,893.923L-553.584,890.848L-560.607,881.953L-535.49,862.124L-525.576,874.682L-529.469,877.756L-522.448,886.647C-531.037,893.429 -539.422,900.052 -547.562,906.479ZM-497.335,866.814L-507.251,854.257L-503.358,851.183L-510.374,842.295L-485.258,822.467L-475.343,835.025L-479.237,838.098L-472.222,846.981C-480.707,853.682 -489.089,860.302 -497.335,866.814ZM-447.109,827.148L-457.025,814.591L-453.132,811.517L-460.141,802.638L-435.026,782.81L-425.111,795.368L-429.004,798.441L-421.996,807.314C-430.41,813.96 -438.791,820.579 -447.109,827.148ZM-396.883,787.481L-406.8,774.925L-402.907,771.85L-409.909,762.981L-384.792,743.152L-374.878,755.71L-378.772,758.784L-371.771,767.648C-380.125,774.246 -388.506,780.865 -396.883,787.481ZM-346.659,747.815L-356.576,735.259L-352.682,732.184L-359.677,723.324L-334.56,703.495L-324.646,716.053L-328.539,719.127L-321.546,727.981C-329.837,734.529 -338.218,741.149 -346.659,747.815ZM-296.434,708.147L-306.35,695.591L-302.457,692.516L-309.444,683.666L-284.328,663.838L-274.414,676.396L-278.307,679.469L-271.321,688.314C-279.53,694.797 -287.914,701.418 -296.434,708.147ZM-246.209,668.48L-256.126,655.924L-252.232,652.848L-259.211,644.009L-234.094,624.179L-224.179,636.737L-228.074,639.812L-221.097,648.647C-229.173,655.025 -237.56,661.649 -246.209,668.48ZM-195.985,628.813L-205.902,616.257L-202.008,613.181L-208.978,604.351L-183.862,584.523L-173.948,597.081L-177.842,600.155L-170.873,608.979C-178.637,615.111 -187.039,621.747 -195.985,628.813ZM-145.761,589.145L-155.678,576.589L-151.783,573.513L-158.746,564.694L-133.629,544.865L-123.714,557.423L-127.609,560.498L-120.649,569.311C-126.254,573.738 -134.801,580.489 -145.761,589.145ZM-95.51,549.511L-105.402,536.936L-101.525,533.886L-108.512,525.036L-83.396,505.208L-73.482,517.766L-77.36,520.827L-70.359,529.727L-95.51,549.511ZM-45.208,509.942L-55.1,497.367L-51.223,494.317L-58.28,485.379L-33.163,465.55L-23.249,478.108L-27.127,481.17L-20.057,490.158L-45.208,509.942ZM5.094,470.373L-4.798,457.798L-0.899,454.731L-8.061,445.702L17.008,425.815L26.952,438.349L23.051,441.444L30.245,450.589L5.094,470.373ZM55.396,430.804L45.504,418.229L49.403,415.161L42.078,405.927L67.147,386.039L77.091,398.574L73.191,401.668L80.547,411.02L55.396,430.804ZM105.698,391.235L95.806,378.66L99.706,375.592L92.217,366.152L117.287,346.264L127.23,358.799L123.33,361.893L130.849,371.451L105.698,391.235ZM156,351.666L146.107,339.091L150.008,336.022L142.356,326.377L163,310L166.293,305.41L179.294,314.736L175.06,320.637C173.959,319.289 172.665,318.774 171.15,319.546L172.348,323.007L170.554,324.431L173.575,326.553L176.647,335.425L156,351.666ZM175.06,320.637C176.628,322.556 177.806,326.16 178.682,330.138L173.575,326.553L172.348,323.007L174.697,321.144L175.06,320.637ZM178.682,330.138L181.11,331.843L181,332L179.311,333.329C179.121,332.255 178.912,331.184 178.682,330.138ZM199.498,305.654L186.404,296.46L193.877,285.816L184.946,279.408L196,264L206.481,256.247L215.996,269.111L212.551,271.659L219.439,280.98L214,285L199.498,305.654ZM245.174,261.962L235.665,249.094L239.11,246.548L232.208,237.218L257.934,218.188L267.449,231.051L264.004,233.599L270.909,242.943L245.174,261.962ZM296.644,223.925L287.135,211.057L290.58,208.511L283.661,199.158L309.388,180.128L318.903,192.991L315.457,195.54L322.379,204.906L296.644,223.925ZM348.114,185.887L338.605,173.02L342.05,170.474L335.115,161.098L360.842,142.068L370.357,154.931L366.91,157.481L373.849,166.869L348.114,185.887ZM399.583,147.85L390.074,134.983L393.52,132.436L386.569,123.038L412.295,104.008L421.81,116.872L418.364,119.421L425.319,128.832L399.583,147.85ZM451.054,109.813L441.544,96.945L444.99,94.399L438.022,84.979L463.749,65.949L473.264,78.812L469.818,81.361L476.789,90.794L451.054,109.813ZM502.524,71.776L493.015,58.908L496.46,56.362L489.476,46.919L515.202,27.889L524.717,40.752L521.271,43.301L528.259,52.757L502.524,71.776ZM553.994,33.738L544.485,20.871L547.93,18.324L540.929,8.859L566.656,-10.171L576.171,2.693L572.725,5.242L579.729,14.72L553.994,33.738ZM605.4,-4.384L595.646,-17.067L599.474,-20.011L592.256,-29.368L617.594,-48.913L627.366,-36.244L623.539,-33.291L630.767,-23.892L605.4,-4.384ZM656.134,-43.4L646.38,-56.083L650.206,-59.026L642.931,-68.457L668.269,-88.002L678.042,-75.333L674.215,-72.381L681.5,-62.908L656.134,-43.4ZM706.867,-82.416L697.113,-95.099L700.939,-98.041L693.607,-107.546L718.945,-127.091L728.717,-114.422L724.891,-111.47L732.233,-101.923L706.867,-82.416ZM757.6,-121.431L747.846,-134.114L751.672,-137.057L744.283,-146.635L769.621,-166.18L779.393,-153.511L775.567,-150.559L782.965,-140.938L757.6,-121.431ZM808.331,-160.446L798.577,-173.129L802.404,-176.072L794.959,-185.724L820.297,-205.269L830.069,-192.6L826.243,-189.649L833.698,-179.954L808.331,-160.446ZM859.065,-199.462L849.311,-212.145L853.137,-215.087L845.635,-224.814L870.973,-244.358L880.745,-231.689L876.918,-228.738L884.431,-218.969L859.065,-199.462ZM909.797,-238.477L900.043,-251.16L903.87,-254.103L896.311,-263.903L921.649,-283.448L931.421,-270.779L927.595,-267.828L935.164,-257.985L909.797,-238.477ZM960.531,-277.493L950.777,-290.176L954.603,-293.119L946.987,-302.992L972.325,-322.537L982.097,-309.868L978.271,-306.917L985.897,-297L960.531,-277.493ZM1011.263,-316.508L1001.509,-329.191L1005.335,-332.134L997.662,-342.081L1023,-361.626L1032.773,-348.957L1028.946,-346.006L1036.629,-336.016L1011.263,-316.508ZM1061.995,-355.523L1052.241,-368.206L1056.068,-371.149L1048.338,-381.17L1073.676,-400.715L1083.449,-388.046L1079.623,-385.095L1087.362,-375.031L1061.995,-355.523ZM1112.729,-394.539L1102.975,-407.222L1106.801,-410.165L1099.014,-420.26L1124.352,-439.804L1134.124,-427.135L1130.299,-424.184L1138.095,-414.047L1112.729,-394.539ZM1163.461,-433.555L1153.707,-446.238L1157.533,-449.18L1149.69,-459.349L1175.028,-478.893L1184.8,-466.224L1180.975,-463.274L1188.828,-453.062L1163.461,-433.555ZM1214.194,-472.57L1204.44,-485.253L1208.266,-488.195L1200.366,-498.438L1225.704,-517.982L1235.476,-505.313L1231.651,-502.363L1239.56,-492.078L1214.194,-472.57ZM1264.927,-511.585L1255.173,-524.269L1258.999,-527.211L1251.041,-537.527L1276.379,-557.071L1286.152,-544.403L1282.326,-541.452L1290.293,-531.093L1264.927,-511.585ZM1315.659,-550.601L1305.906,-563.284L1309.732,-566.226L1301.717,-576.616L1327.055,-596.161L1336.827,-583.492L1333.003,-580.541L1341.026,-570.108L1315.659,-550.601ZM1366.392,-589.616L1356.638,-602.299L1360.464,-605.242L1352.393,-615.705L1374.271,-632.581C1374.521,-632.773 1375.743,-633.755 1377.68,-635.315L1387.717,-622.855C1385.631,-621.174 1384.312,-620.119 1384.043,-619.912L1383.678,-619.631L1391.758,-609.124L1366.392,-589.616ZM1413.75,-632.028L1400.791,-641.411C1403.029,-644.503 1405.222,-647.675 1406.674,-650.351L1402.573,-655.423C1411.735,-662.831 1421.146,-670.444 1427.453,-675.547L1431.512,-670.53C1428.797,-662.221 1424.935,-651.156 1421.546,-644.28C1419.813,-640.764 1416.851,-636.311 1413.75,-632.028Z" style="fill:white;"/>
+            <path d="M1398,-614C1422,-634 1438,-678 1442,-726L1446,-768C1447.333,-780 1454,-790 1466,-798L1546,-858C1556.667,-866 1567.333,-866 1578,-858L1646,-806C1668,-790 1696,-796 1728,-814L1398,-614Z" style="fill:rgb(239,68,68);fill-rule:nonzero;"/>
+            <path d="M1422.483,-628.838L1398,-614C1404.139,-619.116 1409.755,-625.802 1414.78,-633.725L1422.483,-628.838ZM1430.628,-633.775L1423.89,-644.892L1436.832,-652.736L1426.478,-656.904C1429.58,-664.608 1432.282,-672.894 1434.552,-681.601L1447.131,-678.321C1444.937,-669.905 1442.36,-661.859 1439.432,-654.311L1446.125,-658.368L1452.863,-647.25L1430.628,-633.775ZM1442.657,-732.894L1455.598,-731.662L1454.95,-724.865C1454.392,-718.184 1453.612,-711.577 1452.62,-705.093L1439.769,-707.06C1440.72,-713.271 1441.467,-719.6 1442,-726L1442.657,-732.894ZM1451.459,-783.666L1462.458,-776.735C1460.52,-773.661 1459.349,-770.3 1458.931,-766.655L1458.063,-757.544L1445.122,-758.777L1446,-768C1446.63,-773.668 1448.45,-778.89 1451.459,-783.666ZM1491.144,-816.858L1498.944,-806.458L1478.144,-790.858L1470.344,-801.258L1491.144,-816.858ZM1532.744,-848.058L1540.544,-837.658L1519.744,-822.058L1511.944,-832.458L1532.744,-848.058ZM1578,-845C1575.361,-845 1572.79,-845.803 1570.624,-847.295L1570.614,-847.283L1570.2,-847.6L1570.108,-847.669C1566.259,-850.532 1562.519,-851.773 1558.668,-850.366L1554.207,-862.577C1562.138,-865.474 1570.069,-863.948 1578,-858L1578.511,-857.609L1570.745,-847.454L1578,-845ZM1588.327,-850.103C1585.915,-846.949 1582.128,-845 1578,-845L1581.498,-855.325L1588.327,-850.103ZM1619.818,-826.022L1611.921,-815.695L1591.268,-831.489L1599.164,-841.815L1619.818,-826.022ZM1652.98,-768.533L1646.242,-779.651L1657.095,-786.228C1650.524,-788.146 1644.266,-791.187 1638.354,-795.486C1638.269,-795.548 1638.186,-795.61 1638.103,-795.673L1632.574,-799.901L1640.471,-810.228L1646,-806C1651.374,-802.091 1657.107,-799.496 1663.168,-798.067L1660.925,-788.55L1668.477,-793.126L1675.215,-782.009L1652.98,-768.533ZM1608.509,-741.581L1601.771,-752.699L1624.006,-766.175L1630.744,-755.057L1608.509,-741.581ZM1564.039,-714.63L1557.301,-725.747L1579.536,-739.223L1586.274,-728.106L1564.039,-714.63ZM1519.569,-687.678L1512.831,-698.796L1535.066,-712.271L1541.804,-701.154L1519.569,-687.678ZM1475.098,-660.726L1468.36,-671.844L1490.595,-685.32L1497.333,-674.202L1475.098,-660.726ZM1690.397,-791.21L1688.962,-798.204C1698.572,-800.175 1708.748,-804.044 1719.41,-809.414L1719.685,-808.961L1690.397,-791.21Z" style="fill:white;"/>
+            <path d="M1648,-804C1670,-790 1702,-796 1728,-814C1839.333,-876.667 1968.333,-931.333 2115,-978C2248.333,-1020.667 2388.333,-1046 2535,-1054C2728.333,-1062 2945,-1053.333 3185,-1028C3385,-1006.667 3576.667,-979 3760,-945L3765,-972C3581.667,-1006 3389.333,-1033.667 3188,-1055C2946,-1080.333 2727.667,-1089 2533,-1081C2384.333,-1073 2242,-1047.333 2106,-1004C1956.667,-956.667 1825.333,-901 1712,-837C1690,-823 1660,-809 1630,-817L1648,-804Z" style="fill:rgb(239,68,68);fill-rule:nonzero;"/>
+            <path d="M1645.227,-806.002L1645.533,-814.709C1654.964,-814.378 1664.255,-815.874 1673.153,-818.497L1677.111,-805.068C1676.343,-804.841 1675.571,-804.622 1674.797,-804.411L1674.564,-796.292C1664.924,-796.569 1655.829,-799.018 1648,-804L1645.227,-806.002ZM1714.94,-806.221L1708.631,-818.719C1712.377,-820.61 1716.05,-822.784 1719.598,-825.213L1719.204,-824.99L1718.47,-824.527L1711.013,-836.375C1711.344,-836.583 1711.673,-836.792 1712,-837C1719.74,-841.371 1727.565,-845.703 1735.473,-849.997L1742.153,-837.693C1738.905,-835.93 1735.672,-834.16 1732.454,-832.384L1739.168,-820.227C1735.426,-818.16 1731.703,-816.084 1728,-814C1723.782,-811.08 1719.406,-808.475 1714.94,-806.221ZM1776.192,-840.054L1769.74,-852.478C1772.795,-854.065 1775.863,-855.646 1778.942,-857.222L1772.633,-869.568C1780.892,-873.789 1789.237,-877.969 1797.667,-882.11L1803.839,-869.544C1800.869,-868.085 1797.909,-866.621 1794.96,-865.152L1801.145,-852.755C1792.739,-848.561 1784.421,-844.328 1776.192,-840.054ZM1838.944,-871.062L1832.987,-883.731C1835.777,-885.043 1838.575,-886.351 1841.383,-887.654L1835.574,-900.193C1843.99,-904.093 1852.487,-907.955 1861.064,-911.779L1866.766,-898.993C1864.063,-897.788 1861.368,-896.579 1858.681,-895.366L1864.37,-882.788C1855.812,-878.917 1847.337,-875.008 1838.944,-871.062ZM1902.819,-899.689L1897.319,-912.564C1899.853,-913.646 1902.394,-914.726 1904.942,-915.802L1899.599,-928.482C1908.148,-932.084 1916.773,-935.651 1925.473,-939.183L1930.739,-926.211C1928.291,-925.217 1925.849,-924.221 1923.414,-923.222L1928.641,-910.514C1919.956,-906.941 1911.349,-903.333 1902.819,-899.689ZM1967.636,-926.116L1962.559,-939.163C1964.849,-940.054 1967.145,-940.943 1969.446,-941.83L1964.537,-954.608C1973.199,-957.935 1981.932,-961.229 1990.736,-964.49L1995.598,-951.361C1993.392,-950.544 1991.19,-949.725 1988.992,-948.903L1993.792,-936.108C1985,-932.81 1976.281,-929.48 1967.636,-926.116ZM2033.245,-950.509L2028.559,-963.702C2030.619,-964.434 2032.684,-965.164 2034.752,-965.892L2030.247,-978.733C2039.004,-981.805 2047.828,-984.846 2056.719,-987.856L2061.208,-974.595C2059.228,-973.925 2057.252,-973.254 2055.28,-972.58L2059.682,-959.733C2050.801,-956.689 2041.988,-953.615 2033.245,-950.509ZM2099.523,-973.024L2095.198,-986.34C2097.042,-986.939 2098.889,-987.536 2100.739,-988.133L2096.608,-1001.004C2099.731,-1002.007 2102.861,-1003.005 2106,-1004C2111.761,-1005.835 2117.532,-1007.639 2123.316,-1009.411L2127.417,-996.026C2125.671,-995.491 2123.926,-994.953 2122.182,-994.412L2126.197,-981.537C2122.459,-980.372 2118.727,-979.193 2115,-978C2109.819,-976.351 2104.66,-974.693 2099.523,-973.024ZM2166.453,-993.511L2162.639,-1006.981C2164.167,-1007.414 2165.697,-1007.845 2167.227,-1008.273L2163.627,-1021.199C2172.612,-1023.701 2181.624,-1026.129 2190.663,-1028.481L2194.189,-1014.932C2192.804,-1014.572 2191.421,-1014.21 2190.038,-1013.846L2193.459,-1000.903C2184.428,-998.516 2175.426,-996.051 2166.453,-993.511ZM2234.2,-1011.107L2230.975,-1024.73C2232.139,-1025.006 2233.304,-1025.28 2234.469,-1025.553L2231.439,-1038.541C2240.519,-1040.659 2249.626,-1042.702 2258.759,-1044.672L2261.71,-1030.986L2258.658,-1030.325L2261.501,-1017.321C2252.371,-1015.325 2243.271,-1013.254 2234.2,-1011.107ZM2302.642,-1025.764L2300.003,-1039.513L2302.394,-1039.97L2299.922,-1053.008C2309.08,-1054.744 2318.264,-1056.406 2327.475,-1057.995L2329.854,-1044.198L2327.905,-1043.861L2330.183,-1030.81C2320.974,-1029.203 2311.794,-1027.52 2302.642,-1025.764ZM2371.644,-1037.514L2369.581,-1051.361L2370.873,-1051.553L2368.947,-1064.624C2378.165,-1065.983 2387.41,-1067.268 2396.68,-1068.482L2398.497,-1054.6L2397.642,-1054.488L2399.371,-1041.411C2390.1,-1040.185 2380.858,-1038.886 2371.644,-1037.514ZM2441.072,-1046.409L2439.574,-1060.329L2439.781,-1060.351L2438.386,-1073.433C2447.649,-1074.42 2456.937,-1075.337 2466.251,-1076.182L2467.438,-1063.104L2467.657,-1063.125L2468.934,-1049.183C2459.619,-1048.33 2450.331,-1047.406 2441.072,-1046.409ZM2510.8,-1052.519L2509.913,-1065.581L2509.061,-1065.524L2508.119,-1079.492C2516.393,-1080.05 2524.686,-1080.553 2533,-1081C2534.023,-1081.042 2535.046,-1081.084 2536.07,-1081.125L2536.594,-1068.077L2538.189,-1068.142L2538.751,-1054.153C2537.5,-1054.103 2536.25,-1054.052 2535,-1054C2526.913,-1053.559 2518.846,-1053.065 2510.8,-1052.519ZM2580.727,-1055.569L2580.37,-1068.6L2578.431,-1068.547L2578.046,-1082.542C2587.325,-1082.797 2596.656,-1083.016 2606.038,-1083.198L2606.291,-1070.176L2608.45,-1070.219L2608.719,-1056.221C2599.336,-1056.041 2590.006,-1055.824 2580.727,-1055.569ZM2650.715,-1056.778L2650.619,-1069.786L2648.143,-1069.767L2648.034,-1083.767C2657.318,-1083.839 2666.651,-1083.877 2676.034,-1083.88L2676.038,-1070.879L2678.716,-1070.88L2678.715,-1056.88C2669.332,-1056.881 2659.999,-1056.847 2650.715,-1056.778ZM2720.714,-1056.644L2720.857,-1069.634L2717.887,-1069.666L2718.033,-1083.666C2727.319,-1083.569 2736.651,-1083.439 2746.03,-1083.276L2745.805,-1070.29L2748.963,-1070.235L2748.71,-1056.237C2739.332,-1056.406 2729.999,-1056.542 2720.714,-1056.644ZM2790.699,-1055.267L2791.064,-1068.247L2787.637,-1068.342L2788.019,-1082.337C2797.304,-1082.083 2806.633,-1081.798 2816.006,-1081.482L2815.569,-1068.504L2819.169,-1068.38L2818.685,-1054.389C2809.312,-1054.713 2799.983,-1055.006 2790.699,-1055.267ZM2860.652,-1052.737L2861.223,-1065.716L2857.373,-1065.883L2857.975,-1079.87C2867.256,-1079.471 2876.58,-1079.042 2885.946,-1078.583L2885.31,-1065.603L2889.321,-1065.404L2888.621,-1051.421C2879.256,-1051.89 2869.933,-1052.329 2860.652,-1052.737ZM2930.559,-1049.136L2931.323,-1062.122L2927.08,-1062.368L2927.886,-1076.345C2937.161,-1075.81 2946.478,-1075.247 2955.834,-1074.655L2955.012,-1061.664L2959.407,-1061.382L2958.506,-1047.412C2949.149,-1048.015 2939.834,-1048.59 2930.559,-1049.136ZM3000.407,-1044.535L3001.353,-1057.538L2996.743,-1057.869L2997.739,-1071.833C3007.009,-1071.172 3016.317,-1070.483 3025.663,-1069.767L3024.666,-1056.756L3029.417,-1056.387L3028.328,-1042.43C3018.982,-1043.159 3009.675,-1043.861 3000.407,-1044.535ZM3070.187,-1039.001L3071.305,-1052.03L3066.353,-1052.449L3067.528,-1066.4C3076.79,-1065.62 3086.088,-1064.813 3095.424,-1063.981L3094.261,-1050.941L3099.344,-1050.482L3098.079,-1036.539C3088.745,-1037.386 3079.448,-1038.207 3070.187,-1039.001ZM3139.893,-1032.592L3141.173,-1045.657L3135.902,-1046.167L3137.244,-1060.102C3146.497,-1059.211 3155.785,-1058.295 3165.109,-1057.354L3163.788,-1044.274L3169.183,-1043.723L3167.753,-1029.796C3158.431,-1030.753 3149.144,-1031.685 3139.893,-1032.592ZM3209.517,-1025.349L3210.953,-1038.454L3205.373,-1039.059L3206.88,-1052.978C3216.176,-1051.972 3225.454,-1050.952 3234.712,-1049.919L3233.248,-1036.801L3238.917,-1036.162L3237.344,-1022.25C3228.087,-1023.297 3218.811,-1024.33 3209.517,-1025.349ZM3279.066,-1017.427L3280.62,-1030.569L3274.817,-1031.248L3276.441,-1045.154C3285.729,-1044.069 3294.997,-1042.971 3304.246,-1041.859L3302.664,-1028.704L3308.559,-1027.989L3306.867,-1014.092C3297.619,-1015.217 3288.352,-1016.329 3279.066,-1017.427ZM3348.546,-1008.908L3350.22,-1022.084L3344.188,-1022.844L3345.932,-1036.735C3355.211,-1035.57 3364.469,-1034.39 3373.708,-1033.197L3372.004,-1020.009L3378.13,-1019.211L3376.316,-1005.329C3367.078,-1006.536 3357.821,-1007.729 3348.546,-1008.908ZM3417.948,-999.776L3419.746,-1012.983L3413.479,-1013.829L3415.347,-1027.704C3424.615,-1026.456 3433.863,-1025.194 3443.09,-1023.917L3441.261,-1010.701L3447.624,-1009.814L3445.685,-995.949C3436.458,-997.239 3427.212,-998.515 3417.948,-999.776ZM3487.263,-990.016L3489.189,-1003.247L3482.681,-1004.188L3484.677,-1018.045C3493.934,-1016.711 3503.169,-1015.363 3512.384,-1014.001L3510.426,-1000.762L3517.032,-999.779L3514.964,-985.932C3505.75,-987.308 3496.516,-988.67 3487.263,-990.016ZM3556.485,-979.611L3558.541,-992.859C3556.291,-993.207 3554.04,-993.554 3551.787,-993.9L3553.914,-1007.738C3563.158,-1006.317 3572.38,-1004.881 3581.581,-1003.43L3579.491,-990.178C3581.777,-989.816 3584.062,-989.454 3586.346,-989.09L3584.146,-975.264C3574.945,-976.728 3565.725,-978.177 3556.485,-979.611ZM3625.604,-968.543L3627.793,-981.799C3625.459,-982.183 3623.124,-982.567 3620.787,-982.95L3623.049,-996.766C3632.279,-995.254 3641.487,-993.728 3650.673,-992.186L3648.448,-978.93C3650.819,-978.531 3653.189,-978.132 3655.557,-977.731L3653.221,-963.927C3644.036,-965.481 3634.83,-967.02 3625.604,-968.543ZM3694.612,-956.796L3696.936,-970.047C3694.516,-970.471 3692.094,-970.894 3689.671,-971.316L3692.072,-985.108C3701.286,-983.504 3710.478,-981.884 3719.647,-980.249L3717.285,-967.002C3719.743,-966.563 3722.2,-966.123 3724.655,-965.682L3722.181,-951.903C3713.012,-953.549 3703.822,-955.181 3694.612,-956.796ZM3760.647,-948.496L3746.882,-951.046L3751.232,-974.538C3751.236,-974.538 3751.239,-974.537 3751.243,-974.536L3759.171,-963.002L3760.972,-972.746C3762.315,-972.498 3763.658,-972.249 3765,-972L3760.647,-948.496Z" style="fill:white;"/>
+            <g id="no-parking-badge" transform="matrix(1,0,0,1,-443,722)">
+                <circle cx="0" cy="0" r="18" style="fill:white;stroke:rgb(220,38,38);stroke-width:3.6px;"/>
+                <g transform="matrix(1,0,0,1,0,6)">
+                    <text x="-6.003px" y="0px" style="font-family:'Helvetica-Bold', 'Helvetica';font-weight:700;font-size:18px;fill:rgb(30,41,59);">P</text>
+                </g>
+                <path d="M-12.5,-12.5L12.5,12.5" style="fill:none;fill-rule:nonzero;stroke:rgb(220,38,38);stroke-width:3.6px;stroke-linecap:round;"/>
+            </g>
+            <g id="no-parking-badge1" affinity:id="no-parking-badge" transform="matrix(1,0,0,1,116,269)">
+                <circle cx="0" cy="0" r="18" style="fill:white;stroke:rgb(220,38,38);stroke-width:3.6px;"/>
+                <g transform="matrix(1,0,0,1,0,6)">
+                    <text x="-6.003px" y="0px" style="font-family:'Helvetica-Bold', 'Helvetica';font-weight:700;font-size:18px;fill:rgb(30,41,59);">P</text>
+                </g>
+                <path d="M-12.5,-12.5L12.5,12.5" style="fill:none;fill-rule:nonzero;stroke:rgb(220,38,38);stroke-width:3.6px;stroke-linecap:round;"/>
+            </g>
+            <g id="no-parking-badge2" affinity:id="no-parking-badge" transform="matrix(1,0,0,1,689,-182)">
+                <circle cx="0" cy="0" r="18" style="fill:white;stroke:rgb(220,38,38);stroke-width:3.6px;"/>
+                <g transform="matrix(1,0,0,1,0,6)">
+                    <text x="-6.003px" y="0px" style="font-family:'Helvetica-Bold', 'Helvetica';font-weight:700;font-size:18px;fill:rgb(30,41,59);">P</text>
+                </g>
+                <path d="M-12.5,-12.5L12.5,12.5" style="fill:none;fill-rule:nonzero;stroke:rgb(220,38,38);stroke-width:3.6px;stroke-linecap:round;"/>
+            </g>
+            <g id="no-parking-badge3" affinity:id="no-parking-badge" transform="matrix(1,0,0,1,1078,-466)">
+                <circle cx="0" cy="0" r="18" style="fill:white;stroke:rgb(220,38,38);stroke-width:3.6px;"/>
+                <g transform="matrix(1,0,0,1,0,6)">
+                    <text x="-6.003px" y="0px" style="font-family:'Helvetica-Bold', 'Helvetica';font-weight:700;font-size:18px;fill:rgb(30,41,59);">P</text>
+                </g>
+                <path d="M-12.5,-12.5L12.5,12.5" style="fill:none;fill-rule:nonzero;stroke:rgb(220,38,38);stroke-width:3.6px;stroke-linecap:round;"/>
+            </g>
+            <g id="no-parking-badge4" affinity:id="no-parking-badge" transform="matrix(1,0,0,1,1492,-859)">
+                <circle cx="0" cy="0" r="18" style="fill:white;stroke:rgb(220,38,38);stroke-width:3.6px;"/>
+                <g transform="matrix(1,0,0,1,0,6)">
+                    <text x="-6.003px" y="0px" style="font-family:'Helvetica-Bold', 'Helvetica';font-weight:700;font-size:18px;fill:rgb(30,41,59);">P</text>
+                </g>
+                <path d="M-12.5,-12.5L12.5,12.5" style="fill-rule:nonzero;stroke:rgb(220,38,38);stroke-width:3.6px;stroke-linecap:round;"/>
+            </g>
+            <g id="no-parking-badge5" affinity:id="no-parking-badge" transform="matrix(1,0,0,1,2557,-1125)">
+                <circle cx="0" cy="0" r="18" style="fill:white;stroke:rgb(220,38,38);stroke-width:3.6px;"/>
+                <g transform="matrix(1,0,0,1,0,6)">
+                    <text x="-6.003px" y="0px" style="font-family:'Helvetica-Bold', 'Helvetica';font-weight:700;font-size:18px;fill:rgb(30,41,59);">P</text>
+                </g>
+                <path d="M-12.5,-12.5L12.5,12.5" style="fill:none;fill-rule:nonzero;stroke:rgb(220,38,38);stroke-width:3.6px;stroke-linecap:round;"/>
+            </g>
+            <g transform="matrix(1,0,0,1,127,-106)">
+                <text x="-215.275px" y="0px" style="font-family:'Helvetica-Bold', 'Helvetica';font-weight:700;font-size:27px;fill:rgb(185,28,28);">No parking on this side of FM 170</text>
+                <g transform="matrix(1,0,0,1,0,32)">
+                    <text x="-325.302px" y="0px" style="font-family:'Helvetica-Bold', 'Helvetica';font-weight:700;font-size:23px;fill:rgb(153,27,27);">Do not cross the highway · parked vehicles may be ticketed</text>
+                </g>
+            </g>
+            <g transform="matrix(1,0,0,1,154,783)">
+                <g transform="matrix(0.537649,-0.437546,0.437546,0.537649,-162.858481,-51.927102)">
+                    <text x="-394.618px" y="0px" style="font-family:'Helvetica-Bold', 'Helvetica';font-weight:700;font-size:27px;fill:rgb(29,78,216);">Ensure no part of your vehicle is over pavement when parked</text>
+                </g>
+            </g>
+            <g transform="matrix(0.999387,0.03501,-0.03501,0.999387,1438.893109,-247.189471)">
+                <g transform="matrix(0.537649,-0.437546,0.437546,0.537649,-162.858481,-51.927102)">
+                    <text x="-394.618px" y="0px" style="font-family:'Helvetica-Bold', 'Helvetica';font-weight:700;font-size:27px;fill:rgb(29,78,216);">Ensure no part of your vehicle is over pavement when parked</text>
+                </g>
+            </g>
+            <g transform="matrix(0.746189,0.665734,-0.665734,0.746189,2902.503233,-712.373647)">
+                <g transform="matrix(0.537649,-0.437546,0.437546,0.537649,-162.858481,-51.927102)">
+                    <text x="-394.618px" y="0px" style="font-family:'Helvetica-Bold', 'Helvetica';font-weight:700;font-size:27px;fill:rgb(29,78,216);">Ensure no part of your vehicle is over pavement when parked</text>
+                </g>
+            </g>
+            <g transform="matrix(1,0,0,1,2432,-1230)">
+                <text x="-215.275px" y="0px" style="font-family:'Helvetica-Bold', 'Helvetica';font-weight:700;font-size:27px;fill:rgb(185,28,28);">No parking on this side of FM 170</text>
+                <g transform="matrix(1,0,0,1,0,32)">
+                    <text x="-325.302px" y="0px" style="font-family:'Helvetica-Bold', 'Helvetica';font-weight:700;font-size:23px;fill:rgb(153,27,27);">Do not cross the highway · parked vehicles may be ticketed</text>
+                </g>
+            </g>
+        </g>
+        <g id="layer-parking-zone">
+            <g id="parking-zone-sw">
+                <g transform="matrix(1,0,0,1,21,0)">
+                    <path d="M-185,685L-562,980L-542,1005L-165,710L-185,685Z" style="fill:rgb(59,130,246);fill-opacity:0.26;fill-rule:nonzero;stroke:rgb(29,78,216);stroke-width:2px;stroke-linejoin:round;"/>
+                </g>
+                <g transform="matrix(1,0,0,1,21,0)">
+                    <path d="M-175,697L-552,992" style="fill:none;fill-rule:nonzero;stroke:rgb(29,78,216);stroke-opacity:0.55;stroke-width:28px;stroke-dasharray:1.8,14;"/>
+                </g>
+                <g transform="matrix(0.999897,0.014329,-0.014329,0.999897,3.196731,-2.52264)">
+                    <g transform="matrix(1.1051,0,-0,1.098656,487.261089,-423.137358)">
+                        <path d="M-170,673L-404,860L-389,881L-153,695L-170,673Z" style="fill:rgb(59,130,246);fill-opacity:0.26;fill-rule:nonzero;stroke:rgb(29,78,216);stroke-width:2px;stroke-linejoin:round;"/>
+                    </g>
+                    <g transform="matrix(0.82624,0.135966,0.135966,0.893607,360.014785,-271.109712)">
+                        <path d="M-175,697L-552,992" style="fill:none;fill-rule:nonzero;stroke:rgb(29,78,216);stroke-opacity:0.55;stroke-width:28px;stroke-dasharray:1.8,14;"/>
+                    </g>
+                </g>
+                <g id="parking-badge" transform="matrix(1,0,0,1,-317,898)">
+                    <path d="M10,-16C13.311,-16 16,-13.311 16,-10L16,10C16,13.311 13.311,16 10,16L-10,16C-13.311,16 -16,13.311 -16,10L-16,-10C-16,-13.311 -13.311,-16 -10,-16L10,-16Z" style="fill:rgb(29,78,216);stroke:white;stroke-width:2px;"/>
+                    <g transform="matrix(1,0,0,1,0,6.5)">
+                        <text x="-6.336px" y="0px" style="font-family:'Helvetica-Bold', 'Helvetica';font-weight:700;font-size:19px;fill:white;">P</text>
+                    </g>
+                </g>
+                <g transform="matrix(0.784776,-0.619779,0.619779,0.784776,-216,834)">
+                    <text x="-70.544px" y="0px" style="font-family:'Helvetica-BoldOblique', 'Helvetica';font-weight:700;font-style:italic;font-size:25px;fill:rgb(29,78,216);">~ 47 spaces</text>
+                </g>
+                <g transform="matrix(0.784776,-0.619779,0.619779,0.784776,186,533)">
+                    <text x="-70.544px" y="0px" style="font-family:'Helvetica-BoldOblique', 'Helvetica';font-weight:700;font-style:italic;font-size:25px;fill:rgb(29,78,216);">~ 21 spaces</text>
+                </g>
+                <g transform="matrix(0.784776,-0.619779,0.619779,0.784776,-456,982)">
+                    <path d="M36,0L-36,0" style="fill:none;fill-rule:nonzero;stroke:rgb(29,78,216);stroke-width:3.8px;stroke-linecap:round;"/>
+                    <path d="M-22,-9L-38,0L-22,9" style="fill:none;fill-rule:nonzero;stroke:rgb(29,78,216);stroke-width:3.8px;stroke-linecap:round;stroke-linejoin:round;"/>
+                </g>
+                <g transform="matrix(1,0,0,1,-334,989)">
+                    <text x="-91.019px" y="0px" style="font-family:'Helvetica-BoldOblique', 'Helvetica';font-weight:700;font-style:italic;font-size:21px;fill:rgb(29,78,216);">Parking continues</text>
+                </g>
+            </g>
+            <g id="parking-zone-central">
+                <path d="M678,-4L1474,-616L1753,-770C1862.333,-830 1988.667,-883.333 2132,-930C2193.333,-950 2251.333,-965.667 2306,-977L2313,-947C2259,-935.667 2202,-920.333 2142,-901C2000.667,-855 1876,-802.333 1768,-743L1492,-591L697,21L678,-4Z" style="fill:rgb(59,130,246);fill-opacity:0.26;fill-rule:nonzero;stroke:rgb(29,78,216);stroke-width:2px;stroke-linejoin:round;"/>
+                <path d="M688,8L1483,-603L1760,-756C1868.667,-816 1994.333,-869 2137,-915C2197.667,-935 2255.333,-950.667 2310,-962" style="fill:none;fill-rule:nonzero;stroke:rgb(29,78,216);stroke-opacity:0.55;stroke-width:26px;stroke-dasharray:1.8,14;"/>
+                <g id="parking-badge1" affinity:id="parking-badge" transform="matrix(1,0,0,1,1176,-286)">
+                    <path d="M10,-16C13.311,-16 16,-13.311 16,-10L16,10C16,13.311 13.311,16 10,16L-10,16C-13.311,16 -16,13.311 -16,10L-16,-10C-16,-13.311 -13.311,-16 -10,-16L10,-16Z" style="fill:rgb(29,78,216);stroke:white;stroke-width:2px;"/>
+                    <g transform="matrix(1,0,0,1,0,6.5)">
+                        <text x="-6.336px" y="0px" style="font-family:'Helvetica-Bold', 'Helvetica';font-weight:700;font-size:19px;fill:white;">P</text>
+                    </g>
+                </g>
+                <g id="parking-badge2" affinity:id="parking-badge" transform="matrix(1,0,0,1,817,-15)">
+                    <path d="M10,-16C13.311,-16 16,-13.311 16,-10L16,10C16,13.311 13.311,16 10,16L-10,16C-13.311,16 -16,13.311 -16,10L-16,-10C-16,-13.311 -13.311,-16 -10,-16L10,-16Z" style="fill:rgb(29,78,216);stroke:white;stroke-width:2px;"/>
+                    <g transform="matrix(1,0,0,1,0,6.5)">
+                        <text x="-6.336px" y="0px" style="font-family:'Helvetica-Bold', 'Helvetica';font-weight:700;font-size:19px;fill:white;">P</text>
+                    </g>
+                </g>
+                <g id="parking-badge3" affinity:id="parking-badge" transform="matrix(1,0,0,1,276,456)">
+                    <path d="M10,-16C13.311,-16 16,-13.311 16,-10L16,10C16,13.311 13.311,16 10,16L-10,16C-13.311,16 -16,13.311 -16,10L-16,-10C-16,-13.311 -13.311,-16 -10,-16L10,-16Z" style="fill:rgb(29,78,216);stroke:white;stroke-width:2px;"/>
+                    <g transform="matrix(1,0,0,1,0,6.5)">
+                        <text x="-6.336px" y="0px" style="font-family:'Helvetica-Bold', 'Helvetica';font-weight:700;font-size:19px;fill:white;">P</text>
+                    </g>
+                </g>
+                <g id="parking-badge4" affinity:id="parking-badge" transform="matrix(1,0,0,1,1793,-706)">
+                    <path d="M10,-16C13.311,-16 16,-13.311 16,-10L16,10C16,13.311 13.311,16 10,16L-10,16C-13.311,16 -16,13.311 -16,10L-16,-10C-16,-13.311 -13.311,-16 -10,-16L10,-16Z" style="fill:rgb(29,78,216);stroke:white;stroke-width:2px;"/>
+                    <g transform="matrix(1,0,0,1,0,6.5)">
+                        <text x="-6.336px" y="0px" style="font-family:'Helvetica-Bold', 'Helvetica';font-weight:700;font-size:19px;fill:white;">P</text>
+                    </g>
+                </g>
+                <g transform="matrix(0.809017,-0.587785,0.587785,0.809017,1281,-351)">
+                    <text x="-76.984px" y="0px" style="font-family:'Helvetica-BoldOblique', 'Helvetica';font-weight:700;font-style:italic;font-size:26px;fill:rgb(29,78,216);">~187 spaces</text>
+                </g>
+            </g>
+            <g id="parking-zone-ne">
+                <g transform="matrix(0.975714,0,0,1,58.892857,0)">
+                    <path d="M2425,-992C2465,-998 2505,-1002 2545,-1004C2738.333,-1010.667 2931.667,-1004 3125,-984L3122,-954C2930.667,-974 2738.667,-980.667 2546,-974C2507.333,-972 2468.667,-968 2430,-962L2425,-992Z" style="fill:rgb(59,130,246);fill-opacity:0.26;fill-rule:nonzero;stroke:rgb(29,78,216);stroke-width:2px;stroke-linejoin:round;"/>
+                </g>
+                <path d="M2428,-977C2466.667,-983 2505.667,-987 2545,-989C2738.333,-995.667 2916,-990 3108,-970" style="fill:none;fill-rule:nonzero;stroke:rgb(29,78,216);stroke-opacity:0.55;stroke-width:26px;stroke-dasharray:1.8,14;"/>
+                <g id="parking-badge5" affinity:id="parking-badge" transform="matrix(1,0,0,1,2560,-922)">
+                    <path d="M10,-16C13.311,-16 16,-13.311 16,-10L16,10C16,13.311 13.311,16 10,16L-10,16C-13.311,16 -16,13.311 -16,10L-16,-10C-16,-13.311 -13.311,-16 -10,-16L10,-16Z" style="fill:rgb(29,78,216);stroke:white;stroke-width:2px;"/>
+                    <g transform="matrix(1,0,0,1,0,6.5)">
+                        <text x="-6.336px" y="0px" style="font-family:'Helvetica-Bold', 'Helvetica';font-weight:700;font-size:19px;fill:white;">P</text>
+                    </g>
+                </g>
+                <g transform="matrix(0.998135,0.061049,-0.061049,0.998135,2675,-908)">
+                    <text x="-69.754px" y="0px" style="font-family:'Helvetica-BoldOblique', 'Helvetica';font-weight:700;font-style:italic;font-size:26px;fill:rgb(29,78,216);">~67 spaces</text>
+                </g>
+                <g transform="matrix(0.993572,0.113203,-0.113203,0.993572,3062,-935)">
+                    <path d="M-42,0L36,0" style="fill:none;fill-rule:nonzero;stroke:rgb(29,78,216);stroke-width:3.8px;stroke-linecap:round;"/>
+                    <path d="M20,-9L38,0L20,9" style="fill:none;fill-rule:nonzero;stroke:rgb(29,78,216);stroke-width:3.8px;stroke-linecap:round;stroke-linejoin:round;"/>
+                </g>
+                <g transform="matrix(1,0,0,1,3021,-894)">
+                    <text x="-91.019px" y="0px" style="font-family:'Helvetica-BoldOblique', 'Helvetica';font-weight:700;font-style:italic;font-size:21px;fill:rgb(29,78,216);">Parking continues</text>
+                </g>
+            </g>
+        </g>
+        <g id="layer-dropoff-zone">
+            <g id="drop-off-zone" affinity:id="drop off zone" transform="matrix(1,0,0,1,934,-609)">
+                <path d="M-343,661L-471,757L-474,803C-474,803 -385.498,734.181 -366.269,719.195C-358.122,712.847 -321.853,685.122 -321.853,685.122L-343,661Z" style="fill:rgb(228,211,42);fill-opacity:0.26;fill-rule:nonzero;"/>
+            </g>
+            <g transform="matrix(0.799402,-0.600797,0.600797,0.799402,530.903754,126.035043)">
+                <text x="-69.766px" y="0px" style="font-family:'Helvetica-BoldOblique', 'Helvetica';font-weight:700;font-style:italic;font-size:16px;fill:rgb(146,64,14);">drop-off zone only</text>
+            </g>
+        </g>
+        <g id="layer-restricted-access">
+            <g id="Gate" transform="matrix(0.765107,0.643903,-0.643903,0.765107,269.639006,-303.955375)">
+                <g transform="matrix(0.4072,0.075178,-1.096623,5.93985,596.820076,-1466.682586)">
+                    <path d="M557,281L553,310" style="fill:none;fill-rule:nonzero;stroke:rgb(30,41,59);stroke-width:4.4px;stroke-linecap:round;"/>
+                    <path d="M557,281L553,310" style="fill:none;fill-rule:nonzero;stroke:rgb(239,68,68);stroke-width:3px;stroke-dasharray:3.5,3.5;"/>
+                    <path d="M557,281L553,310" style="fill:none;fill-rule:nonzero;stroke:white;stroke-width:3px;stroke-dasharray:0,3.5,3.5,0;"/>
+                </g>
+            </g>
+            <g transform="matrix(0.706558,0.922465,-0.999598,0.315004,404.742534,-382.06228)">
+                <path d="M559,276.857L578,239.571" style="fill:none;fill-rule:nonzero;stroke:rgb(30,41,59);stroke-width:1.3px;"/>
+            </g>
+            <g transform="matrix(1,0,0,1,636,230)">
+                <text x="-56.403px" y="0px" style="font-family:'Helvetica-Bold', 'Helvetica';font-weight:700;font-size:14px;fill:rgb(185,28,28);">Restricted Entry:</text>
+                <text x="-69.638px" y="14px" style="font-family:'Helvetica';font-size:14px;fill:rgb(185,28,28);">No Race Dark Parking</text>
+            </g>
+        </g>
+        <g id="layer-rv-dump">
+            <g transform="matrix(1.192308,0,0,1,-116.153846,0)">
+                <path d="M630,426L604,426" style="fill:none;fill-rule:nonzero;stroke:rgb(30,41,59);stroke-opacity:0.25;stroke-width:1.3px;"/>
+            </g>
+            <g transform="matrix(1,0,0,1,598,430)">
+                <text x="-59.01px" y="0px" style="font-family:'Helvetica-Bold', 'Helvetica';font-weight:700;font-size:13.5px;fill:rgb(30,41,59);fill-opacity:0.25;">R<tspan x="-49.498px -40.493px " y="0px 0px ">V </tspan>dump</text>
+            </g>
+        </g>
+        <g id="layer-portable-restrooms">
+            <g transform="matrix(0.988228,0.152986,-0.152986,0.988228,641.5,446)">
+                <path d="M5.7,0C6.142,0 6.5,0.358 6.5,0.8L6.5,6C6.5,6.442 6.142,6.8 5.7,6.8L0.8,6.8C0.358,6.8 0,6.442 0,6L0,0.8C0,0.358 0.358,0 0.8,0L5.7,0Z" style="fill:rgb(219,234,254);stroke:rgb(29,78,216);stroke-width:1.1px;"/>
+                <path d="M5.7,8.2C6.142,8.2 6.5,8.558 6.5,9L6.5,14.2C6.5,14.642 6.142,15 5.7,15L0.8,15C0.358,15 0,14.642 0,14.2L0,9C0,8.558 0.358,8.2 0.8,8.2L5.7,8.2Z" style="fill:rgb(219,234,254);stroke:rgb(29,78,216);stroke-width:1.1px;"/>
+                <path d="M5.7,16.4C6.142,16.4 6.5,16.758 6.5,17.2L6.5,22.4C6.5,22.842 6.142,23.2 5.7,23.2L0.8,23.2C0.358,23.2 0,22.842 0,22.4L0,17.2C0,16.758 0.358,16.4 0.8,16.4L5.7,16.4Z" style="fill:rgb(219,234,254);stroke:rgb(29,78,216);stroke-width:1.1px;"/>
+                <path d="M5.7,24.6C6.142,24.6 6.5,24.958 6.5,25.4L6.5,30.6C6.5,31.042 6.142,31.4 5.7,31.4L0.8,31.4C0.358,31.4 0,31.042 0,30.6L0,25.4C0,24.958 0.358,24.6 0.8,24.6L5.7,24.6Z" style="fill:rgb(219,234,254);stroke:rgb(29,78,216);stroke-width:1.1px;"/>
+                <path d="M5.7,32.8C6.142,32.8 6.5,33.158 6.5,33.6L6.5,38.8C6.5,39.242 6.142,39.6 5.7,39.6L0.8,39.6C0.358,39.6 0,39.242 0,38.8L0,33.6C0,33.158 0.358,32.8 0.8,32.8L5.7,32.8Z" style="fill:rgb(219,234,254);stroke:rgb(29,78,216);stroke-width:1.1px;"/>
+                <path d="M5.7,41C6.142,41 6.5,41.358 6.5,41.8L6.5,47C6.5,47.442 6.142,47.8 5.7,47.8L0.8,47.8C0.358,47.8 0,47.442 0,47L0,41.8C0,41.358 0.358,41 0.8,41L5.7,41Z" style="fill:rgb(219,234,254);stroke:rgb(29,78,216);stroke-width:1.1px;"/>
+                <path d="M5.7,49.2C6.142,49.2 6.5,49.558 6.5,50L6.5,55.2C6.5,55.642 6.142,56 5.7,56L0.8,56C0.358,56 0,55.642 0,55.2L0,50C0,49.558 0.358,49.2 0.8,49.2L5.7,49.2Z" style="fill:rgb(219,234,254);stroke:rgb(29,78,216);stroke-width:1.1px;"/>
+                <path d="M5.7,57.4C6.142,57.4 6.5,57.758 6.5,58.2L6.5,63.4C6.5,63.842 6.142,64.2 5.7,64.2L0.8,64.2C0.358,64.2 0,63.842 0,63.4L0,58.2C0,57.758 0.358,57.4 0.8,57.4L5.7,57.4Z" style="fill:rgb(219,234,254);stroke:rgb(29,78,216);stroke-width:1.1px;"/>
+                <path d="M5.7,65.6C6.142,65.6 6.5,65.958 6.5,66.4L6.5,71.6C6.5,72.042 6.142,72.4 5.7,72.4L0.8,72.4C0.358,72.4 0,72.042 0,71.6L0,66.4C0,65.958 0.358,65.6 0.8,65.6L5.7,65.6Z" style="fill:rgb(219,234,254);stroke:rgb(29,78,216);stroke-width:1.1px;"/>
+                <path d="M5.7,73.8C6.142,73.8 6.5,74.158 6.5,74.6L6.5,79.8C6.5,80.242 6.142,80.6 5.7,80.6L0.8,80.6C0.358,80.6 0,80.242 0,79.8L0,74.6C0,74.158 0.358,73.8 0.8,73.8L5.7,73.8Z" style="fill:rgb(219,234,254);stroke:rgb(29,78,216);stroke-width:1.1px;"/>
+                <path d="M5.7,82C6.142,82 6.5,82.358 6.5,82.8L6.5,88C6.5,88.442 6.142,88.8 5.7,88.8L0.8,88.8C0.358,88.8 0,88.442 0,88L0,82.8C0,82.358 0.358,82 0.8,82L5.7,82Z" style="fill:rgb(219,234,254);stroke:rgb(29,78,216);stroke-width:1.1px;"/>
+                <path d="M5.7,90.2C6.142,90.2 6.5,90.558 6.5,91L6.5,96.2C6.5,96.642 6.142,97 5.7,97L0.8,97C0.358,97 0,96.642 0,96.2L0,91C0,90.558 0.358,90.2 0.8,90.2L5.7,90.2Z" style="fill:rgb(219,234,254);stroke:rgb(29,78,216);stroke-width:1.1px;"/>
+            </g>
+            <path d="M628,496L602,496" style="fill:none;fill-rule:nonzero;stroke:rgb(30,41,59);stroke-width:1.3px;"/>
+            <g transform="matrix(1,0,0,1,596,500)">
+                <text x="-67.533px" y="0px" style="font-family:'Helvetica-Bold', 'Helvetica';font-weight:700;font-size:13.5px;fill:rgb(30,41,59);">Lavatories</text>
+            </g>
+        </g>
+        <g id="layer-water-spigot" transform="matrix(1,0,0,1,-3,37)">
+            <g transform="matrix(1.25,0,0,1.2,-206.5,-118.2)">
+                <path d="M846,556L866,576" style="fill-rule:nonzero;stroke:rgb(30,41,59);stroke-opacity:0.25;stroke-width:1.3px;"/>
+            </g>
+            <g transform="matrix(1,0,0,1,876,578)">
+                <text x="0px" y="0px" style="font-family:'Helvetica-BoldOblique', 'Helvetica';font-weight:700;font-style:italic;font-size:13px;fill:rgb(30,41,59);fill-opacity:0.25;">W<tspan x="11.794px 19.024px " y="0px 0px ">at</tspan>er spigot</text>
+            </g>
+        </g>
+        <g id="layer-picnic-area">
+            <g transform="matrix(1,0,0,1,982,468)">
+                <text x="-35.648px" y="0px" style="font-family:'Helvetica-BoldOblique', 'Helvetica';font-weight:700;font-style:italic;font-size:13.5px;fill-opacity:0.25;">Picnic area</text>
+            </g>
+        </g>
+        <g id="layer-radio-command">
+            <g transform="matrix(0.982287,0.187381,-0.187381,0.982287,853,391)">
+                <path d="M22.5,-5.5C23.328,-5.5 24,-4.828 24,-4L24,4C24,4.828 23.328,5.5 22.5,5.5L-22.5,5.5C-23.328,5.5 -24,4.828 -24,4L-24,-4C-24,-4.828 -23.328,-5.5 -22.5,-5.5L22.5,-5.5Z" style="fill:rgb(248,250,252);stroke:rgb(30,41,59);stroke-width:1.5px;"/>
+                <path d="M23,-5.5C23.552,-5.5 24,-5.052 24,-4.5L24,4.5C24,5.052 23.552,5.5 23,5.5L9,5.5C8.448,5.5 8,5.052 8,4.5L8,-4.5C8,-5.052 8.448,-5.5 9,-5.5L23,-5.5Z" style="fill:rgb(148,163,184);stroke:rgb(30,41,59);stroke-width:1.2px;"/>
+                <circle cx="-14" cy="0" r="2" style="fill:rgb(239,68,68);"/>
+            </g>
+            <path d="M874,386L947,352" style="fill:none;fill-rule:nonzero;stroke:rgb(30,41,59);stroke-width:1.5px;"/>
+            <g transform="matrix(1.037638,-0.271216,0.193312,0.997609,1301.898232,-1005.662698)">
+                <path d="M874,386L947,352" style="fill:none;fill-rule:nonzero;stroke:rgb(30,41,59);stroke-width:1.5px;"/>
+            </g>
+            <g transform="matrix(0.605289,-0.621022,0.782985,0.577188,-155.537591,1115.252563)">
+                <path d="M874,386L947,352" style="fill:none;fill-rule:nonzero;stroke:rgb(30,41,59);stroke-width:1.5px;"/>
+            </g>
+            <g transform="matrix(1,0,0,1,950,355)">
+                <text x="0px" y="0px" style="font-family:'Helvetica-Bold', 'Helvetica';font-weight:700;font-size:14px;fill:rgb(30,41,59);">Radio Command</text>
+            </g>
+            <g transform="matrix(1,0,0,1,2229,-843)">
+                <text x="0px" y="0px" style="font-family:'Helvetica-Bold', 'Helvetica';font-weight:700;font-size:14px;fill:rgb(30,41,59);">No Entry Gate</text>
+            </g>
+            <g transform="matrix(1,0,0,1,588,813)">
+                <text x="0px" y="0px" style="font-family:'Helvetica-Bold', 'Helvetica';font-weight:700;font-size:14px;fill:rgb(30,41,59);">Saturday Packet Pick Up</text>
+            </g>
+        </g>
+    </g>
+    <g id="trail" transform="matrix(1,0,0,1,650,1650)">
+        <path d="M792,332C804,294 785,248 811,212C839,172 909.484,140.87 952,108C994.812,74.901 1033.759,36.134 1072,-18C1118,-60 1172,-96 1218,-142C1264,-188 1316,-230 1364,-276C1414,-324 1445,-359 1495,-409C1541,-455 1543,-437 1579,-485C1601,-515 1584,-533 1554,-553C1516,-579 1481,-677 1439,-699C1389,-725 1378,-848 1322,-868C1272,-886 1218,-896 1184,-922C1154,-944 1142,-976 1152,-1012C1162,-1048 1192,-1082 1222,-1118C1254,-1156 1284,-1198 1306,-1248C1328,-1298 1352,-1410 1392,-1650L1422,-1650C1380,-1404 1354,-1284 1330,-1230C1306,-1176 1274,-1132 1242,-1092C1214,-1058 1188,-1028 1180,-998C1172,-970 1182,-948 1208,-932C1242,-910 1294,-898 1342,-880C1398,-858 1398,-754 1448,-726C1492,-702 1538,-591 1578,-563C1614,-537 1626,-503 1600,-469C1560,-417 1570,-436 1522,-388C1472,-338 1416,-296 1368,-248C1320,-200 1280,-146 1234,-100C1188,-54 1134,-18 1090,24C1046,66 997,111 969,152C938.693,196.379 860,186 834,224C810,258 830,318 820,338L792,332Z" style="fill:rgb(233,223,198);fill-rule:nonzero;stroke:rgb(194,178,147);stroke-width:1px;stroke-linejoin:round;"/>
+        <g id="layer-start-finish">
+            <g id="arch" transform="matrix(2.259494,0.351869,-0.439507,2.82225,808,318.504593)">
+                <g transform="matrix(1,-0,0,1,-0.06729,-0.345938)">
+                    <path d="M-14.437,-4.5C-14.196,-4.5 -14,-4.343 -14,-4.15L-14,4.15C-14,4.343 -14.196,4.5 -14.437,4.5L-18.563,4.5C-18.804,4.5 -19,4.343 -19,4.15L-19,-4.15C-19,-4.343 -18.804,-4.5 -18.563,-4.5L-14.437,-4.5Z" style="fill:rgb(15,23,42);stroke:white;stroke-width:0.9px;"/>
+                </g>
+                <g transform="matrix(1,-0,0,1,-3.159266,-0.314767)">
+                    <path d="M18.563,-4.5C18.804,-4.5 19,-4.343 19,-4.15L19,4.15C19,4.343 18.804,4.5 18.563,4.5L14.437,4.5C14.196,4.5 14,4.343 14,4.15L14,-4.15C14,-4.343 14.196,-4.5 14.437,-4.5L18.563,-4.5Z" style="fill:rgb(15,23,42);stroke:white;stroke-width:0.9px;"/>
+                </g>
+                <g transform="matrix(0.852474,-0,-0,1,-2.501463,-0.345938)">
+                    <path d="M-16.5,0L16.5,0" style="fill:none;fill-rule:nonzero;stroke:rgb(15,23,42);stroke-width:6.13px;"/>
+                </g>
+                <g transform="matrix(0.931911,-0,-0,1,0.124101,0.638003)">
+                    <path d="M-13,0L13,0" style="fill:none;fill-rule:nonzero;stroke:white;stroke-width:2.38px;stroke-dasharray:2.381,2.381;"/>
+                </g>
+                <g transform="matrix(0.965956,0,0,1,-2.075322,-1.568071)">
+                    <path d="M-13,0L13,0" style="fill:none;fill-rule:nonzero;stroke:white;stroke-width:2.35px;stroke-dasharray:2.35,2.35;"/>
+                </g>
+            </g>
+            <g id="pointer" transform="matrix(0.892487,0.066163,0.025873,0.977786,86.296193,-49.056002)">
+                <path d="M846.639,319.703L878.091,302.915" style="fill:none;fill-rule:nonzero;stroke:rgb(30,41,59);stroke-width:1.5px;"/>
+            </g>
+            <g transform="matrix(1,0,0,1,884,305)">
+                <text x="0px" y="0px" style="font-family:'Helvetica-Bold', 'Helvetica';font-weight:700;font-size:14px;fill:rgb(30,41,59);">Start / Finish Line</text>
+            </g>
+        </g>
+    </g>
+</svg>
