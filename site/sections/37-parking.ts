@@ -3,7 +3,7 @@ import { renderParkingPlan, pkSwatch, fpSwatch as S, C, PARK } from '../lib/floo
 import { planLegend } from '../lib/siteplan';
 export const meta = { id: 'parking-plan', title: 'Parking plan' };
 const LABELS: Record<string, [number, number]> = {
-  noPark: [-30, -70], strip1: [70, -48], strip2: [-90, 62], strip3: [0, 0], 'Parking1icon': [50, 4], 'Parking1': [118, 18], 'Parking2': [58, 8], 'No Parking1': [-110, -22], 'Start / Finish Line1': [-70, -40], 'Barton Warnock1': [0, 40], dropoff: [-92, 4],
+  noPark: [-30, -70], strip1: [70, -48], strip2: [-90, 62], strip3: [0, 0], 'Parking1icon': [80, 12], 'Parking1': [62, 0], 'Parking2': [58, 8], 'No Parking1': [-110, -22], 'Start / Finish Line1': [-70, -40], 'Barton Warnock1': [0, 40], dropoff: [-92, 4],
 };
 export function render(c) {
   return `<article class="doc plan"><h2>Parking · Barton Warnock Visitor Center</h2>${renderParkingPlan(c, LABELS)}

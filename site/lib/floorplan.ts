@@ -1,6 +1,7 @@
 // Finish-area floor plan (architectural look, true scale): footprints drawn in local ground meters from Erik's logistics
 // My Map points (content/logistics.json) + OSM roads / lot; no aerial. Sizes are assumptions (see ASSUME) until confirmed.
 import TR from './finish-trace.json';
+import { Scene, textOb, circleOb, lineOb, polyOb, type Pt } from './collide';
 import { esc, f1, textBlock, leaderLine, gmapLink, station } from './util';
 
 export const FT = 0.3048;
@@ -62,6 +63,10 @@ function furniture(W: number, H: number, s: number, ft: number[], gridNote: stri
 }
 const lbl = (x: number, y: number, text: string, o: any = {}) => textBlock(x, y, { text, fs: o.fs ?? 17, color: o.color ?? C.ink, style: o.style ?? 'normal', weight: 'bold', family: 'sans', halo: { color: o.halo ?? '#fff', width: 4.5 }, ha: 'center', linespacing: 1.15, rotation: o.rot });
 const fm170 = (B) => { const a = B.osm.find((f) => f.properties.highway === 'secondary' && B.P(f.geometry.coordinates[0])[0] < B.W).geometry.coordinates as [number, number][]; return a; };
+function fmGeo(B, t: number) { const ws = B.osm.filter((f) => f.properties.highway === 'secondary'); let best: [number, number][] | null = null, bl = 0;
+  for (const w of ws) { const cs = w.geometry.coordinates.map(B.P); for (let i = 1; i < cs.length; i++) { const a = cs[i - 1], b = cs[i]; if ([a, b].some(([x, y]) => x < 40 || y < 40 || x > B.W - 40 || y > B.H - 40)) continue; const l = Math.hypot(b[0] - a[0], b[1] - a[1]); if (l > bl) { bl = l; best = [a, b]; } } }
+  if (!best) return null; const [a, b] = best; let an = Math.atan2(b[1] - a[1], b[0] - a[0]) * 180 / Math.PI; if (an > 90) an -= 180; if (an < -90) an += 180;
+  return { x: a[0] + (b[0] - a[0]) * t, y: a[1] + (b[1] - a[1]) * t, an }; }
 function fmLabel(B, t: number) { const ws = B.osm.filter((f) => f.properties.highway === 'secondary'); let best: [number, number][] | null = null, bl = 0;
   for (const w of ws) { const cs = w.geometry.coordinates.map(B.P); for (let i = 1; i < cs.length; i++) { const a = cs[i - 1], b = cs[i]; if ([a, b].some(([x, y]) => x < 40 || y < 40 || x > B.W - 40 || y > B.H - 40)) continue; const l = Math.hypot(b[0] - a[0], b[1] - a[1]); if (l > bl) { bl = l; best = [a, b]; } } }
   if (!best) return ''; const [a, b] = best; let an = Math.atan2(b[1] - a[1], b[0] - a[0]) * 180 / Math.PI; if (an > 90) an -= 180; if (an < -90) an += 180;
@@ -78,7 +83,7 @@ const RT = roadTools(B), ln = RT.lines[0], cs2 = RT.cum(ln.pts), pr = (drop.coor
     let s0 = S0, s1 = S1; while (s1 > s0 && !clear(s1)) s1 -= 0.5; while (s0 < s1 && !clear(s0)) s0 += 0.5;
     for (let sv = s0; sv <= s1 + 1e-6; sv += 1) { inn.push(off(sv, o1)); out.push(off(sv, o2)); }
     const band = 'M' + [...inn, ...out.reverse()].map((q) => pm(q).map(f1).join(',')).join('L') + 'Z', cx = drop.coords.reduce((t, q) => t + q[0], 0) / drop.coords.length, cy = drop.coords.reduce((t, q) => t + q[1], 0) / drop.coords.length;
-  return { band, where: [cx, cy] as [number, number], anchor: pm(off((s0 + s1) / 2, (o1 + o2) / 2)) }; }
+  return { band, ring: [...inn, ...out], where: [cx, cy] as [number, number], anchor: pm(off((s0 + s1) / 2, (o1 + o2) / 2)) }; }
 export function renderFinishPlan(c, labels: Record<string, [number, number]>) {
   const B = makeBase(c, FRAME, 10, 'fp', 1200, { ground: C.dirt, grid: '#e3dac8', road: C.pave, edge: C.curb, lot: false, osmBld: false }), { gm, pm, P, d, s, W, H, osm, L, pt, rect, poly, ang, way, RW } = B; let g = B.g;
   // surfaces traced from Erik's annotated satellite view (georeferenced on the My Map points, <1 m residual)
@@ -147,14 +152,30 @@ export function renderFinishPlan(c, labels: Record<string, [number, number]>) {
   // Barton Warnock (label inside the building)
   g += `</g>`;
   let shapes = '', lbls = '';
+  // collision scene: course line (buffered), every footprint/symbol (hull of its drawn geometry), labels, leaders, road label
+  const sc = new Scene('finish plan', W, H), hullOf = (svg: string): Pt[] => { const ps: Pt[] = []; for (const m of svg.matchAll(/(?:d="|[ML])\s*(-?[\d.]+)[ ,](-?[\d.]+)/g)) ps.push([+m[1], +m[2]]);
+    for (const m of svg.matchAll(/<(?:circle) cx="(-?[\d.]+)" cy="(-?[\d.]+)" r="([\d.]+)"/g)) { const [x, y, r] = [+m[1], +m[2], +m[3]]; ps.push([x - r, y - r], [x + r, y - r], [x + r, y + r], [x - r, y + r]); }
+    for (const m of svg.matchAll(/<rect x="(-?[\d.]+)" y="(-?[\d.]+)" width="([\d.]+)" height="([\d.]+)"/g)) { const [x, y, w, h] = [+m[1], +m[2], +m[3], +m[4]]; ps.push([x, y], [x + w, y], [x + w, y + h], [x, y + h]); }
+    ps.sort((u, v) => u[0] - v[0] || u[1] - v[1]); const cr = (o: Pt, u: Pt, v: Pt) => (u[0] - o[0]) * (v[1] - o[1]) - (u[1] - o[1]) * (v[0] - o[0]), lo: Pt[] = [], up: Pt[] = [];
+    for (const q of ps) { while (lo.length > 1 && cr(lo[lo.length - 2], lo[lo.length - 1], q) <= 0) lo.pop(); lo.push(q); }
+    for (const q of [...ps].reverse()) { while (up.length > 1 && cr(up[up.length - 2], up[up.length - 1], q) <= 0) up.pop(); up.push(q); }
+    return [...lo.slice(0, -1), ...up.slice(0, -1)]; };
+  sc.add(lineOb('route', tail.map((q) => P(q) as Pt), (1.6 * s) / 2 + 3, 'line'));
+  for (const it of items) { const h = hullOf(it.shape); if (h.length > 2) { const o = polyOb(it.key + ':icon', h, it.key === 'dropoff' || it.key === 'picnic' ? 'zone' : 'icon'); o.caps = h.map((p, i) => ({ a: p, b: h[(i + 1) % h.length], r: 2 })); sc.add(o); } }
+  const bw = P([-103.757407, 29.269773]), BWT = 'Barton Warnock\nVisitor Center'; sc.add(textOb('bw:label', bw[0], bw[1] + 70, BWT, 19));
   for (const it of items) {
     shapes += gmapLink(it.where, it.label, `<g class="fp-${it.key}">${it.shape}</g>`);
-    const [ox, oy] = labels[it.key] ?? [0, -24], tx = it.anchor[0] + ox, ty = it.anchor[1] + oy, inside = ox === 0 && oy === 0;
-    if (!inside && Math.hypot(ox, oy) > it.r + 26) { const tw = it.label.length * 9.6 + 8, th = 24, ex = Math.max(tx - tw / 2, Math.min(it.anchor[0], tx + tw / 2)), ey = Math.max(ty - th / 2, Math.min(it.anchor[1], ty + th / 2)); lbls += leaderLine(it.anchor[0], it.anchor[1], ex, ey, it.r, 0); }
-    lbls += textBlock(tx, ty, { text: it.label, fs: it.minor ? 13 : 17, color: it.key === 'dropoff' ? '#8a5a00' : it.minor ? C.mute : C.ink, style: it.key === 'dropoff' || it.minor ? 'italic' : 'normal', weight: it.minor ? 'normal' : 'bold', family: 'sans', halo: { color: '#fff', width: 4.5 }, ha: 'center' });
+    const pref = labels[it.key] ?? [0, -24], fs = it.minor ? 13 : 17, inside = pref[0] === 0 && pref[1] === 0;
+    const r = sc.place(it.key + ':label', it.anchor, pref as Pt, (x, y) => textOb('', x, y, it.label, fs), { iconR: it.r, leader: !inside, ignore: (q) => inside && q.id === it.key + ':icon' });
+    if (r.leader) lbls += leaderLine(r.leader[0][0], r.leader[0][1], r.leader[1][0], r.leader[1][1]);
+    lbls += textBlock(r.x, r.y, { text: it.label, fs, color: it.key === 'dropoff' ? '#8a5a00' : it.minor ? C.mute : C.ink, style: it.key === 'dropoff' || it.minor ? 'italic' : 'normal', weight: it.minor ? 'normal' : 'bold', family: 'sans', halo: { color: '#fff', width: 4.5 }, ha: 'center' });
   }
-  { const [x, y] = P([-103.757407, 29.269773]); lbls += gmapLink(sfPlace ?? [-103.757522, 29.269797], 'Barton Warnock Visitor Center', textBlock(x, y + 70, { text: 'Barton Warnock\nVisitor Center', fs: 19, color: C.ink, style: 'normal', weight: 'bold', family: 'sans', halo: { color: C.bld, width: 4 }, ha: 'center', linespacing: 1.15 })); }
-  lbls += fmLabel(B, 0.5);
+  lbls += gmapLink(sfPlace ?? [-103.757522, 29.269797], 'Barton Warnock Visitor Center', textBlock(bw[0], bw[1] + 70, { text: BWT, fs: 19, color: C.ink, style: 'normal', weight: 'bold', family: 'sans', halo: { color: C.bld, width: 4 }, ha: 'center', linespacing: 1.15 }));
+  { const F = fmGeo(B, 0.5); if (F) { let ok = false; const a = F.an * Math.PI / 180;
+    for (const t of [0, 40, -40, 80, -80, 120, -120]) { const x = F.x + Math.cos(a) * t, y = F.y + Math.sin(a) * t, ob = textOb('fmlabel', x, y, 'FM 170', 16, F.an); if (!sc.inFrame(ob) || sc.hit(ob, (q) => q.id === 'dropoff:icon')) continue; sc.add(ob); lbls += lbl(x, y, 'FM 170', { fs: 16, color: '#5d5850', rot: -F.an }); ok = true; break; }
+    if (!ok) throw new Error('[collide:finish plan] no room for FM 170 label'); } }
+  const nOb = sc.audit((a, b) => a.id.split(':')[0] === b.id.split(':')[0] || (a.id === 'sf:icon' && b.id === 'route') || (a.id === 'fmlabel' && b.id === 'dropoff:icon') || (a.kind === 'zone' && b.kind === 'icon'));
+  console.log(`  collide: finish plan OK (${nOb} objects, route buffered)`);
   let out = g + shapes + lbls + furniture(W, H, s, [0, 25, 50, 100], 'Grid 10 m (≈33 ft) · footprints to scale');
   return `<svg class="siteplan floorplan" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Finish area floor plan">${out}</svg>`;
 }
@@ -174,17 +195,18 @@ void esc;
 // ---------------- parking plan ----------------
 // KML "Parking" polygons only say WHICH road stretch has parking (start/end and side); the strips are drawn as clean bands
 // offset from the OSM road centerline: shoulder gap 2 ft, depth 20 ft, simulated stall stripes every 9 ft (real lots are dirt).
-export const PARK = { gapFt: 2, depthFt: 20, stallFt: 9 };
+export const PARK = { gapFt: 5, depthFt: 20, stallFt: 9 };
 const PFRAME = [-103.76125, 29.26835, -103.75125, 29.27425];
 const PICON = (slash: boolean) => slash
   // standard No Parking sign: white disc, black P, red ring + red diagonal slash over the P
   ? `<circle r="13" fill="#fff" stroke="${C.red}" stroke-width="3.2"/><text y="1" font-size="17" font-weight="800" fill="#111" text-anchor="middle" dominant-baseline="central" font-family="Arial, Helvetica, sans-serif">P</text><path d="M-9.2,-9.2L9.2,9.2" stroke="${C.red}" stroke-width="3.2"/>`
   : `<rect x="-14" y="-14" width="28" height="28" rx="5" fill="#fff"/><rect x="-12" y="-12" width="24" height="24" rx="4" fill="${C.blue}"/><text y="1" font-size="17" font-weight="700" fill="#fff" text-anchor="middle" dominant-baseline="central">P</text>`;
 /** every course's GPX line inside the frame, black with a white casing (runners on course near S/F) */
-function courseRoutes(c, B) { const { P, W, H } = B; let runs: string[] = [];
-  for (const k of ['100K']) { let cur: string[] = []; for (const q of c.courseGeo[k].features[0].geometry.coordinates as [number, number][]) { const [x, y] = P(q);
-    if (x > -60 && y > -60 && x < W + 60 && y < H + 60) cur.push(`${f1(x)},${f1(y)}`); else { if (cur.length > 1) runs.push('M' + cur.join('L')); cur = []; } } if (cur.length > 1) runs.push('M' + cur.join('L')); }
-  const dd = runs[0] ?? ''; // outbound leg only: the return leg is the same path (GPX differences are routing noise)
+/** 100K route inside the frame, outbound leg only (the return leg is the same path; GPX differences are routing noise) */
+function routePts(c, B): Pt[] { const { P, W, H } = B; const runs: Pt[][] = []; let cur: Pt[] = [];
+  for (const q of c.courseGeo['100K'].features[0].geometry.coordinates as [number, number][]) { const p = P(q) as Pt; if (p[0] > -60 && p[1] > -60 && p[0] < W + 60 && p[1] < H + 60) cur.push(p); else { if (cur.length > 1) runs.push(cur); cur = []; } }
+  if (cur.length > 1) runs.push(cur); return runs[0] ?? []; }
+function courseRoutes(c, B) { const dd = 'M' + routePts(c, B).map((p) => p.map(f1).join(',')).join('L');
   return `<path d="${dd}" fill="none" stroke="#fff" stroke-width="6" stroke-linejoin="round" stroke-linecap="round" stroke-opacity=".9"/><path d="${dd}" fill="none" stroke="#111" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"/>`; }
 type V = [number, number];
 function roadTools(B) {
@@ -209,9 +231,13 @@ function roadTools(B) {
 }
 export function renderParkingPlan(c, labels: Record<string, [number, number]>) {
   const B = makeBase(c, PFRAME, 50, 'pk'), { gm, pm, P, d, s, W, H, osm, L } = B; let g = B.g;
-  type V = [number, number];
   const { lines, cum, project, at, tan, RWm } = roadTools(B);
-  let strips = '', stripLbl = '', fmSide = 0;
+  const sc = new Scene('parking plan', W, H), base = (id: string) => id.split(':')[0];
+  let strips = '', top = '', fmSide = 0; // top = icons + labels + leaders (drawn above everything)
+  const labelQ: (() => void)[] = [], iconQ0: (() => void)[] = []; // labels are placed after every icon / line / zone is registered
+  const T = (id: string, text: string, fs: number, rot = 0) => (x: number, y: number) => textOb(id, x, y, text, fs, rot);
+  // course route (100K, outbound leg only) — protected line, ~3 px halo buffer
+  const rp = routePts(c, B); if (process.env.CDEBUG) console.log('route', JSON.stringify(rp.filter((p) => p[1] > 180 && p[1] < 340).map((p) => p.map(Math.round)))); sc.add(lineOb('route', rp, 1.3 + 4, 'line'));
   L.placemarks.filter((p) => p.kind === 'polygon' && p.name === 'Parking').forEach((pg, k) => {
     const vs = (pg.coords as V[]).map(gm); let best: any = null;
     for (const ln of lines) { const cs = cum(ln.pts), pr = vs.map((v) => project(ln.pts, cs, v)), md = pr.reduce((t, q) => t + q[0], 0) / pr.length; if (!best || md < best.md) best = { ln, cs, pr, md }; }
@@ -220,22 +246,24 @@ export function renderParkingPlan(c, labels: Record<string, [number, number]>) {
     const o1 = RWm[ln.h] / 2 + PARK.gapFt * FT, o2 = o1 + PARK.depthFt * FT, inner: V[] = [], outer: V[] = [];
     const off = (sv: number, o: number): V => { const p = at(ln.pts, cs, sv), t = tan(ln.pts, cs, sv); return [p[0] - t[1] * o * side, p[1] + t[0] * o * side]; };
     for (let sv = s0; sv <= s1 + 1e-6; sv += 2) { inner.push(off(sv, o1)); outer.push(off(sv, o2)); }
-    const band = 'M' + [...inner, ...outer.reverse()].map((q) => pm(q).map(f1).join(',')).join('L') + 'Z';
+    const ring = [...inner, ...outer.reverse()].map(pm), band = 'M' + ring.map((q) => q.map(f1).join(',')).join('L') + 'Z';
+    sc.add(polyOb(`strip${k + 1}`, ring as Pt[], 'zone'));
     let ticks = ''; const st = PARK.stallFt * FT, n = Math.floor((s1 - s0) / st);
     for (let i = 0; i <= n; i++) { const sv = s0 + i * st, a = pm(off(sv, o1)), b = pm(off(sv, o2)); ticks += `M${a.map(f1)}L${b.map(f1)}`; }
     strips += gmapLink([pg.coords.reduce((t, q) => t + q[0], 0) / pg.coords.length, pg.coords.reduce((t, q) => t + q[1], 0) / pg.coords.length], `Parking strip ${k + 1}`, `<path d="${band}" fill="#dfe7f2" stroke="${C.blue}" stroke-width="1.6" stroke-linejoin="round"/><path d="${ticks}" stroke="${C.blue}" stroke-width=".8" stroke-opacity=".55"/>`);
     // strip runs off the plan edge -> small "parking continues" arrow just inside the frame (no extra stalls drawn)
-    { const inF = (q: number[]) => q[0] > 14 && q[0] < W - 14 && q[1] > 14 && q[1] < H - 14, om = (o1 + o2) / 2;
-      const edgeD = (q: number[]) => Math.min(q[0], q[1], W - q[0], H - q[1]);
+    { const inF = (q: number[]) => q[0] > 14 && q[0] < W - 14 && q[1] > 14 && q[1] < H - 14, om = (o1 + o2) / 2, edgeD = (q: number[]) => Math.min(q[0], q[1], W - q[0], H - q[1]);
       for (const [sEnd, dir] of [[s0, -1], [s1, 1]] as const) { if (inF(pm(off(sEnd, om))) && edgeD(pm(off(sEnd, om))) > 80) continue;
         let sv = sEnd; while (Math.abs(sv - (s0 + s1) / 2) > 1 && !inF(pm(off(sv + dir * 30, om)))) sv -= dir * 2; sv -= dir * 6;
-        const a = pm(off(sv, o2 + 7)), b = pm(off(sv + dir * 14, o2 + 7)), an = Math.atan2(b[1] - a[1], b[0] - a[0]) * 180 / Math.PI;
-        stripLbl += `<g transform="translate(${f1(b[0])} ${f1(b[1])}) rotate(${f1(an)})" opacity=".9"><path d="M-22,0H-2" stroke="${C.blue}" stroke-width="2"/><path d="M0,0L-8,-5L-8,5Z" fill="${C.blue}"/></g>`;
-        let ta = an; if (ta > 90) ta -= 180; if (ta < -90) ta += 180; const lp = pm(off(sv - dir * 30, o2 + 32));
-        stripLbl += lbl(lp[0], lp[1], 'Parking continues', { fs: 11, color: C.blue, style: 'italic' }); } }
+        const a = pm(off(sv, o2 + 7)), b = pm(off(sv + dir * 14, o2 + 7)), an = Math.atan2(b[1] - a[1], b[0] - a[0]) * 180 / Math.PI, id = `cont${k}${dir}`;
+        const ux = Math.cos(an * Math.PI / 180), uy = Math.sin(an * Math.PI / 180);
+        sc.add(lineOb(id + ':icon', [[b[0] - ux * 22, b[1] - uy * 22], [b[0], b[1]]], 5, 'icon'));
+        top += `<g transform="translate(${f1(b[0])} ${f1(b[1])}) rotate(${f1(an)})" opacity=".9"><path d="M-22,0H-2" stroke="${C.blue}" stroke-width="2"/><path d="M0,0L-8,-5L-8,5Z" fill="${C.blue}"/></g>`;
+        const lp = pm(off(sv - dir * 30, o2 + 32)), anc: Pt = [b[0] - ux * 11, b[1] - uy * 11];
+        labelQ.push(() => { const r = sc.place(id + ':label', anc, [lp[0] - anc[0], lp[1] - anc[1]], T(id, 'Parking continues', 11), { leader: false, rings: [20, 28, 36, 46, 58] }); top += lbl(r.x, r.y, 'Parking continues', { fs: 11, color: C.blue, style: 'italic' }); }); } }
     const mid = pm(off((s0 + s1) / 2, o2 + 9)), [ox, oy] = labels[`strip${k + 1}`] ?? [0, 0], t = tan(ln.pts, cs, (s0 + s1) / 2);
-    let an = Math.atan2(-t[1], t[0]) * 180 / Math.PI; if (an > 90) an -= 180; if (an < -90) an += 180;
-    stripLbl += lbl(mid[0] + ox, mid[1] + oy, `≈${n} spaces`, { fs: 14, color: C.blue, style: 'italic', rot: -an });
+    let an = Math.atan2(-t[1], t[0]) * 180 / Math.PI; if (an > 90) an -= 180; if (an < -90) an += 180; const txt = `≈${n} spaces`;
+    labelQ.push(() => { const r = sc.place(`strip${k + 1}lbl:label`, mid as Pt, [ox, oy], T('', txt, 14, an), { leader: false }); top += lbl(r.x, r.y, txt, { fs: 14, color: C.blue, style: 'italic', rot: -an }); });
   });
   g += strips;
   g += courseRoutes(c, B);
@@ -243,52 +271,75 @@ export function renderParkingPlan(c, labels: Record<string, [number, number]>) {
   { const ln = lines[0], cs = cum(ln.pts), sd = -(fmSide || 1), o1 = RWm.secondary / 2 + PARK.gapFt * FT, o2 = o1 + PARK.depthFt * FT, inner: V[] = [], outer: V[] = [], tot = cs[cs.length - 1];
     const off = (sv: number, o: number): V => { const p = at(ln.pts, cs, sv), t = tan(ln.pts, cs, sv); return [p[0] - t[1] * o * sd, p[1] + t[0] * o * sd]; };
     for (let sv = 0; sv <= tot; sv += 2) { inner.push(off(sv, o1)); outer.push(off(sv, o2)); }
-    const band = 'M' + [...inner, ...outer.reverse()].map((q) => pm(q).map(f1).join(',')).join('L') + 'Z';
+    const ring = [...inner, ...outer.reverse()].map(pm), band = 'M' + ring.map((q) => q.map(f1).join(',')).join('L') + 'Z';
+    sc.add(polyOb('npshoulder', ring as Pt[], 'zone'));
     g += `<defs><pattern id="pknph" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="7" stroke="${C.red}" stroke-width="1.3" stroke-opacity=".55"/></pattern></defs><path d="${band}" fill="#f6dede" fill-opacity=".7"/><path d="${band}" fill="url(#pknph)" stroke="${C.red}" stroke-width="1" stroke-opacity=".7" stroke-linejoin="round"/>`;
-    // signs at intervals across from the parking, plus one note
+    // signs at intervals just outside the shoulder band (slid along the road until clear), plus one note
     const inF = (q: number[]) => q[0] > 30 && q[0] < W - 30 && q[1] > 30 && q[1] < H - 30;
     const vis: number[] = []; for (let sv = 0; sv <= tot; sv += 5) if (inF(pm(at(ln.pts, cs, sv)))) vis.push(sv);
     const sA = vis[0] ?? 0, sB = vis[vis.length - 1] ?? tot, sAt = (f: number) => sA + (sB - sA) * f;
-    for (const f of [0.15, 0.5, 0.85]) { const q = pm(off(sAt(f), o2 + 9)); if (inF(q)) stripLbl += `<g transform="translate(${f1(q[0])} ${f1(q[1])}) scale(.8)">${PICON(true)}</g>`; }
-    const [nx, ny] = labels.noPark ?? [0, 0], np = pm(off(sAt(0.3), o2 + 70));
-    stripLbl += lbl(np[0] + nx, np[1] + ny, 'No parking on this side of FM 170\nDo not cross the highway · vehicles may be towed or ticketed', { fs: 13, color: C.red }); }
-  // drop-off area (its KML polygon)
+    const pairP: number[] = [];
+    for (const [i, f] of [0.15, 0.5, 0.85].entries()) { let done = false;
+      for (const df of [0, 0.02, -0.02, 0.04, -0.04, 0.06, -0.06, 0.08, -0.08]) { const q = pm(off(sAt(f + df), o2 + 12)), ob = circleOb(`npsign${i}:icon`, q[0], q[1], 11);
+        if (!inF(q) || sc.hit(ob, (o) => o.id === 'npshoulder')) continue; sc.add(ob); top += `<g transform="translate(${f1(q[0])} ${f1(q[1])}) scale(.8)">${PICON(true)}</g>`; done = true; pairP.push(sAt(f + df)); break; }
+      if (!done) throw new Error('[collide:parking plan] no room for no-parking sign ' + i); }
+    // matching blue Parking sign directly opposite each No Parking sign / zone (parking side of FM 170, just outside the stalls)
+    const npPt = L.placemarks.find((p) => p.kind === 'point' && p.name === 'No Parking'); if (npPt) pairP.push(project(ln.pts, cs, gm(npPt.coords[0]))[1]);
+    const offP = (sv: number, o: number): V => { const p = at(ln.pts, cs, sv), t = tan(ln.pts, cs, sv), sp = fmSide || 1; return [p[0] - t[1] * o * sp, p[1] + t[0] * o * sp]; };
+    iconQ0.push(() => pairP.forEach((sv, i) => { let done = false;
+      for (const ds of [0, 6, -6, 12, -12, 18, -18, 26, -26, 34, -34]) for (const o of [o2 + 12, o2 + 18]) { if (done) break; const q = pm(offP(sv + ds, o)), ob = circleOb(`ppair${i}:icon`, q[0], q[1], 12);
+        if (!inF(q) || sc.hit(ob, (x) => x.id.startsWith('strip'))) continue; sc.add(ob); top += `<g transform="translate(${f1(q[0])} ${f1(q[1])}) scale(.8)">${PICON(false)}</g>`; done = true; }
+      if (!done) throw new Error('[collide:parking plan] no room for paired Parking sign ' + i); }));
+    const [nx, ny] = labels.noPark ?? [0, 0], np = pm(off(sAt(0.3), o2 + 70)), NT = 'No parking on this side of FM 170\nDo not cross the highway · vehicles may be towed or ticketed';
+    labelQ.push(() => { const r = sc.place('npnote:label', np as Pt, [nx, ny], T('', NT, 13), { leader: false }); top += lbl(r.x, r.y, NT, { fs: 13, color: C.red }); }); }
+  // drop-off lane
   const drop = L.placemarks.find((p) => p.name === '5 Min Dropoff Area');
-  let marks = '', lbls = stripLbl;
-  if (drop) { const DB = dropBand(B, drop); g += gmapLink(drop.coords[0], '5-minute drop-off', `<path d="${DB.band}" fill="#f6e2b0" fill-opacity=".85"/><path d="${DB.band}" fill="url(#pkhatch)" stroke="${C.amber}" stroke-width="2" stroke-linejoin="round"/>`);
-    const cx = drop.coords.reduce((t, q) => t + q[0], 0) / drop.coords.length, cy = drop.coords.reduce((t, q) => t + q[1], 0) / drop.coords.length, [x, y] = P([cx, cy]), [ox, oy] = labels.dropoff ?? [-70, 0];
-    lbls += lbl(x + ox, y + oy, '5-minute\ndrop-off', { color: '#8a5a00', style: 'italic' }); }
-  // point markers: Parking, No parking, Start / Finish, Barton Warnock (reference)
-  const seen: Record<string, number> = {}, sfPlace = c.stations.stations['S/F'].place;
+  if (drop) { const DB = dropBand(B, drop); sc.add(polyOb('dropoff', DB.ring.map(pm) as Pt[], 'zone'));
+    g += gmapLink(drop.coords[0], '5-minute drop-off', `<path d="${DB.band}" fill="#f6e2b0" fill-opacity=".85"/><path d="${DB.band}" fill="url(#pkhatch)" stroke="${C.amber}" stroke-width="2" stroke-linejoin="round"/>`);
+    const [ax, ay] = DB.anchor, [ox, oy] = labels.dropoff ?? [-70, 0];
+    labelQ.push(() => { const r = sc.place('dropoff:label', [ax, ay], [ox, oy], T('', '5-minute\ndrop-off', 17), { leader: false }); top += lbl(r.x, r.y, '5-minute\ndrop-off', { color: '#8a5a00', style: 'italic' }); }); }
+  // FM 170 road label (protected)
+  { const F = fmGeo(B, 0.28); if (F) { const a = F.an * Math.PI / 180, nx = -Math.sin(a), ny = Math.cos(a), cands: Pt[] = [];
+      for (const d of [36, 44, 52, -36, -44, -52]) for (const t of [0, 30, -30, 60, -60]) cands.push([nx * d + Math.cos(a) * t, ny * d + Math.sin(a) * t]);
+      labelQ.unshift(() => { for (const [ox, oy] of cands) { const ob = textOb('fmlabel', F.x + ox, F.y + oy, 'FM 170', 16, F.an, 'label'); if (!sc.inFrame(ob) || sc.hit(ob)) continue; sc.add(ob); top += lbl(F.x + ox, F.y + oy, 'FM 170', { fs: 16, color: '#5d5850', rot: -F.an }); return; }
+        throw new Error('[collide:parking plan] no room for FM 170 label'); }); } }
+  // point markers: Parking, No parking (park entrance), Start / Finish, Barton Warnock (reference)
+  const seen: Record<string, number> = {}, sfPlace = c.stations.stations['S/F'].place, iconQ: (() => void)[] = [];
   for (const p of L.placemarks.filter((p) => p.kind === 'point' && ['Parking', 'No Parking', 'Start / Finish Line', 'Barton Warnock'].includes(p.name))) {
-    const key = p.name + (seen[p.name] = (seen[p.name] ?? 0) + 1), [x, y] = P(p.coords[0]), [ox, oy] = labels[key] ?? [0, -30];
-    const lab = p.name === 'Start / Finish Line' ? 'Start / Finish' : p.name === 'Barton Warnock' ? 'Barton Warnock\nVisitor Center' : p.name === 'No Parking' ? 'No parking' : 'Parking';
+    const key = (p.name + (seen[p.name] = (seen[p.name] ?? 0) + 1)).replace(/[^A-Za-z0-9]/g, ''), [x, y] = P(p.coords[0]), [ox, oy] = labels[p.name + seen[p.name]] ?? [0, -30];
+    const lab = p.name === 'Start / Finish Line' ? 'Start / Finish' : p.name === 'Barton Warnock' ? 'Barton Warnock\nVisitor Center' : 'Parking';
     const where = p.name === 'Start / Finish Line' || p.name === 'Barton Warnock' ? sfPlace ?? p.coords[0] : p.coords[0];
-    if (p.name === 'Barton Warnock') { lbls += gmapLink(where, 'Barton Warnock Visitor Center', lbl(x + ox, y + oy, lab, { fs: 15 })); continue; }
-    if (p.name === 'No Parking') { // park entrance: the whole drivable entrance surface (union of the pavement within ~35 m) as ONE tinted no-parking shape; sign set off to the side
+    if (p.name === 'Barton Warnock') { labelQ.push(() => { const r = sc.place(key + ':label', [x, y], [ox, oy], T('', lab, 15), { leader: false, rings: [10, 20, 30] }); top += gmapLink(where, 'Barton Warnock Visitor Center', lbl(r.x, r.y, lab, { fs: 15 })); }); continue; }
+    if (p.name === 'No Parking') { // park entrance: the whole drivable entrance surface as ONE tinted no-parking shape; sign + label placed clear of it
       const R = 35 * s, cid = `pknpz${seen[p.name]}`, pts: number[][] = [], hw = 3.5 * s, inR = (q: number[]) => Math.hypot(q[0] - x, q[1] - y) <= R;
       for (const f of osm) { const h = f.properties.highway, isLot = f.properties.amenity === 'parking' && f.geometry.type === 'Polygon';
         if (!isLot && (!['service', 'residential', 'track', 'unclassified'].includes(h) || f.geometry.type !== 'LineString')) continue;
         const cs = (isLot ? f.geometry.coordinates[0] : f.geometry.coordinates).map(P);
         for (let i = 1; i < cs.length; i++) { const [a1, b1] = [cs[i - 1], cs[i]], L = Math.hypot(b1[0] - a1[0], b1[1] - a1[1]) || 1, nx = -(b1[1] - a1[1]) / L, ny = (b1[0] - a1[0]) / L;
           for (let t = 0; t <= 1; t += 2 / L) { const q = [a1[0] + (b1[0] - a1[0]) * t, a1[1] + (b1[1] - a1[1]) * t]; if (!inR(q)) continue; const e = isLot ? 0 : hw; pts.push([q[0] + nx * e, q[1] + ny * e], [q[0] - nx * e, q[1] - ny * e]); } } }
-      // convex hull (monotone chain) -> one solid entrance shape
       pts.sort((u, v) => u[0] - v[0] || u[1] - v[1]); const cr = (o: number[], u: number[], v: number[]) => (u[0] - o[0]) * (v[1] - o[1]) - (u[1] - o[1]) * (v[0] - o[0]); const lo: number[][] = [], up: number[][] = [];
       for (const q of pts) { while (lo.length > 1 && cr(lo[lo.length - 2], lo[lo.length - 1], q) <= 0) lo.pop(); lo.push(q); }
       for (const q of [...pts].reverse()) { while (up.length > 1 && cr(up[up.length - 2], up[up.length - 1], q) <= 0) up.pop(); up.push(q); }
-      const hull = [...lo.slice(0, -1), ...up.slice(0, -1)];
-      if (hull.length > 2) g += `<defs><clipPath id="${cid}"><circle cx="${f1(x)}" cy="${f1(y)}" r="${f1(R)}"/></clipPath></defs><path clip-path="url(#${cid})" d="M${hull.map((q) => q.map(f1).join(',')).join('L')}Z" fill="#f3d4d4" stroke="${C.red}" stroke-opacity=".55" stroke-width="1.4" stroke-linejoin="round"/>`;
-      const sx = x + ox, sy = y + oy; marks += gmapLink(where, 'No parking — park entrance', `<g transform="translate(${f1(sx)} ${f1(sy)}) scale(.85)">${PICON(true)}</g>`);
-      lbls += lbl(sx, sy - 22, 'No parking at park entrance', { fs: 13, color: C.red }); continue; }
-    const [ix, iy] = labels[key + 'icon'] ?? [0, 0]; // optional icon nudge off the course route (leader drawn to the true point)
-    if (ix || iy) marks += `<path d="M${f1(x)},${f1(y)}L${f1(x + ix)},${f1(y + iy)}" stroke="${C.blue}" stroke-width="1.4"/><circle cx="${f1(x)}" cy="${f1(y)}" r="2.5" fill="${C.blue}"/>`;
-    const icon = p.name === 'Start / Finish Line' ? station(x, y, 'S/F', true, { s: 1000, fs: 20, badge: false, colors: c.colors }) : `<g transform="translate(${f1(x + ix)} ${f1(y + iy)})">${PICON(p.name === 'No Parking')}</g>`;
-    marks += gmapLink(where, lab, icon);
-    const r = 16; if (Math.hypot(ox - ix, oy - iy) > r + 26) lbls += leaderLine(x + ix, y + iy, x + ox, y + oy + (oy > 0 ? -10 : 10), r, 0);
-    lbls += lbl(x + ox, y + oy, lab);
+      const hull = [...lo.slice(0, -1), ...up.slice(0, -1)].filter(inR) as Pt[];
+      if (hull.length > 2) { sc.add(polyOb('npentrance', hull, 'zone')); g += `<defs><clipPath id="${cid}"><circle cx="${f1(x)}" cy="${f1(y)}" r="${f1(R)}"/></clipPath></defs><path clip-path="url(#${cid})" d="M${[...lo.slice(0, -1), ...up.slice(0, -1)].map((q) => q.map(f1).join(',')).join('L')}Z" fill="#f3d4d4" stroke="${C.red}" stroke-opacity=".55" stroke-width="1.4" stroke-linejoin="round"/>`; }
+      iconQ.push(() => { const r = sc.place(key + ':icon', [x, y], [ox, oy], (X, Y) => circleOb('', X, Y, 12), { leader: false, rings: [40, 52, 64, 78] });
+        top += gmapLink(where, 'No parking — park entrance', `<g transform="translate(${f1(r.x)} ${f1(r.y)}) scale(.85)">${PICON(true)}</g>`);
+        labelQ.unshift(() => { const q = sc.place(key + ':label', [r.x, r.y], [0, -22], T('', 'No parking at park entrance', 13), { leader: false, rings: [22, 26, 32, 40, 50, 62, 76] }); top += lbl(q.x, q.y, 'No parking at park entrance', { fs: 13, color: C.red }); }); });
+      continue; }
+    if (p.name === 'Start / Finish Line') { sc.add(circleOb(key + ':icon', x, y, 17)); top += gmapLink(where, lab, station(x, y, 'S/F', true, { s: 1000, fs: 20, badge: false, colors: c.colors }));
+      labelQ.push(() => { const r = sc.place(key + ':label', [x, y], [ox, oy], T('', lab, 17), { iconR: 17 }); if (r.leader) top += leaderLine(r.leader[0][0], r.leader[0][1], r.leader[1][0], r.leader[1][1]); top += lbl(r.x, r.y, lab); }); continue; }
+    // Parking icon: at the KML point unless that touches the route / a label / a zone (strips excepted) -> nearest clear spot
+    iconQ.push(() => { const r = sc.place(key + ':icon', [x, y], labels[key + 'icon'] ?? [0, 0], (X, Y) => circleOb('', X, Y, 15), { leader: false, ignore: (o) => o.id.startsWith('strip'), rings: [16, 22, 28, 36, 46] });
+      if (process.env.CDEBUG) console.log('icon', key, x, y, '->', r.x, r.y);
+      top += gmapLink(where, lab, `<g transform="translate(${f1(r.x)} ${f1(r.y)})">${PICON(false)}</g>`);
+      labelQ.push(() => { const q = sc.place(key + ':label', [r.x, r.y], [ox, oy], T('', lab, 17), { iconR: 15, leaderIgnore: (o) => o.id.startsWith('strip') }); if (q.leader) top += leaderLine(q.leader[0][0], q.leader[0][1], q.leader[1][0], q.leader[1][1]); top += lbl(q.x, q.y, lab); }); });
   }
+  iconQ.forEach((f) => f()); iconQ0.forEach((f) => f()); while (labelQ.length) labelQ.shift()!();
+  // strict audit: icons may sit on their own parking strip; S/F sits on the route by definition; leaders touch their own icon/label
+  const n = sc.audit((a, b) => ((a.kind === 'icon' || a.kind === 'leader') && a.id.startsWith('Parking') && b.id.startsWith('strip')) || (a.id.startsWith('StartFinish') && a.kind === 'icon' && b.id === 'route') || base(a.id) === base(b.id) || (a.id.startsWith('npsign') && b.id === 'npshoulder') || (a.id.startsWith('ppair') && b.id.startsWith('strip')));
+  console.log(`  collide: parking plan OK (${n} objects, route buffered)`);
   g += `</g>`;
-  return `<svg class="siteplan floorplan" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Parking plan">${g}${marks}${lbls}${fmLabel(B, 0.28)}${furniture(W, H, s, [0, 250, 500, 1000], `Grid 50 m (≈164 ft) · parking strips ${PARK.depthFt} ft deep, stalls every ${PARK.stallFt} ft (simulated)`)}</svg>`;
+  return `<svg class="siteplan floorplan" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Parking plan">${g}${top}${furniture(W, H, s, [0, 250, 500, 1000], `Grid 50 m (≈164 ft) · stalls ${PARK.depthFt} ft deep, ${PARK.gapFt} ft dirt buffer from the pavement edge, stalls every ${PARK.stallFt} ft (simulated)`)}</svg>`;
 }
 export const pkSwatch = {
   noPark: () => `<svg width="30" height="14"><defs><pattern id="swnp" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="5" stroke="${C.red}" stroke-width="1" stroke-opacity=".6"/></pattern></defs><rect x="1" y="3" width="28" height="8" fill="#f6dede"/><rect x="1" y="3" width="28" height="8" fill="url(#swnp)" stroke="${C.red}" stroke-width=".8"/></svg>`,

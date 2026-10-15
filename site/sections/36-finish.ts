@@ -4,7 +4,7 @@ import { planLegend } from '../lib/siteplan';
 export const meta = { id: 'finish-plan', title: 'Finish area plan' };
 // label offsets (px from each footprint's anchor); [0, 0] = centred inside
 const LABELS: Record<string, [number, number]> = {
-  dropoff: [0, 0], picnic: [0, 0], radio: [110, -46], medic: [-40, 46], restrooms: [-120, 0], water: [74, 30], sf: [-60, -46], gate: [0, -36],
+  dropoff: [0, 0], picnic: [0, 0], radio: [110, -46], medic: [-40, 46], restrooms: [-152, 0], water: [74, 30], sf: [-118, -50], gate: [0, -36],
 };
 export function render(c) {
   return `<article class="doc plan"><h2>Finish area · Barton Warnock Visitor Center</h2>${renderFinishPlan(c, LABELS)}
