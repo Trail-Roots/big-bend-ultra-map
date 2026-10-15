@@ -179,7 +179,7 @@ html.embed,html.embed body,html.embed .sec.noprint{background:transparent!import
 }
 /* paper view: each race page is a landscape letter sheet */
 @media screen and (min-width:1100px){
-  html .sec-courses .coursepage{--S:min(calc(calc(var(--host-vw, 1vw) * 100) - 48px),calc((calc(var(--host-vh, 1vh) * 100) - 90px) * 11 / 8.5),1600px);width:var(--S);max-width:none;height:calc(var(--S) * 8.5 / 11);margin:28px auto;padding:calc(var(--S) * .02545);gap:calc(var(--S) * .018);font-size:calc(var(--S) * .009);align-items:start;overflow:hidden}
+  html .sec-courses .coursepage{--S:min(calc(calc(var(--host-vw, 1vw) * 100) - 48px),calc((calc(var(--host-vh, 1vh) * 100) - 90px) * 11 / 8.5),1600px);width:var(--S);max-width:none;height:calc(var(--S) * 8.5 / 11);margin:28px auto;padding:calc(var(--S) * .02545);gap:calc(var(--S) * .018);font-size:calc(var(--S) * .009);align-items:start;overflow:hidden;background:#fff;box-shadow:0 1px 6px #0000001f;border:0;border-radius:0}
   html .sec-courses .coursepage .cpmap{display:flex;justify-content:center}
   html .sec-courses .coursepage svg.racemap{height:calc(var(--S) * .72);width:auto;max-width:100%;box-shadow:none}
   html .sec-courses .coursepage .cphead h2{font-size:calc(var(--S) * .018)}html .sec-courses .coursepage .cpbtns *{font-size:calc(var(--S) * .009)}
