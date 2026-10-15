@@ -70,8 +70,8 @@ if (hdEl && prof) {
   const fmt = (m: number) => { m = ((Math.round(m) % 1440) + 1440) % 1440; const h = Math.floor(m / 60), mi = m % 60; return `${h % 12 || 12}:${String(mi).padStart(2, '0')}${h < 12 ? 'a' : 'p'}`; };
   // runner dots (one per simulated runner) on the main map
   const dotLayer = main.querySelector('g.layer[data-layer="dots"]');
-  const dots2: { k: string; T: number; stop: number; c: SVGCircleElement; j: number; cv: any }[] = [];
-  if (dotLayer) for (const [k, C] of Object.entries(TM.courses) as [string, any][]) C.T.forEach((T: number, i: number) => { const c = el('circle', { r: 3.4, fill: HD.courses[k].color, stroke: '#fff', 'stroke-width': 0.9, style: 'display:none' }, dotLayer) as SVGCircleElement; dots2.push({ k, T, stop: C.stop[i], c, j: (dots2.length * 2.399) % 6.283, cv: C.curves[C.fit[i]] }); });
+  const dots2: { k: string; T: number; o: number; stop: number; c: SVGCircleElement; j: number; cv: any }[] = [];
+  if (dotLayer) for (const [k, C] of Object.entries(TM.courses) as [string, any][]) C.T.forEach((T: number, i: number) => { const c = el('circle', { r: 3.4, fill: HD.courses[k].color, stroke: '#fff', 'stroke-width': 0.9, style: 'display:none' }, dotLayer) as SVGCircleElement; dots2.push({ k, T, o: C.off?.[i] ?? 0, stop: C.stop[i], c, j: (dots2.length * 2.399) % 6.283, cv: C.curves[C.fit[i]] }); });
   // leader = the course's eventual first finisher (fastest 2026 time), not whoever is in front right now: course-colour ring around their dot.
   // course record = a ghost runner at course-record pace: course-colour dot with a heavier dark ring. "You" = bib-lookup runner (black ring).
   const dupLead = new Set<number>(), leadRing: Record<string, SVGCircleElement> = {}, leadIdx: Record<string, number> = {}, recDot: Record<string, SVGGElement> = {};
@@ -111,7 +111,7 @@ if (hdEl && prof) {
     { const ph = phase(t); badge.style.display = ''; badge.dataset.phase = ph; badge.textContent = `${ph === 'day' ? '☀' : ph === 'twilight' ? '◐' : '☾'} ${fmt(t)} · ${ph === 'day' ? 'daylight' : ph === 'twilight' ? 'twilight' : 'dark'}`; if (tint) tint.setAttribute('fill-opacity', dark(t).toFixed(3)); }
     const ends: Record<string, { lead?: [number, any]; last?: [number, any] }> = {};
     for (const d of dots2) {
-      const C = TM.courses[d.k], f = (t - C.start) / d.T; const mile = effAt(d.cv, f);
+      const C = TM.courses[d.k], f = (t - C.start - d.o) / d.T; const mile = effAt(d.cv, f);
       if (f < 0 || f > 1 || (d.stop >= 0 && mile >= d.stop) || dupLead.has(dots2.indexOf(d))) { d.c.style.display = 'none'; continue; } // not started / finished / dropped (DNF)
       // spread runners slightly so a crowd reads as a crowd, not one dot
       const p = ptAt(d.k, mile), j = d.j;
@@ -151,7 +151,7 @@ if (hdEl && prof) {
   document.querySelectorAll('svg.mini').forEach((m) => m.addEventListener('zoomchange', () => glide.redraw()));
   // auto-play (web only): slow sweep of the race-day clock, looping; off for reduced motion; pause persisted
   // play window: first race start → last runner off course (latest finish across all courses); loops back to the first start
-  const CS = Object.values(TM.courses) as any[], PA = Math.min(...CS.map((C) => C.start)), PB = Math.max(...CS.map((C) => C.start + Math.max(...C.T)));
+  const CS = Object.values(TM.courses) as any[], PA = Math.min(...CS.map((C) => C.start)), PB = Math.max(...CS.map((C) => C.start + 2 + Math.max(...C.T)));
   const LOOP_S = 90, KEY = 'bbu-autoplay-paused';
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
   let paused = localStorage.getItem(KEY) === '1', user = false, t0 = 0, f0 = 0, raf = 0, last = 0;
@@ -176,13 +176,19 @@ if (hdEl && prof) {
   prof.addEventListener('pointerenter', () => { suspend(); clearTime(); });
   prof.addEventListener('pointerleave', (e) => { if (e.pointerType === 'mouse') { hide(); resume(); } });
   prof.addEventListener('pointerup', (e) => { if (e.pointerType !== 'mouse') setTimeout(() => { hide(); resume(); }, 1500); });
-  // timeline: scrub the clock
+  // timeline: hover scrubs the clock; a click seeks playback to that time and plays on from there (starting it if paused).
+  // After a click, hover stays out of the way until the pointer leaves the chart so the playback is visible.
   if (tl) {
-    const tmove = (e: PointerEvent) => { const ctm = tl.getScreenCTM(); if (!ctm) return; const p = new DOMPoint(e.clientX, e.clientY).matrixTransform(ctm.inverse()), lx = +tl.dataset.lx!, rx = +tl.dataset.rx!; const t = TM.t0 + ((p.x - lx) / (rx - lx)) * (TM.t1 - TM.t0); if (t < TM.t0 || t > TM.t1) return; hovY = p.y; hide(); setTime(t); };
+    let seek = false;
+    const tAt = (e: PointerEvent | MouseEvent) => { const ctm = tl.getScreenCTM(); if (!ctm) return null; const p = new DOMPoint(e.clientX, e.clientY).matrixTransform(ctm.inverse()), lx = +tl.dataset.lx!, rx = +tl.dataset.rx!; const t = TM.t0 + ((p.x - lx) / (rx - lx)) * (TM.t1 - TM.t0); return t < TM.t0 || t > TM.t1 ? null : { t, y: p.y }; };
+    const tmove = (e: PointerEvent) => { if (seek) return; const q = tAt(e); if (!q) return; hovY = q.y; hide(); setTime(q.t); };
     tl.style.cursor = 'crosshair';
-    tl.addEventListener('pointerenter', suspend); tl.addEventListener('pointermove', tmove); tl.addEventListener('pointerdown', (e) => { suspend(); tmove(e); });
-    tl.addEventListener('pointerleave', (e) => { if (e.pointerType === 'mouse') { clearTime(); resume(); } });
-    tl.addEventListener('pointerup', (e) => { if (e.pointerType !== 'mouse') setTimeout(() => { clearTime(); resume(); }, 1500); });
+    tl.addEventListener('pointerenter', () => { if (!seek) suspend(); }); tl.addEventListener('pointermove', tmove); tl.addEventListener('pointerdown', (e) => { if (!seek) { suspend(); tmove(e); } });
+    tl.addEventListener('click', (e) => { const q = tAt(e); if (!q || reduced) return;
+      seek = true; paused = false; localStorage.setItem(KEY, '0'); label(); hovY = -1;
+      f0 = Math.min(0.9999, Math.max(0, (q.t - PA) / (PB - PA))); stop(); user = false; t0 = 0; setTime(PA + f0 * (PB - PA)); start(); });
+    tl.addEventListener('pointerleave', (e) => { if (seek) { seek = false; return; } if (e.pointerType === 'mouse') { clearTime(); resume(); } });
+    tl.addEventListener('pointerup', (e) => { if (e.pointerType !== 'mouse') setTimeout(() => { if (seek) return; clearTime(); resume(); }, 1500); });
   }
   document.addEventListener('visibilitychange', () => (document.hidden ? stop() : start()));
   addEventListener('beforeprint', () => { stop(); hide(); clearTime(); }); addEventListener('afterprint', start);

@@ -160,22 +160,26 @@ const stByCourse: Record<string, Record<string, number[]>> = {};
 const PRE = 60, LINGER = 60, PASS_LINGER = 5, crowd = bins(nb), crowdBy: Record<string, number[]> = {};
 const W8: Record<string, number> = Object.fromEntries(ORDER.map((k) => [k, dist[k].scale]));
 const presence = (k: string, a: number, d: number) => { for (let b = 0; b < nb; b++) { const t = T0 + (b + 0.5) * BIN; if (t >= a && t < a + d) { crowd[b] += W8[k]; (crowdBy[k] ??= bins(nb))[b] += W8[k]; } } };
+// mass-start crossing delay: nobody crosses before the gun; 0..2 min after it, skewed early (quantile u -> 2*u^2 min), deterministic per runner
+const startDelay = (i: number, n: number) => 2 * ((i + 0.5) / n) ** 2;
 const runners: Record<string, { T: number; stop?: number }[]> = {};
 for (const k of ORDER) {
-  const D = dist[k], S0 = start(k), cuts = cutoffs[k], total = courses.courses[k].distance_mi;
+  const D = dist[k], SG = start(k), cuts = cutoffs[k], total = courses.courses[k].distance_mi;
   const midStop = cuts[Math.floor(cuts.length / 2)].mile;
   const R: { T: number; stop?: number }[] = D.finish_s.map((s: number) => ({ T: s / 60 }));
   for (let i = 0; i < D.dnf; i++) R.push({ T: D.q50 / 60, stop: midStop });
   runners[k] = R;
+  if (R.some((_, i) => startDelay(i, R.length) < 0 || startDelay(i, R.length) > 2)) throw new Error(`[timeline] ${k}: a start before the gun`);
   const onCourse = bins(nb); stByCourse[k] = {};
-  for (const r of R) {
+  R.forEach((r, ri) => { const S0 = SG + startDelay(ri, R.length);
     const endMin = r.stop != null ? S0 + r.T * fracAt(k, r.stop, r.T) : S0 + r.T;
     for (let b = 0; b < nb; b++) { const t = T0 + (b + 0.5) * BIN; if (t >= S0 && t <= endMin) onCourse[b] += W8[k]; }
     presence(k, S0 - PRE, PRE);
     if (r.stop == null) presence(k, S0 + r.T, LINGER);
     for (const c of cuts) { if (c.station === 'S/F' && c.mile > 0 && c.mile < total - 0.01 && (r.stop == null || c.mile <= r.stop)) presence(k, S0 + r.T * fracAt(k, c.mile, r.T), PASS_LINGER); }
     for (const c of cuts) { if (c.mile === 0 || (r.stop != null && c.mile > r.stop)) continue; const t = S0 + r.T * fracAt(k, c.mile, r.T), b = Math.floor((t - T0) / BIN); if (b >= 0 && b < nb) { stBins[c.station][b] += W8[k]; (stByCourse[k][c.station] ??= bins(nb))[b] += W8[k]; } }
-  }
+  });
+  const S0 = SG;
   const pass = cuts.map((c: any) => ({ station: c.station, mile: c.mile, cutoff: c.cutoff, first: S0 + arrive(k, D.finish_s[0] / 60, c.mile, PAR), median: S0 + arrive(k, D.q50 / 60, c.mile, PAR), last: S0 + arrive(k, D.finish_s[D.finish_s.length - 1] / 60, c.mile, PAR) }));
   // course record: fastest finish on this course. 35K/55K/100K were new in 2026 (2026 only); 10K/20K kept their names and courses 2019-2026
   const recYears = RS.events.filter((e: any) => evKey(e.name) === k && e.year < 2027 && (e.year >= 2026 || ['10K', '20K'].includes(k)) && e.result_sets[0]?.finish_s.length);
@@ -197,6 +201,7 @@ for (const s of stations.order) {
 out.pace_model = { params: PAR, grid: GRID, validation, mean_abs_error_min: +best!.err.toFixed(1), previous_model_mean_abs_error_min: +baselineErr.toFixed(1), same_without_fitness_scaling_min: +noFitnessErr.toFixed(1), beta_note: 'beta ≥ 0.5 enforced (faster runners less affected, per spec); the splits alone slightly prefer beta = 0', reference_runner_20min_mi: pace20, validated_points: VAL.reduce((a, v) => a + v.pts.length, 0) };
 out.assumptions = [
   'Expected runners per course = sources/curated/site.json expectedRunners (default 2026 starters). All counts (on course, aid-station passes, finish crowd) are the 2026-shaped simulation scaled by N / 2026 starters, i.e. the expected value of resampling N runners from the 2026 finish-time distribution. Map dots bootstrap whole 2026 runners (seeded, ±1% time jitter) when N differs, keeping 2026 clustering.',
+  'Start: nobody crosses the line before the gun; each runner starts 0-2 min after it (mass-start crossing delay, skewed early: runner quantile u -> 2u² min, faster runners nearer the front).',
   `Start / Finish crowd (one row, same place): every runner (finisher or DNF) arrives ${PRE} min before their own start and stays until the gun; every finisher (all five distances) stays ${LINGER} min after their modelled finish; runners passing S/F mid-race (not finishing there) count for ${PASS_LINGER} min. DNF runners and spectators/crew are not counted. Count = people present at the middle of each 15 min bin.`,
   'Finish-time distributions per 2027 distance = 2026 RunSignup results for the identically named event (same start times); one simulated runner per 2026 finisher.',
   'Expected 2027 starters = 2026 starters (finishers + DNF): 2027 registrant counts are not public (RunSignup participants endpoint returns Permission Denied). 2027 caps from RunSignup are shown for reference only.',

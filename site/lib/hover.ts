@@ -51,7 +51,9 @@ export function hoverData(c: Ctx) {
     const N = C.expected_starters ?? T.length;
     if (N !== T.length) { const r = rng(k), idx = Array.from({ length: N }, (_, i) => (i < T.length && N > T.length ? i : Math.floor(r() * T.length)));
       T = idx.map((i, j) => (j < T.length && N > T.length ? T[i] : Math.round(T[i] * (1 + (r() - 0.5) * 0.02) * 10) / 10)); stop = idx.map((i) => stop[i]); fit = idx.map((i) => fit[i]); }
-    return [k, { start: C.start, T, stop, fit, curves: C.curves.byFit, med: C.q50 / 60, medFit: midFit, on: C.on_course, rec: { T: C.record.s / 60, year: C.record.year, fit: C.curves.fitOf[0] }, fin }];
+    // mass-start crossing delay (same as scripts/timeline.ts): never before the gun, 0..2 min after, skewed early
+    const off = T.map((_, i) => 2 * ((i + 0.5) / T.length) ** 2);
+    return [k, { start: C.start, T, off, stop, fit, curves: C.curves.byFit, med: C.q50 / 60, medFit: midFit, on: C.on_course, rec: { T: C.record.s / 60, year: C.record.year, fit: C.curves.fitOf[0] }, fin }];
   })) };
   return { profile: { W, H, x: L.elev_xlim, y: L.elev_ylim }, courses, time };
 }
