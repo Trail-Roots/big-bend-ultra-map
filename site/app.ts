@@ -214,6 +214,7 @@ document.querySelectorAll<HTMLElement>('.fp-zoom').forEach((box) => {
   const st = box.querySelector<HTMLElement>('.fp-stage')!; let k = 1, x = 0, y = 0;
   const clamp = () => { k = Math.min(8, Math.max(1, k)); const w = box.clientWidth, h = box.clientHeight; x = Math.min(0, Math.max(w - w * k, x)); y = Math.min(0, Math.max(h - h * k, y)); st.style.transform = k === 1 ? '' : `translate(${x}px,${y}px) scale(${k})`; };
   const zoomAt = (f: number, cx: number, cy: number) => { const nk = Math.min(8, Math.max(1, k * f)); x = cx - ((cx - x) * nk) / k; y = cy - ((cy - y) * nk) / k; k = nk; clamp(); };
+  box.querySelectorAll<HTMLButtonElement>('.fp-zoomctl button').forEach((b) => { b.addEventListener('click', () => zoomAt(b.dataset.z === 'in' ? 1.5 : 1 / 1.5, box.clientWidth / 2, box.clientHeight / 2)); b.addEventListener('dblclick', (e) => e.stopPropagation()); });
   box.addEventListener('dblclick', () => { k = 1; x = y = 0; clamp(); });
   box.addEventListener('wheel', (e) => { e.preventDefault(); const r = box.getBoundingClientRect(); zoomAt(Math.exp(-e.deltaY * 0.0015), e.clientX - r.left, e.clientY - r.top); }, { passive: false });
   const pts = new Map<number, { x: number; y: number }>(); let last: { x: number; y: number; d: number } | null = null;

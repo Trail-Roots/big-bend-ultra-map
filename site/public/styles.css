@@ -150,3 +150,5 @@ svg.mainmap,svg.mini{touch-action:pan-x pan-y}svg.panning{cursor:grabbing}
 .fp-zoom{position:relative;overflow:hidden;border:1px solid #000;background:#fff;touch-action:none}.fp-stage{transform-origin:0 0;cursor:grab}.fp-stage.drag{cursor:grabbing}.fp-zoom img{user-select:none;-webkit-user-drag:none}
 @media print{.fp-stage{transform:none!important}}
 .plan svg.fp-north{position:absolute;top:8px;width:28px!important;height:52px!important;pointer-events:none;z-index:2}.plan svg.fp-tr{right:10px}.plan svg.fp-tl{left:10px}@media print{.plan svg.fp-north{width:16pt!important;height:30pt!important;top:5pt}}
+.fp-zoomctl{position:absolute;right:8px;bottom:8px;z-index:3;display:flex;flex-direction:column;gap:4px}.fp-zoomctl button{width:30px;height:30px;font:700 18px/1 system-ui,sans-serif;background:#fff;border:1px solid #64748b;border-radius:4px;cursor:pointer}
+@media print{.fp-zoomctl{display:none!important}}
