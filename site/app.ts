@@ -267,5 +267,9 @@ document.querySelectorAll<HTMLElement>('.fp-zoom').forEach((box) => {
 // ---- ?view=embed inside an iframe (dist/embed.js): report the content height to the parent so it can size the iframe ----
 if (document.documentElement.classList.contains('embed') && parent !== window) {
   let last = 0; const post = () => { const h = document.documentElement.scrollHeight; if (Math.abs(h - last) > 1) { last = h; parent.postMessage({ type: 'bbu-embed-height', height: h }, '*'); } };
+  // host viewport from embed.js -> --host-vw/--host-vh (1% of the parent window), so vh/vw size limits follow the HOST screen, not the auto-height iframe
+  let hv = '';
+  addEventListener('message', (e) => { const d = e.data; if (e.source !== parent || !d || d.type !== 'bbu-host-viewport' || !(d.w > 0 && d.h > 0)) return;
+    const v = d.w + 'x' + d.h; if (v === hv) return; hv = v; const s = document.documentElement.style; s.setProperty('--host-vw', d.w / 100 + 'px'); s.setProperty('--host-vh', d.h / 100 + 'px'); });
   new ResizeObserver(post).observe(document.body); addEventListener('load', post); post();
 }

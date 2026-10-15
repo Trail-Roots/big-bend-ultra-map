@@ -20,16 +20,16 @@ svg .stnum{fill:#fff;font-weight:700}
 .printctl{margin-left:auto;display:flex;gap:.4rem;align-items:center}.printctl a,.printctl button{font:inherit;font-size:.9rem;padding:.25rem .7rem;border:1px solid #888;border-radius:4px;background:#fff;color:var(--ink);text-decoration:none;cursor:pointer}.printctl a.pdf{background:var(--ink);color:#fff;border-color:var(--ink)}
 .layers{margin:.6rem 1rem;background:#fff;border:1px solid #ddd;border-radius:6px;padding:.4rem .8rem;font-size:.9rem}
 .toggles{display:flex;flex-wrap:wrap;gap:.3rem 1rem;padding:.4rem 0}.toggles .sub{display:flex;gap:.6rem}.ck{color:var(--c);font-weight:700;display:inline-flex;align-items:center;gap:.3rem}.minibib{display:inline-block;width:auto;vertical-align:middle}
-.sheet{display:grid;grid-template-columns:minmax(0,44fr) minmax(0,51fr);gap:1.5vw;padding:0 1rem 1rem;max-width:2400px;margin:0 auto}
+.sheet{display:grid;grid-template-columns:minmax(0,44fr) minmax(0,51fr);gap:calc(var(--host-vw, 1vw) * 1.5);padding:0 1rem 1rem;max-width:2400px;margin:0 auto}
 .main svg{background:#fff;box-shadow:0 1px 4px #0002}
-.side{display:flex;flex-direction:column;gap:1.2vw;min-width:0}
+.side{display:flex;flex-direction:column;gap:calc(var(--host-vw, 1vw) * 1.2);min-width:0}
 @media screen{.pg1,.charts{display:contents}}
 .hdr{display:grid;grid-template-columns:auto 1fr auto;gap:1rem;align-items:start}
-.logo img{width:clamp(56px,6vw,120px);display:block}
-.hdr h1{font-family:"DejaVu Serif",serif;font-weight:400;font-size:clamp(1.4rem,2.4vw,2.6rem);margin:0}
-.subtitle{font-family:"DejaVu Serif",serif;font-style:italic;color:var(--mute);margin:.2rem 0 0;font-size:clamp(.9rem,1.3vw,1.4rem)}
-.notice{background:#efefef;padding:.5rem .7rem;font-size:clamp(.7rem,.85vw,.95rem);line-height:1.4;text-align:right}
-.minis{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:.3vw}.minibox{margin:0}
+.logo img{width:clamp(56px,calc(var(--host-vw, 1vw) * 6),120px);display:block}
+.hdr h1{font-family:"DejaVu Serif",serif;font-weight:400;font-size:clamp(1.4rem,calc(var(--host-vw, 1vw) * 2.4),2.6rem);margin:0}
+.subtitle{font-family:"DejaVu Serif",serif;font-style:italic;color:var(--mute);margin:.2rem 0 0;font-size:clamp(.9rem,calc(var(--host-vw, 1vw) * 1.3),1.4rem)}
+.notice{background:#efefef;padding:.5rem .7rem;font-size:clamp(.7rem,calc(var(--host-vw, 1vw) * .85),.95rem);line-height:1.4;text-align:right}
+.minis{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:calc(var(--host-vw, 1vw) * .3)}.minibox{margin:0}
 .doc{max-width:900px;margin:1rem auto;background:#fff;padding:1rem 2rem}.doc table{border-collapse:collapse;width:100%}.doc td,.doc th{border-bottom:1px solid #ddd;padding:.3rem;text-align:left}
 @media (max-width:1000px){
   .sheet{grid-template-columns:1fr}
@@ -119,8 +119,8 @@ svg.mainmap,svg.mini{touch-action:pan-x pan-y}svg.panning{cursor:grabbing}
 /* ---------- web header: compact (nav already carries the logo + title) ---------- */
 @media screen{
   .hdr{grid-template-columns:1fr auto;gap:.6rem}.hdr .logo{display:none}
-  .hdr h1{font-size:clamp(1.1rem,1.6vw,1.7rem)}.subtitle{font-size:clamp(.8rem,1vw,1rem);margin:0}
-  .notice{font-size:clamp(.68rem,.75vw,.85rem);padding:.35rem .6rem}
+  .hdr h1{font-size:clamp(1.1rem,calc(var(--host-vw, 1vw) * 1.6),1.7rem)}.subtitle{font-size:clamp(.8rem,calc(var(--host-vw, 1vw) * 1),1rem);margin:0}
+  .notice{font-size:clamp(.68rem,calc(var(--host-vw, 1vw) * .75),.85rem);padding:.35rem .6rem}
 }
 /* ---------- small screens: timeline + profile up, mini maps lower ---------- */
 @media screen and (max-width:1000px){
@@ -132,10 +132,10 @@ html.embed,html.embed body,html.embed .sec.noprint{background:transparent!import
 .cprofile{margin:.4rem 0 .8rem}
 /* ---------- wide / desktop: whole main map visible, fitted to the screen height ---------- */
 @media screen and (min-width:1001px){
-  .sheet{grid-template-columns:auto minmax(0,1fr);grid-template-rows:auto auto auto 1fr;align-items:start;column-gap:1.5vw;row-gap:1.2vw}
+  .sheet{grid-template-columns:auto minmax(0,1fr);grid-template-rows:auto auto auto 1fr;align-items:start;column-gap:calc(var(--host-vw, 1vw) * 1.5);row-gap:calc(var(--host-vw, 1vw) * 1.2)}
   .sheet .side{display:contents}.sheet .main{grid-column:1;grid-row:1/5}.sheet .hdr,.sheet .minis,.sheet .stripsbox,.sheet .profilebox{grid-column:2}.sheet .hdr{grid-row:1}.sheet .minis{grid-row:2}.sheet .stripsbox{grid-row:3}.sheet .profilebox{grid-row:4}
   .main{justify-self:start}
-  .main svg.mainmap{height:calc(100vh - 140px);min-height:520px;width:auto;max-width:min(62vw,100%)}
+  .main svg.mainmap{height:calc(calc(var(--host-vh, 1vh) * 100) - 140px);min-height:520px;width:auto;max-width:min(calc(var(--host-vw, 1vw) * 62),100%)}
 }
 /* ---------- site plans ---------- */
 .plan svg.siteplan{border-radius:2px}
@@ -156,14 +156,14 @@ html.embed,html.embed body,html.embed .sec.noprint{background:transparent!import
 @media screen and (min-width:1100px){
   html body{background:#f4f4f4}
   /* navbar: full-width bar, items constrained to the landscape sheet width and centred */
-  html .topnav{padding-inline:max(1rem,calc((100vw - min(calc(100vw - 48px),calc((100vh - 90px) * 11 / 8.5),1600px)) / 2))}
+  html .topnav{padding-inline:max(1rem,calc((calc(var(--host-vw, 1vw) * 100) - min(calc(calc(var(--host-vw, 1vw) * 100) - 48px),calc((calc(var(--host-vh, 1vh) * 100) - 90px) * 11 / 8.5),1600px)) / 2))}
   html .topnav{position:relative;z-index:1}
   /* map section = page 1 (landscape: map + charts, positioned like the PDF) and page 2 (portrait: header + mini maps), one sheet per row */
   html .sec-map .sheet{display:flex;flex-direction:column;align-items:center;gap:28px;padding:24px 1rem;max-width:none}
-  html .sec-map .pg1{display:block;position:relative;flex:none;width:min(calc(100vw - 48px),calc((100vh - 90px) * 11 / 8.5),1600px);aspect-ratio:11/8.5;background:#fff;box-shadow:0 1px 6px #0000001f}
+  html .sec-map .pg1{display:block;position:relative;flex:none;width:min(calc(calc(var(--host-vw, 1vw) * 100) - 48px),calc((calc(var(--host-vh, 1vh) * 100) - 90px) * 11 / 8.5),1600px);aspect-ratio:11/8.5;background:#fff;box-shadow:0 1px 6px #0000001f}
   html .sec-map .pg1 .main,html .sec-map .pg1 .stripsbox,html .sec-map .pg1 .profilebox{position:absolute;margin:0}
   html .sec-map .pg1 .main svg.mainmap,html .sec-map .pg1 .stripsbox svg.timeline,html .sec-map .pg1 .profilebox svg{width:100%;height:100%;max-width:none;min-height:0;min-width:0;box-shadow:none}
-  html .sec-map .side{display:flex;width:8.5in;max-width:calc(100vw - 48px);min-height:11in;background:#fff;box-shadow:0 1px 6px #0000001f;padding:.28in}
+  html .sec-map .side{display:flex;width:8.5in;max-width:calc(calc(var(--host-vw, 1vw) * 100) - 48px);min-height:11in;background:#fff;box-shadow:0 1px 6px #0000001f;padding:.28in}
   /* every other printed section = its own sheet(s) */
   html .sec:not(.noprint):not(.sec-map):not(.sec-courses) > .doc{width:8.5in;max-width:none;min-height:11in;margin:28px auto;padding:.28in;box-shadow:0 1px 6px #0000001f;font-size:10.5pt}
   html .sec.noprint{background:#f4f2ee;padding:1px 0}
@@ -179,7 +179,7 @@ html.embed,html.embed body,html.embed .sec.noprint{background:transparent!import
 }
 /* paper view: each race page is a landscape letter sheet */
 @media screen and (min-width:1100px){
-  html .sec-courses .coursepage{--S:min(calc(100vw - 48px),calc((100vh - 90px) * 11 / 8.5),1600px);width:var(--S);max-width:none;height:calc(var(--S) * 8.5 / 11);margin:28px auto;padding:calc(var(--S) * .02545);gap:calc(var(--S) * .018);font-size:calc(var(--S) * .009);align-items:start;overflow:hidden}
+  html .sec-courses .coursepage{--S:min(calc(calc(var(--host-vw, 1vw) * 100) - 48px),calc((calc(var(--host-vh, 1vh) * 100) - 90px) * 11 / 8.5),1600px);width:var(--S);max-width:none;height:calc(var(--S) * 8.5 / 11);margin:28px auto;padding:calc(var(--S) * .02545);gap:calc(var(--S) * .018);font-size:calc(var(--S) * .009);align-items:start;overflow:hidden}
   html .sec-courses .coursepage .cpmap{display:flex;justify-content:center}
   html .sec-courses .coursepage svg.racemap{height:calc(var(--S) * .72);width:auto;max-width:100%;box-shadow:none}
   html .sec-courses .coursepage .cphead h2{font-size:calc(var(--S) * .018)}html .sec-courses .coursepage .cpbtns *{font-size:calc(var(--S) * .009)}
@@ -187,7 +187,7 @@ html.embed,html.embed body,html.embed .sec.noprint{background:transparent!import
 }
 /* wide screens: the Map layers panel is exactly as wide as the page-1 sheet below it (edges aligned) */
 @media screen and (min-width:1100px){
-  html{--SW:min(calc(100vw - 48px),calc((100vh - 90px) * 11 / 8.5),1600px)}
+  html{--SW:min(calc(calc(var(--host-vw, 1vw) * 100) - 48px),calc((calc(var(--host-vh, 1vh) * 100) - 90px) * 11 / 8.5),1600px)}
   html .layers{width:var(--SW);box-sizing:border-box;margin:.6rem auto}
 }
 /* narrow screens (< 700 px): tight padding so maps and charts use nearly the full width; matrix condensed to fit without scrolling */
@@ -202,7 +202,7 @@ html.embed,html.embed body,html.embed .sec.noprint{background:transparent!import
 .cuttab .ab{display:none}
 /* narrow / short screens: every map and chart scales to fit (contain), never cropped: whole viewBox visible, at most 85% of the screen height */
 @media screen and (max-width:1099px){
-  svg.mainmap,svg.racemap,svg.profile,svg.cprofile{display:block;width:auto!important;max-width:100%!important;height:auto!important;max-height:85vh!important;min-height:0!important;margin-left:auto;margin-right:auto}
+  svg.mainmap,svg.racemap,svg.profile,svg.cprofile{display:block;width:auto!important;max-width:100%!important;height:auto!important;max-height:calc(var(--host-vh, 1vh) * 85)!important;min-height:0!important;margin-left:auto;margin-right:auto}
 }
-@media screen and (max-width:1099px){.fp-zoom{width:min(100%,calc(85vh * var(--ar,1)));margin-left:auto;margin-right:auto}}
+@media screen and (max-width:1099px){.fp-zoom{width:min(100%,calc(calc(var(--host-vh, 1vh) * 85) * var(--ar,1)));margin-left:auto;margin-right:auto}}
 @media screen and (max-width:1099px){.cuttab{font-size:11px;width:100%}.doc .cuttab td,.doc .cuttab th{padding:.2rem .15rem}.cuttab th .ab{display:inline}.cuttab th .fu{display:none}}
