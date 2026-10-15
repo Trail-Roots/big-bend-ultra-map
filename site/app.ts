@@ -32,12 +32,12 @@ if (hdEl && prof) {
   const move = (ev: PointerEvent) => {
     const ctm = prof.getScreenCTM(); if (!ctm) return;
     const p = new DOMPoint(ev.clientX, ev.clientY).matrixTransform(ctm.inverse());
-    show(x0 + (p.x / W) * (x1 - x0));
+    show(x0 + (p.x / W) * (x1 - x0), p.y);
   };
   // average pace from the start needed to make the next cutoff at or beyond this mile
   const pace = (mpm: number) => { const s = Math.round(mpm * 60); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; };
   const cutPace = (c: any, mile: number) => { const n = (c.cut as [number, number][]).find(([m]) => m >= mile - 1e-6 && m > 0); return n ? ` · cutoff pace ${pace(n[1] / n[0])}/mi` : ''; };
-  const show = (mile: number) => {
+  const show = (mile: number, py?: number) => {
     if (mile < 0) return hide();
     // every course that reaches this mile gets a marker; shorter courses show nothing
     const hits = Object.entries(HD.courses).filter(([, c]) => mile <= c.dist).map(([k, c]) => ({ k, c, v: routeAt(c.s, mile) }));
@@ -49,7 +49,9 @@ if (hdEl && prof) {
       const ft = v[1], d = dots[k] as SVGElement;
       d.style.display = ''; d.setAttribute('cx', String(X(mile))); d.setAttribute('cy', String(Y(ft)));
     }
-    for (const k in HD.courses) glide.set(k, hits.some((h) => h.k === k) ? mile : null);
+    // ONE tracking point on the main map: the course whose line is nearest the pointer (else the longest course here)
+    const pick = py == null ? hits[0] : hits.reduce((a, b) => (Math.abs(Y(b.v[1]) - py) < Math.abs(Y(a.v[1]) - py) ? b : a));
+    for (const k in HD.courses) glide.set(k, k === pick.k ? mile : null);
     // readout: one line per course, longest first: course · mile · cumulative gain from the start
     lab.textContent = '';
     const rows = hits.map(({ k, c, v }) => ({ k, bib: (c as any).bib, t: `mi ${v[0].toFixed(1)} · +${Math.round(v[6]).toLocaleString('en-US')} ft gain${cutPace(c, v[0])}` }));
@@ -62,6 +64,34 @@ if (hdEl && prof) {
     box.setAttribute('x', String(bb.x - 8)); box.setAttribute('y', String(bb.y - 5)); box.setAttribute('width', String(bb.width + 16)); box.setAttribute('height', String(bb.height + 10));
   };
   prof.style.touchAction = 'none'; prof.style.cursor = 'crosshair';
+  // ---- race pages: each race's own elevation chart drives ONE tracking point on that race page's map; readout = distance, elevation,
+  // gain so far and the pace needed for the next cutoff (as on the main chart) ----
+  document.querySelectorAll<SVGSVGElement>('svg.cprofile').forEach((cp) => {
+    const k = cp.dataset.course!, C = HD.courses[k] as any, rm = document.querySelector<SVGSVGElement>(`svg.racemap[data-race="${k}"]`); if (!C) return;
+    const PL = +cp.dataset.pl!, CW = +cp.dataset.w!, CH = +cp.dataset.h!, PB = +cp.dataset.pb!, D = +cp.dataset.d!, lo = +cp.dataset.lo!, hi = +cp.dataset.hi!;
+    const CX = (m: number) => PL + (m / D) * (CW - PL - 10), CY = (ft: number) => 10 + (1 - (ft - lo) / (hi - lo)) * (CH - PB - 10);
+    const g = el('g', { class: 'hov', style: 'display:none;pointer-events:none' }, cp);
+    const vl = el('line', { y1: 10, y2: CH - PB, stroke: '#111', 'stroke-width': 1.5, 'stroke-dasharray': '4 3' }, g), dot = el('circle', { r: 7, fill: '#fff', 'stroke-width': 3.5, stroke: C.color }, g);
+    const bx = el('rect', { fill: '#fff', 'fill-opacity': 0.94, stroke: '#bbb', 'stroke-width': 1, rx: 4 }, g), tx = el('text', { 'font-size': 18, 'font-weight': 700, fill: '#1a1a1a' }, g);
+    let mm: { g: SVGElement } | null = null;
+    if (rm) { const f = +rm.dataset.f! || 1, vb = rm.viewBox.baseVal, R = vb.width / 90, mg = el('g', { class: 'hov', style: 'display:none;pointer-events:none' }, rm) as SVGElement;
+      el('circle', { r: R * 1.35, fill: '#fff' }, mg); el('circle', { r: R, fill: 'none', stroke: C.color, 'stroke-width': R * 0.38 }, mg); el('circle', { r: R * 0.32, fill: '#111' }, mg); mm = { g: mg }; (mm as any).f = f; }
+    const st = HD.time.courses[k].start as number;
+    const hideC = () => { g.style.display = 'none'; if (mm) mm.g.style.display = 'none'; };
+    const cmove = (ev: PointerEvent) => { const ctm = cp.getScreenCTM(); if (!ctm) return; const p = new DOMPoint(ev.clientX, ev.clientY).matrixTransform(ctm.inverse()), mile = ((p.x - PL) / (CW - PL - 10)) * D;
+      if (mile < 0 || mile > D) return hideC();
+      const v = routeAt(C.s, mile), x = CX(mile); g.style.display = ''; vl.setAttribute('x1', String(x)); vl.setAttribute('x2', String(x)); dot.setAttribute('cx', String(x)); dot.setAttribute('cy', String(CY(v[1])));
+      const n = (C.cut as [number, number, string][]).find(([m]) => m >= mile - 1e-6 && m > 0);
+      const lines = [`mi ${v[0].toFixed(1)} · ${Math.round(v[1]).toLocaleString('en-US')} ft · +${Math.round(v[6]).toLocaleString('en-US')} ft gain`, n ? `next cutoff ${fmt(st + n[1])} (mi ${n[0].toFixed(1)}) · pace ${pace(n[1] / n[0])}/mi` : 'no further cutoff'];
+      tx.textContent = ''; const right = x < CW * 0.55, lx = x + (right ? 14 : -14); tx.setAttribute('text-anchor', right ? 'start' : 'end');
+      lines.forEach((t, i) => { const ts = el('tspan', { x: lx, y: 34 + i * 24 }, tx); ts.textContent = t; });
+      const bb = (tx as SVGTextElement).getBBox(); bx.setAttribute('x', String(bb.x - 7)); bx.setAttribute('y', String(bb.y - 4)); bx.setAttribute('width', String(bb.width + 14)); bx.setAttribute('height', String(bb.height + 8));
+      if (mm) { const f = (mm as any).f; mm.g.style.display = ''; mm.g.setAttribute('transform', `translate(${v[4] * f} ${v[5] * f})`); } };
+    cp.style.touchAction = 'none'; cp.style.cursor = 'crosshair';
+    cp.addEventListener('pointermove', cmove); cp.addEventListener('pointerdown', cmove);
+    cp.addEventListener('pointerleave', (e) => { if (e.pointerType === 'mouse') hideC(); });
+    cp.addEventListener('pointerup', (e) => { if (e.pointerType !== 'mouse') setTimeout(hideC, 1500); });
+  });
   // ---- race-day time: timeline cursor, median-runner markers, runner dots; auto-play sweeps the clock ----
   const TM = HD.time, tl = document.querySelector<SVGSVGElement>('svg.timeline');
   // elapsed fraction -> mile on a runner's fitness-class curve (flat steps = aid-station dwell)

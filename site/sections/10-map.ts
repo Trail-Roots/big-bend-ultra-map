@@ -9,10 +9,10 @@ import { renderTimeline } from '../lib/timeline';
 // Panels keep their 36x24 in design-sheet geometry (inches) and each page is uniformly zoomed to fit the printable area.
 /** live site; links in the PDF must be absolute */
 export const SITE_URL = 'https://trail-roots.github.io/big-bend-ultra-map/';
-export const LETTER = { w: 8.5, h: 11, margin: 0.4 };
+export const LETTER = { w: 8.5, h: 11, margin: 0.28 };
 type Box = [number, number, number, number]; // sheet fractions [x0, y0 (from bottom), w, h]
 const inch = (b: Box) => ({ l: b[0] * 36, t: (1 - b[1] - b[3]) * 24, w: b[2] * 36, h: b[3] * 24 });
-/** best letter orientation for a w x h in block: largest uniform zoom inside equal 0.4in margins, centred */
+/** best letter orientation for a w x h in block: largest uniform zoom inside equal 0.28in margins, centred */
 function place(w: number, h: number, force?: 'portrait' | 'landscape') {
   const opt = (pw: number, ph: number, orient: string) => { const W = pw - 2 * LETTER.margin, H = ph - 2 * LETTER.margin, z = Math.min(W / w, H / h); return { z, orient, mx: (W - w * z) / 2, my: (H - h * z) / 2 }; };
   const a = opt(LETTER.w, LETTER.h, 'portrait'), b = opt(LETTER.h, LETTER.w, 'landscape');
