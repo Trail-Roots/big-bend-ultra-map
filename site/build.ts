@@ -59,3 +59,4 @@ for (const f of ['logo_ink_crop.png', 'logo_white_crop.png']) fs.copyFileSync(pa
 // site-plan aerial backdrops (USGS, public domain)
 fs.mkdirSync(path.join(D, 'plans'), { recursive: true });
 for (const f of ['finish_muted.jpg', 'parking_muted.jpg']) fs.copyFileSync(path.join(root, 'sources', 'curated', 'aerial', f), path.join(D, 'plans', f));
+fs.copyFileSync(path.join(root, 'sources', 'floorplan.svg'), path.join(D, 'plans', 'floorplan.svg')); // Erik's floor-plan drawing, served byte-for-byte
