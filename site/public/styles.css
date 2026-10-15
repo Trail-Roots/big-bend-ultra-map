@@ -206,3 +206,10 @@ html.embed,html.embed body,html.embed .sec.noprint{background:transparent!import
 }
 @media screen and (max-width:1099px){.fp-zoom{width:min(100%,calc(calc(var(--host-vh, 1vh) * 85) * var(--ar,1)));margin-left:auto;margin-right:auto}}
 @media screen and (max-width:1099px){.cuttab{font-size:11px;width:100%}.doc .cuttab td,.doc .cuttab th{padding:.2rem .15rem}.cuttab th .ab{display:inline}.cuttab th .fu{display:none}}
+/* race page Strava / .GPX links (header, next to the print buttons); in print they stay as compact links */
+.cplinks{display:flex;gap:.4rem;margin-left:auto}.cplinks a{display:inline-flex;align-items:center;gap:.25em;font:600 .8rem system-ui,sans-serif;padding:.25rem .6rem;border:1px solid #888;border-radius:4px;background:#fff;color:var(--ink);text-decoration:none}.cplinks a:hover{border-color:#111}
+.cplinks svg.dlico{width:.85em;height:.85em;flex:none;box-shadow:none}
+@media screen and (min-width:1100px){html .sec-courses .coursepage .cplinks a{font-size:calc(var(--S) * .009)}}
+@media print{.cplinks{gap:4pt}.cplinks a{font-size:7pt;padding:1.5pt 4pt;border:.8pt solid #c8c2b8;border-radius:3px;color:#555;gap:2pt}}
+@media screen{.cphead{flex-wrap:wrap;justify-content:flex-start;row-gap:.35rem;column-gap:.4rem}.cphead h2{flex:1 0 100%;white-space:nowrap}.cphead .cplinks{margin-left:0}.cplinks a,.cpbtns a,.cpbtns button{white-space:nowrap}}
+@media screen and (max-width:699px){.cphead h2{font-size:1.35rem}}

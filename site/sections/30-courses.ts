@@ -4,6 +4,7 @@ import { esc, f1, station } from '../lib/util';
 import { miniBibSvg } from '../lib/panels';
 import { courseTable, TABLE_NOTE } from '../lib/coursetable';
 import { renderRaceMap } from '../lib/racemap';
+import { SITE_URL } from './10-map';
 export const meta = { id: 'courses', title: 'Race pages' };
 const uniq = (svg: string, k: string) => svg.replace(/\bid="([^"]+)"/g, `id="$1-cp${k}"`).replace(/url\(#([^)]+)\)/g, `url(#$1-cp${k})`).replace('class="mini"', 'class="mini mini-cp"').replace(/ data-mini="[^"]*"/, '');
 function profile(c, k: string) {
@@ -38,7 +39,7 @@ export function render(c) {
   const nav = c.courses.order.map((k) => `<a href="#course-${k}" style="color:${c.courses.colors[k]}">${miniBibSvg(k, c.courses.colors[k], 0.7)}</a>`).join('');
   const pages = c.courses.order.map((k) => {
     const C = c.courses.courses[k];
-    return `<article class="doc coursepage" id="course-${k}" data-course="${k}"><figure class="cpmap">${renderRaceMap(c, k)}</figure><div class="cpright"><header class="cphead"><h2 class="bibh" style="color:${c.courses.colors[k]}">${miniBibSvg(k, c.courses.colors[k], 1)} ${C.distance_mi.toFixed(1)} mi · start ${esc(C.start)}</h2><span class="ui cpbtns"><button type="button" class="printone" data-course="${k}">Print this course</button><a href="course-${k}.pdf" download aria-label="${k} course page (PDF)">PDF</a></span></header>
+    return `<article class="doc coursepage" id="course-${k}" data-course="${k}"><figure class="cpmap">${renderRaceMap(c, k)}</figure><div class="cpright"><header class="cphead"><h2 class="bibh" style="color:${c.courses.colors[k]}">${miniBibSvg(k, c.courses.colors[k], 1)} ${C.distance_mi.toFixed(1)} mi · start ${esc(C.start)}</h2><span class="cplinks">${C.stravaUrl ? `<a href="${esc(C.stravaUrl)}" target="_blank" rel="noopener" title="${k} route on Strava">Strava</a>` : ''}<a href="${SITE_URL}${esc(C.gpx)}" download title="Download the ${k} GPX"><svg class="dlico" viewBox="0 0 10 10" aria-hidden="true"><path d="M5 1v5.2M2.6 4.2 5 6.6l2.4-2.4M1.5 8.6h7" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>.GPX</a></span><span class="ui cpbtns"><button type="button" class="printone" data-course="${k}">Print this course</button><a href="course-${k}.pdf" download aria-label="${k} course page (PDF)">PDF</a></span></header>
 ${profile(c, k)}<p class="note">${TABLE_NOTE}</p>${courseTable(c, k)}</div></article>`;
   }).join('');
   return `<nav class="ui cpnav"><strong>Course pages</strong> ${nav}</nav>${pages}`;

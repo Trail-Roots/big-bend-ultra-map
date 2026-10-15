@@ -125,13 +125,26 @@ notice next to Download PDF on the web page. Set it to `false` and rebuild (`bun
 - Rincon: <https://www.google.com/maps/search/?api=1&query=29.407652,-103.857292>
 - Sauceda: <https://www.google.com/maps/search/?api=1&query=29.469013,-103.957010>
 
+### Routes
+
+- 100K route on Strava: <https://www.strava.com/routes/3450526029363380036>
+- 55K route on Strava: <https://www.strava.com/routes/3450532671815509296>
+- 35K route on Strava: <https://www.strava.com/routes/3450543498764908848>
+- 20K route on Strava: <https://www.strava.com/routes/3476258112199931088>
+- 10K route on Strava: <https://www.strava.com/routes/3476252579046666448>
+
 ### Downloads
 
 - Download PDF: <https://trail-roots.github.io/big-bend-ultra-map/big-bend-ultra-2027-map.pdf>
+- Download the 100K GPX: <https://trail-roots.github.io/big-bend-ultra-map/gpx/big-bend-ultra-100k.gpx>
 - 100K course page (PDF): <https://trail-roots.github.io/big-bend-ultra-map/course-100K.pdf>
+- Download the 55K GPX: <https://trail-roots.github.io/big-bend-ultra-map/gpx/big-bend-ultra-55k.gpx>
 - 55K course page (PDF): <https://trail-roots.github.io/big-bend-ultra-map/course-55K.pdf>
+- Download the 35K GPX: <https://trail-roots.github.io/big-bend-ultra-map/gpx/big-bend-ultra-35k.gpx>
 - 35K course page (PDF): <https://trail-roots.github.io/big-bend-ultra-map/course-35K.pdf>
+- Download the 20K GPX: <https://trail-roots.github.io/big-bend-ultra-map/gpx/big-bend-ultra-20k.gpx>
 - 20K course page (PDF): <https://trail-roots.github.io/big-bend-ultra-map/course-20K.pdf>
+- Download the 10K GPX: <https://trail-roots.github.io/big-bend-ultra-map/gpx/big-bend-ultra-10k.gpx>
 - 10K course page (PDF): <https://trail-roots.github.io/big-bend-ultra-map/course-10K.pdf>
 
 ### Calendar
