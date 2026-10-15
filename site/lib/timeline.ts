@@ -57,34 +57,27 @@ export function renderTimeline(c: Ctx) {
   const GMAX = Math.max(...sts.filter((k) => k !== 'S/F' && T.stations[k]).map((k) => Math.max(...T.stations[k].passes15)));
   // cutoff icons / lines placed so far (all rows), for the overlap check
   type Bx = { x0: number; x1: number; y0: number; y1: number };
-  const CIR = 9.5, cplaced: { b: Bx; segs: Bx[]; row: [number, number] }[] = [], hitB = (p: Bx, q: Bx, m: number) => p.x0 < q.x1 + m && q.x0 < p.x1 + m && p.y0 < q.y1 + m && q.y0 < p.y1 + m;
+  const CW = 3, cplaced: { b: Bx; segs: Bx[]; row: [number, number] }[] = [], hitB = (p: Bx, q: Bx, m: number) => p.x0 < q.x1 + m && q.x0 < p.x1 + m && p.y0 < q.y1 + m && q.y0 < p.y1 + m;
     sts.forEach((k, r) => {
     const FC = T.finish_crowd, sf = k === 'S/F' && FC, S = sf ? { name: 'Start / Finish', passes15: FC.present15, window: null, peak15: FC.peak15 } : T.stations[k], maxP = Math.max(...S.passes15), y0 = sTop + r * SR, base = y0 + SR - 6, hgt = SR - 12, B = T.bin_min;
     const ms = Math.min(950, (SR - 4) ** 2 / 1.8), mr = Math.sqrt(ms * 1.8) / 2, lt = station(PADL + mr, y0 + SR / 2, k, c.stations.stations[k].spectator, { s: ms, fs: Math.sqrt(ms / 950) * 24, badge: false, colors: c.colors }) + `<text x="${f1(PADL + 2 * mr + 8)}" y="${f1(y0 + SR / 2)}" font-size="19" fill="${ink}" dominant-baseline="central">${esc(S.name)}</text>`;
     let g = (sf ? `<title>Start / Finish shaded on its own scale (peak ${Math.round(maxP)} people); aid stations share one scale</title>` : "") + gmapLink(c.stations.stations[k].place ?? c.stations.stations[k].link_lonlat ?? c.stations.stations[k].lonlat, S.name, lt);
     S.passes15.forEach((v: number, i: number) => { if (!v) return; const x = X(t0 + i * B); g += `<rect x="${f1(x)}" y="${f1(y0 + 5)}" width="${f1(X(t0 + B) - X(t0) + 0.3)}" height="${f1(SR - 10)}" fill="#b3261e" fill-opacity="${(0.06 + 0.9 * Math.min(1, v / (sf ? maxP : GMAX))).toFixed(2)}"/>`; }); // single-hue intensity ramp, no outlines
-    // cutoffs: each applies to this station only, so its black line stays inside this row (true time, row bottom up to its number icon at the
-    // row's top edge). Two close cutoffs here: the later icon drops lower in the row, then slides sideways (line elbows) until it clears.
+    // cutoffs: no icons (the row names the station). Each cutoff is a short vertical line in its RACE's course colour, confined to this row
+    // at the cutoff time; races sharing this station and time split the row height into equal segments. Thin white halo for legibility on the heat cells.
     const cm = new Map<number, string[]>();
     for (const kk of order) { const C = T.courses[kk]; for (const q of C.passes) { if (q.station !== k || q.mile === 0) continue; const tm = cutMin(q.cutoff); if (tm == null) continue; const t = tm < C.start ? tm + 1440 : tm; if (t >= t0 && t <= t1) (cm.get(t) ?? cm.set(t, []).get(t)!).push(kk); } }
-    const rowLo = y0 + 1, rowHi = y0 + SR - 1, yE = y0 + SR - 3;
-    for (const t of [...cm.keys()].sort((p, q) => p - q)) { const ks = cm.get(t)!, tx = X(t); let done = false;
-      for (let dd = 0; dd <= 160 && !done; dd++) for (const iy of [rowLo + CIR, rowLo + CIR + 6, rowLo + CIR + 11]) { if (done) break; const d = dd % 2 ? (dd + 1) / 2 : -dd / 2, cx = tx + d;
-        const bx: Bx = { x0: cx - CIR, x1: cx + CIR, y0: iy - CIR, y1: iy + CIR + 4 }; if (bx.y1 > yE - 2) continue;
-        const segs: Bx[] = cx === tx ? [{ x0: tx, x1: tx, y0: bx.y1, y1: yE }] : [{ x0: tx, x1: tx, y0: bx.y1 + 2, y1: yE }, { x0: Math.min(tx, cx), x1: Math.max(tx, cx), y0: bx.y1 + 2, y1: bx.y1 + 2 }];
-        if (cplaced.some((P) => hitB(P.b, bx, 2) || P.segs.some((g2) => hitB(g2, bx, 1)) || segs.some((g2) => hitB(g2, P.b, 1)))) continue;
-        cplaced.push({ b: bx, segs, row: [rowLo, rowHi] }); done = true;
-        const path = segs.length === 1 ? `M${f1(tx)},${f1(yE)}V${f1(bx.y1)}` : `M${f1(tx)},${f1(yE)}V${f1(bx.y1 + 2)}H${f1(cx)}V${f1(bx.y1)}`;
-        g += `<g class="tlcut"><title>${esc(S.name)} cutoff ${clock(t, false)} (${ks.join(', ')})</title><path d="${path}" fill="none" stroke="#111" stroke-width="2.4"/>`
-          + ks.map((kk, j) => `<rect x="${f1(cx - CIR + j * (CIR * 2 / ks.length))}" y="${f1(iy + CIR + 1)}" width="${f1(CIR * 2 / ks.length)}" height="3" fill="${c.courses.colors[kk]}"/>`).join('')
-          + station(cx, iy, k, false, { s: (CIR * 2) ** 2 / 1.8, fs: k.length > 1 ? 9.5 : 14, badge: false, colors: c.colors }) + '</g>'; }
-      if (!done) throw new Error(`[timeline] no clear spot in the ${k} row for the ${clock(t)} cutoff icon`); }
+    const rowLo = y0 + 3, rowHi = y0 + SR - 3;
+    for (const t of [...cm.keys()].sort((p, q) => p - q)) { const ks = cm.get(t)!, tx = X(t), sh = (rowHi - rowLo) / ks.length;
+      g += `<g class="tlcut"><title>${esc(S.name)} cutoff ${clock(t, false)} (${ks.join(', ')})</title>` + ks.map((kk, j) => { const ya = rowLo + j * sh + (j ? 0.75 : 0), yb = rowLo + (j + 1) * sh - (j < ks.length - 1 ? 0.75 : 0);
+        cplaced.push({ b: { x0: tx - CW / 2, x1: tx + CW / 2, y0: ya, y1: yb }, segs: [], row: [rowLo, rowHi] });
+        return `<path d="M${f1(tx)},${f1(ya)}V${f1(yb)}" stroke="#fff" stroke-width="${CW + 2}"/><path d="M${f1(tx)},${f1(ya)}V${f1(yb)}" stroke="${c.courses.colors[kk]}" stroke-width="${CW}"/>`; }).join('') + '</g>'; }
     s += `<g class="tlst" data-station="${esc(k)}">${g}</g>`;
   });
-  // build check: every cutoff line and icon stays inside its own station row; no icon touches another icon or any cutoff line
+  // build check: every cutoff mark stays inside its own station row; no mark touches another
   cplaced.forEach((P, i) => { for (const g2 of [P.b, ...P.segs]) if (g2.y0 < P.row[0] - 0.01 || g2.y1 > P.row[1] + 0.01) throw new Error('[timeline] a cutoff line/icon enters another station row');
-    cplaced.forEach((Q, j) => { if (i !== j && (hitB(P.b, Q.b, 1) || Q.segs.some((g2) => hitB(g2, P.b, 0.5)))) throw new Error('[timeline] cutoff icons overlap'); }); });
-  console.log(`timeline: ${cplaced.length} cutoff icons, each inside its own station row, no overlaps`);
+    cplaced.forEach((Q, j) => { if (i !== j && (hitB(P.b, Q.b, 0.5) || Q.segs.some((g2) => hitB(g2, P.b, 0.5)))) throw new Error('[timeline] cutoff marks overlap'); }); });
+  console.log(`timeline: ${cplaced.length} cutoff marks, each inside its own station row, no overlaps`);
   s += `<g class="tlcursor" style="display:none;pointer-events:none"><path d="M0,${AX}V${f1(bottom)}" stroke="#111" stroke-width="1.5" stroke-dasharray="4 3"/><rect class="tlbox" fill="#fff" fill-opacity=".92" stroke="#bbb" rx="4"/><text class="tlread" font-size="17" font-weight="700"></text></g>`;
   return `<svg class="strips timeline" data-t0="${t0}" data-t1="${t1}" data-lx="${LX}" data-stop="${f1(sTop)}" data-sr="${f1(SR)}" data-stations="${sts.join(',')}" data-rx="${f1(RX)}" viewBox="0 0 ${f1(W)} ${f1(H)}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Race-day timeline: runners on course and at aid stations by time of day">${s}</svg>`;
 }
