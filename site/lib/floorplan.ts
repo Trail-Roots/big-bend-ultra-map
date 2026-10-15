@@ -167,7 +167,10 @@ void esc;
 // offset from the OSM road centerline: shoulder gap 2 ft, depth 20 ft, simulated stall stripes every 9 ft (real lots are dirt).
 export const PARK = { gapFt: 2, depthFt: 20, stallFt: 9 };
 const PFRAME = [-103.76125, 29.26835, -103.75125, 29.27425];
-const PICON = (slash: boolean) => `<rect x="-14" y="-14" width="28" height="28" rx="5" fill="#fff"/><rect x="-12" y="-12" width="24" height="24" rx="4" fill="${C.blue}"/><text y="1" font-size="17" font-weight="700" fill="#fff" text-anchor="middle" dominant-baseline="central">P</text>${slash ? `<circle r="10.5" fill="none" stroke="${C.red}" stroke-width="3"/><path d="M-7.4,-7.4L7.4,7.4" stroke="${C.red}" stroke-width="3"/>` : ''}`;
+const PICON = (slash: boolean) => slash
+  // standard No Parking sign: white disc, black P, red ring + red diagonal slash over the P
+  ? `<circle r="13" fill="#fff" stroke="${C.red}" stroke-width="3.2"/><text y="1" font-size="17" font-weight="800" fill="#111" text-anchor="middle" dominant-baseline="central" font-family="Arial, Helvetica, sans-serif">P</text><path d="M-9.2,-9.2L9.2,9.2" stroke="${C.red}" stroke-width="3.2"/>`
+  : `<rect x="-14" y="-14" width="28" height="28" rx="5" fill="#fff"/><rect x="-12" y="-12" width="24" height="24" rx="4" fill="${C.blue}"/><text y="1" font-size="17" font-weight="700" fill="#fff" text-anchor="middle" dominant-baseline="central">P</text>`;
 type V = [number, number];
 function roadTools(B) {
   const { gm, osm } = B;
