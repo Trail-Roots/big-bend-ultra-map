@@ -19,7 +19,7 @@ const BW_IN: [number, number][] = [[-103.757535, 29.269872], [-103.75728, 29.269
 const FRAME = [-103.7593, 29.26935, -103.75645, 29.27078]; // lon/lat: tight around the finish-area features incl. the drop-off
 export const C = { ground: '#f8f6f1', grid: '#ebe6dc', road: '#c4c2bd', roadEdge: '#a39c90', lot: '#c4c2bd', bld: '#d9d2c4', bldEdge: '#3d3a35', ink: '#2a2a2a', dirt: '#efe8da', pave: '#c4c2bd', curb: '#9d978c', island: '#d5dfc2', islandEdge: '#8a9478', mute: '#7d776d', picnic: '#e2ecd6', picnicEdge: '#5f8a5a', rest: '#dce8f6', restEdge: '#2a62a8', rv: '#e9ebef', amber: '#d08a10', red: '#c4161c', blue: '#2a62a8' };
 
-function makeBase(c, FRAME: number[], gridM: number, id = "fp", W = 1200, o: { ground?: string; road?: string; edge?: string; lot?: boolean; grid?: string; osmBld?: boolean } = {}) {
+function makeBase(c, FRAME: number[], gridM: number, id = "fp", W = 1200, o: { ground?: string; road?: string; edge?: string; lot?: boolean; grid?: string; osmBld?: boolean; skipWays?: number[]; extraWays?: any[] } = {}) {
   const lat0 = 29.2702, lon0 = -103.7575, kx = Math.cos(lat0 * Math.PI / 180) * 111320, ky = 110574;
   const gm = (q: [number, number]) => [(q[0] - lon0) * kx, (q[1] - lat0) * ky] as [number, number]; // ground meters, y up
   const [fx0, fy0] = gm([FRAME[0], FRAME[1]]), [fx1, fy1] = gm([FRAME[2], FRAME[3]]);
@@ -27,7 +27,7 @@ function makeBase(c, FRAME: number[], gridM: number, id = "fp", W = 1200, o: { g
   const pm = (m: [number, number]) => [(m[0] - fx0) * s, (fy1 - m[1]) * s] as [number, number];
   const P = (q: [number, number]) => pm(gm(q));
   const d = (cs: [number, number][], close = false) => 'M' + cs.map((q) => P(q).map(f1).join(',')).join('L') + (close ? 'Z' : '');
-  const L = c.logistics, osm = L.osm.features, pt = (n: string) => L.placemarks.find((p) => p.name === n && p.kind === 'point')!.coords[0] as [number, number];
+  const L = c.logistics, osm = [...L.osm.features, ...(o.extraWays ?? [])], pt = (n: string) => L.placemarks.find((p) => p.name === n && p.kind === 'point')!.coords[0] as [number, number];
   // rectangle footprint centred on ground point m, w across x l along the angle a (radians, ground frame), as px path
   const rect = (m: [number, number], w: number, l: number, a: number) => { const ux = Math.cos(a), uy = Math.sin(a), vx = -uy, vy = ux;
     return [[-l / 2, -w / 2], [l / 2, -w / 2], [l / 2, w / 2], [-l / 2, w / 2]].map(([p, q]) => pm([m[0] + ux * p + vx * q, m[1] + uy * p + vy * q])); };
@@ -42,15 +42,31 @@ function makeBase(c, FRAME: number[], gridM: number, id = "fp", W = 1200, o: { g
   // paved lot, roads (true widths), FM 170 centre line
   if (o.lot !== false) for (const f of osm) if (f.properties.amenity === 'parking' && f.geometry.type === 'Polygon') g += `<path d="${d(f.geometry.coordinates[0], true)}" fill="${C.lot}" stroke="${C.roadEdge}" stroke-width="1.2"/>`;
   const RW: Record<string, number> = { secondary: 10, service: 5.5, track: 3.5, residential: 6.5 };
-  for (const pass of [0, 1]) for (const f of osm) { const h = f.properties.highway; if (!(h in RW) || f.geometry.type !== 'LineString') continue;
+  for (const pass of [0, 1]) for (const f of osm) { const h = f.properties.highway; if (!(h in RW) || f.geometry.type !== 'LineString' || o.skipWays?.includes(f.properties.osm_id)) continue;
     const w = RW[h] * s; g += `<path d="${d(f.geometry.coordinates)}" fill="none" stroke="${pass ? (o.road ?? C.road) : (o.edge ?? C.roadEdge)}" stroke-width="${f1(pass ? w : w + 2.4)}" stroke-linejoin="round" stroke-linecap="${pass ? 'round' : 'butt'}"/>`; }
-  for (const f of osm) { const h = f.properties.highway; if (!['secondary', 'service', 'residential'].includes(h) || f.geometry.type !== 'LineString') continue; const dl = Math.max(3 * s, 6), gp = Math.max(6 * s, 9); g += `<path d="${d(f.geometry.coordinates)}" fill="none" stroke="#fff" stroke-width="${h === 'secondary' ? 1.8 : 1.2}" stroke-dasharray="${f1(dl)} ${f1(gp)}"/>`; } // white dashed centerlines
+  for (const f of osm) { const h = f.properties.highway; if (!['secondary', 'service', 'residential'].includes(h) || f.geometry.type !== 'LineString' || o.skipWays?.includes(f.properties.osm_id)) continue; const dl = Math.max(3 * s, 6), gp = Math.max(6 * s, 9); g += `<path d="${d(f.geometry.coordinates)}" fill="none" stroke="#fff" stroke-width="${h === 'secondary' ? 1.8 : 1.2}" stroke-dasharray="${f1(dl)} ${f1(gp)}"/>`; } // white dashed centerlines
   for (const f of osm) if (f.properties.highway === 'path') g += `<path d="${d(f.geometry.coordinates)}" fill="none" stroke="#a39782" stroke-width="1.6" stroke-dasharray="1 4" stroke-linecap="round"/>`;
   // buildings
   if (o.osmBld !== false) for (const f of osm) if (f.properties.building && f.geometry.type === 'Polygon') g += `<path d="${d(f.geometry.coordinates[0], true)}" fill="${C.bld}" stroke="${C.bldEdge}" stroke-width="1.6"/>`;
   g += `<path d="${d(BW_OUT, true)}${d(BW_IN, true)}" fill="${C.bld}" fill-rule="evenodd" stroke="${C.bldEdge}" stroke-width="2.6"/><path d="${d(BW_OUT, true)}${d(BW_IN, true)}" fill="url(#${id}bld)" fill-rule="evenodd"/>`;
-  return { lat0, lon0, gm, pm, P, d, s, W, H, fx0, fy0, fx1, fy1, g, osm, L, pt, rect, poly, ang, way, RW };
+  // paved road bands (px) for masking areas and for the area-vs-road build check
+  const roads = osm.filter((f) => f.properties.highway in RW && f.geometry.type === 'LineString' && !o.skipWays?.includes(f.properties.osm_id)).map((f) => ({ h: f.properties.highway as string, pts: (f.geometry.coordinates as [number, number][]).map(P), w: RW[f.properties.highway] * s + 2.4 }));
+  const roadMask = (mid: string, keep: (h: string) => boolean = () => true) => `<mask id="${mid}" maskUnits="userSpaceOnUse" x="0" y="0" width="${W}" height="${H}"><rect width="${W}" height="${H}" fill="#fff"/>${roads.filter((r) => keep(r.h)).map((r) => `<path d="M${r.pts.map((q) => q.map(f1).join(',')).join('L')}" fill="none" stroke="#000" stroke-width="${f1(r.w)}" stroke-linejoin="round" stroke-linecap="round"/>`).join('')}</mask>`;
+  return { lat0, lon0, gm, pm, P, d, s, W, H, fx0, fy0, fx1, fy1, g, osm, L, pt, rect, poly, ang, way, RW, roads, roadMask };
 }
+/** build check: no area polygon may overlap any road band (sampled every 2 px; areas clipped by a road mask are exempt by construction) */
+function checkAreasOffRoads(name: string, B, areas: { id: string; pts: number[][]; skip?: (h: string) => boolean }[]) {
+  const bad: string[] = [], dseg = (p: number[], a: number[], b: number[]) => { const dx = b[0] - a[0], dy = b[1] - a[1], t = Math.max(0, Math.min(1, ((p[0] - a[0]) * dx + (p[1] - a[1]) * dy) / (dx * dx + dy * dy || 1))); return Math.hypot(p[0] - a[0] - dx * t, p[1] - a[1] - dy * t); };
+  const pip = (p: number[], poly: number[][]) => { let ins = false; for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) { const [xi, yi] = poly[i], [xj, yj] = poly[j]; if (yi > p[1] !== yj > p[1] && p[0] < ((xj - xi) * (p[1] - yi)) / (yj - yi) + xi) ins = !ins; } return ins; };
+  for (const A of areas) { const xs = A.pts.map((q) => q[0]), ys = A.pts.map((q) => q[1]), X0 = Math.min(...xs), X1 = Math.max(...xs), Y0 = Math.min(...ys), Y1 = Math.max(...ys);
+    // only road segments whose band can reach the area's bbox
+    const segs: [number[], number[], number, string][] = []; for (const r of B.roads) { if (A.skip?.(r.h)) continue; for (let i = 1; i < r.pts.length; i++) { const a = r.pts[i - 1], b = r.pts[i], m = r.w / 2;
+      if (Math.max(a[0], b[0]) + m < X0 || Math.min(a[0], b[0]) - m > X1 || Math.max(a[1], b[1]) + m < Y0 || Math.min(a[1], b[1]) - m > Y1) continue; segs.push([a, b, m - 1.5, r.h]); } }
+    if (!segs.length) continue;
+    outer: for (let x = X0; x <= X1; x += 2) for (let y = Y0; y <= Y1; y += 2) { if (x < 0 || y < 0 || x > B.W || y > B.H) continue; const near = segs.filter((q) => dseg([x, y], q[0], q[1]) < q[2]); if (!near.length || !pip([x, y], A.pts)) continue;
+      bad.push(`${A.id} overlaps ${near[0][3]} road at ${x.toFixed(0)},${y.toFixed(0)}`); break outer; } }
+  if (bad.length) throw new Error(`[roads:${name}] ` + bad.join('; '));
+  console.log(`  roads: ${name} OK (${areas.length} areas off the road bands)`); }
 /** north arrow, ft scale bar, grid note, frame */
 function furniture(W: number, H: number, s: number, ft: number[], gridNote: string) {
   let out = '';
@@ -85,11 +101,25 @@ const RT = roadTools(B), ln = RT.lines[0], cs2 = RT.cum(ln.pts), pr = (drop.coor
     const band = 'M' + [...inn, ...out.reverse()].map((q) => pm(q).map(f1).join(',')).join('L') + 'Z', cx = drop.coords.reduce((t, q) => t + q[0], 0) / drop.coords.length, cy = drop.coords.reduce((t, q) => t + q[1], 0) / drop.coords.length;
   return { band, ring: [...inn, ...out], where: [cx, cy] as [number, number], anchor: pm(off((s0 + s1) / 2, (o1 + o2) / 2)) }; }
 export function renderFinishPlan(c, labels: Record<string, [number, number]>) {
-  const B = makeBase(c, FRAME, 10, 'fp', 1200, { ground: C.dirt, grid: '#e3dac8', road: C.pave, edge: C.curb, lot: false, osmBld: false }), { gm, pm, P, d, s, W, H, osm, L, pt, rect, poly, ang, way, RW } = B; let g = B.g;
+  const B = makeBase(c, FRAME, 10, 'fp', 1200, { ground: C.dirt, grid: '#e3dac8', road: C.pave, edge: C.curb, lot: false, osmBld: false, skipWays: [321566200, 1452473490, 15134664] /* lot-internal OSM ways + the OSM park road, replaced by traced geometry */, extraWays: [{ type: 'Feature', properties: { highway: 'service', osm_id: -1, name: 'Big Bend St Park Rd (traced)' }, geometry: { type: 'LineString', coordinates: (TR as any).PARKRD } }] }), { gm, pm, P, d, s, W, H, osm, L, pt, rect, poly, ang, way, RW } = B; let g = B.g;
   // surfaces traced from Erik's annotated satellite view (georeferenced on the My Map points, <1 m residual)
   const TRc = TR as Record<string, [number, number][]>;
-  g += `<path d="${d(TRc.LOT, true)}" fill="${C.pave}" stroke="${C.curb}" stroke-width="1.4" stroke-linejoin="round"/>`;
+  g += `<defs>${B.roadMask('fpmask')}</defs><path mask="url(#fpmask)" d="${d(TRc.LOT, true)}" fill="${C.pave}" stroke="${C.curb}" stroke-width="1.4" stroke-linejoin="round"/>`;
   for (const k of ['ISL_BIG', 'ISL_W', 'ISL_E']) g += `<path d="${d(TRc[k], true)}" fill="${C.island}" stroke="${C.islandEdge}" stroke-width="2" stroke-linejoin="round"/>`;
+  // simulated stall stripes (white on pavement, 9 ft o.c., 18 ft deep): a double row between the two small islands, and a
+  // single head-in row along the paved edge in front of the Barton Warnock entrance (skipping the Medic tent footprint)
+  const stallZones: Pt[][] = [], SD = 18 * FT, SW = 9 * FT;
+  const stallRow = (A: [number, number], Bp: [number, number], sides: number[], t0: number, t1: number, skip: (q: [number, number]) => boolean = () => false) => {
+    const L0 = Math.hypot(Bp[0] - A[0], Bp[1] - A[1]), u = [(Bp[0] - A[0]) / L0, (Bp[1] - A[1]) / L0], n = [-u[1], u[0]]; let dd = '';
+    const at2 = (t: number, o: number): [number, number] => [A[0] + u[0] * t + n[0] * o, A[1] + u[1] * t + n[1] * o];
+    for (const sd of sides) { for (let t = t0; t <= L0 - t1 + 1e-6; t += SW) { const p0 = at2(t, 0), p1 = at2(t, sd * SD); if (skip(p0) || skip(p1) || skip(at2(t, sd * SD / 2))) continue; dd += `M${pm(p0).map(f1)}L${pm(p1).map(f1)}`; }
+      stallZones.push([at2(t0, 0), at2(L0 - t1, 0), at2(L0 - t1, sd * SD), at2(t0, sd * SD)].map(pm) as Pt[]); }
+    if (sides.length > 1) dd += `M${pm(at2(t0, 0)).map(f1)}L${pm(at2(L0 - t1, 0)).map(f1)}`;
+    g += `<path d="${dd}" stroke="#fff" stroke-width="1.4" stroke-linecap="round" fill="none"/>`; };
+  { const cW = TRc.ISL_W.map(gm), cE = TRc.ISL_E.map(gm), ctr = (v: [number, number][]) => [v.reduce((t, q) => t + q[0], 0) / v.length, v.reduce((t, q) => t + q[1], 0) / v.length] as [number, number];
+    stallRow(ctr(cW), ctr(cE), [1, -1], 2.2, 2.2);
+    const lot = TRc.LOT.map(gm), med = gm(pt('Medic')), mr = (ASSUME.medic.w * FT) * 0.75 + 1;
+    stallRow(lot[10], lot[9], [-1], 4, 4, (q) => Math.hypot(q[0] - med[0], q[1] - med[1]) < mr + 2.5); }
   g += `<path d="${d(TRc.SHED, true)}" fill="${C.bld}" stroke="${C.bldEdge}" stroke-width="1.6"/>`;
   // course into the finish (100K GPX), clipped to the frame
   const cs = c.courseGeo['100K'].features[0].geometry.coordinates as [number, number][], tail: [number, number][] = [];
@@ -102,13 +132,14 @@ export function renderFinishPlan(c, labels: Record<string, [number, number]>) {
   const sfPlace = c.stations.stations['S/F'].place;
   // drop-off area polygon
   const drop = L.placemarks.find((p) => p.name === '5 Min Dropoff Area');
-  if (drop) { const { band, where, anchor } = dropBand(B, drop);
+  let dropRing: number[][] | null = null;
+  if (drop) { const { band, where, anchor, ring } = dropBand(B, drop); dropRing = ring.map(pm);
     items.push({ key: 'dropoff', label: '5-minute drop-off', where, shape: `<path d="${band}" fill="#f6e2b0" fill-opacity=".85"/><path d="${band}" fill="url(#fphatch)" stroke="${C.amber}" stroke-width="2" stroke-linejoin="round"/>`, anchor, r: 0 }); }
   // picnic area: the whole triangle of different-coloured ground east of the lot (low prominence)
   { const PP = TRc.PICNIC, cx = PP.reduce((t, q) => t + q[0], 0) / PP.length, cy = PP.reduce((t, q) => t + q[1], 0) / PP.length;
     // gravel path across the picnic triangle to the shelter (distinct gravel tone, ~1.5 m wide)
     const gravel = `<path d="${d(TRc.GRAVEL)}" fill="none" stroke="#b9ab8e" stroke-width="${f1(1.8 * s + 2)}" stroke-linecap="round" stroke-linejoin="round"/><path d="${d(TRc.GRAVEL)}" fill="none" stroke="#e6dcc6" stroke-width="${f1(1.8 * s)}" stroke-linecap="round" stroke-linejoin="round"/>`;
-    items.push({ minor: true, key: 'picnic', label: 'Picnic area', where: pt('Picnic Area'), shape: `<path d="${d(PP, true)}" fill="${C.picnic}" fill-opacity=".75" stroke="${C.picnicEdge}" stroke-opacity=".6" stroke-width="1.4" stroke-dasharray="6 4" stroke-linejoin="round"/>${gravel}`, anchor: P([cx, cy]), r: 0 }); }
+    items.push({ minor: true, key: 'picnic', label: 'Picnic area', where: pt('Picnic Area'), shape: `<path mask="url(#fpmask)" d="${d(PP, true)}" fill="${C.picnic}" fill-opacity=".75" stroke="${C.picnicEdge}" stroke-opacity=".6" stroke-width="1.4" stroke-dasharray="6 4" stroke-linejoin="round"/>${gravel}`, anchor: P([cx, cy]), r: 0 }); }
   // orientations from nearby roads
   const aisle = way(1452473490), loop = way(321566200), aAisle = ang(aisle[0], aisle[1]), aWest = ang(loop[1], loop[2]), aSouth = ang(loop[2], loop[3]);
   // Radio Command: vehicle footprint parked against the southeast side of the large island, parallel to its curb (drive lane left clear)
@@ -163,6 +194,7 @@ export function renderFinishPlan(c, labels: Record<string, [number, number]>) {
     for (const q of [...ps].reverse()) { while (up.length > 1 && cr(up[up.length - 2], up[up.length - 1], q) <= 0) up.pop(); up.push(q); }
     return [...lo.slice(0, -1), ...up.slice(0, -1)]; };
   sc.add(lineOb('route', tail.map((q) => P(q) as Pt), (1.6 * s) / 2 + 3, 'line'));
+  stallZones.forEach((z, i) => sc.add(polyOb(`stalls${i}`, z, 'zone')));
   for (const it of items) { const h = hullOf(it.shape); if (h.length > 2) { const o = polyOb(it.key + ':icon', h, it.key === 'dropoff' || it.key === 'picnic' ? 'zone' : 'icon'); o.caps = h.map((p, i) => ({ a: p, b: h[(i + 1) % h.length], r: 2 })); sc.add(o); } }
   const bw = P([-103.757407, 29.269773]), BWT = 'Barton Warnock\nVisitor Center'; sc.add(textOb('bw:label', bw[0], bw[1] + 70, BWT, 19));
   for (const it of items) {
@@ -176,6 +208,7 @@ export function renderFinishPlan(c, labels: Record<string, [number, number]>) {
   { const F = fmGeo(B, 0.5); if (F) { let ok = false; const a = F.an * Math.PI / 180;
     for (const t of [0, 40, -40, 80, -80, 120, -120]) { const x = F.x + Math.cos(a) * t, y = F.y + Math.sin(a) * t, ob = textOb('fmlabel', x, y, 'FM 170', 16, F.an); if (!sc.inFrame(ob) || sc.hit(ob, (q) => q.id === 'dropoff:icon')) continue; sc.add(ob); lbls += lbl(x, y, 'FM 170', { fs: 16, color: '#5d5850', rot: -F.an }); ok = true; break; }
     if (!ok) throw new Error('[collide:finish plan] no room for FM 170 label'); } }
+  checkAreasOffRoads('finish plan', B, [...['ISL_BIG', 'ISL_W', 'ISL_E', 'SHED'].map((k) => ({ id: k, pts: TRc[k].map(P) })), ...(dropRing ? [{ id: 'dropoff', pts: dropRing }] : [])]);
   const nOb = sc.audit((a, b) => a.id.split(':')[0] === b.id.split(':')[0] || (a.id === 'sf:icon' && b.id === 'route') || (a.id === 'fmlabel' && b.id === 'dropoff:icon') || (a.kind === 'zone' && b.kind === 'icon'));
   console.log(`  collide: finish plan OK (${nOb} objects, route buffered)`);
   let out = g + shapes + lbls + furniture(W, H, s, [0, 25, 50, 100], 'Grid 10 m (≈33 ft) · footprints to scale');
@@ -252,7 +285,7 @@ export function renderParkingPlan(c, labels: Record<string, [number, number]>) {
     sc.add(polyOb(`strip${k + 1}`, ring as Pt[], 'zone'));
     let ticks = ''; const st = PARK.stallFt * FT, n = Math.floor((s1 - s0) / st);
     for (let i = 0; i <= n; i++) { const sv = s0 + i * st, a = pm(off(sv, o1)), b = pm(off(sv, o2)); ticks += `M${a.map(f1)}L${b.map(f1)}`; }
-    strips += gmapLink([pg.coords.reduce((t, q) => t + q[0], 0) / pg.coords.length, pg.coords.reduce((t, q) => t + q[1], 0) / pg.coords.length], `Parking strip ${k + 1}`, `<path d="${band}" fill="#dfe7f2" stroke="${C.blue}" stroke-width="1.6" stroke-linejoin="round"/><path d="${ticks}" stroke="${C.blue}" stroke-width=".8" stroke-opacity=".55"/>`);
+    strips += gmapLink([pg.coords.reduce((t, q) => t + q[0], 0) / pg.coords.length, pg.coords.reduce((t, q) => t + q[1], 0) / pg.coords.length], `Parking strip ${k + 1}`, `<path mask="url(#pkmask)" d="${band}" fill="#dfe7f2" stroke="${C.blue}" stroke-width="1.6" stroke-linejoin="round"/><path mask="url(#pkmask)" d="${ticks}" stroke="${C.blue}" stroke-width=".8" stroke-opacity=".55"/>`);
     // strip runs off the plan edge -> small "parking continues" arrow just inside the frame (no extra stalls drawn)
     { const inF = (q: number[]) => q[0] > 14 && q[0] < W - 14 && q[1] > 14 && q[1] < H - 14, om = (o1 + o2) / 2, edgeD = (q: number[]) => Math.min(q[0], q[1], W - q[0], H - q[1]);
       for (const [sEnd, dir] of [[s0, -1], [s1, 1]] as const) { if (inF(pm(off(sEnd, om))) && edgeD(pm(off(sEnd, om))) > 80) continue;
@@ -267,7 +300,7 @@ export function renderParkingPlan(c, labels: Record<string, [number, number]>) {
     let an = Math.atan2(-t[1], t[0]) * 180 / Math.PI; if (an > 90) an -= 180; if (an < -90) an += 180; const txt = `≈${n} spaces`;
     labelQ.push(() => { const r = sc.place(`strip${k + 1}lbl:label`, mid as Pt, [ox, oy], T('', txt, 14, an), { leader: false }); top += lbl(r.x, r.y, txt, { fs: 14, color: C.blue, style: 'italic', rot: -an }); });
   });
-  g += strips;
+  g += `<defs>${B.roadMask('pkmask')}</defs>` + strips;
   g += courseRoutes(c, B);
   // No-parking shoulder: full length of FM 170 on the side opposite the venue / parking
   { const ln = lines[0], cs = cum(ln.pts), sd = -(fmSide || 1), o1 = RWm.secondary / 2 + PARK.gapFt * FT, o2 = o1 + PARK.depthFt * FT, inner: V[] = [], outer: V[] = [], tot = cs[cs.length - 1];
@@ -275,7 +308,7 @@ export function renderParkingPlan(c, labels: Record<string, [number, number]>) {
     for (let sv = 0; sv <= tot; sv += 2) { inner.push(off(sv, o1)); outer.push(off(sv, o2)); }
     const ring = [...inner, ...outer.reverse()].map(pm), band = 'M' + ring.map((q) => q.map(f1).join(',')).join('L') + 'Z';
     sc.add(polyOb('npshoulder', ring as Pt[], 'zone'));
-    g += `<defs><pattern id="pknph" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="7" stroke="${C.red}" stroke-width="1.3" stroke-opacity=".55"/></pattern></defs><path d="${band}" fill="#f6dede" fill-opacity=".7"/><path d="${band}" fill="url(#pknph)" stroke="${C.red}" stroke-width="1" stroke-opacity=".7" stroke-linejoin="round"/>`;
+    g += `<defs><pattern id="pknph" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="7" stroke="${C.red}" stroke-width="1.3" stroke-opacity=".55"/></pattern></defs><path mask="url(#pkmask)" d="${band}" fill="#f6dede" fill-opacity=".7"/><path mask="url(#pkmask)" d="${band}" fill="url(#pknph)" stroke="${C.red}" stroke-width="1" stroke-opacity=".7" stroke-linejoin="round"/>`;
     // signs at intervals just outside the shoulder band (slid along the road until clear), plus one note
     const inF = (q: number[]) => q[0] > 30 && q[0] < W - 30 && q[1] > 30 && q[1] < H - 30;
     const vis: number[] = []; for (let sv = 0; sv <= tot; sv += 5) if (inF(pm(at(ln.pts, cs, sv)))) vis.push(sv);
@@ -323,7 +356,7 @@ export function renderParkingPlan(c, labels: Record<string, [number, number]>) {
       for (const q of pts) { while (lo.length > 1 && cr(lo[lo.length - 2], lo[lo.length - 1], q) <= 0) lo.pop(); lo.push(q); }
       for (const q of [...pts].reverse()) { while (up.length > 1 && cr(up[up.length - 2], up[up.length - 1], q) <= 0) up.pop(); up.push(q); }
       const hull = [...lo.slice(0, -1), ...up.slice(0, -1)].filter(inR) as Pt[];
-      if (hull.length > 2) { sc.add(polyOb('npentrance', hull, 'zone')); g += `<defs><clipPath id="${cid}"><circle cx="${f1(x)}" cy="${f1(y)}" r="${f1(R)}"/></clipPath></defs><path clip-path="url(#${cid})" d="M${[...lo.slice(0, -1), ...up.slice(0, -1)].map((q) => q.map(f1).join(',')).join('L')}Z" fill="#f3d4d4" stroke="${C.red}" stroke-opacity=".55" stroke-width="1.4" stroke-linejoin="round"/>`
+      if (hull.length > 2) { sc.add(polyOb('npentrance', hull, 'zone')); g += `<defs><clipPath id="${cid}"><circle cx="${f1(x)}" cy="${f1(y)}" r="${f1(R)}"/></clipPath></defs><defs>${B.roadMask(cid + 'm', (h) => h === 'secondary')}</defs><path mask="url(#${cid}m)" clip-path="url(#${cid})" d="M${[...lo.slice(0, -1), ...up.slice(0, -1)].map((q) => q.map(f1).join(',')).join('L')}Z" fill="#f3d4d4" stroke="${C.red}" stroke-opacity=".55" stroke-width="1.4" stroke-linejoin="round"/>`
         // the main road stays uncovered: redraw FM 170 (edge, gray pavement, white centerline) on top of the zone
         let fm = ''; for (const f of osm) if (f.properties.highway === 'secondary' && f.geometry.type === 'LineString') { const dd = d(f.geometry.coordinates), w = B.RW.secondary * s;
           fm += `<path d="${dd}" fill="none" stroke="${C.roadEdge}" stroke-width="${f1(w + 2.4)}" stroke-linejoin="round"/><path d="${dd}" fill="none" stroke="${C.road}" stroke-width="${f1(w)}" stroke-linejoin="round"/><path d="${dd}" fill="none" stroke="#fff" stroke-width="1.8" stroke-dasharray="${f1(Math.max(3 * s, 6))} ${f1(Math.max(6 * s, 9))}"/>`; }
@@ -340,6 +373,7 @@ export function renderParkingPlan(c, labels: Record<string, [number, number]>) {
       top += gmapLink(where, lab, `<g transform="translate(${f1(r.x)} ${f1(r.y)})">${PICON(false)}</g>`);
       labelQ.push(() => { const q = sc.place(key + ':label', [r.x, r.y], [ox, oy], T('', lab, 17), { iconR: 15, leaderIgnore: (o) => o.id.startsWith('strip') }); if (q.leader) top += leaderLine(q.leader[0][0], q.leader[0][1], q.leader[1][0], q.leader[1][1]); top += lbl(q.x, q.y, lab); }); });
   }
+  checkAreasOffRoads('parking plan', B, sc.obs.filter((o) => o.kind === 'zone' && o.poly && o.id !== 'npentrance' && !o.id.startsWith('strip') && o.id !== 'npshoulder') /* strips + shoulder are road-masked by construction */.map((o) => ({ id: o.id, pts: o.poly! })));
   iconQ.forEach((f) => f()); iconQ0.forEach((f) => f()); while (labelQ.length) labelQ.shift()!();
   // strict audit: icons may sit on their own parking strip; S/F sits on the route by definition; leaders touch their own icon/label
   const n = sc.audit((a, b) => ((a.kind === 'icon' || a.kind === 'leader') && a.id.startsWith('Parking') && b.id.startsWith('strip')) || (a.id.startsWith('StartFinish') && a.kind === 'icon' && b.id === 'route') || base(a.id) === base(b.id) || (a.id.startsWith('npsign') && b.id === 'npshoulder') || (a.id.startsWith('ppair') && b.id.startsWith('strip')));
