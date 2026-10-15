@@ -12,7 +12,7 @@ export const cutMin = (t: string) => { const m = t.match(/^(\d+):(\d\d) (AM|PM)$
 
 export function renderTimeline(c: Ctx) {
   const T = c.timeline, st = c.layout.strips, W = st.w * SHEET.w, H = 5 * st.rh * SHEET.h, col = c.colors, ink = col.ink;
-  const [t0, t1] = T.window, LX = 196, RX = W - 8, X = (t: number) => LX + ((t - t0) / (t1 - t0)) * (RX - LX);
+  const [t0, t1] = T.window, LX = 44, RX = W - 8, X = (t: number) => LX + ((t - t0) / (t1 - t0)) * (RX - LX);
   const AX = 34, CR = 50, SH = 24, order: string[] = c.courses.order, sts: string[] = c.stations.order, PADL = 14;
   const SR = Math.min(36, (H - 50 - (AX + 4 + order.length * CR + SH)) / sts.length); // station rows shrink to keep the footer inside the fixed strip height
   const cTop = AX + 4, sTop = cTop + order.length * CR + SH, bottom = sTop + sts.length * SR;
@@ -30,7 +30,6 @@ export function renderTimeline(c: Ctx) {
     s += `<path d="M${f1(x)},${AX}V${f1(bottom)}" stroke="${major ? '#d6d0c4' : '#ece8e0'}" stroke-width="1"/>`;
     if (major) s += `<text x="${f1(x)}" y="${AX - 10}" font-size="21" text-anchor="middle" fill="${ink}">${t % 1440 === 0 ? '12a' : clock(t)}</text>`;
   }
-  s += `<text x="0" y="${AX - 10}" font-size="21" font-weight="700" fill="${ink}">Sun Jan 17</text>`;
   if (t1 > 1440) s += `<text x="${f1(X(1440) + 4)}" y="${AX - 10}" font-size="15" fill="${col.mute}" dx="22">Mon</text>`;
   // sunrise / sunset markers
   const sunMark = (t: number, lab: string) => { const x = X(t), y = bottom + 14, up = lab === 'Sunrise'; let rays = ''; for (let i = 0; i < 5; i++) { const a = Math.PI * (i / 4); rays += `M${f1(x + Math.cos(a) * 9)},${f1(y - Math.sin(a) * 9)}L${f1(x + Math.cos(a) * 13)},${f1(y - Math.sin(a) * 13)}`; } return `<path d="M${f1(x)},${AX}V${f1(bottom)}" stroke="#d08a1e" stroke-width="2" stroke-dasharray="6 4"/><g class="sun"><title>${lab} ${clock(t, false)}</title><path d="M${f1(x - 7)},${f1(y)}a7,7 0 0 1 14,0z" fill="#f2a93b"/><path d="${rays}" stroke="#f2a93b" stroke-width="2" stroke-linecap="round"/><path d="M${f1(x - 14)},${f1(y)}h28" stroke="#a86a10" stroke-width="1.5"/><text x="${f1(x + 17)}" y="${f1(y)}" font-size="17" font-weight="700" fill="#a86a10" stroke="#fff" stroke-width="4" paint-order="stroke">${up ? '↑' : '↓'}${clock(t, false)}</text></g>`; };
@@ -40,7 +39,7 @@ export function renderTimeline(c: Ctx) {
     const acc = new Array(n).fill(0), tot = acc.map((_, i) => order.reduce((q, k) => q + (T.courses[k].on_course[i] || 0), 0)), maxT = Math.max(...tot);
     const xs = acc.map((_, i) => X(t0 + (i + 0.5) * B)), Y = (v: number) => base - (v / maxT) * hgt;
     s += `<path d="M${f1(LX)},${f1(base)}H${f1(RX)}" stroke="${ink}" stroke-width="1"/>`;
-    for (let v = 0; v <= maxT; v += maxT > 400 ? 200 : 100) s += `<path d="M${f1(LX)},${f1(Y(v))}H${f1(RX)}" stroke="#ece8e0" stroke-width="1"/><text x="${f1(LX - 6)}" y="${f1(Y(v) + 5)}" font-size="13" text-anchor="end" fill="${col.mute}">${v}</text>`;
+    for (let v = 0; v <= maxT; v += maxT > 400 ? 200 : 100) s += `<path d="M${f1(LX)},${f1(Y(v))}H${f1(RX)}" stroke="#ece8e0" stroke-width="1"/>`;
     let bands = '', tops = '';
     order.forEach((k) => {
       const C = T.courses[k], cc = c.courses.colors[k], lo = acc.slice();
@@ -50,7 +49,10 @@ export function renderTimeline(c: Ctx) {
       // course-colour line along the top edge of this race's band, drawn after every fill so no band covers it
       tops += `<path d="M${upper.join('L')}" class="ln" data-course="${k}" fill="none" stroke="${cc}" stroke-width="2.6" stroke-linejoin="round"/>`;
     });
-    s += bands + tops + `<text x="${PADL}" y="${f1(top - 8)}" font-weight="700" font-size="14" fill="${col.mute}">Runners on course</text>`;
+    s += bands + tops;
+    // date in the chart's top-right corner (no left label column); build fails if any race band reaches it
+    { const dw = 10 * 21 * 0.6, dx1 = RX - 6, dx0 = dx1 - dw, dy = top - 4; s += `<text x="${f1(dx1)}" y="${f1(dy)}" font-size="21" font-weight="700" text-anchor="end" fill="${ink}" stroke="#fff" stroke-width="4" paint-order="stroke">Sun Jan 17</text>`;
+      xs.forEach((x, i) => { if (x > dx0 - 4 && x < dx1 + 4 && Y(acc[i]) < dy + 6) throw new Error('[timeline] date label overlaps the chart'); }); }
   }
   // stations
   // intensity: S/F (start/finish crowd) on its own scale (its own max); every other aid station shares ONE scale, normalized to the busiest non-S/F station and 15-min slot
@@ -60,7 +62,7 @@ export function renderTimeline(c: Ctx) {
   const CW = 3, cplaced: { b: Bx; segs: Bx[]; row: [number, number] }[] = [], hitB = (p: Bx, q: Bx, m: number) => p.x0 < q.x1 + m && q.x0 < p.x1 + m && p.y0 < q.y1 + m && q.y0 < p.y1 + m;
     sts.forEach((k, r) => {
     const FC = T.finish_crowd, sf = k === 'S/F' && FC, S = sf ? { name: 'Start / Finish', passes15: FC.present15, window: null, peak15: FC.peak15 } : T.stations[k], maxP = Math.max(...S.passes15), y0 = sTop + r * SR, base = y0 + SR - 6, hgt = SR - 12, B = T.bin_min;
-    const ms = Math.min(950, (SR - 4) ** 2 / 1.8), mr = Math.sqrt(ms * 1.8) / 2, lt = station(PADL + mr, y0 + SR / 2, k, c.stations.stations[k].spectator, { s: ms, fs: Math.sqrt(ms / 950) * 24, badge: false, colors: c.colors }) + `<text x="${f1(PADL + 2 * mr + 8)}" y="${f1(y0 + SR / 2)}" font-size="19" fill="${ink}" dominant-baseline="central">${esc(S.name)}</text>`;
+    const ms = Math.min(950, (SR - 6) ** 2 / 1.8), mr = Math.sqrt(ms * 1.8) / 2, lt = station((LX - 2) / 2, y0 + SR / 2, k, c.stations.stations[k].spectator, { s: ms, fs: Math.sqrt(ms / 950) * 24, badge: false, colors: c.colors });
     let g = (sf ? `<title>Start / Finish shaded on its own scale (peak ${Math.round(maxP)} people); aid stations share one scale</title>` : "") + gmapLink(c.stations.stations[k].place ?? c.stations.stations[k].link_lonlat ?? c.stations.stations[k].lonlat, S.name, lt);
     S.passes15.forEach((v: number, i: number) => { if (!v) return; const x = X(t0 + i * B); g += `<rect x="${f1(x)}" y="${f1(y0 + 5)}" width="${f1(X(t0 + B) - X(t0) + 0.3)}" height="${f1(SR - 10)}" fill="#b3261e" fill-opacity="${(0.06 + 0.9 * Math.min(1, v / (sf ? maxP : GMAX))).toFixed(2)}"/>`; }); // single-hue intensity ramp, no outlines
     // cutoffs: no icons (the row names the station). Each cutoff is a short vertical line in its RACE's course colour, confined to this row
