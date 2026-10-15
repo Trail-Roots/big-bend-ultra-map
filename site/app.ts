@@ -1,5 +1,6 @@
 import { initZoom, zoomOf } from './zoom';
 import { makeGlide, routeAt } from './glide';
+import { placeTip } from './tip';
 // Layer toggles. No framework; the map is static inline SVG.
 const show = (sel: string, on: boolean) => document.querySelectorAll<SVGGElement>(sel).forEach((g) => (g.style.display = on ? '' : 'none'));
 document.querySelectorAll<HTMLInputElement>('input[data-layer]').forEach((cb) => cb.addEventListener('change', () => { show(`.mainmap g.layer[data-layer="${cb.dataset.layer}"]`, cb.checked); if (cb.dataset.layer === 'topo') show('svg.mini g.topo', cb.checked); }));
@@ -21,8 +22,8 @@ if (hdEl && prof) {
   const vline = el('line', { y1: 0, y2: HD.profile.H, stroke: '#111', 'stroke-width': 1.5, 'stroke-dasharray': '4 3' }, pg);
   const dots: Record<string, Element> = {};
   for (const [k, c] of Object.entries(HD.courses)) dots[k] = el('circle', { r: 7, fill: '#fff', 'stroke-width': 3.5, stroke: c.color }, pg);
-  const box = el('rect', { fill: '#fff', 'fill-opacity': 0.92, stroke: '#bbb', 'stroke-width': 1, rx: 4 }, pg);
-  const lab = el('text', { 'font-size': 22, 'font-weight': 700 }, pg), bibs = el('g', {}, pg);
+  const tipG = el('g', { class: 'tip' }, pg) as SVGGElement, box = el('rect', { fill: '#fff', 'fill-opacity': 0.94, stroke: '#bbb', 'stroke-width': 1, rx: 4 }, tipG);
+  const lab = el('text', { 'font-size': 19, 'font-weight': 700 }, tipG), bibs = el('g', {}, tipG);
   const BW: number = (HD.courses as any)._bibw, BH: number = (HD.courses as any)._bibh; delete (HD.courses as any)._bibw; delete (HD.courses as any)._bibh;
   const { W, H, x: [x0, x1], y: [y0, y1] } = HD.profile;
   const X = (m: number) => ((m - x0) / (x1 - x0)) * W, Y = (ft: number) => (1 - (ft - y0) / (y1 - y0)) * H;
@@ -54,14 +55,15 @@ if (hdEl && prof) {
     for (const k in HD.courses) glide.set(k, k === pick.k ? mile : null);
     // readout: one line per course, longest first: course · mile · cumulative gain from the start
     lab.textContent = '';
-    const rows = hits.map(({ k, c, v }) => ({ k, bib: (c as any).bib, t: `mi ${v[0].toFixed(1)} · +${Math.round(v[6]).toLocaleString('en-US')} ft gain${cutPace(c, v[0])}` }));
-    const right = px < W * 0.7, lx = px + (right ? 16 + BW + 8 : -16), ly = 14;
-    rows.forEach((r, i) => { const ts = el('tspan', { x: lx, y: ly + 13 + i * 30, fill: '#1a1a1a' }, lab); ts.textContent = r.t; });
-    lab.setAttribute('text-anchor', right ? 'start' : 'end');
-    const bb = (lab as SVGTextElement).getBBox(), bx = bb.x - BW - 8;
-    bibs.innerHTML = rows.map((r, i) => `<g transform="translate(${bx} ${ly + 13 + i * 30 - 8 - BH / 2})">${r.bib}</g>`).join('');
-    bb.width += bb.x - bx; bb.x = bx;
-    box.setAttribute('x', String(bb.x - 8)); box.setAttribute('y', String(bb.y - 5)); box.setAttribute('width', String(bb.width + 16)); box.setAttribute('height', String(bb.height + 10));
+    // condensed: one line per course: bib · mile · gain so far · pace needed for the next cutoff
+    const rows = hits.map(({ c, v }) => ({ bib: (c as any).bib, t: `${v[0].toFixed(1)} mi · +${Math.round(v[6]).toLocaleString('en-US')} ft${cutPace(c, v[0]).replace(' · cutoff pace ', ' · ').replace('/mi', '/mi to cutoff')}` }));
+    const LH = 26, lx = BW + 6;
+    rows.forEach((r, i) => { const ts = el('tspan', { x: lx, y: 13 + i * LH, fill: '#1a1a1a' }, lab); ts.textContent = r.t; });
+    lab.setAttribute('text-anchor', 'start');
+    bibs.innerHTML = rows.map((r, i) => `<g transform="translate(0 ${13 + i * LH - 7 - BH / 2})">${r.bib}</g>`).join('');
+    const bb = (lab as SVGTextElement).getBBox(); bb.width += bb.x; bb.x = 0;
+    box.setAttribute('x', String(bb.x - 5)); box.setAttribute('y', String(Math.min(bb.y, 13 - 7 - BH / 2) - 4)); box.setAttribute('width', String(bb.width + 10)); box.setAttribute('height', String(Math.max(bb.height, rows.length * LH) + 6));
+    placeTip(prof, tipG, px, py ?? 20);
   };
   prof.style.touchAction = 'none'; prof.style.cursor = 'crosshair';
   // ---- race pages: each race's own elevation chart drives ONE tracking point on that race page's map; readout = distance, elevation,
@@ -72,7 +74,7 @@ if (hdEl && prof) {
     const CX = (m: number) => PL + (m / D) * (CW - PL - 10), CY = (ft: number) => 10 + (1 - (ft - lo) / (hi - lo)) * (CH - PB - 10);
     const g = el('g', { class: 'hov', style: 'display:none;pointer-events:none' }, cp);
     const vl = el('line', { y1: 10, y2: CH - PB, stroke: '#111', 'stroke-width': 1.5, 'stroke-dasharray': '4 3' }, g), dot = el('circle', { r: 7, fill: '#fff', 'stroke-width': 3.5, stroke: C.color }, g);
-    const bx = el('rect', { fill: '#fff', 'fill-opacity': 0.94, stroke: '#bbb', 'stroke-width': 1, rx: 4 }, g), tx = el('text', { 'font-size': 18, 'font-weight': 700, fill: '#1a1a1a' }, g);
+    const tg = el('g', { class: 'tip' }, g) as SVGGElement, bx = el('rect', { fill: '#fff', 'fill-opacity': 0.94, stroke: '#bbb', 'stroke-width': 1, rx: 4 }, tg), tx = el('text', { 'font-size': 17, 'font-weight': 700, fill: '#1a1a1a' }, tg);
     let mm: { g: SVGElement } | null = null;
     if (rm) { const f = +rm.dataset.f! || 1, vb = rm.viewBox.baseVal, R = vb.width / 90, mg = el('g', { class: 'hov', style: 'display:none;pointer-events:none' }, rm) as SVGElement;
       el('circle', { r: R * 1.35, fill: '#fff' }, mg); el('circle', { r: R, fill: 'none', stroke: C.color, 'stroke-width': R * 0.38 }, mg); el('circle', { r: R * 0.32, fill: '#111' }, mg); mm = { g: mg }; (mm as any).f = f; }
@@ -82,10 +84,11 @@ if (hdEl && prof) {
       if (mile < 0 || mile > D) return hideC();
       const v = routeAt(C.s, mile), x = CX(mile); g.style.display = ''; vl.setAttribute('x1', String(x)); vl.setAttribute('x2', String(x)); dot.setAttribute('cx', String(x)); dot.setAttribute('cy', String(CY(v[1])));
       const n = (C.cut as [number, number, string][]).find(([m]) => m >= mile - 1e-6 && m > 0);
-      const lines = [`mi ${v[0].toFixed(1)} · ${Math.round(v[1]).toLocaleString('en-US')} ft · +${Math.round(v[6]).toLocaleString('en-US')} ft gain`, n ? `next cutoff ${fmt(st + n[1])} (mi ${n[0].toFixed(1)}) · pace ${pace(n[1] / n[0])}/mi` : 'no further cutoff'];
-      tx.textContent = ''; const right = x < CW * 0.55, lx = x + (right ? 14 : -14); tx.setAttribute('text-anchor', right ? 'start' : 'end');
-      lines.forEach((t, i) => { const ts = el('tspan', { x: lx, y: 34 + i * 24 }, tx); ts.textContent = t; });
-      const bb = (tx as SVGTextElement).getBBox(); bx.setAttribute('x', String(bb.x - 7)); bx.setAttribute('y', String(bb.y - 4)); bx.setAttribute('width', String(bb.width + 14)); bx.setAttribute('height', String(bb.height + 8));
+      const lines = [`${v[0].toFixed(1)} mi · ${Math.round(v[1]).toLocaleString('en-US')} ft · +${Math.round(v[6]).toLocaleString('en-US')} ft`, n ? `cutoff ${fmt(st + n[1])} @ ${n[0].toFixed(1)} mi · ${pace(n[1] / n[0])}/mi` : 'no further cutoff'];
+      tx.textContent = ''; tx.setAttribute('text-anchor', 'start');
+      lines.forEach((t, i) => { const ts = el('tspan', { x: 0, y: i * 21 }, tx); ts.textContent = t; });
+      const bb = (tx as SVGTextElement).getBBox(); bx.setAttribute('x', String(bb.x - 5)); bx.setAttribute('y', String(bb.y - 3)); bx.setAttribute('width', String(bb.width + 10)); bx.setAttribute('height', String(bb.height + 6));
+      placeTip(cp, tg, x, p.y);
       if (mm) { const f = (mm as any).f; mm.g.style.display = ''; mm.g.setAttribute('transform', `translate(${v[4] * f} ${v[5] * f})`); } };
     cp.style.touchAction = 'none'; cp.style.cursor = 'crosshair';
     cp.addEventListener('pointermove', cmove); cp.addEventListener('pointerdown', cmove);
@@ -122,10 +125,10 @@ if (hdEl && prof) {
     const sTop = +tl.dataset.stop!, sr = +tl.dataset.sr!, order = Object.keys(TM.courses);
     if (hovY >= sTop) { // busiest-times row: that station's next cutoff per course + required pace
       const st = (tl.dataset.stations || '').split(',')[Math.floor((hovY - sTop) / sr)]; if (!st) return [];
-      return order.flatMap((k) => { const n = nextCut(k, t, st); return n ? [`${k} cutoff ${fmt(TM.courses[k].start + n[1])} · ${pc(n[1] / n[0])}/mi needed`] : []; });
+      return order.flatMap((k) => { const n = nextCut(k, t, st); return n ? [`${k} cutoff ${fmt(TM.courses[k].start + n[1])} · ${pc(n[1] / n[0])}/mi`] : []; });
     }
     return order.flatMap((k) => { const mp = medPace(k, t), n = nextCut(k, t); if (mp == null && !n) return []; if (t < TM.courses[k].start) return [];
-      return [`${k}${mp != null ? ` median ${pc(mp)}/mi` : ''}${n ? ` · cutoff pace ${pc(n[1] / n[0])}/mi` : ''}`]; });
+      return [`${k}${mp != null ? ` median ${pc(mp)}` : ''}${n ? ` · cutoff ${pc(n[1] / n[0])}/mi` : '/mi'}`]; });
   };
   // day / night indicator on the big map during the race-day simulation: badge (sun / twilight / moon + clock) and a light night tint
   const sky = TM.sun as { dawn: number; sunrise: number; sunset: number; dusk: number };
@@ -166,14 +169,13 @@ if (hdEl && prof) {
     glide.clear(); // no median-runner markers during time play (profile distance-hover markers are separate)
     if (tl) {
       const t0 = +tl.dataset.t0!, t1 = +tl.dataset.t1!, lx = +tl.dataset.lx!, rx = +tl.dataset.rx!, x = lx + ((t - t0) / (t1 - t0)) * (rx - lx);
-      const cur = tl.querySelector<SVGGElement>('g.tlcursor')!, txt = cur.querySelector('text')!, bx = cur.querySelector('rect')!;
+      const cur = tl.querySelector<SVGGElement>('g.tlcursor')!, txt = cur.querySelector('text')!, bx = cur.querySelector('rect')!, tg = cur.querySelector<SVGGElement>('g.tip')!;
       cur.style.display = ''; cur.querySelector('path')!.setAttribute('transform', `translate(${x} 0)`);
       const rows = [fmt(t), ...paceRows(t)];
-      txt.textContent = ''; const right = x < rx - 260;
-      rows.forEach((r, i) => { const ts = document.createElementNS(NS, 'tspan'); ts.setAttribute('x', String(x + (right ? 10 : -10))); ts.setAttribute('dx', '0'); ts.textContent = i === 0 ? String(r) : String(r); if (i) ts.setAttribute('dx', '8'); ts.setAttribute('y', '23'); if (i === 0) ts.setAttribute('font-size', '19'); txt.appendChild(ts); });
-      txt.querySelectorAll('tspan').forEach((ts, i) => { if (i) { ts.removeAttribute('dx'); ts.setAttribute('y', String(23 + i * 21)); ts.setAttribute('font-size', '15'); ts.setAttribute('font-weight', '600'); } });
-      txt.setAttribute('text-anchor', right ? 'start' : 'end');
-      const bb = (txt as SVGTextElement).getBBox(); bx.setAttribute('x', String(bb.x - 6)); bx.setAttribute('y', String(bb.y - 3)); bx.setAttribute('width', String(bb.width + 12)); bx.setAttribute('height', String(bb.height + 6));
+      txt.textContent = ''; txt.setAttribute('text-anchor', 'start');
+      rows.forEach((r, i) => { const ts = document.createElementNS(NS, 'tspan'); ts.setAttribute('x', '0'); ts.setAttribute('y', String(i ? 4 + i * 18 : 0)); ts.textContent = String(r); ts.setAttribute('font-size', i ? '14' : '17'); if (i) ts.setAttribute('font-weight', '600'); txt.appendChild(ts); });
+      const bb = (txt as SVGTextElement).getBBox(); bx.setAttribute('x', String(bb.x - 5)); bx.setAttribute('y', String(bb.y - 3)); bx.setAttribute('width', String(bb.width + 10)); bx.setAttribute('height', String(bb.height + 6));
+      if (hovY >= 0) placeTip(tl, tg, x, hovY); else placeTip(tl, tg, x, 0);
     }
   };
   const clearTime = () => { tShown = -1; hovY = -1; badge.style.display = 'none'; tint?.setAttribute('fill-opacity', '0'); Object.values(recDot).forEach((g) => (g.style.display = 'none')); Object.values(leadRing).forEach((g) => (g.style.display = 'none')); dots2.forEach((d) => (d.c.style.display = 'none')); glide.clear(); const cur = tl?.querySelector<SVGGElement>('g.tlcursor'); if (cur) cur.style.display = 'none'; };

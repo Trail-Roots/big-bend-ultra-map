@@ -100,6 +100,6 @@ export function renderTimeline(c: Ctx) {
     cplaced.forEach((Q, j) => { if (i !== j && (hitB(P.b, Q.b, 0.5) || Q.segs.some((g2) => hitB(g2, P.b, 0.5)))) throw new Error('[timeline] cutoff marks overlap'); }); });
   cplaced.forEach((P) => { if (ticons.some((I) => hitB(I, P.b, 1))) throw new Error('[timeline] a station icon touches a cutoff mark'); });
   console.log(`timeline: ${ticons.length} inset station icons clear of cutoff marks; ${cplaced.length} cutoff marks, each inside its own station row, no overlaps`);
-  s += `<g class="tlcursor" style="display:none;pointer-events:none"><path d="M0,${AX}V${f1(bottom)}" stroke="#111" stroke-width="1.5" stroke-dasharray="4 3"/><rect class="tlbox" fill="#fff" fill-opacity=".92" stroke="#bbb" rx="4"/><text class="tlread" font-size="17" font-weight="700"></text></g>`;
+  s += `<g class="tlcursor" style="display:none;pointer-events:none"><path d="M0,${AX}V${f1(bottom)}" stroke="#111" stroke-width="1.5" stroke-dasharray="4 3"/><g class="tip"><rect class="tlbox" fill="#fff" fill-opacity=".94" stroke="#bbb" rx="4"/><text class="tlread" font-size="17" font-weight="700"></text></g></g>`;
   return `<svg class="strips timeline" data-t0="${t0}" data-t1="${t1}" data-lx="${LX}" data-stop="${f1(sTop)}" data-sr="${f1(SR)}" data-stations="${sts.join(',')}" data-rx="${f1(RX)}" viewBox="0 0 ${f1(W)} ${f1(H)}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Race-day timeline: runners on course and at aid stations by time of day">${s}</svg>`;
 }

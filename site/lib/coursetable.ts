@@ -21,7 +21,7 @@ export function courseTable(c, k: string) {
     const s = S[x.station], last = i === q.length - 1, first = i === 0;
     return `<tr><td>${esc(first ? 'Start' : last ? 'Finish' : s.name)}</td><td class="n">${x.mile.toFixed(1)}</td><td class="n">${prev}</td><td class="n">${next}</td><td class="n">${gainAt(x.mile, last).toLocaleString('en-US')}</td><td class="n">${esc(first ? `start ${sh(C.start)}` : x.cutoff === 'TBD' ? '—' : sh(x.cutoff))}</td><td class="n">${pace}</td></tr>`;
   }).join('');
-  return `<table class="cuttab"><thead><tr><th>Station</th><th class="n">Mile</th><th class="n">From prev.</th><th class="n">To next</th><th class="n">Gain (ft)</th><th class="n">Cutoff</th><th class="n">Pace</th></tr></thead><tbody>${body}</tbody></table>`;
+  return `<table class="cuttab"><thead><tr><th>Station</th><th class="n">Mile</th><th class="n"><span class="fu">From prev.</span><span class="ab">Prev</span></th><th class="n"><span class="fu">To next</span><span class="ab">Next</span></th><th class="n"><span class="fu">Gain (ft)</span><span class="ab">Gain</span></th><th class="n">Cutoff</th><th class="n">Pace</th></tr></thead><tbody>${body}</tbody></table>`;
 }
 /** "10:30 AM" -> "10:30a" */
 const sh = (t: string) => t.replace(/ ?([AP])M$/, (_, a) => a.toLowerCase());

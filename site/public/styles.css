@@ -35,7 +35,7 @@ svg .stnum{fill:#fff;font-weight:700}
   .sheet{grid-template-columns:1fr}
   .minis{grid-template-columns:repeat(3,minmax(0,1fr))}
   .hdr{grid-template-columns:auto 1fr}.notice{grid-column:1/-1;text-align:left}
-  .stripsbox{overflow-x:auto}.stripsbox svg{min-width:640px}
+  .stripsbox svg{width:100%;height:auto;min-width:0}
 }
 @media (max-width:560px){.minis{grid-template-columns:repeat(2,minmax(0,1fr))}.printctl{display:none}}
 /* ---------- print: US Letter portrait, 2 pages (map | side panel); sizes/zoom injected by sections/10-map.ts ---------- */
@@ -94,8 +94,6 @@ svg.mainmap,svg.mini{touch-action:pan-x pan-y}svg.panning{cursor:grabbing}
 .bibh{display:flex;align-items:center;gap:.4rem}
 @media screen{.stripsbox{position:relative}}.callinks{align-items:center;flex-wrap:wrap}.callinks .calnote{color:#555;font-weight:500;margin-right:4px}.stripsbox .callinks svg.dlico{width:.8em;height:.8em;flex:none;box-shadow:none;display:inline-block}
 @media print{.stripsbox{overflow:visible!important}.stripsbox .callinks{position:absolute;z-index:3;top:100%;left:0;right:auto;width:max-content;flex-wrap:nowrap;white-space:nowrap;margin-top:2pt;font-size:13pt;gap:4pt}.stripsbox .callinks a{padding:2pt 6pt;border-width:1.2pt;gap:3pt}}
-.links{font-size:.8rem;color:#555}.links h4{margin:.8rem 0 .2rem;color:var(--ink)}.links ol{margin:0;padding-left:1.4rem}.links li{margin:.1rem 0;line-height:1.35}.links .lk{color:var(--ink)}.links a{color:#555;word-break:break-all}
-@media print{.sec-links{break-before:page}.links{font-size:8pt}}
 .doc .note{font-size:.85rem;color:#666}.doc td.n,.doc th.n{text-align:right;font-variant-numeric:tabular-nums}.cuttab th{font-size:.8rem}
 @media print{.cuttab{font-size:9pt}.course-cut{margin-bottom:6pt}}
 .daynight{position:absolute;left:50%;top:8px;transform:translateX(-50%);padding:3px 10px;border-radius:12px;font:700 13px/1.3 system-ui,sans-serif;background:#fff8e1;color:#7a5a00;border:1px solid #e9c46a;pointer-events:none}
@@ -105,7 +103,7 @@ svg.mainmap,svg.mini{touch-action:pan-x pan-y}svg.panning{cursor:grabbing}
 .coursepage{max-width:1200px}.cphead{display:flex;align-items:center;justify-content:space-between;gap:1rem}.cphead h2{margin:.2rem 0}
 .cpbtns{display:flex;gap:.4rem}.cpbtns button,.cpbtns a{font:600 .8rem system-ui,sans-serif;padding:.25rem .6rem;border:1px solid #888;border-radius:4px;background:#fff;color:var(--ink);text-decoration:none;cursor:pointer}
 .coursepage{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:1.2rem;align-items:start}.cpmap{margin:0}.cpmap svg.racemap{box-shadow:0 1px 3px #0002;width:100%;height:auto}
-@media (max-width:800px){.coursepage{grid-template-columns:minmax(0,1fr)}.cpright{min-width:0;overflow-x:auto}.cpmap{max-width:520px;margin:0 auto;width:100%}}
+@media (max-width:800px){.coursepage{grid-template-columns:minmax(0,1fr)}.cpright{min-width:0}.cpmap{max-width:520px;margin:0 auto;width:100%}}
 /* race pages print as landscape letter: race map left half, header + profile + matrix right half */
 @page race{size:letter landscape;margin:.28in}
 @media print{.sec-courses .coursepage{page:race;break-before:page;grid-template-columns:5.12in 5.12in;gap:.2in;height:7.94in;max-width:none;margin:0;padding:0;font-size:8.5pt;overflow:hidden}.sec-courses .coursepage:first-of-type{break-before:auto}.cpmap svg.racemap{height:7.94in;width:auto;max-width:5.12in;box-shadow:none;margin:0 auto}.cpright .cprofile{margin:.06in 0 .08in}.cpright .note{font-size:7pt}.cpright .cuttab{font-size:8pt}.cphead h2{font-size:15pt}}
@@ -192,3 +190,19 @@ html.embed,html.embed body,html.embed .sec.noprint{background:transparent!import
   html{--SW:min(calc(100vw - 48px),calc((100vh - 90px) * 11 / 8.5),1600px)}
   html .layers{width:var(--SW);box-sizing:border-box;margin:.6rem auto}
 }
+/* narrow screens (< 700 px): tight padding so maps and charts use nearly the full width; matrix condensed to fit without scrolling */
+@media screen and (max-width:699px){
+  .topnav{padding:.4rem 9px;gap:.6rem}.layers{margin:.4rem 8px;padding:.3rem .5rem}
+  .sheet{padding:0 8px 8px;gap:8px}.side{gap:8px}
+  .doc{padding:.5rem 9px;margin:.5rem 0}.cpnav{padding:0 9px;margin-top:.5rem}
+  .coursepage{gap:.5rem}
+  .cuttab{font-size:11px;table-layout:auto;width:100%}.doc .cuttab td,.doc .cuttab th{padding:.2rem .15rem}.cuttab th .ab{display:inline}.cuttab th .fu{display:none}
+  .plan svg.fp-north{width:20px!important;height:37px!important;top:6px}
+}
+.cuttab .ab{display:none}
+/* narrow / short screens: every map and chart scales to fit (contain), never cropped: whole viewBox visible, at most 85% of the screen height */
+@media screen and (max-width:1099px){
+  svg.mainmap,svg.racemap,svg.profile,svg.cprofile{display:block;width:auto!important;max-width:100%!important;height:auto!important;max-height:85vh!important;min-height:0!important;margin-left:auto;margin-right:auto}
+}
+@media screen and (max-width:1099px){.fp-zoom{width:min(100%,calc(85vh * var(--ar,1)));margin-left:auto;margin-right:auto}}
+@media screen and (max-width:1099px){.cuttab{font-size:11px;width:100%}.doc .cuttab td,.doc .cuttab th{padding:.2rem .15rem}.cuttab th .ab{display:inline}.cuttab th .fu{display:none}}
