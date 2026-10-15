@@ -4,9 +4,9 @@ import path from 'node:path';
 import type { Ctx, Section } from './lib/types';
 import { markerDefs } from './lib/util';
 
-// big semi-transparent red diagonal DRAFT watermark: on every printed page (fixed element repeats per page) and on every web paper sheet
+// big semi-transparent red diagonal DRAFT watermark: print / PDF only (fixed element repeats on every printed page); never shown on screen
 const WM_SVG = `url("data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"><text x="500" y="500" transform="rotate(-35 500 500)" text-anchor="middle" dominant-baseline="central" font-family="system-ui,sans-serif" font-weight="900" font-size="300" fill="#b3261e" fill-opacity=".16" letter-spacing="20">DRAFT</text></svg>')}")`;
-const WATERMARK = `<style>.wm{display:none}@media print{.wm{display:block;position:fixed;inset:0;background:${WM_SVG} center/100% no-repeat;pointer-events:none;z-index:9999}}@media screen and (min-width:1100px){html .sec-map .pg1,html .sec-courses .coursepage,html .sec:not(.noprint):not(.sec-map):not(.sec-courses)>.doc{position:relative}html .sec-map .pg1::after,html .sec-courses .coursepage::after,html .sec:not(.noprint):not(.sec-map):not(.sec-courses)>.doc::after{content:"";position:absolute;inset:0;background:${WM_SVG} center/contain no-repeat;pointer-events:none;z-index:60}}</style><div class="wm" aria-hidden="true"></div>`;
+const WATERMARK = `<style>.wm{display:none}@media print{.wm{display:block;position:fixed;inset:0;background:${WM_SVG} center/100% no-repeat;pointer-events:none;z-index:9999}}</style><div class="wm" aria-hidden="true"></div>`;
 const here = import.meta.dir, root = path.resolve(here, '..');
 const C = path.join(root, 'content'), D = path.join(root, 'dist');
 const J = (p: string) => JSON.parse(fs.readFileSync(path.join(C, p), 'utf8'));
