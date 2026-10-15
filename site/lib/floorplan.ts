@@ -164,8 +164,8 @@ void esc;
 
 // ---------------- parking plan ----------------
 // KML "Parking" polygons only say WHICH road stretch has parking (start/end and side); the strips are drawn as clean bands
-// offset from the OSM road centerline: shoulder gap 2 ft, depth 18 ft, simulated stall stripes every 9 ft (real lots are dirt).
-export const PARK = { gapFt: 2, depthFt: 18, stallFt: 9 };
+// offset from the OSM road centerline: shoulder gap 2 ft, depth 20 ft, simulated stall stripes every 9 ft (real lots are dirt).
+export const PARK = { gapFt: 2, depthFt: 20, stallFt: 9 };
 const PFRAME = [-103.76125, 29.26835, -103.75125, 29.27425];
 const PICON = (slash: boolean) => `<rect x="-14" y="-14" width="28" height="28" rx="5" fill="#fff"/><rect x="-12" y="-12" width="24" height="24" rx="4" fill="${C.blue}"/><text y="1" font-size="17" font-weight="700" fill="#fff" text-anchor="middle" dominant-baseline="central">P</text>${slash ? `<circle r="10.5" fill="none" stroke="${C.red}" stroke-width="3"/><path d="M-7.4,-7.4L7.4,7.4" stroke="${C.red}" stroke-width="3"/>` : ''}`;
 type V = [number, number];
@@ -221,7 +221,7 @@ export function renderParkingPlan(c, labels: Record<string, [number, number]>) {
   });
   g += strips;
   // No-parking shoulder: full length of FM 170 on the side opposite the venue / parking
-  { const ln = lines[0], cs = cum(ln.pts), sd = -(fmSide || 1), o1 = RWm.secondary / 2 + PARK.gapFt * FT, o2 = o1 + 10 * FT, inner: V[] = [], outer: V[] = [], tot = cs[cs.length - 1];
+  { const ln = lines[0], cs = cum(ln.pts), sd = -(fmSide || 1), o1 = RWm.secondary / 2 + PARK.gapFt * FT, o2 = o1 + PARK.depthFt * FT, inner: V[] = [], outer: V[] = [], tot = cs[cs.length - 1];
     const off = (sv: number, o: number): V => { const p = at(ln.pts, cs, sv), t = tan(ln.pts, cs, sv); return [p[0] - t[1] * o * sd, p[1] + t[0] * o * sd]; };
     for (let sv = 0; sv <= tot; sv += 2) { inner.push(off(sv, o1)); outer.push(off(sv, o2)); }
     const band = 'M' + [...inner, ...outer.reverse()].map((q) => pm(q).map(f1).join(',')).join('L') + 'Z';
