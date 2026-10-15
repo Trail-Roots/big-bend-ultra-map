@@ -321,8 +321,12 @@ export function renderParkingPlan(c, labels: Record<string, [number, number]>) {
       for (const q of pts) { while (lo.length > 1 && cr(lo[lo.length - 2], lo[lo.length - 1], q) <= 0) lo.pop(); lo.push(q); }
       for (const q of [...pts].reverse()) { while (up.length > 1 && cr(up[up.length - 2], up[up.length - 1], q) <= 0) up.pop(); up.push(q); }
       const hull = [...lo.slice(0, -1), ...up.slice(0, -1)].filter(inR) as Pt[];
-      if (hull.length > 2) { sc.add(polyOb('npentrance', hull, 'zone')); g += `<defs><clipPath id="${cid}"><circle cx="${f1(x)}" cy="${f1(y)}" r="${f1(R)}"/></clipPath></defs><path clip-path="url(#${cid})" d="M${[...lo.slice(0, -1), ...up.slice(0, -1)].map((q) => q.map(f1).join(',')).join('L')}Z" fill="#f3d4d4" stroke="${C.red}" stroke-opacity=".55" stroke-width="1.4" stroke-linejoin="round"/>`; }
-      iconQ.push(() => { const r = sc.place(key + ':icon', [x, y], [ox, oy], (X, Y) => circleOb('', X, Y, 12), { leader: false, rings: [40, 52, 64, 78] });
+      if (hull.length > 2) { sc.add(polyOb('npentrance', hull, 'zone')); g += `<defs><clipPath id="${cid}"><circle cx="${f1(x)}" cy="${f1(y)}" r="${f1(R)}"/></clipPath></defs><path clip-path="url(#${cid})" d="M${[...lo.slice(0, -1), ...up.slice(0, -1)].map((q) => q.map(f1).join(',')).join('L')}Z" fill="#f3d4d4" stroke="${C.red}" stroke-opacity=".55" stroke-width="1.4" stroke-linejoin="round"/>`
+        // the main road stays uncovered: redraw FM 170 (edge, gray pavement, white centerline) on top of the zone
+        let fm = ''; for (const f of osm) if (f.properties.highway === 'secondary' && f.geometry.type === 'LineString') { const dd = d(f.geometry.coordinates), w = B.RW.secondary * s;
+          fm += `<path d="${dd}" fill="none" stroke="${C.roadEdge}" stroke-width="${f1(w + 2.4)}" stroke-linejoin="round"/><path d="${dd}" fill="none" stroke="${C.road}" stroke-width="${f1(w)}" stroke-linejoin="round"/><path d="${dd}" fill="none" stroke="#fff" stroke-width="1.8" stroke-dasharray="${f1(Math.max(3 * s, 6))} ${f1(Math.max(6 * s, 9))}"/>`; }
+        g += `<g clip-path="url(#${cid})">${fm}${courseRoutes(c, B)}</g>`; }
+      iconQ.push(() => { const r = sc.place(key + ':icon', [x, y], [ox, oy], (X, Y) => circleOb('', X, Y, 13), { leader: false, rings: [40, 52, 64, 78, 95, 115] });
         top += gmapLink(where, 'No parking — park entrance', `<g transform="translate(${f1(r.x)} ${f1(r.y)}) scale(.85)">${PICON(true)}</g>`);
         labelQ.unshift(() => { const q = sc.place(key + ':label', [r.x, r.y], [0, -22], T('', 'No parking at park entrance', 13), { leader: false, rings: [22, 26, 32, 40, 50, 62, 76] }); top += lbl(q.x, q.y, 'No parking at park entrance', { fs: 13, color: C.red }); }); });
       continue; }
