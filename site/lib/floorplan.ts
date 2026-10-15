@@ -14,11 +14,11 @@ export const ASSUME = {
   arch: { span: 24, along: 'parallel to Big Bend St Park Rd' }, gate: { span: 18 },
 };
 // picnic area: the section east of the visitor-center loop road, south of the entry road and north of the small outbuilding (OSM + aerial)
-const BW_OUT = TR.BLD_OUT, BW_IN = TR.BLD_IN; // traced, rotated with the roof edge
-const FRAME = [-103.7593, 29.26935, -103.75645, 29.27078]; // lon/lat: tight around the finish-area features incl. the drop-off
-export const C = { ground: '#f8f6f1', grid: '#ebe6dc', road: '#c4c2bd', roadEdge: '#a39c90', lot: '#c4c2bd', bld: '#d9d2c4', bldEdge: '#3d3a35', ink: '#2a2a2a', dirt: '#efe8da', pave: '#c4c2bd', curb: '#9d978c', island: '#d5dfc2', garden: '#e4dcc5', gardenEdge: '#b7ab8f', islandEdge: '#8a9478', mute: '#7d776d', picnic: '#e2ecd6', picnicEdge: '#5f8a5a', rest: '#dce8f6', restEdge: '#2a62a8', rv: '#e9ebef', amber: '#d08a10', red: '#c4161c', blue: '#2a62a8' };
+const BW_OUT = TR.BLD_OUT; // traced, rotated with the roof edge
+const FRAME = [-103.75911, 29.269842, -103.756428, 29.270691]; // lon/lat: the reference image extent, widened west only to take in the gate and the drop-off on FM 170
+export const C = { ground: '#f8f6f1', grid: '#ebe6dc', road: '#c4c2bd', roadEdge: '#a39c90', lot: '#c4c2bd', bld: '#d9d2c4', bldEdge: '#3d3a35', ink: '#2a2a2a', dirt: '#efe8da', pave: '#c4c2bd', curb: '#9d978c', island: '#d5dfc2', garden: '#c99579', gardenEdge: '#9a634a', islandEdge: '#8a9478', mute: '#7d776d', picnic: '#a99b72', picnicEdge: '#7a6c48', rest: '#dce8f6', restEdge: '#2a62a8', rv: '#e9ebef', amber: '#d08a10', red: '#c4161c', blue: '#2a62a8' };
 
-function makeBase(c, FRAME: number[], gridM: number, id = "fp", W = 1200, o: { ground?: string; road?: string; edge?: string; lot?: boolean; grid?: string; osmBld?: boolean; skipWays?: number[]; extraWays?: any[] } = {}) {
+function makeBase(c, FRAME: number[], gridM: number, id = "fp", W = 1200, o: { ground?: string; road?: string; edge?: string; lot?: boolean; grid?: string; osmBld?: boolean; bldFill?: string; skipWays?: number[]; extraWays?: any[] } = {}) {
   const lat0 = 29.2702, lon0 = -103.7575, kx = Math.cos(lat0 * Math.PI / 180) * 111320, ky = 110574;
   const gm = (q: [number, number]) => [(q[0] - lon0) * kx, (q[1] - lat0) * ky] as [number, number]; // ground meters, y up
   const [fx0, fy0] = gm([FRAME[0], FRAME[1]]), [fx1, fy1] = gm([FRAME[2], FRAME[3]]);
@@ -47,7 +47,7 @@ function makeBase(c, FRAME: number[], gridM: number, id = "fp", W = 1200, o: { g
   for (const f of osm) if (f.properties.highway === 'path') g += `<path d="${d(f.geometry.coordinates)}" fill="none" stroke="#a39782" stroke-width="1.6" stroke-dasharray="1 4" stroke-linecap="round"/>`;
   // buildings
   if (o.osmBld !== false) for (const f of osm) if (f.properties.building && f.geometry.type === 'Polygon') g += `<path d="${d(f.geometry.coordinates[0], true)}" fill="${C.bld}" stroke="${C.bldEdge}" stroke-width="1.6"/>`;
-  g += `<path d="${d(BW_OUT, true)}${d(BW_IN, true)}" fill="${C.bld}" fill-rule="evenodd" stroke="${C.bldEdge}" stroke-width="2.6"/><path d="${d(BW_OUT, true)}${d(BW_IN, true)}" fill="url(#${id}bld)" fill-rule="evenodd"/>`;
+  g += `<path d="${d(BW_OUT, true)}" fill="${o.bldFill ?? C.bld}" stroke="${C.bldEdge}" stroke-width="2.6"/><path d="${d(BW_OUT, true)}" fill="url(#${id}bld)"/>`;
   // paved road bands (px) for masking areas and for the area-vs-road build check
   const roads = osm.filter((f) => f.properties.highway in RW && f.geometry.type === 'LineString' && !o.skipWays?.includes(f.properties.osm_id)).map((f) => ({ h: f.properties.highway as string, pts: (f.geometry.coordinates as [number, number][]).map(P), w: RW[f.properties.highway] * s + 2.4 }));
   const roadMask = (mid: string, keep: (h: string) => boolean = () => true) => `<mask id="${mid}" maskUnits="userSpaceOnUse" x="0" y="0" width="${W}" height="${H}"><rect width="${W}" height="${H}" fill="#fff"/>${roads.filter((r) => keep(r.h)).map((r) => `<path d="M${r.pts.map((q) => q.map(f1).join(',')).join('L')}" fill="none" stroke="#000" stroke-width="${f1(r.w)}" stroke-linejoin="round" stroke-linecap="round"/>`).join('')}</mask>`;
@@ -130,7 +130,7 @@ const RT = roadTools(B), ln = RT.lines[0], cs2 = RT.cum(ln.pts), pr = (drop.coor
     const band = 'M' + [...inn, ...out.reverse()].map((q) => pm(q).map(f1).join(',')).join('L') + 'Z', cx = drop.coords.reduce((t, q) => t + q[0], 0) / drop.coords.length, cy = drop.coords.reduce((t, q) => t + q[1], 0) / drop.coords.length;
   return { band, ring: [...inn, ...out], where: [cx, cy] as [number, number], anchor: pm(off((s0 + s1) / 2, (o1 + o2) / 2)) }; }
 export function renderFinishPlan(c, labels: Record<string, [number, number]>) {
-  const B = makeBase(c, FRAME, 10, 'fp', 1200, { ground: C.dirt, grid: '#e3dac8', road: C.pave, edge: C.curb, lot: false, osmBld: false, skipWays: [321566200, 1452473490, 15134664] /* lot-internal OSM ways + the OSM park road, replaced by traced geometry */, extraWays: [{ type: 'Feature', properties: { highway: 'service', osm_id: -1, name: 'Big Bend St Park Rd (traced)' }, geometry: { type: 'LineString', coordinates: parkRd(c) } }] }), { gm, pm, P, d, s, W, H, osm, L, pt, rect, poly, ang, way, RW } = B; let g = B.g;
+  const B = makeBase(c, FRAME, 10, 'fp', 1200, { ground: C.dirt, grid: '#e3dac8', road: C.pave, edge: C.curb, lot: false, osmBld: false, bldFill: '#f6f5f1' /* white roof */, skipWays: [321566200, 1452473490, 15134664] /* lot-internal OSM ways + the OSM park road, replaced by traced geometry */, extraWays: [{ type: 'Feature', properties: { highway: 'service', osm_id: -1, name: 'Big Bend St Park Rd (traced)' }, geometry: { type: 'LineString', coordinates: parkRd(c) } }] }), { gm, pm, P, d, s, W, H, osm, L, pt, rect, poly, ang, way, RW } = B; let g = B.g;
   // surfaces traced from Erik's annotated satellite view (georeferenced on the My Map points, <1 m residual)
   const TRc = TR;
   // ONE pavement polygon (park road + lot + drive) with the islands cut out; garden + picnic + shelter + building share its edges
@@ -151,9 +151,9 @@ export function renderFinishPlan(c, labels: Record<string, [number, number]>) {
   { const cW = TRc.ISL_W.map(gm), cE = TRc.ISL_E.map(gm), ctr = (v: [number, number][]) => [v.reduce((t, q) => t + q[0], 0) / v.length, v.reduce((t, q) => t + q[1], 0) / v.length] as [number, number];
     stallRow(ctr(cW), ctr(cE), [1, -1], 2.2, 2.2);
     // Barton Warnock entrance row: head-in stalls on the paved lot along its south edge, east of the plaza (garden stays clear)
-    { const a0 = gm(toLL(TV.l4)), b0 = gm(toLL(TV.g1)), L = Math.hypot(b0[0] - a0[0], b0[1] - a0[1]), nx = -(b0[1] - a0[1]) / L * 0.5, ny = (b0[0] - a0[0]) / L * 0.5; // 0.5 m in from the curb
+    { const a0 = gm(toLL(TV.bNW)), b0 = gm(toLL(TV.bNE)), L = Math.hypot(b0[0] - a0[0], b0[1] - a0[1]), nx = -(b0[1] - a0[1]) / L * 0.5, ny = (b0[0] - a0[0]) / L * 0.5; // 0.5 m in from the curb
       stallRow([a0[0] + nx, a0[1] + ny], [b0[0] + nx, b0[1] + ny], [1], 1.2, 1.2); } }
-  g += `<path d="${d(TRc.SHED, true)}" fill="${C.bld}" stroke="${C.bldEdge}" stroke-width="1.6"/>`;
+  g += `<path d="${d(TRc.SHED, true)}" fill="#b5503f" stroke="${C.bldEdge}" stroke-width="1.6"/>`; // red-roof shelter
   // course into the finish (100K GPX), clipped to the frame
   const cs = c.courseGeo['100K'].features[0].geometry.coordinates as [number, number][], tail: [number, number][] = [];
   for (let i = cs.length - 1; i >= 0; i--) { tail.unshift(cs[i]); const [x, y] = P(cs[i]); if (x < -30 || y < -30 || x > W + 30 || y > H + 30) break; }
@@ -172,7 +172,7 @@ export function renderFinishPlan(c, labels: Record<string, [number, number]>) {
   { const PP = TRc.PICNIC, cx = PP.reduce((t, q) => t + q[0], 0) / PP.length, cy = PP.reduce((t, q) => t + q[1], 0) / PP.length;
     // gravel path across the picnic triangle to the shelter (distinct gravel tone, ~1.5 m wide)
     const gravel = `<path d="${d(TRc.GRAVEL)}" fill="none" stroke="#b9ab8e" stroke-width="${f1(1.8 * s + 2)}" stroke-linecap="round" stroke-linejoin="round"/><path d="${d(TRc.GRAVEL)}" fill="none" stroke="#e6dcc6" stroke-width="${f1(1.8 * s)}" stroke-linecap="round" stroke-linejoin="round"/>`;
-    items.push({ minor: true, key: 'picnic', label: 'Picnic area', where: pt('Picnic Area'), shape: `<path d="${d(PP, true)}" fill="${C.picnic}" fill-opacity=".75" stroke="${C.picnicEdge}" stroke-opacity=".6" stroke-width="1.4" stroke-dasharray="6 4" stroke-linejoin="round"/>${gravel}`, anchor: P([cx, cy]), r: 0 }); }
+    items.push({ minor: true, key: 'picnic', label: 'Picnic area', where: pt('Picnic Area'), shape: `<path d="${d(PP, true)}" fill="${C.picnic}" stroke="${C.picnicEdge}" stroke-width="1.2" stroke-linejoin="round"/>${gravel}`, anchor: P([cx, cy]), r: 0 }); }
   // orientations from nearby roads
   const aisle = way(1452473490), loop = way(321566200), aAisle = ang(aisle[0], aisle[1]), aWest = ang(loop[1], loop[2]), aSouth = ang(loop[2], loop[3]);
   // Radio Command: vehicle footprint parked against the southeast side of the large island, parallel to its curb (drive lane left clear)
@@ -229,7 +229,7 @@ export function renderFinishPlan(c, labels: Record<string, [number, number]>) {
   sc.add(lineOb('route', tail.map((q) => P(q) as Pt), (1.6 * s) / 2 + 3, 'line'));
   stallZones.forEach((z, i) => sc.add(polyOb(`stalls${i}`, z, 'zone')));
   for (const it of items) { const h = hullOf(it.shape); if (h.length > 2) { const o = polyOb(it.key + ':icon', h, it.key === 'dropoff' || it.key === 'picnic' ? 'zone' : 'icon'); o.caps = h.map((p, i) => ({ a: p, b: h[(i + 1) % h.length], r: 2 })); sc.add(o); } }
-  const bw = P([-103.757407, 29.269773]), BWT = 'Barton Warnock\nVisitor Center'; sc.add(textOb('bw:label', bw[0], bw[1] + 70, BWT, 19));
+  const bw = P(toLL([300, 497])), BWT = 'Barton Warnock\nVisitor Center'; sc.add(textOb('bw:label', bw[0], bw[1], BWT, 15)); // on the visible white roof
   for (const it of items) {
     shapes += gmapLink(it.where, it.label, `<g class="fp-${it.key}">${it.shape}</g>`);
     const pref = labels[it.key] ?? [0, -24], fs = it.minor ? 13 : 17, inside = pref[0] === 0 && pref[1] === 0;
@@ -237,7 +237,7 @@ export function renderFinishPlan(c, labels: Record<string, [number, number]>) {
     if (r.leader) lbls += leaderLine(r.leader[0][0], r.leader[0][1], r.leader[1][0], r.leader[1][1]);
     lbls += textBlock(r.x, r.y, { text: it.label, fs, color: it.key === 'dropoff' ? '#8a5a00' : it.minor ? C.mute : C.ink, style: it.key === 'dropoff' || it.minor ? 'italic' : 'normal', weight: it.minor ? 'normal' : 'bold', family: 'sans', halo: { color: '#fff', width: 4.5 }, ha: 'center' });
   }
-  lbls += gmapLink(sfPlace ?? [-103.757522, 29.269797], 'Barton Warnock Visitor Center', textBlock(bw[0], bw[1] + 70, { text: BWT, fs: 19, color: C.ink, style: 'normal', weight: 'bold', family: 'sans', halo: { color: C.bld, width: 4 }, ha: 'center', linespacing: 1.15 }));
+  lbls += gmapLink(sfPlace ?? [-103.757522, 29.269797], 'Barton Warnock Visitor Center', textBlock(bw[0], bw[1], { text: BWT, fs: 15, color: C.ink, style: 'normal', weight: 'bold', family: 'sans', halo: { color: '#f6f5f1', width: 4 }, ha: 'center', linespacing: 1.15 }));
   { const F = fmGeo(B, 0.5); if (F) { let ok = false; const a = F.an * Math.PI / 180;
     for (const t of [0, 40, -40, 80, -80, 120, -120]) { const x = F.x + Math.cos(a) * t, y = F.y + Math.sin(a) * t, ob = textOb('fmlabel', x, y, 'FM 170', 16, F.an); if (!sc.inFrame(ob) || sc.hit(ob, (q) => q.id === 'dropoff:icon')) continue; sc.add(ob); lbls += lbl(x, y, 'FM 170', { fs: 16, color: '#5d5850', rot: -F.an }); ok = true; break; }
     if (!ok) throw new Error('[collide:finish plan] no room for FM 170 label'); } }
