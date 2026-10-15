@@ -5,7 +5,7 @@ import { SHEET, viewProjection } from './util';
 import { miniBib, MINIBIB } from './panels';
 import type { Ctx } from './types';
 
-const lerp = (x: number, xs: number[], ys: number[]) => {
+export const lerp = (x: number, xs: number[], ys: number[]) => {
   if (x <= xs[0]) return ys[0]; if (x >= xs[xs.length - 1]) return ys[ys.length - 1];
   let lo = 0, hi = xs.length - 1; while (hi - lo > 1) { const m = (lo + hi) >> 1; if (xs[m] <= x) lo = m; else hi = m; }
   return ys[lo] + ((ys[hi] - ys[lo]) * (x - xs[lo])) / (xs[hi] - xs[lo] || 1);
