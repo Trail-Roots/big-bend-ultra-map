@@ -37,7 +37,7 @@ export function renderTimeline(c: Ctx) {
   const sunMark = (t: number, lab: string) => { const x = X(t), y = bottom + 14, up = lab === 'Sunrise'; let rays = ''; for (let i = 0; i < 5; i++) { const a = Math.PI * (i / 4); rays += `M${f1(x + Math.cos(a) * 9)},${f1(y - Math.sin(a) * 9)}L${f1(x + Math.cos(a) * 13)},${f1(y - Math.sin(a) * 13)}`; } return `<path d="M${f1(x)},${AX}V${f1(bottom)}" stroke="#d08a1e" stroke-width="2" stroke-dasharray="6 4"/><g class="sun"><title>${lab} ${clock(t, false)}</title><path d="M${f1(x - 7)},${f1(y)}a7,7 0 0 1 14,0z" fill="#f2a93b"/><path d="${rays}" stroke="#f2a93b" stroke-width="2" stroke-linecap="round"/><path d="M${f1(x - 14)},${f1(y)}h28" stroke="#a86a10" stroke-width="1.5"/><text x="${f1(x + 17)}" y="${f1(y)}" font-size="17" font-weight="700" fill="#a86a10" stroke="#fff" stroke-width="4" paint-order="stroke">${up ? '↑' : '↓'}${clock(t, false)}</text></g>`; };
   s += sunMark(d17.sunrise, 'Sunrise') + sunMark(d17.sunset, 'Sunset');
   {
-    const B = T.bin_min, n = T.courses[order[0]].on_course.length, top = cTop + 58, base = cTop + order.length * CR - 6, hgt = base - top;
+    const B = T.bin_min, n = T.courses[order[0]].on_course.length, top = cTop + 70, base = cTop + order.length * CR - 6, hgt = base - top;
     const acc = new Array(n).fill(0), tot = acc.map((_, i) => order.reduce((q, k) => q + (T.courses[k].on_course[i] || 0), 0)), maxT = Math.max(...tot);
     const xs = acc.map((_, i) => X(t0 + (i + 0.5) * B)), Y = (v: number) => base - (v / maxT) * hgt;
     s += `<path d="M${f1(LX)},${f1(base)}H${f1(RX)}" stroke="${ink}" stroke-width="1"/>`;
@@ -55,20 +55,47 @@ export function renderTimeline(c: Ctx) {
     [...order].reverse().forEach((k, r) => { s += miniBib(k, c.courses.colors[k], PADL, top + r * lh + lh / 2 - MINIBIB.h / 2, c.colors); });
     // lane above the chart: race starts (flag + time) and every cutoff (aid-station number icon in the legend marker style + time;
     // a race-colour bar under the icon per race). Items are placed left to right on up to 3 staggered rows so nothing touches.
-    type It = { x: number; w: number; draw: (ry: number) => string };
-    const items: It[] = [], tw = (t: string) => t.length * 13 * 0.62;
-    order.forEach((k) => { const C = T.courses[k], x = X(C.start), lab = clock(C.start);
-      items.push({ x, w: 14 + tw(lab) + 6, draw: (ry) => `<path d="M${f1(x)},${f1(base)}V${f1(ry - 8)}" stroke="${ink}" stroke-width="1.2" stroke-dasharray="3 3"/><path d="M${f1(x)},${f1(ry - 9)}h12l-4,4 4,4h-12z" fill="${c.courses.colors[k]}"/><text x="${f1(x + 14)}" y="${f1(ry + 4)}" font-size="13" font-weight="700" fill="${ink}">${lab}</text>` }); });
-    const cuts = new Map<string, { t: number; st: string; ks: string[]; fin: boolean }>();
-    order.forEach((k) => { const C = T.courses[k]; C.passes.forEach((q: any, i: number) => { if (q.mile === 0) return; const tm = cutMin(q.cutoff); if (tm == null) return; const t = tm < C.start ? tm + 1440 : tm, key = q.station + '@' + t, e = cuts.get(key) ?? { t, st: q.station, ks: [], fin: i === C.passes.length - 1 }; e.ks.push(k); cuts.set(key, e); }); });
-    const IR = 7.5, ms = (IR * 2) ** 2 / 1.8;
-    for (const e of cuts.values()) { const x = X(e.t), lab = clock(e.t);
-      items.push({ x: x - IR, w: IR * 2 + 3 + tw(lab) + 6, draw: (ry) => (e.fin ? `<path d="M${f1(x)},${f1(base)}V${f1(ry + IR)}" stroke="${ink}" stroke-width="1.6"/>` : `<path d="M${f1(x)},${f1(top - 1)}V${f1(ry + IR)}" stroke="${ink}" stroke-width="1.2"/>`)
-        + e.ks.map((k, j) => `<rect x="${f1(x - IR + j * (IR * 2 / e.ks.length))}" y="${f1(ry + IR + 1)}" width="${f1(IR * 2 / e.ks.length)}" height="3" fill="${c.courses.colors[k]}"/>`).join('')
-        + station(x, ry, e.st, false, { s: ms, fs: e.st.length > 1 ? 15 : 11, badge: false, colors: c.colors }) + `<text x="${f1(x + IR + 3)}" y="${f1(ry + 4)}" font-size="13" font-weight="700" fill="${ink}">${lab}</text>` }); }
-    items.sort((a, b) => a.x - b.x);
-    const rowEnd = [-1e9, -1e9, -1e9];
-    for (const it of items) { let ri = rowEnd.findIndex((e) => e + 3 < it.x); if (ri < 0) ri = rowEnd.indexOf(Math.min(...rowEnd)); rowEnd[ri] = it.x + it.w; s += `<g class="tlmk">${it.draw(cTop + 9 + ri * 17)}</g>`; }
+    // Placement: left to right, up to 3 rows; an item may slide right (its tick then elbows back to the true time) until its box clears every
+    // placed box, every placed tick and the sunrise / sunset lines, and its own tick clears every placed box. The build fails if anything still touches.
+    type Bx = { x0: number; x1: number; y0: number; y1: number };
+    type It = { tx: number; w: number; lw?: number; start: boolean; draw: (cx: number, ry: number) => string; fin?: boolean };
+    const items: It[] = [], tw = (t: string) => t.length * 13 * 0.7, IR = 7.5, ms = (IR * 2) ** 2 / 1.8, PAD = 2;
+    order.forEach((k) => { const C = T.courses[k], lab = clock(C.start);
+      items.push({ tx: X(C.start), w: 14 + tw(lab), start: true, draw: (cx, ry) => `<path d="M${f1(cx)},${f1(ry - 9)}h12l-4,4 4,4h-12z" fill="${c.courses.colors[k]}"/><text x="${f1(cx - 3)}" y="${f1(ry + 4)}" font-size="13" font-weight="700" text-anchor="end" fill="${ink}">${lab}</text>` }); });
+    // cutoffs at the same time share one tick: their station icons sit side by side (icons only; times are on the axis and in the hover)
+    const SHOWT = false;
+    const cuts = new Map<number, { t: number; fin: boolean; sts: { st: string; ks: string[] }[] }>();
+    order.forEach((k) => { const C = T.courses[k]; C.passes.forEach((q: any, i: number) => { if (q.mile === 0) return; const tm = cutMin(q.cutoff); if (tm == null) return; const t = tm < C.start ? tm + 1440 : tm, e = cuts.get(t) ?? { t, fin: false, sts: [] };
+      if (i === C.passes.length - 1) e.fin = true; let g = e.sts.find((x) => x.st === q.station); if (!g) { g = { st: q.station, ks: [] }; e.sts.push(g); } g.ks.push(k); cuts.set(t, e); }); });
+    for (const e of cuts.values()) { const lab = clock(e.t), n = e.sts.length, SP = IR * 2 + 2;
+      items.push({ tx: X(e.t), w: n * SP - 2 + 3 + (SHOWT ? tw(lab) : -3), lw: SHOWT ? tw(lab) : -3, start: false, fin: e.fin, draw: (cx, ry) => e.sts.map((g, gi) => { const ix = cx + gi * SP;
+        return g.ks.map((k, j) => `<rect x="${f1(ix - IR + j * (IR * 2 / g.ks.length))}" y="${f1(ry + IR + 1)}" width="${f1(IR * 2 / g.ks.length)}" height="3" fill="${c.courses.colors[k]}"/>`).join('')
+          + station(ix, ry, g.st, false, { s: ms, fs: g.st.length > 1 ? 15 : 11, badge: false, colors: c.colors }); }).join('') + (SHOWT ? `<text x="${f1(cx - IR - 3)}" text-anchor="end" y="${f1(ry + 4)}" font-size="13" font-weight="700" fill="${ink}">${lab}</text>` : ``) }); }
+    items.sort((a, b) => a.tx - b.tx);
+    const NR = 3, sunX = [X(d17.sunrise), X(d17.sunset)], rowY = (ri: number) => cTop + 9 + ri * 21;
+    // labels sit LEFT of the pole / icons, so a later (right-hand) item can sit one row up and drop its tick clear of the earlier one
+    const boxOf = (it: It, cx: number, ry: number): Bx => it.start ? { x0: cx - 3 - (it.w - 14), x1: cx + 12, y0: ry - 9, y1: ry + 6 } : { x0: cx - IR - 3 - it.lw!, x1: cx - IR - 3 - it.lw! + it.w, y0: ry - IR, y1: ry + IR + 4 };
+    // tick segments: vertical at the true time from the chart (base for starts / finishes, chart top otherwise) up to the elbow, then across to the icon
+    const segsOf = (it: It, cx: number, b: Bx): Bx[] => { const yb = it.start || it.fin ? base : top - 1, ax = it.start ? cx : cx, ye = it.start ? b.y1 : b.y1;
+      return cx === it.tx ? [{ x0: it.tx, x1: it.tx, y0: ye, y1: yb }] : [{ x0: it.tx, x1: it.tx, y0: ye + 2, y1: yb }, { x0: it.tx, x1: ax, y0: ye + 2, y1: ye + 2 }]; };
+    const hit = (a: Bx, b: Bx, p = PAD) => a.x0 < b.x1 + p && b.x0 < a.x1 + p && a.y0 < b.y1 + p && b.y0 < a.y1 + p;
+    const placed: { it: It; b: Bx; segs: Bx[] }[] = [];
+    const ok = (it: It, b: Bx, segs: Bx[]) => !sunX.some((x) => x > b.x0 - PAD && x < b.x1 + PAD) && !segs.some((g) => g.y0 === g.y1 && sunX.some((x) => x > Math.min(g.x0, g.x1) - PAD && x < Math.max(g.x0, g.x1) + PAD))
+      && placed.every((P) => !hit(P.b, b, 3) && !P.segs.some((g) => hit(g, b, 1)) && !segs.some((g) => hit(g, P.b, 1)));
+    for (const it of items) {
+      let done = false;
+      for (let dd = 0; dd <= 240 && !done; dd += 1) for (let ri = NR - 1; ri >= 0 && !done; ri--) { const d = dd % 2 ? -(dd + 1) / 2 : dd / 2;
+        const ry = rowY(ri), cx = it.tx + d, b = boxOf(it, cx, ry), segs = segsOf(it, cx, b);
+        if (!ok(it, b, segs)) continue;
+        placed.push({ it, b, segs }); done = true;
+        const path = segs.length === 1 ? `M${f1(it.tx)},${f1(segs[0].y1)}V${f1(segs[0].y0)}` : `M${f1(it.tx)},${f1(segs[0].y1)}V${f1(segs[0].y0)}H${f1(cx)}`;
+        s += `<g class="tlmk"><path d="${path}" fill="none" stroke="${ink}" stroke-width="${it.start ? 1.2 : it.fin ? 1.6 : 1.2}"${it.start ? ' stroke-dasharray="3 3"' : ''}/>${it.draw(cx, ry)}</g>`;
+      }
+      if (!done) throw new Error(`[timeline] no clear spot for the cutoff/start marker at ${clock(T.window[0] + ((it.tx - LX) / (RX - LX)) * (T.window[1] - T.window[0]))}`);
+    }
+    // build check: no marker box touches another marker, any tick or a sunrise / sunset line
+    placed.forEach((P, i) => { if (sunX.some((x) => x > P.b.x0 - PAD && x < P.b.x1 + PAD)) throw new Error('[timeline] marker on a sunrise/sunset line');
+      placed.forEach((Q, j) => { if (i === j) return; if (hit(P.b, Q.b, 1)) throw new Error('[timeline] markers overlap'); if (Q.segs.some((g) => hit(g, P.b, 0.5))) throw new Error(`[timeline] a tick crosses the marker at x=${f1(P.b.x0)}`); }); });
   }
   // stations
   s += `<text x="${PADL}" y="${f1(sTop - 6)}" font-size="17" font-weight="700" fill="${ink}">Busiest times</text><path d="M${PADL + 172},${f1(sTop - 20)}v16" stroke="#111" stroke-width="4"/><path d="M${PADL + 172},${f1(sTop - 20)}v16" stroke="#fff" stroke-width="2"/><text x="${PADL + 178}" y="${f1(sTop - 6)}" font-size="14" fill="${col.mute}">opens</text><path d="M${PADL + 230},${f1(sTop - 20)}v16" stroke="#111" stroke-width="2.4"/><text x="${PADL + 236}" y="${f1(sTop - 6)}" font-size="14" fill="${col.mute}">cutoff</text>`;
