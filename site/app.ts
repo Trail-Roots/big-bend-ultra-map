@@ -150,6 +150,8 @@ if (hdEl && prof) {
   main.addEventListener('zoomchange', () => { glide.redraw(); if (tShown >= 0) setTime(tShown); });
   document.querySelectorAll('svg.mini').forEach((m) => m.addEventListener('zoomchange', () => glide.redraw()));
   // auto-play (web only): slow sweep of the race-day clock, looping; off for reduced motion; pause persisted
+  // play window: first race start → last runner off course (latest finish across all courses); loops back to the first start
+  const CS = Object.values(TM.courses) as any[], PA = Math.min(...CS.map((C) => C.start)), PB = Math.max(...CS.map((C) => C.start + Math.max(...C.T)));
   const LOOP_S = 90, KEY = 'bbu-autoplay-paused';
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
   let paused = localStorage.getItem(KEY) === '1', user = false, t0 = 0, f0 = 0, raf = 0, last = 0;
@@ -158,7 +160,7 @@ if (hdEl && prof) {
     raf = 0; if (!running()) return;
     if (!t0) t0 = t - f0 * LOOP_S * 1000;
     const f = (((t - t0) / 1000 / LOOP_S) % 1); f0 = f;
-    setTime(TM.t0 + f * (TM.t1 - TM.t0)); last = t; // every frame, continuous (fractional) clock
+    setTime(PA + f * (PB - PA)); last = t; // every frame, continuous (fractional) clock
     raf = requestAnimationFrame(tick);
   };
   const start = () => { if (!raf && running()) { t0 = 0; raf = requestAnimationFrame(tick); } };
