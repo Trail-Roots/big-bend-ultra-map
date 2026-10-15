@@ -18,6 +18,20 @@ function profile(c, k: string) {
   s += `<path d="M${f1(X(0))},${H - PB}L${pts.join('L')}L${f1(X(p.mi[p.mi.length - 1]))},${H - PB}z" fill="${cc}" fill-opacity=".15"/><path d="M${pts.join('L')}" class="ln" stroke="${cc}" stroke-width="3.5"/>`;
   const ftAt = (m: number) => { let i = p.mi.findIndex((x: number) => x >= m); if (i < 0) i = p.mi.length - 1; return p.ft[i]; };
   for (const q of c.cutoffs[k]) { const x = X(q.mile), y = Y(ftAt(q.mile)) - 26; s += `<path d="M${f1(x)},${f1(y + 12)}V${f1(Y(ftAt(q.mile)))}" stroke="${col.ink}" stroke-width="1.5"/>` + station(x, y, q.station, c.stations.stations[q.station].spectator, { s: 600, fs: 19, badge: false, colors: col }); }
+  // cutoff flags: a small flag + time above each aid-station icon that has a cutoff on this race; raised a row at a time until it clears
+  // every other flag, every icon and the profile line (build fails otherwise)
+  type Bx = { x0: number; x1: number; y0: number; y1: number }; const hit = (a: Bx, b: Bx, m = 2) => a.x0 < b.x1 + m && b.x0 < a.x1 + m && a.y0 < b.y1 + m && b.y0 < a.y1 + m;
+  const IR = Math.sqrt(600 * 1.8) / 2, icons: Bx[] = c.cutoffs[k].map((q) => { const x = X(q.mile), y = Y(ftAt(q.mile)) - 26; return { x0: x - IR, x1: x + IR, y0: y - IR, y1: y + IR }; });
+  const linePts = p.mi.map((m: number, i: number) => [X(m), Y(p.ft[i])]), fl: Bx[] = [], FS = 16;
+  const shc = (t: string) => t.replace(/:00 ?([AP])M$/, (_, a) => a.toLowerCase()).replace(/ ?([AP])M$/, (_, a) => a.toLowerCase());
+  for (const q of c.cutoffs[k]) { if (!(q.mile > 0) || !q.cutoff || q.cutoff === 'TBD') continue;
+    const t = shc(q.cutoff), w = 16 + 4 + t.length * FS * 0.62, h = 20, x = X(q.mile), iy = Y(ftAt(q.mile)) - 26; let done = false;
+    for (let row = 0; row < 12 && !done; row++) for (const dx of [0, -w / 2 - 2, w / 2 + 2]) { const x0 = Math.min(W - 10 - w, Math.max(PL + 2, x - w / 2 + dx)), y1 = iy - IR - 3 - row * (h + 3), b = { x0, x1: x0 + w, y0: y1 - h, y1 };
+      if (b.y0 < 2 || fl.some((o) => hit(o, b)) || icons.some((o) => hit(o, b, 1)) || linePts.some(([px, py]: number[]) => px > b.x0 - 2 && px < b.x1 + 2 && py > b.y0 - 2 && py < b.y1 + 2)) continue;
+      fl.push(b); done = true; const fx = b.x0 + 2, fy = b.y1 - 2;
+      s += `<g class="cpflag"><rect x="${f1(b.x0)}" y="${f1(b.y0)}" width="${f1(w)}" height="${h}" rx="3" fill="#fff" fill-opacity=".92"/><path d="M${f1(fx)},${f1(fy)}V${f1(fy - 16)}" stroke="#111" stroke-width="2"/><path d="M${f1(fx + 1)},${f1(fy - 16)}h12l-3,4 3,4h-12z" fill="#b3261e"/><text x="${f1(b.x0 + 20)}" y="${f1(b.y1 - 5)}" font-size="${FS}" font-weight="700" fill="${col.ink}">${t}</text></g>`; break; }
+    if (!done) throw new Error(`[${k} profile] no clear spot for the ${t} cutoff flag at mi ${q.mile}`); }
+  console.log(`  profile ${k}: ${fl.length} cutoff flags placed, no overlaps`);
   return `<svg class="cprofile" data-course="${k}" data-pl="${PL}" data-w="${W}" data-h="${H}" data-pb="${PB}" data-d="${D}" data-lo="${lo}" data-hi="${hi}" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${k} elevation profile">${s}</svg>`;
 }
 export function render(c) {

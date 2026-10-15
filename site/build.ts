@@ -5,8 +5,8 @@ import type { Ctx, Section } from './lib/types';
 import { markerDefs } from './lib/util';
 
 // big semi-transparent red diagonal DRAFT watermark: print / PDF only (fixed element repeats on every printed page); never shown on screen
-const WM_SVG = `url("data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"><text x="500" y="500" transform="rotate(-35 500 500)" text-anchor="middle" dominant-baseline="central" font-family="system-ui,sans-serif" font-weight="900" font-size="300" fill="#b3261e" fill-opacity=".16" letter-spacing="20">DRAFT</text></svg>')}")`;
-const WATERMARK = `<style>.wm{display:none}@media print{.wm{display:block;position:fixed;inset:0;background:${WM_SVG} center/100% no-repeat;pointer-events:none;z-index:9999}}</style><div class="wm" aria-hidden="true"></div>`;
+const WM_SVG = `url("data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"><text x="500" y="500" transform="rotate(-35 500 500)" text-anchor="middle" dominant-baseline="central" font-family="system-ui,sans-serif" font-weight="900" font-size="220" fill="#b3261e" fill-opacity=".16" letter-spacing="10">DRAFT</text></svg>')}")`;
+const WATERMARK = `<style>.wm{display:none}@media print{.wm{display:block;position:fixed;inset:0;background:${WM_SVG} center/contain no-repeat;pointer-events:none;z-index:9999}}</style><div class="wm" aria-hidden="true"></div>`;
 const here = import.meta.dir, root = path.resolve(here, '..');
 const C = path.join(root, 'content'), D = path.join(root, 'dist');
 const J = (p: string) => JSON.parse(fs.readFileSync(path.join(C, p), 'utf8'));
