@@ -25,7 +25,7 @@ export function renderRaceMap(c, k: string, card?: boolean) {
   for (const f of c.network.features.filter((f) => f.properties.cls === 'connector')) { const d = V.path(f); sample(V.lines(f)); base += `<path d="${d}" class="ln" stroke="${col.cream}" stroke-width="12" stroke-linecap="butt"/><path d="${d}" class="ln" stroke="#000" stroke-width="7"/>`; }
   // next longer race's route underneath at low opacity (as on the old mini maps); the 100K has none
   const O: string[] = c.courses.order, nk = O[O.indexOf(k) - 1];
-  if (nk) { const nf = c.courseGeo[nk].features[0]; sample(V.lines(nf)); s += `<path d="${V.path(nf)}" class="ln under" data-course="${nk}" stroke="${tint(c.courses.colors[nk], BAND_TINT * 0.7)}" stroke-width="${card ? 30 : 13}" stroke-linejoin="round"/>`; }
+  if (nk) { const nf = c.courseGeo[nk].features[0]; sample(V.lines(nf)); s += `<path d="${V.path(nf)}" class="ln under" data-course="${nk}" stroke="${tint(c.courses.colors[nk], BAND_TINT * 0.4)}" stroke-width="${card ? 20 : 9}" stroke-linejoin="round"/>`; }
   const rf = c.courseGeo[k].features[0], d = V.path(rf); sample(V.lines(rf));
   // race route = solid light tint band of the race colour BENEATH the full trail-type layer (every road / trail drawn exactly as without the band)
   s += `<path d="${d}" class="ln" stroke="${tint(cc, BAND_TINT)}" stroke-width="${card ? 42 : 18}" stroke-linejoin="round"/>` + base + offRoads(c.network.features, V) + accessPatterns(c.network.features.filter((f) => f.properties.on_course), V, col);

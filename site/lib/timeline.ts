@@ -1,7 +1,7 @@
 // Time-of-day timeline (race day, Jan 17 2027): one row per distance with modelled runners-on-course density,
 // start, cutoffs and finish; one row per aid station with its open window and modelled runners passing per 15 min.
 // Data: content/timeline.json (scripts/timeline.ts). Night / civil twilight / daylight shading from the same file.
-import { SHEET, f1, esc, gmapLink, finishFlag, station } from './util';
+import { BAND_OP, SHEET, f1, esc, gmapLink, finishFlag, station } from './util';
 import type { Ctx } from './types';
 
 export const clock = (m: number, short = true) => {
@@ -61,7 +61,7 @@ export function renderTimeline(c: Ctx) {
       // build check: this race's band has zero height at every sampled time before its gun
       ts.forEach((t, i) => { if (t < C.start && Math.abs(Y(acc[i]) - Y(lo[i])) > 1e-9) throw new Error(`[timeline] ${k} band is above zero before its ${clock(C.start)} start`); });
       const upper = xs.map((x, i) => `${f1(x)},${f1(Y(acc[i]))}`), lower = xs.map((x, i) => `${f1(x)},${f1(Y(lo[i]))}`).reverse();
-      bands += `<g class="tlrow" data-course="${k}"><path d="M${upper.join('L')}L${lower.join('L')}Z" fill="${cc}" fill-opacity=".55" stroke="none"/></g>`;
+      bands += `<g class="tlrow" data-course="${k}"><path d="M${upper.join('L')}L${lower.join('L')}Z" fill="${cc}" fill-opacity="${BAND_OP}" stroke="none"/></g>`;
       // course-colour line along the top edge of this race's band, drawn after every fill so no band covers it
       topsA.push(`<path d="${segD(acc.map(Y), lo.map(Y))}" class="ln" data-course="${k}" fill="none" stroke="${cc}" stroke-width="2.6" stroke-linejoin="round"/>`);
     });

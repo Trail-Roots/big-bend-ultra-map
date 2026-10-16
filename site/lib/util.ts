@@ -66,7 +66,7 @@ export function markerDefs(colors: Record<string, string>) {
 /** station marker centred exactly on (x, y): optional spectator ring, dot, number, aid badge — all from the shared symbols */
 export function station(x, y, lab, spec, { s = 2000, fs = 28, badge = true, colors = null as any, numberText = true }) {
   const k = Math.sqrt(s / BASE_S), sc = `transform="scale(${k.toFixed(4)})"`;
-  let out = `<g class="marker" transform="translate(${f1(x)} ${f1(y)})">`;
+  let out = `<g class="marker" data-ax="0" data-ay="0" transform="translate(${f1(x)} ${f1(y)})">`;
   if (spec) out += `<use href="#mk-ring" ${sc}/>`;
   out += `<use href="#mk-dot" ${sc}/>`;
   if (numberText && lab) out += `<text class="stnum" font-size="${lab.length === 1 ? fs : f1(fs * 0.6)}" text-anchor="middle" dominant-baseline="central">${esc(lab)}</text>`;
