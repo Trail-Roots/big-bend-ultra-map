@@ -47,22 +47,19 @@ export function renderRaceMap(c, k: string, card?: boolean) {
   // full bib (START band), top-right, scaled up to race-page size
   const BS = card ? (0.2 * W) / BIB.w /* card: bib ~20% of the frame width, readable at card size */ : 2.2, bx = W - 18 - BIB.w * BS, by = 18; ob.push({ x0: bx - 4, x1: W, y0: 0, y1: by + BIB.h * BS + 4 });
   const bibSvg = `<g transform="translate(${f1(bx)} ${f1(by)}) scale(${BS})">${bib(k, c.courses.courses[k].start, cc, BIB.w, BIB.h, col, 'band', [0, 0])}</g>`;
+  // BBU logo (white halo, drawn last = on top): race pages only (not cards); fixed TOP-LEFT, same position / size proportion as on the
+  // main map (x 8.0 %, y 2.14 %, width 9.15 % of the frame width). Placed before the north arrow and labels so those move around it;
+  // build fails if a station marker, arrow or the bib would sit under it.
+  let logoSvg = ''; if (!card) { const lw = W * 0.0915, lh = lw * 776 / 730, at: [number, number] = [W * 0.08, W * 0.0214];
+    if (ob.some((o) => at[0] < o.x1 + 6 && o.x0 < at[0] + lw + 6 && at[1] < o.y1 + 6 && o.y0 < at[1] + lh + 6)) throw new Error(`[racemap ${k}] logo overlaps a marker / arrow / bib`);
+    ob.push({ x0: at[0], x1: at[0] + lw, y0: at[1], y1: at[1] + lh });
+    logoSvg = `<a href="https://trailroots.com/big-bend-ultra" target="_blank" rel="noopener"><image class="racelogo" filter="url(#logohalo${k})" href="logo_ink_crop.png" x="${f1(at[0])}" y="${f1(at[1])}" width="${f1(lw)}" height="${f1(lh)}" preserveAspectRatio="xMidYMid meet"/></a>`; }
   // north arrow (SSOT site/lib/north.ts): first clear corner (top-left, bottom-left, bottom-right) by the shared size rule
   let northSvg = ''; { const ins = W * NORTH_INSET, nb0 = northBox(W, 0, 0);
     for (const [nx, ny] of [[ins, ins], [ins, H - ins - nb0.h], [W - ins - nb0.w, H - ins - nb0.h]]) { const nb = northBox(W, nx, ny);
       if (pts.some(([px, py]) => px > nb.x0 - 4 && px < nb.x1 + 4 && py > nb.y0 - 4 && py < nb.y1 + 4) || ob.some((o) => nb.x0 < o.x1 && o.x0 < nb.x1 && nb.y0 < o.y1 && o.y0 < nb.y1)) continue;
       ob.push({ x0: nb.x0, x1: nb.x1, y0: nb.y0, y1: nb.y1 }); northSvg = northG(W, nx, ny); break; }
     if (!northSvg) throw new Error(`[racemap ${k}] no clear corner for the north arrow`); }
-  // BBU logo (white halo, drawn last = on top): race pages only (not cards); the clear spot nearest a corner, clear of route / roads / markers /
-  // bib / north arrow; labels are then placed around it. Build fails if no clear spot exists.
-  let logoSvg = ''; if (!card) { const lw = W * 0.17, lh = lw * 776 / 730, m = W * NORTH_INSET, cand: [number, number][] = [];
-    for (let y = m; y <= H - m - lh; y += 12) for (let x = m; x <= W - m - lw; x += 12) cand.push([x, y]);
-    const dC = ([x, y]: [number, number]) => Math.min(Math.hypot(x - m, y - m), Math.hypot(x - m, H - m - lh - y), Math.hypot(W - m - lw - x, H - m - lh - y), Math.hypot(W - m - lw - x, y - m));
-    cand.sort((a, b) => dC(a) - dC(b));
-    const hit = ([x, y]: [number, number]) => pts.some(([px, py]) => px > x - 8 && px < x + lw + 8 && py > y - 8 && py < y + lh + 8) || ob.some((o) => x < o.x1 + 6 && o.x0 < x + lw + 6 && y < o.y1 + 6 && o.y0 < y + lh + 6);
-    const at = cand.find((q) => !hit(q)); if (!at) throw new Error(`[racemap ${k}] no clear spot for the logo`);
-    ob.push({ x0: at[0], x1: at[0] + lw, y0: at[1], y1: at[1] + lh });
-    logoSvg = `<a href="https://trailroots.com/big-bend-ultra" target="_blank" rel="noopener"><image class="racelogo" filter="url(#logohalo${k})" href="logo_ink_crop.png" x="${f1(at[0])}" y="${f1(at[1])}" width="${f1(lw)}" height="${f1(lh)}" preserveAspectRatio="xMidYMid meet"/></a>`; }
   // ---- labels: name (serif) + full-name subtitle (sans, wraps after " / "), placed at the nearest clear spot ----
   const T = STATION_TPL, placed: Bx[] = [];
   const free = (b: Bx) => b.x0 > 4 && b.x1 < W - 4 && b.y0 > 4 && b.y1 < H - 4 && !ob.some((o) => b.x0 < o.x1 + 3 && o.x0 < b.x1 + 3 && b.y0 < o.y1 + 3 && o.y0 < b.y1 + 3)
