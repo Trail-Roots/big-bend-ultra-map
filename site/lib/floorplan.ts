@@ -162,7 +162,7 @@ export function renderFinishPlan(c, labels: Record<string, [number, number]>) {
   { const n = tail.length, i = Math.max(0, Math.min(n - 2, Math.floor(n * 0.5))), [ax, ay] = P(tail[i]), [bx, by] = P(tail[i + 1]), a = Math.atan2(by - ay, bx - ax) * 180 / Math.PI;
     g += `<g transform="translate(${f1(ax)} ${f1(ay)}) rotate(${f1(a)})"><path d="M-8,-9L8,0L-8,9L-4,0Z" fill="#111" stroke="#fff" stroke-width="2" paint-order="stroke"/></g>`; }
   const items: { minor?: boolean; key: string; label: string; where: [number, number] | string; shape: string; anchor: [number, number]; r: number }[] = [];
-  const sfPlace = c.stations.stations['S/F'].place;
+  const sfPlace = c.stations.stations['S/F'].link_lonlat;
   // drop-off area polygon
   const drop = L.placemarks.find((p) => p.name === '5 Min Dropoff Area');
   let dropRing: number[][] | null = null;
@@ -373,7 +373,7 @@ export function renderParkingPlan(c, labels: Record<string, [number, number]>) {
       labelQ.unshift(() => { for (const [ox, oy] of cands) { const ob = textOb('fmlabel', F.x + ox, F.y + oy, 'FM 170', 16, F.an, 'label'); if (!sc.inFrame(ob) || sc.hit(ob)) continue; sc.add(ob); top += lbl(F.x + ox, F.y + oy, 'FM 170', { fs: 16, color: '#5d5850', rot: -F.an }); return; }
         throw new Error('[collide:parking plan] no room for FM 170 label'); }); } }
   // point markers: Parking, No parking (park entrance), Start / Finish, Barton Warnock (reference)
-  const seen: Record<string, number> = {}, sfPlace = c.stations.stations['S/F'].place, iconQ: (() => void)[] = [];
+  const seen: Record<string, number> = {}, sfPlace = c.stations.stations['S/F'].link_lonlat, iconQ: (() => void)[] = [];
   for (const p of L.placemarks.filter((p) => p.kind === 'point' && ['Parking', 'No Parking', 'Start / Finish Line', 'Barton Warnock'].includes(p.name))) {
     const key = (p.name + (seen[p.name] = (seen[p.name] ?? 0) + 1)).replace(/[^A-Za-z0-9]/g, ''), [x, y] = P(p.coords[0]), [ox, oy] = labels[p.name + seen[p.name]] ?? [0, -30];
     const lab = p.name === 'Start / Finish Line' ? 'Start / Finish' : p.name === 'Barton Warnock' ? 'Barton Warnock\nVisitor Center' : 'Parking';

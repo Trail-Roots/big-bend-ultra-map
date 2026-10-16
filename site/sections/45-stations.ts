@@ -10,7 +10,7 @@ const AM: [string, string][] = [['aid', 'Aid station'], ['water', 'Water'], ['sn
 const sh = (t: string) => t.replace(/:00 ?([AP])M$/, (_, a) => a.toLowerCase()).replace(/ ?([AP])M$/, (_, a) => a.toLowerCase());
 export function render(c: Ctx) {
   const tpl = c.stations.order.map((k) => {
-    const s = c.stations.stations[k], a = (amen as any)[k] ?? {}, q = encodeURIComponent(typeof s.place === 'string' ? s.place : (s.link_lonlat ?? s.lonlat).slice().reverse().join(','));
+    const s = c.stations.stations[k], a = (amen as any)[k] ?? {}, q = encodeURIComponent((s.link_lonlat ?? s.lonlat).slice().reverse().join(','));
     const am = AM.map(([f, lab]) => { const v = a[f]; return `<li class="am am-${v === true ? 'y' : v === false ? 'n' : 'u'}"><span class="amv" aria-hidden="true">${v === true ? '✓' : v === false ? '✕' : '?'}</span>${lab}${v == null ? ' <em>TBC</em>' : v === false ? ' <em>no</em>' : ''}</li>`; }).join('');
     const cuts = c.courses.order.map((r) => { const v = c.cutoffs[r].filter((x, i) => x.station === k && i > 0); if (!v.length) return '';
       return `<tr><th style="color:${c.courses.colors[r]}">${r}</th><td>${v.map((x) => `<span class="cutv"><b>${x.cutoff === 'TBD' ? 'no cutoff' : sh(x.cutoff)}</b> <small>mi ${x.mile.toFixed(1)}</small></span>`).join(' ')}</td></tr>`; }).join('');

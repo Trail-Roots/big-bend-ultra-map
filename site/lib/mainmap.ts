@@ -49,7 +49,7 @@ export function renderMain(c) {
   // stations
   for (const k of c.stations.order) {
     const s = c.stations.stations[k], [x, y] = V.p(s.lonlat);
-    add('stations', `<g class="stpick" data-station="${esc(k)}">` + gmapLink(s.place ?? s.link_lonlat ?? s.lonlat, k === 'S/F' ? s.name : `Aid station ${k} · ${s.name}`, station(x, y, k, s.spectator, k === 'S/F' ? { s: 2900, fs: 34, colors: col } : { colors: col })) + '</g>');
+    add('stations', `<g class="stpick" data-station="${esc(k)}">` + gmapLink(s.link_lonlat ?? s.lonlat, k === 'S/F' ? s.name : `Aid station ${k} · ${s.name}`, station(x, y, k, s.spectator, k === 'S/F' ? { s: 2900, fs: 34, colors: col } : { colors: col })) + '</g>');
   }
   // POIs
   for (const f of c.pois.features) if (f.geometry.type === 'Point') { const [x, y] = V.p(f.geometry.coordinates); add('pois', gmapLink(f.geometry.coordinates, f.properties.name ?? 'Point of interest', poiDot(x, y))); }
@@ -122,7 +122,7 @@ function legend(c, W, H) {
     else if (kk === 'rin') s += poiDot(x + sw / 2, y, 0.85);
     else if (kk === 'ring') s += station(x + sw / 2, y, '', true, { s: 420, badge: false, colors: col });
     else if (kk === 'aid') s += station(x + sw / 2, y, '', false, { s: 420, colors: col });
-    else if (kk.startsWith('st')) { const k = kk.slice(2); s += gmapLink(c.stations.stations[k].place ?? c.stations.stations[k].link_lonlat ?? c.stations.stations[k].lonlat, c.stations.stations[k].name, station(x + sw / 2, y, k, c.stations.stations[k].spectator, { s: 520, fs: 17, badge: false, colors: col })); }
+    else if (kk.startsWith('st')) { const k = kk.slice(2); s += gmapLink(c.stations.stations[k].link_lonlat ?? c.stations.stations[k].lonlat, c.stations.stations[k].name, station(x + sw / 2, y, k, c.stations.stations[k].spectator, { s: 520, fs: 17, badge: false, colors: col })); }
     s += `<text x="${f1(x0 + 0.25 * w)}" y="${f1(y)}" font-size="21" dominant-baseline="central" fill="${col.ink}">${esc(txt)}</text>`;
   });
   return s + '</g>';

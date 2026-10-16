@@ -99,7 +99,7 @@ export function renderPlan(c, o: Opts) {
   for (const p of pts) if (want.includes(p.name)) marks.push({ name: p.name, lonlat: p.coords[0], icon: p.name === 'Start / Finish Line' ? 'sf' : ICON_FOR[p.name][0], label: p.name === 'Start / Finish Line' ? 'Start / Finish' : ICON_FOR[p.name][1] });
   // area labels (as marks without icons): drop-off zone; parking lots numbered by size
   for (const a of areas.filter((a) => a.name === '5 Min Dropoff Area')) { const cx = a.coords.reduce((t, q) => t + q[0], 0) / a.coords.length, cy = a.coords.reduce((t, q) => t + q[1], 0) / a.coords.length; marks.push({ name: 'dropoff', lonlat: [cx, cy], icon: '', label: '5-minute\ndrop-off' }); }
-  const sfPlace = c.stations.stations['S/F'].place;
+  const sfPlace = c.stations.stations['S/F'].link_lonlat;
   const seen: Record<string, number> = {}, LBL: string[] = [], MK: string[] = [];
   for (const m of marks) {
     const key = m.name + (seen[m.name] = (seen[m.name] ?? 0) + 1), [x, y] = P(m.lonlat), off = o.labels[key] ?? [26, -22];

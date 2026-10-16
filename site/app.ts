@@ -396,7 +396,7 @@ if (document.documentElement.classList.contains('embed') && parent !== window) {
   document.addEventListener('click', (e) => { const t = e.target as Element; if (!(t instanceof Element)) return;
     const a = t.closest<Element>('g.stpick, a.stlink'); if (!a || a.closest('.lightbox.stbox')) return; const k = (a as HTMLElement).dataset?.station ?? a.getAttribute('data-station'); if (!k) return;
     if (document.querySelector('svg.mainmap.panning')) return; e.preventDefault(); openStation(k); history.replaceState(null, '', `#station-${encodeURIComponent(k)}`); });
-  for (const box of [rbox, sbox]) if (box) { box.querySelector('.lb-close')!.addEventListener('click', () => box.close()); box.addEventListener('click', (e) => { if (e.target === box) box.close(); }); }
+  for (const box of [rbox, sbox]) if (box) { box.querySelector('.lb-close')!.addEventListener('click', () => box.close()); box.addEventListener('click', (e) => { const t = e.target as Element; if (t === box || t.classList?.contains('lb-body')) box.close(); }); /* backdrop + the empty padding around the content close it; Esc closes natively */ }
   const fromHash = () => { const h = decodeURIComponent(location.hash); let m; if ((m = /^#course-(.+)$/.exec(h))) openRace(m[1]); else if ((m = /^#station-(.+)$/.exec(h))) openStation(m[1]); };
   addEventListener('hashchange', fromHash); fromHash();
 }

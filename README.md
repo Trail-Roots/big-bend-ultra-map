@@ -124,16 +124,20 @@ notice next to Download PDF on the web page. Set it to `false` and rebuild (`bun
 
 ### Locations
 
-- Start / Finish: <https://www.google.com/maps/search/?api=1&query=Barton%20Warnock%20Visitor%20Center%2C%2021800%20FM170%2C%20Terlingua%2C%20TX%2079852%2C%20USA>
+- Start / Finish: <https://www.google.com/maps/search/?api=1&query=29.270540,-103.757188>
 - Aid station 1 · Waterhole: <https://www.google.com/maps/search/?api=1&query=29.317977,-103.795332>
-- Aid station 2 · Contrabando: <https://www.google.com/maps/search/?api=1&query=West%20Contrabondo%20Trailhead%2C%20W%20Main%20Trail%2C%20Redford%2C%20TX%2079846%2C%20USA>
-- Aid station 3 · Whit Roy: <https://www.google.com/maps/search/?api=1&query=Whit-Roy%20Cinnabar%20Mine%2C%201900%20Sauceda%20Ranch%20Road%2C%20Redford%2C%20TX%2079846%2C%20USA>
+- Aid station 2 · Contrabando: <https://www.google.com/maps/search/?api=1&query=29.300373,-103.845625>
+- Aid station 3 · Whit Roy: <https://www.google.com/maps/search/?api=1&query=29.344005,-103.818072>
 - Aid station 4 · Shutup: <https://www.google.com/maps/search/?api=1&query=29.445718,-103.863270>
-- Aid station 5 · Solitario: <https://www.google.com/maps/search/?api=1&query=Paso%20al%20Solitario%2C%20Solitario%20Road%2C%20Redford%2C%20TX%2079846%2C%20USA>
+- Aid station 5 · Solitario: <https://www.google.com/maps/search/?api=1&query=29.491795,-103.803597>
 - Rincon: <https://www.google.com/maps/search/?api=1&query=29.407652,-103.857292>
 - Sauceda: <https://www.google.com/maps/search/?api=1&query=29.469013,-103.957010>
+- Open in Google Maps: <https://www.google.com/maps/search/?api=1&query=29.270539792542188%2C-103.75718815843129>
 - Open in Google Maps: <https://www.google.com/maps/search/?api=1&query=29.31797692590845%2C-103.79533238192568>
+- Open in Google Maps: <https://www.google.com/maps/search/?api=1&query=29.300372549553572%2C-103.84562511477459>
+- Open in Google Maps: <https://www.google.com/maps/search/?api=1&query=29.344005493038026%2C-103.81807186482354>
 - Open in Google Maps: <https://www.google.com/maps/search/?api=1&query=29.445718309498755%2C-103.86327034213237>
+- Open in Google Maps: <https://www.google.com/maps/search/?api=1&query=29.491795134487283%2C-103.80359661347411>
 
 ### Routes
 

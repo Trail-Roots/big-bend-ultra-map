@@ -43,7 +43,7 @@ export function renderRaceMap(c, k: string, card?: boolean) {
   const sts = [...new Set<string>(c.cutoffs[k].map((q) => q.station))];
   const R = (st: string) => (st === 'S/F' ? Math.sqrt(2900 * 1.8) / 2 : c.stations.stations[st].spectator ? Math.sqrt(2000 * 1.8) / 2 : Math.sqrt(2000) / 2);
   for (const st of sts) { const S = c.stations.stations[st], [x, y] = V.p(S.lonlat), r = R(st); const rb = r * 1.45; ob.push({ x0: x - rb, x1: x + rb, y0: y - rb, y1: y + rb }); // includes the aid badge
-    s += gmapLink(S.place ?? S.link_lonlat ?? S.lonlat, st === 'S/F' ? S.name : `Aid station ${st} · ${S.name}`, station(x, y, st, S.spectator, st === 'S/F' ? { s: 2900, fs: 34, colors: col } : { colors: col })); }
+    s += gmapLink(S.link_lonlat ?? S.lonlat, st === 'S/F' ? S.name : `Aid station ${st} · ${S.name}`, station(x, y, st, S.spectator, st === 'S/F' ? { s: 2900, fs: 34, colors: col } : { colors: col })); }
   // full bib (START band), top-right, scaled up to race-page size
   const BS = card ? (0.2 * W) / BIB.w /* card: bib ~20% of the frame width, readable at card size */ : 2.2, bx = W - 18 - BIB.w * BS, by = 18; ob.push({ x0: bx - 4, x1: W, y0: 0, y1: by + BIB.h * BS + 4 });
   const bibSvg = `<g transform="translate(${f1(bx)} ${f1(by)}) scale(${BS})">${bib(k, c.courses.courses[k].start, cc, BIB.w, BIB.h, col, 'band', [0, 0])}</g>`;

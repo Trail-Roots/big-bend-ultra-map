@@ -68,7 +68,13 @@ const kpt = (n: string) => { const p = PTS.find((x) => x.folder === 'Aid' && x.n
 const SLL: Record<string, XY> = Object.fromEntries(Object.entries(KN).map(([k, n]) => [k, kpt(n)]));
 SLL.RIN = RINCON;
 // Shutup (Righthand Shutup): true aid-station location from Erik (Oct 16 2026), overrides the My Map point
+// precise station coordinates from Erik (Oct 16 2026), used for markers, mileage snapping and every station map link
+SLL['3'] = [-103.81807186482354, 29.344005493038026];
+SLL['2'] = [-103.84562511477459, 29.300372549553572];
+SLL['5'] = [-103.80359661347411, 29.491795134487283];
+SLL['S/F'] = [-103.75718815843129, 29.270539792542188];
 SLL['4'] = [-103.86327034213237, 29.445718309498755];
+const PRECISE = new Set(['S/F', '2', '3', '4', '5']);
 const STEL: Record<string, number> = Object.fromEntries(Object.entries(rj('stel.json') as Record<string, number>).map(([k, v]) => [k, v * 3.281])); // m -> ft (SRTM 30 m via opentopodata, cached)
 
 // ---------- GPX ----------
@@ -151,6 +157,21 @@ for (const k of ORDER) {
   w(`courses/${k}.geojson`, fc([{ type: 'Feature', properties: { course: k, color: C[k], distance_mi: dist, mi: RMI[k].map((v) => Math.round(v * 1e4) / 1e4) }, geometry: { type: 'LineString', coordinates: ll(rt) } }]));
 }
 
+const CALD = await loadCalendar(SRC), EV = CALD.events.filter(inRaceYear);
+// ---------- cutoffs: the race calendar is AUTHORITATIVE (Erik, Oct 16 2026) ----------
+// every "<race> Cutoff@<station>" event sets that station visit's cutoff (the visit with the nearest sheet time; TBD-only -> the last visit)
+const CUT_RE: Record<string, RegExp> = { '1': /Waterhole|Alpha/i, '2': /Contrabando|Delta/i, '3': /Whit ?Roy|Bravo/i, '4': /Right ?hand Shutup/i, '5': /Solitario/i };
+const CUT_CHANGES: string[] = [];
+{ const clk0 = (m: number) => { m = ((Math.round(m) % 1440) + 1440) % 1440; return `${Math.floor(m / 60) % 12 || 12}:${String(m % 60).padStart(2, '0')} ${m < 720 ? 'AM' : 'PM'}`; };
+  for (const k of ORDER) for (const e of EV.filter((e) => new RegExp(`\\b${k} Cutoff@`).test(e.summary)).sort((a, b) => +a.start! - +b.start!)) {
+    const where = e.summary.split('@')[1], sid = Object.entries(CUT_RE).find(([, re]) => re.test(where))?.[0];
+    if (!sid) throw new Error(`calendar cutoff '${e.summary}' names no known aid station`);
+    const t = Math.round(raceMin(e.start!)), vis = S[k].map((x, i) => [x, i] as const).slice(1, -1).filter(([x]) => x[0] === sid);
+    if (!vis.length) throw new Error(`calendar cutoff '${e.summary}': ${k} has no visit to station ${sid}`);
+    const known = vis.filter(([x]) => x[2] !== 'TBD'), pick = known.length ? known.sort((a, b) => Math.abs(tm(a[0][2]) - t) - Math.abs(tm(b[0][2]) - t))[0] : vis[vis.length - 1];
+    const was = pick[0][2], now = clk0(t); if (was !== now) { CUT_CHANGES.push(`${k} | ${sid} @ mi ${pick[0][1]} | ${was} | ${now}`); S[k][pick[1]] = [pick[0][0], pick[0][1], now]; }
+  } }
+if (CUT_CHANGES.length) console.log('cutoffs from calendar (race | station | sheet | calendar):\n  ' + CUT_CHANGES.join('\n  '));
 // station hours
 const CLOSE: Record<string, string> = {};
 for (const k of ORDER) for (const [l, , c] of S[k].slice(1)) if (c !== 'TBD' && (!(l in CLOSE) || tm(c) > tm(CLOSE[l]))) CLOSE[l] = c;
@@ -164,7 +185,6 @@ const HRS: Record<string, string> = {};
 for (const l in OPEN) if (l in CLOSE) HRS[l] = `${hmx(OPEN[l])} - ${CLOSE[l].replace(':00', '')}`;
 HRS['S/F'] = SF_HOURS;
 // ---------- race calendar (authoritative for places and times) ----------
-const CALD = await loadCalendar(SRC), EV = CALD.events.filter(inRaceYear);
 const GH = !!process.env.GITHUB_ACTIONS, soft: string[] = [], hard: string[] = [];
 const warn = (m: string) => { soft.push(m); console.warn((GH ? '::warning title=Data check::' : 'SOFT CHECK: ') + m); };
 const fail = (m: string) => { hard.push(m); console.error((GH ? '::error title=Timing check::' : 'TIMING CHECK FAILED: ') + m); };
@@ -189,12 +209,12 @@ for (const k of ORDER) {
     const where = e.summary.split('@')[1], sid = Object.entries(ST_RE).find(([id, re]) => id !== 'S/F' && re.test(where))?.[0];
     if (!sid) { warn(`calendar cutoff '${e.summary}' does not name a known aid station`); continue; }
     const t = Math.round(raceMin(e.start!)), sheet = S[k].slice(1, -1).filter((x) => x[0] === sid);
-    if (!sheet.some((x) => x[2] !== 'TBD' && tm(x[2]) === t)) warn(`${k} cutoff at ${LONG[sid]}: calendar ${clk(t)} vs race sheet ${sheet.map((x) => x[2]).join(' / ') || 'none'}`);
+    if (!sheet.some((x) => x[2] !== 'TBD' && tm(x[2]) === t)) fail(`${k} cutoff at ${LONG[sid]}: calendar ${clk(t)} vs race sheet ${sheet.map((x) => x[2]).join(' / ') || 'none'}`);
   }
 }
 const CAL_SUN = Object.fromEntries(['Sunrise', 'Sunset'].map((n) => [n, EV.find((e) => e.summary.includes(n))?.start]).filter(([, d]) => d).map(([n, d]) => [n, raceMin(d as Date)]));
 
-w('stations.json', { order: ['S/F', '1', '2', '3', '4', '5'], stations: Object.fromEntries(['S/F', '1', '2', '3', '4', '5'].map((k) => [k, { name: NAME[k], kml: KN[k], lonlat: ll([merc(SLL[k])])[0], long: LONG[k], ...(CAL[k]?.place ? { place: CAL[k].place } : {}), ...(CAL[k]?.lat != null ? { link_lonlat: [CAL[k].lon, CAL[k].lat] } : {}), hours: HRS[k] ?? null, spectator: SPEC.has(k), elevation_ft: Math.round(STEL[k] ?? 0) }])) });
+w('stations.json', { order: ['S/F', '1', '2', '3', '4', '5'], stations: Object.fromEntries(['S/F', '1', '2', '3', '4', '5'].map((k) => [k, { name: NAME[k], kml: KN[k], lonlat: ll([merc(SLL[k])])[0], long: LONG[k], ...(CAL[k]?.place ? { place: CAL[k].place } : {}), link_lonlat: PRECISE.has(k) || CAL[k]?.lat == null ? SLL[k] : [CAL[k].lon, CAL[k].lat] /* map links always use coordinates */, hours: HRS[k] ?? null, spectator: SPEC.has(k), elevation_ft: Math.round(STEL[k] ?? 0) }])) });
 w('cutoffs.json', Object.fromEntries(ORDER.map((k) => [k, S[k].map(([station, mile, cutoff]) => ({ station, mile, cutoff }))])));
 // Strava route URL: only taken from the source GPX metadata (<link href="https://www.strava.com/routes/...">); never invented
 const strava = (k: Course) => { const m = fs.readFileSync(path.join(SRC, 'gpx', `${k}.gpx`), 'utf8').match(/https?:\/\/(?:www\.)?strava\.com\/routes\/\d+/); return m ? m[0].replace(/^http:/, 'https:') : null; };
