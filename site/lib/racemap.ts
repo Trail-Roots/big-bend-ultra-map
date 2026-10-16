@@ -6,8 +6,8 @@ import { turnaround } from './panels';
 // the build fails if a label cannot be placed clear of the route, roads, markers, arrows, bib and the other labels.
 import { hillImage, chevron } from './mainmap';
 import { bib, BIB } from './panels';
-import { accessPatterns } from './mainmap';
-import { BAND_OP, viewProjection, SHEET, f1, esc, station, gmapLink, leaderLine } from './util';
+import { accessPatterns, offRoads } from './mainmap';
+import { BAND_TINT, tint, viewProjection, SHEET, f1, esc, station, gmapLink, leaderLine } from './util';
 import { STATION_TPL } from './labels';
 
 /** sheet-unit scale vs the mini-map view, so symbols and text use the main map's sizes at race-page print size */
@@ -21,22 +21,15 @@ export function renderRaceMap(c, k: string, card?: boolean) {
   let s = `<g class="topo">${card ? `<image href="hillshade/card-${k}.png" x="0" y="0" width="${f1(W)}" height="${f1(H)}" preserveAspectRatio="none"/>` : hillImage(c, k, V)}</g>`;
   const pts: [number, number][] = []; // every drawn line, sampled, for label collision tests
   const sample = (L: [number, number][][]) => { for (const l of L) for (let i = 1; i < l.length; i++) { const [a, b] = [l[i - 1], l[i]], n = Math.max(1, Math.ceil(Math.hypot(b[0] - a[0], b[1] - a[1]) / 3)); for (let j = 0; j <= n; j++) pts.push([a[0] + (b[0] - a[0]) * j / n, a[1] + (b[1] - a[1]) * j / n]); } };
-  for (const f of c.network.features.filter((f) => f.properties.cls === 'paved')) { const d = V.path(f); sample(V.lines(f)); s += `<path d="${d}" class="ln" stroke="#fff" stroke-width="14"/><path d="${d}" class="ln" stroke="#333" stroke-width="10"/><path d="${d}" class="ln" stroke="#fff" stroke-width="2.2" stroke-dasharray="13.2 11"/>`; }
-  for (const f of c.network.features.filter((f) => f.properties.cls === 'connector')) { const d = V.path(f); sample(V.lines(f)); s += `<path d="${d}" class="ln" stroke="${col.cream}" stroke-width="12" stroke-linecap="butt"/><path d="${d}" class="ln" stroke="#000" stroke-width="7"/>`; }
+  let base = ''; for (const f of c.network.features.filter((f) => f.properties.cls === 'paved')) { const d = V.path(f); sample(V.lines(f)); base += `<path d="${d}" class="ln" stroke="#fff" stroke-width="14"/><path d="${d}" class="ln" stroke="#333" stroke-width="10"/><path d="${d}" class="ln" stroke="#fff" stroke-width="2.2" stroke-dasharray="13.2 11"/>`; }
+  for (const f of c.network.features.filter((f) => f.properties.cls === 'connector')) { const d = V.path(f); sample(V.lines(f)); base += `<path d="${d}" class="ln" stroke="${col.cream}" stroke-width="12" stroke-linecap="butt"/><path d="${d}" class="ln" stroke="#000" stroke-width="7"/>`; }
   // next longer race's route underneath at low opacity (as on the old mini maps); the 100K has none
   const O: string[] = c.courses.order, nk = O[O.indexOf(k) - 1];
-  if (nk) { const nf = c.courseGeo[nk].features[0]; sample(V.lines(nf)); s += `<path d="${V.path(nf)}" class="ln under" data-course="${nk}" stroke="${c.courses.colors[nk]}" stroke-width="9" stroke-opacity="${f1(BAND_OP * 0.45)}"/>`; }
+  if (nk) { const nf = c.courseGeo[nk].features[0]; sample(V.lines(nf)); s += `<path d="${V.path(nf)}" class="ln under" data-course="${nk}" stroke="${tint(c.courses.colors[nk], BAND_TINT * 0.7)}" stroke-width="${card ? 30 : 13}" stroke-linejoin="round"/>`; }
   const rf = c.courseGeo[k].features[0], d = V.path(rf); sample(V.lines(rf));
-  // race route = race-colour band (as the main map's race halo) under the trail-type patterns of the on-course network it follows (no white casing)
-  { const TOL = 2.5, cell = 4, G = new Map<string, number[][]>(), key = (a: number, b: number) => a + ',' + b; // route points every 1 unit, bucketed
-    for (const l of V.lines(rf)) for (let i = 1; i < l.length; i++) { const [a, b] = [l[i - 1], l[i]], n = Math.max(1, Math.ceil(Math.hypot(b[0] - a[0], b[1] - a[1]))); for (let j = 0; j <= n; j++) { const q = [a[0] + (b[0] - a[0]) * j / n, a[1] + (b[1] - a[1]) * j / n], kk = key(Math.floor(q[0] / cell), Math.floor(q[1] / cell)); (G.get(kk) ?? G.set(kk, []).get(kk)!).push(q); } }
-    const near = (x: number, y: number) => { const cx = Math.floor(x / cell), cy = Math.floor(y / cell); for (let dx = -1; dx <= 1; dx++) for (let dy = -1; dy <= 1; dy++) for (const q of G.get(key(cx + dx, cy + dy)) ?? []) if (Math.hypot(q[0] - x, q[1] - y) <= TOL) return true; return false; };
-    // clip every on-course network line to the runs that lie ON this race's GPX (densified, so partial overlaps keep exactly their shared part
-    // and nearby lines of other races are dropped); each clipped run keeps its trail-type class
-    const dens = (l: number[][]) => { const o: number[][] = []; for (let i = 1; i < l.length; i++) { const [a, b] = [l[i - 1], l[i]], n = Math.max(1, Math.ceil(Math.hypot(b[0] - a[0], b[1] - a[1]) / 2)); for (let j = i === 1 ? 0 : 1; j <= n; j++) o.push([a[0] + (b[0] - a[0]) * j / n, a[1] + (b[1] - a[1]) * j / n]); } return o; };
-    const on: any[] = []; for (const f of c.network.features) { if (!f.properties.on_course) continue; for (const l of V.lines(f)) { let run: number[][] = []; const flush = () => { if (run.length > 8) on.push({ properties: f.properties, _l: run }); run = []; }; for (const q of dens(l)) { if (near(q[0], q[1])) run.push(q); else flush(); } flush(); } }
-    const Vc = { ...V, lines: (f: any) => (f._l ? [f._l] : V.lines(f)) };
-    s += `<path d="${d}" class="ln" stroke="${cc}" stroke-width="15" stroke-linejoin="round" stroke-opacity="${BAND_OP}"/>` + accessPatterns(on, Vc, col); }
+  // race route = solid light tint band of the race colour BENEATH the full trail-type layer (every road / trail drawn exactly as without the band)
+  s += `<path d="${d}" class="ln" stroke="${tint(cc, BAND_TINT)}" stroke-width="${card ? 42 : 18}" stroke-linejoin="round"/>` + base + offRoads(c.network.features, V) + accessPatterns(c.network.features.filter((f) => f.properties.on_course), V, col);
+  for (const f of c.network.features) sample(V.lines(f)); // every drawn road / trail counts for label collisions
   // arrows: this race's arrows, at the main map's arrow size
   const arrows = c.arrows.features.filter((f) => f.properties.map === k).map((f) => ({ ...f, properties: { ...f.properties, size_pt: 12.4 } }));
   const ob: Bx[] = [];

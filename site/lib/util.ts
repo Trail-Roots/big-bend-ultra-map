@@ -183,3 +183,6 @@ export function doubleTrack(lines: number[][][], color: string, w: number, rail:
 }
 /** race-colour band opacity: SSOT for the fill under each race's elevation profile and the route bands on the maps (they match) */
 export const BAND_OP = 0.15;
+/** map route bands: SOLID light tint = race colour blended over white at BAND_TINT (reads on the topo; same hue family as the elevation fill) */
+export const BAND_TINT = 0.45;
+export const tint = (hex: string, a: number) => { const h = hex.replace('#', ''), v = [0, 2, 4].map((i) => parseInt(h.slice(i, i + 2), 16)); return '#' + v.map((x) => Math.round(255 + (x - 255) * a).toString(16).padStart(2, '0')).join(''); };

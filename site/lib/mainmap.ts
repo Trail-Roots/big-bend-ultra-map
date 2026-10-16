@@ -1,6 +1,6 @@
 import { northG, NORTH_INSET } from './north';
 import { stationLabel, poiLabel, areaLabel } from './labels';
-import { chaikin, mergeChains, simplifyPts, leaderLine, poiDot, SHEET, viewProjection, esc, f1, lineD, dash, STYLE, station, textBlock, gmapLink, tireTrack, doubleTrack, BAND_OP } from './util';
+import { chaikin, mergeChains, simplifyPts, leaderLine, poiDot, SHEET, viewProjection, esc, f1, lineD, dash, STYLE, station, textBlock, gmapLink, tireTrack, doubleTrack, BAND_OP, BAND_TINT, tint } from './util';
 // user-toggleable layers (off-course roads, access styles, arrows, aid stations, distances and all labels are always shown)
 const LAYERS: [string, string, boolean][] = [
   ['topo', 'Topo shading', true], ['park', 'Park boundary', true],
@@ -29,12 +29,7 @@ export function renderMain(c) {
   const net = c.network.features;
   for (const f of net.filter(f => f.properties.cls === 'paved')) { const d = V.path(f); add('roads', `<path d="${d}" class="ln" stroke="#fff" stroke-width="14"/><path d="${d}" class="ln" stroke="#333" stroke-width="10"/><path d="${d}" class="ln" stroke="#fff" stroke-width="2.2" stroke-dasharray="${dash([6, 5], 2.2)}" stroke-linecap="butt"/>`); }
   for (const f of net.filter(f => f.properties.cls === 'connector')) { const d = V.path(f); add('roads', `<path d="${d}" class="ln" stroke="${col.cream}" stroke-width="12" stroke-linecap="butt"/><path d="${d}" class="ln" stroke="#000" stroke-width="7"/>`); }
-  for (const f of net.filter(f => !f.properties.on_course && STYLE.off[f.properties.cls])) {
-    const s = STYLE.off[f.properties.cls], d = V.path(f);
-    if (f.properties.cls === 'unpaved') { add('roads', doubleTrack(V.lines(f), s.color, s.lw, 0.7, [8, 0.8])); continue; } // unpaved: dashed double track (the pre-Oct-16 4x4 style)
-    if (f.properties.cls === '4x4') { add('roads', tireTrack(V.lines(f), s.color, 4, 3)); continue; } // 4x4: tire tread
-    add('roads', `<path d="${d}" class="ln" data-name="${esc(f.properties.name || '')}" stroke="${s.color}" stroke-width="${s.lw}" stroke-dasharray="${dash(s.pat, s.lw)}" stroke-linecap="butt"/>` + (s.rail ? `<path d="${d}" class="ln" stroke="#fff" stroke-width="${s.rail}" stroke-linecap="butt"/>` : ''));
-  }
+  add('roads', offRoads(net, V));
   // on-course access runs: casing first, then patterns (draw order as in make.py)
   const on = net.filter(f => f.properties.on_course);
   let cas = '', pat = '';
@@ -45,8 +40,8 @@ export function renderMain(c) {
   // on top; one composited group (opacity on the group) drawn longest race first, so on shared sections the shortest race's colour wins.
   // data-bb = route bounds for zoom-to-fit. Hidden unless the filter shows fewer than all races (app.ts).
   { let h = ''; for (const k of c.courses.order) { const f = c.courseGeo[k].features[0], L = V.lines(f).flat(), xs = L.map((q) => q[0]), ys = L.map((q) => q[1]);
-      h += `<g class="raceroute" data-rc="${k}" data-bb="${[Math.min(...xs), Math.min(...ys), Math.max(...xs), Math.max(...ys)].map(f1).join(',')}" style="display:none"><path d="${V.path(f)}" class="ln" stroke="${c.courses.colors[k]}" stroke-width="15" stroke-linejoin="round"/></g>`; }
-    g['roads'] = `<g class="racehalos" opacity="${BAND_OP}">${h}</g>` + (g['roads'] || ''); }
+      h += `<g class="raceroute" data-rc="${k}" data-bb="${[Math.min(...xs), Math.min(...ys), Math.max(...xs), Math.max(...ys)].map(f1).join(',')}" style="display:none"><path d="${V.path(f)}" class="ln" stroke="${tint(c.courses.colors[k], BAND_TINT)}" stroke-width="18" stroke-linejoin="round"/></g>`; }
+    g['roads'] = `<g class="racehalos">${h}</g>` + (g['roads'] || ''); }
   // zoom boxes
   for (const f of c.zoom.features) add('zoom', `<path data-course="${f.properties.course}" d="${V.path(f)}" fill="none" stroke="${f.properties.color}" stroke-width="2.4" stroke-dasharray="${dash([5, 3], 2.4)}"/>`);
   // arrows
@@ -150,4 +145,16 @@ export function accessPatterns(on: any[], V: any, col: any) {
     pat += `<path d="${d}" class="ln" stroke="${col.ink}" stroke-width="${s.lw}" stroke-dasharray="${dash(s.pat, s.lw)}" stroke-linecap="butt"/>` + (s.rail ? `<path d="${d}" class="ln" stroke="#fff" stroke-width="${s.rail}" stroke-linecap="butt"/>` : '');
   }
   void cas; return pat;
+}
+
+/** off-course roads / trails by trail type (SSOT: main map and race / card maps) */
+export function offRoads(net: any[], V: any) {
+  let o = ''; const add = (_: string, x: string) => (o += x);
+  for (const f of net.filter(f => !f.properties.on_course && STYLE.off[f.properties.cls])) {
+    const s = STYLE.off[f.properties.cls], d = V.path(f);
+    if (f.properties.cls === 'unpaved') { add('roads', doubleTrack(V.lines(f), s.color, s.lw, 0.7, [8, 0.8])); continue; } // unpaved: dashed double track (the pre-Oct-16 4x4 style)
+    if (f.properties.cls === '4x4') { add('roads', tireTrack(V.lines(f), s.color, 4, 3)); continue; } // 4x4: tire tread
+    add('roads', `<path d="${d}" class="ln" data-name="${esc(f.properties.name || '')}" stroke="${s.color}" stroke-width="${s.lw}" stroke-dasharray="${dash(s.pat, s.lw)}" stroke-linecap="butt"/>` + (s.rail ? `<path d="${d}" class="ln" stroke="#fff" stroke-width="${s.rail}" stroke-linecap="butt"/>` : ''));
+  }
+  return o;
 }
