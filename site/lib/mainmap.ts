@@ -53,9 +53,12 @@ export function renderMain(c) {
     pat += `<path d="${d}" class="ln" stroke="${col.ink}" stroke-width="${s.lw}" stroke-dasharray="${dash(s.pat, s.lw)}" stroke-linecap="butt"/>` + (s.rail ? `<path d="${d}" class="ln" stroke="#fff" stroke-width="${s.rail}" stroke-linecap="butt"/>` : '');
   }
   add('access', cas + pat);
-  // race routes in race colours: hidden unless the race filter shows fewer than all races (app.ts); data-bb = route bounds for zoom-to-fit
-  for (const k of c.courses.order) { const f = c.courseGeo[k].features[0], L = V.lines(f).flat(), xs = L.map((q) => q[0]), ys = L.map((q) => q[1]);
-    add('courses', `<g class="raceroute" data-rc="${k}" data-bb="${[Math.min(...xs), Math.min(...ys), Math.max(...xs), Math.max(...ys)].map(f1).join(',')}" style="display:none"><path d="${V.path(f)}" class="ln" stroke="#fff" stroke-width="9" stroke-opacity=".85"/><path d="${V.path(f)}" class="ln" stroke="${c.courses.colors[k]}" stroke-width="5"/></g>`); }
+  // race subset (race filter): a colour HALO beneath each visible race's route, under the roads / trail-type patterns so the trail type always shows
+  // on top; one composited group (opacity on the group) drawn longest race first, so on shared sections the shortest race's colour wins.
+  // data-bb = route bounds for zoom-to-fit. Hidden unless the filter shows fewer than all races (app.ts).
+  { let h = ''; for (const k of c.courses.order) { const f = c.courseGeo[k].features[0], L = V.lines(f).flat(), xs = L.map((q) => q[0]), ys = L.map((q) => q[1]);
+      h += `<g class="raceroute" data-rc="${k}" data-bb="${[Math.min(...xs), Math.min(...ys), Math.max(...xs), Math.max(...ys)].map(f1).join(',')}" style="display:none"><path d="${V.path(f)}" class="ln" stroke="${c.courses.colors[k]}" stroke-width="15" stroke-linejoin="round"/></g>`; }
+    g['roads'] = `<g class="racehalos" opacity=".55">${h}</g>` + (g['roads'] || ''); }
   // zoom boxes
   for (const f of c.zoom.features) add('zoom', `<path data-course="${f.properties.course}" d="${V.path(f)}" fill="none" stroke="${f.properties.color}" stroke-width="2.4" stroke-dasharray="${dash([5, 3], 2.4)}"/>`);
   // arrows

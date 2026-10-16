@@ -9,7 +9,7 @@ import { icon } from '../lib/icons';
 import { renderRaceHeat } from '../lib/timeline';
 import siteCfg from '../../content/site.json';
 /** card thumbnail: the race's own map in the established race-map style (ids made unique) */
-const thumb = (c, k: string) => uniq(renderRaceMap(c, k, { aspect: 330 / 240 }), `card${k}`).replace('class="racemap"', 'class="racemap rc-map"').replace(/ data-race="[^"]*"/, '').replace('<svg ', '<svg preserveAspectRatio="xMidYMid slice" ');
+const thumb = (c, k: string) => uniq(renderRaceMap(c, k, true), `card${k}`).replace('class="racemap"', 'class="racemap rc-map"').replace(/ data-race="[^"]*"/, '');
 function card(c, k: string) {
   const C = c.courses.courses[k], cc = c.courses.colors[k], club = (siteCfg as any).stravaClub as string;
   return `<article class="racecard" data-course="${k}" style="--rc:${cc}"><button type="button" class="rc-open" data-course="${k}" aria-label="Open the full ${k} race page">${thumb(c, k)}</button>

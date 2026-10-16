@@ -21,11 +21,11 @@ if (hdEl && prof) {
   const HD: HD = JSON.parse(hdEl.textContent || '{}'), NS = 'http://www.w3.org/2000/svg';
   const el = (tag: string, attrs: Record<string, string | number>, parent: Element) => { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, String(attrs[k])); parent.appendChild(e); return e; };
   const main = document.querySelector<SVGSVGElement>('svg.mainmap')!;
-  const mk = (svg: SVGSVGElement, r: number, sw: number) => { const g = el('g', { class: 'hov', style: 'display:none;pointer-events:none' }, svg.querySelector('g.zv') ?? svg); el('circle', { r: r + sw, fill: '#fff' }, g); const c = el('circle', { r, fill: 'none', 'stroke-width': sw }, g); el('circle', { r: sw * 0.9, fill: '#111' }, g); return { g, c }; };
+  const mk = (svg: SVGSVGElement, r: number, sw: number) => { const g = el('g', { class: 'hov', style: 'display:none;pointer-events:none' }, svg.querySelector('g.zv') ?? svg); const c = el('circle', { r: r * 0.72, fill: '#111', stroke: '#fff', 'stroke-width': sw * 0.8 }, g); /* race-colour dot, white stroke */ return { g, c }; };
   // one marker per course on the main map, one on each course's own mini map
   const mains: Record<string, ReturnType<typeof mk>> = {}, minis: Record<string, ReturnType<typeof mk>> = {};
-  for (const [k, c] of Object.entries(HD.courses)) { mains[k] = mk(main, 13, 5); mains[k].c.setAttribute('stroke', c.color); }
-  document.querySelectorAll<SVGSVGElement>('svg.mini').forEach((s) => { const k = s.dataset.mini!; minis[k] = mk(s, 12, 4.5); if (HD.courses[k]) minis[k].c.setAttribute('stroke', HD.courses[k].color); });
+  for (const [k, c] of Object.entries(HD.courses)) { mains[k] = mk(main, 13, 5); mains[k].c.setAttribute('fill', c.color); }
+  document.querySelectorAll<SVGSVGElement>('svg.mini').forEach((s) => { const k = s.dataset.mini!; minis[k] = mk(s, 12, 4.5); if (HD.courses[k]) minis[k].c.setAttribute('fill', HD.courses[k].color); });
   const pg = el('g', { class: 'hov', style: 'display:none;pointer-events:none' }, prof);
   const vline = el('line', { y1: 0, y2: HD.profile.H, stroke: '#111', 'stroke-width': 1.5, 'stroke-dasharray': '4 3' }, pg);
   const dots: Record<string, Element> = {};
@@ -46,15 +46,15 @@ if (hdEl && prof) {
     // over a station marker: that station's cutoff time(s) and the overall pace they require, per visible race
     const pc0 = (ev.target as Element).closest?.('g.pcall') as SVGGElement | null;
     if (pc0) { const st = pc0.dataset.st!, mi = +pc0.dataset.mi!; const rows: Row[] = Object.entries(HD.courses).filter(([k]) => raceOn(k)).flatMap(([k, c]: [string, any]) => (c.cut as [number, number, string][]).filter(([m, , s2]) => s2 === st && Math.abs(m - mi) < 1.5).map(([m, mm]) => ({ b: `${k} cutoff ${fmt(HD.time.courses[k].start + mm)}`, l: `mi ${m.toFixed(1)} · ${pace(mm / m)}/mi`, c: c.color })));
-      if (rows.length) { show(x0 + (p.x / W) * (x1 - x0), p.y); bibs.innerHTML = ''; rich(lab as SVGTextElement, rows, 26, 0, undefined, 13); const bb = (lab as SVGTextElement).getBBox(); box.setAttribute('x', String(bb.x - 5)); box.setAttribute('y', String(bb.y - 4)); box.setAttribute('width', String(bb.width + 10)); box.setAttribute('height', String(bb.height + 8)); placeTip(prof, tipG, p.x, p.y); return; } }
-    show(x0 + (p.x / W) * (x1 - x0), p.y);
+      if (rows.length) { show(x0 + (p.x / W) * (x1 - x0), p.y, rows); return; } }
+    show(x0 + (p.x / W) * (x1 - x0), p.y); // x decides the mile; every visible race marks its position
   };
   // average pace from the start needed to make the next cutoff at or beyond this mile
   const pace = (mpm: number) => { const s = Math.round(mpm * 60); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; };
   const cutPace = (c: any, mile: number) => { const n = (c.cut as [number, number][]).find(([m]) => m >= mile - 1e-6 && m > 0); return n ? ` · cutoff pace ${pace(n[1] / n[0])}/mi` : ''; };
   // distance to the next aid station (or finish) along that course
   const nextStop = (c: any, mile: number) => { const n = (c.stops as [number, string][]).find(([m]) => m > mile + 0.05); return n ? `${(n[0] - mile).toFixed(1)} mi to ${n[1]}` : 'at the finish'; }; void cutPace;
-  const show = (mile: number, py?: number) => {
+  const show = (mile: number, py?: number, extra: Row[] = []) => {
     if (mile < 0) return hide();
     // every course that reaches this mile gets a marker; shorter courses show nothing
     const hits = Object.entries(HD.courses).filter(([k, c]) => mile <= c.dist && raceOn(k)).map(([k, c]) => ({ k, c, v: routeAt(c.s, mile) }));
@@ -68,15 +68,15 @@ if (hdEl && prof) {
     }
     // ONE tracking point on the main map: the course whose line is nearest the pointer (else the longest course here)
     const pick = py == null ? hits[0] : hits.reduce((a, b) => (Math.abs(Y(b.v[1]) - py) < Math.abs(Y(a.v[1]) - py) ? b : a));
-    for (const k in HD.courses) glide.set(k, k === pick.k ? mile : null);
+    for (const k in HD.courses) glide.set(k, hits.some((h) => h.k === k) ? mile : null); void pick; // every shown race marks its own position at this mile
     // readout: one line per course, longest first: course · mile · cumulative gain from the start
     lab.textContent = '';
     // condensed: one line per course: bib · mile · gain so far · pace needed for the next cutoff
-    const rows = hits.map(({ c, v }) => ({ bib: (c as any).bib, b: `${v[0].toFixed(1)} mi`, l: nextStop(c, v[0]) }));
+    const rows: (Row & { bib?: string })[] = [...hits.map(({ c, v }) => ({ bib: (c as any).bib, b: `${v[0].toFixed(1)} mi`, l: nextStop(c, v[0]) })), ...extra];
     const LH = 26, lx = BW + 6;
     rich(lab as SVGTextElement, rows, LH, lx, undefined, 13);
     lab.setAttribute('text-anchor', 'start');
-    bibs.innerHTML = rows.map((r, i) => `<g transform="translate(0 ${13 + i * LH - 7 - BH / 2})">${r.bib}</g>`).join('');
+    bibs.innerHTML = rows.filter((r) => r.bib).map((r, i) => `<g transform="translate(0 ${13 + i * LH - 7 - BH / 2})">${r.bib}</g>`).join('');
     const bb = (lab as SVGTextElement).getBBox(); bb.width += bb.x; bb.x = 0;
     box.setAttribute('x', String(bb.x - 5)); box.setAttribute('y', String(Math.min(bb.y, 13 - 7 - BH / 2) - 4)); box.setAttribute('width', String(bb.width + 10)); box.setAttribute('height', String(Math.max(bb.height, rows.length * LH) + 6));
     placeTip(prof, tipG, px, py ?? 20);
@@ -114,8 +114,9 @@ if (hdEl && prof) {
   });
   // ---- race-day time: timeline cursor, median-runner markers, runner dots; auto-play sweeps the clock ----
   const TM = HD.time, tl = document.querySelector<SVGSVGElement>('svg.timeline');
-  const TEMPS: number[][] = JSON.parse(document.getElementById('tempdata')?.textContent || '[]');
-  const tempAtJS = (m: number) => { const i = TEMPS.findIndex((p) => p[0] >= m); if (i < 1) return NaN; const [ma, va] = TEMPS[i - 1], [mb, vb] = TEMPS[i]; return va + ((vb - va) * (m - ma)) / (mb - ma); };
+  // past race days: per hour [min, min°F, median°F, max°F]; y = [first year, last year, count]
+  const TD = JSON.parse(document.getElementById('tempdata')?.textContent || '{"s":[],"y":[]}'), TS: number[][] = TD.s;
+  const tempAtJS = (m: number, j = 2) => { const i = TS.findIndex((p) => p[0] >= m); if (i < 1) return NaN; const [ma, va] = [TS[i - 1][0], TS[i - 1][j]], [mb, vb] = [TS[i][0], TS[i][j]]; return va + ((vb - va) * (m - ma)) / (mb - ma); };
   // elapsed fraction -> mile on a runner's fitness-class curve (flat steps = aid-station dwell)
   const effAt = (e: { mi: number[]; f: number[] }, f: number) => { if (f <= 0) return 0; if (f >= 1) return e.mi[e.mi.length - 1]; let lo = 0, hi = e.f.length - 1; while (hi - lo > 1) { const m = (lo + hi) >> 1; if (e.f[m] <= f) lo = m; else hi = m; } return e.mi[lo] + ((e.mi[hi] - e.mi[lo]) * (f - e.f[lo])) / (e.f[hi] - e.f[lo] || 1); };
   const ptAt = (k: string, mile: number) => routeAt(HD.courses[k].s, mile);
@@ -131,7 +132,7 @@ if (hdEl && prof) {
     leadRing[k] = el('circle', { fill: 'none', stroke: HD.courses[k].color, style: 'display:none;pointer-events:none' }, dotLayer) as SVGCircleElement;
     let bi = -1; dots2.forEach((d, i) => { if (d.k === k && d.stop < 0 && (bi < 0 || d.T < dots2[bi].T)) bi = i; }); leadIdx[k] = bi;
     if (bi >= 0 && C.rec.year === 2026 && Math.abs(dots2[bi].T - C.rec.T) < 0.2) { dupLead.add(bi); leadIdx[k] = -1; } // same performance: course-record dot only
-    const g = el('g', { style: 'display:none;pointer-events:none' }, dotLayer) as SVGGElement; el('circle', { fill: 'none', stroke: '#111' }, g); el('circle', { fill: 'none', stroke: HD.courses[k].color }, g); el('circle', { fill: HD.courses[k].color, stroke: '#fff' }, g); recDot[k] = g;
+    const g = el('g', { style: 'display:none;pointer-events:none;opacity:.22' /* course-record marker: strongly faded, no emphasis */ }, dotLayer) as SVGGElement; el('circle', { fill: 'none', stroke: '#111' }, g); el('circle', { fill: 'none', stroke: HD.courses[k].color }, g); el('circle', { fill: HD.courses[k].color, stroke: '#fff' }, g); recDot[k] = g;
   }
   let tShown = -1, hovY = -1; // hovY: pointer y in the timeline (−1 = auto-play: time only)
   const pc = (mpm: number) => { const v = Math.round(mpm * 60); return `${Math.floor(v / 60)}:${String(v % 60).padStart(2, '0')}`; };
@@ -152,7 +153,7 @@ if (hdEl && prof) {
       return [{ b: k, c: HD.courses[k].color, l: `next cutoff ${fmt(TM.courses[k].start + n[1])} · ${pc(n[1] / n[0])}/mi needed` }]; });
   };
   // ONE shade (the elevation profile's background gray) for map night, timeline night and the notice box: colors.json shade / shade_op
-  const SHADE: [string, number] = ['#888888', 0.1];
+  const SHADE: [string, number] = ['#888888', 0.17];
   // day / night indicator on the big map during the race-day simulation: badge (sun / twilight / moon + clock) and a light night tint
   const sky = TM.sun as { dawn: number; sunrise: number; sunset: number; dusk: number };
   const tint = dotLayer ? el('rect', { x: -5000, y: -5000, width: 20000, height: 20000, fill: SHADE[0], 'fill-opacity': 0, style: 'pointer-events:none' }, dotLayer) as SVGRectElement : null;
@@ -166,7 +167,7 @@ if (hdEl && prof) {
   const DS = matchMedia('(max-width:699px)').matches ? 1.9 : 1.25;
   const setTime = (t: number) => {
     tShown = t; const z = 1 / zoomOf(main); document.dispatchEvent(new CustomEvent('racetime', { detail: t }));
-    if (!Object.keys(TM.courses).some(raceOn)) { badge.style.display = 'none'; tint?.setAttribute('fill-opacity', '0'); } else { const ph = phase(t); badge.style.display = ''; badge.dataset.phase = ph; badge.textContent = `${ph === 'day' ? '☀' : ph === 'twilight' ? '◐' : '☾'} ${fmt(t)} · ${ph === 'day' ? 'daylight' : ph === 'twilight' ? 'twilight' : 'dark'}`; if (tint) tint.setAttribute('fill-opacity', dark(t).toFixed(3)); }
+    if (!Object.keys(TM.courses).some(raceOn)) { badge.style.display = 'none'; tint?.setAttribute('fill-opacity', '0'); } else { const ph = phase(t); badge.style.display = ''; badge.dataset.phase = ph; badge.textContent = `${ph === 'day' ? '☀' : ph === 'twilight' ? '◐' : '☾'} ${fmt(t)} · ${ph === 'day' ? 'daylight' : ph === 'twilight' ? ((((t % 1440) + 1440) % 1440) < 720 ? 'dawn' : 'dusk') : 'dark'}`; if (tint) tint.setAttribute('fill-opacity', dark(t).toFixed(3)); }
     const ends: Record<string, { lead?: [number, any]; last?: [number, any] }> = {};
     for (const d of dots2) {
       const C = TM.courses[d.k], f = (t - C.start - d.o) / d.T; const mile = effAt(d.cv, f);
@@ -198,12 +199,11 @@ if (hdEl && prof) {
       cur.style.display = ''; cur.querySelector('path')!.setAttribute('transform', `translate(${x} 0)`);
       const tc = Math.round(tempAtJS(t));
       txt.setAttribute('text-anchor', 'start'); txt.setAttribute('font-size', '15');
-      rich(txt as SVGTextElement, [{ b: fmt(t), l: Number.isFinite(tc) ? `· ${tc}°F last year` : '' }, ...paceRows(t)], 20, 0, 17);
+      rich(txt as SVGTextElement, [{ b: fmt(t), l: Number.isFinite(tc) ? `· ${tc}°F median (${Math.round(tempAtJS(t, 1))}–${Math.round(tempAtJS(t, 3))}°, ${TD.y[0]}–${TD.y[1]})` : '' }, ...paceRows(t)], 20, 0, 17);
       const bb = (txt as SVGTextElement).getBBox(); bx.setAttribute('x', String(bb.x - 5)); bx.setAttribute('y', String(bb.y - 3)); bx.setAttribute('width', String(bb.width + 10)); bx.setAttribute('height', String(bb.height + 6));
       if (hovY >= 0) placeTip(tl, tg, x, hovY); else placeTip(tl, tg, x, 0);
-      // sunrise / sunset labels step aside (fade) wherever the time tooltip covers them
-      { const tb = tg.getBBox(), m = tg.transform.baseVal.consolidate()?.matrix, ox = m?.e ?? 0, oy = m?.f ?? 0;
-        tl.querySelectorAll<SVGGElement>('g.sun').forEach((g) => { const sb = g.getBBox(), hit = sb.x < tb.x + ox + tb.width && tb.x + ox < sb.x + sb.width && sb.y < tb.y + oy + tb.height && tb.y + oy < sb.y + sb.height; g.style.opacity = hit ? '0' : ''; }); }
+      // sunrise / sunset markers step aside wherever the time tooltip covers them (screen rectangles, so any transform / scale is included)
+      { const tb = tg.getBoundingClientRect(); tl.querySelectorAll<SVGGElement>('g.sun').forEach((g) => { g.style.opacity = ''; const sb = g.getBoundingClientRect(); const hit = sb.left < tb.right + 4 && tb.left - 4 < sb.right && sb.top < tb.bottom + 4 && tb.top - 4 < sb.bottom; g.style.opacity = hit ? '0' : ''; }); }
     }
   };
   const clearTime = () => { tShown = -1; hovY = -1; badge.style.display = 'none'; tint?.setAttribute('fill-opacity', '0'); Object.values(recDot).forEach((g) => (g.style.display = 'none')); Object.values(leadRing).forEach((g) => (g.style.display = 'none')); dots2.forEach((d) => (d.c.style.display = 'none')); glide.clear(); tl?.querySelectorAll<SVGGElement>('g.sun').forEach((g) => (g.style.opacity = '')); const cur = tl?.querySelector<SVGGElement>('g.tlcursor'); if (cur) cur.style.display = 'none'; };
@@ -211,7 +211,10 @@ if (hdEl && prof) {
   document.querySelectorAll('svg.mini').forEach((m) => m.addEventListener('zoomchange', () => glide.redraw()));
   // auto-play (web only): slow sweep of the race-day clock, looping; off for reduced motion; pause persisted
   // play window: first race start → last runner off course (latest finish across all courses); loops back to the first start
-  const CS = Object.values(TM.courses) as any[], PA = Math.min(...CS.map((C) => C.start)), PB = Math.max(...CS.map((C) => C.start + 2 + Math.max(...C.T)));
+  // loop window: first start -> last runner off course of the VISIBLE races only (race filter), 10 min padding each side
+  let PA = 0, PB = 1; const span = () => { const CS = (Object.entries(TM.courses) as [string, any][]).filter(([k]) => raceOn(k)).map(([, C]) => C); const S = CS.length ? CS : Object.values(TM.courses) as any[];
+    PA = Math.min(...S.map((C) => C.start)) - 10; PB = Math.max(...S.map((C) => C.start + 2 + Math.max(...C.T))) + 10; }; span(); document.addEventListener('change', (e) => { if ((e.target as Element).matches?.('input[data-race], input[data-race-all]')) span(); });
+  document.querySelector('svg.profile')?.addEventListener('click', () => setTimeout(span, 0));
   const LOOP_S = 90, KEY = 'bbu-autoplay-paused';
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
   let paused = localStorage.getItem(KEY) === '1', user = false, t0 = 0, f0 = 0, raf = 0, last = 0;
@@ -322,7 +325,7 @@ if (document.documentElement.classList.contains('embed') && parent !== window) {
     const all = [...document.querySelectorAll<HTMLInputElement>('input[data-race]')].map((i) => i.dataset.race!), on = force ?? picked(all);
     for (const k of all) { const key = 'off' + k.replace(/\W/g, ''); if (on.includes(k)) delete root.dataset[key]; else root.dataset[key] = '1'; }
     // main map + page 1 charts + race cards
-    document.querySelectorAll<SVGElement | HTMLElement>('.mainmap [data-course], svg.timeline .tlcut [data-course], .racecard[data-course]').forEach((e) => (e.style.display = on.includes(e.dataset.course!) ? '' : 'none'));
+    document.querySelectorAll<SVGElement | HTMLElement>('.mainmap [data-course], .tlcut [data-course], .racecard[data-course]').forEach((e) => (e.style.display = on.includes(e.dataset.course!) ? '' : 'none'));
     // page-1 elevation chart: body for exactly the visible races, scaled to the longest visible route
     { const pb = document.querySelector<SVGGElement>('svg.profile g.pbody'), prof2 = pb?.ownerSVGElement; if (pb && prof2) { const key = on.join(',');
       origProf ??= { s: pb.innerHTML, x: HD0.profile.x, y: HD0.profile.y };
@@ -332,6 +335,9 @@ if (document.documentElement.classList.contains('embed') && parent !== window) {
     { const mm = document.querySelector<SVGSVGElement>('svg.mainmap'), sub = on.length > 0 && on.length < all.length, bb = [Infinity, Infinity, -Infinity, -Infinity];
       document.querySelectorAll<SVGGElement>('.mainmap g.raceroute').forEach((g) => { const vis = sub && on.includes(g.dataset.rc!); g.style.display = vis ? '' : 'none'; if (vis) { const b = g.dataset.bb!.split(',').map(Number); bb[0] = Math.min(bb[0], b[0]); bb[1] = Math.min(bb[1], b[1]); bb[2] = Math.max(bb[2], b[2]); bb[3] = Math.max(bb[3], b[3]); } });
       if (mm) zoomToBox(mm, sub && !force ? { x0: bb[0], y0: bb[1], x1: bb[2], y1: bb[3] } : null); }
+    // heat-map cutoff marks shared by several races at one station + time: the row height is split evenly among the VISIBLE races (all heat maps)
+    document.querySelectorAll<SVGGElement>('g.tlcut[data-r]').forEach((g) => { const [lo, hi] = g.dataset.r!.split(',').map(Number), vis = [...g.querySelectorAll<SVGRectElement>('rect[data-course]')].filter((r) => on.includes(r.dataset.course!)), n = vis.length, sh = (hi - lo) / Math.max(1, n);
+      vis.forEach((r, j) => { const ya = lo + j * sh + (j ? 0.75 : 0), yb = lo + (j + 1) * sh - (j < n - 1 ? 0.75 : 0); r.setAttribute('y', ya.toFixed(1)); r.setAttribute('height', (yb - ya).toFixed(1)); }); });
     // "All" checkbox mirrors the state: checked = all, indeterminate = some, unchecked = none
     { const ab = document.querySelector<HTMLInputElement>('input[data-race-all]'); if (ab && !force) ab.checked = !document.querySelector('input[data-race]:checked'); }
     // timeline: restack the visible races
@@ -386,3 +392,6 @@ if (document.documentElement.classList.contains('embed') && parent !== window) {
   addEventListener('hashchange', fromHash); fromHash();
 }
 
+
+// fixed navbar: reserve its height at the top of the page
+{ const nav = document.querySelector<HTMLElement>('.topnav'); if (nav && !document.documentElement.classList.contains('embed')) { const set = () => document.documentElement.style.setProperty('--navh', nav.offsetHeight + 'px'); new ResizeObserver(set).observe(nav); set(); } }

@@ -1,4 +1,5 @@
 import { northG, northBox, NORTH_INSET } from './north';
+import { cardView, CARD_ASPECT } from './cardview';
 import { turnaround } from './panels';
 // Race-page map: ONLY one race's route, main-map styling (hillshade, paved roads, race-coloured route, arrows, aid stations with
 // full-name subtitles), full bib with START band. No zoom / pan, no zoom boxes. Labels are auto-placed against every drawn element;
@@ -13,12 +14,10 @@ export const RACE_F = 4;
 type Bx = { x0: number; x1: number; y0: number; y1: number };
 const wEst = (t: string, size: number) => t.length * size * 0.56;
 
-export function renderRaceMap(c, k: string, card?: { aspect: number }) {
-  const view = c.layout.views[k], W = view.fig[2] * SHEET.w * RACE_F, H = view.fig[3] * SHEET.h * RACE_F, V = viewProjection(view, W, H), col = c.colors, cc = c.courses.colors[k];
-  // card thumbnails: cover-fit box of the card's aspect around the map centre; the main map's (larger) hillshade under the race one so no blank margin
-  const Hn = card ? H * 0.95 : H, Wn = card ? Hn * card.aspect : W, cbx = (W - Wn) / 2, cby = (H - Hn) / 2;
-  const mainHill = card ? (() => { const h = c.layout.hillshade.main, [a0, b0, a1, b1] = h.bounds_3857, kk = V.ppm, x0 = view.x[0], y1 = view.y[1]; return `<image href="${h.file}" x="${f1((a0 - x0) * kk)}" y="${f1((y1 - b1) * kk)}" width="${f1((a1 - a0) * kk)}" height="${f1((b1 - b0) * kk)}" preserveAspectRatio="none"/>`; })() : '';
-  let s = `<g class="topo">${mainHill}${hillImage(c, k, V)}</g>`;
+export function renderRaceMap(c, k: string, card?: boolean) {
+  // card thumbnails: the race view re-fit to the card's exact aspect (site/lib/cardview.ts), same symbol scale, one generated relief image over the whole frame
+  const view0 = c.layout.views[k], view = card ? { ...view0, ...cardView(view0) } : view0, H = view0.fig[3] * SHEET.h * RACE_F, W = card ? H * CARD_ASPECT : view0.fig[2] * SHEET.w * RACE_F, V = viewProjection(view, W, H), col = c.colors, cc = c.courses.colors[k];
+  let s = `<g class="topo">${card ? `<image href="hillshade/card-${k}.png" x="0" y="0" width="${f1(W)}" height="${f1(H)}" preserveAspectRatio="none"/>` : hillImage(c, k, V)}</g>`;
   const pts: [number, number][] = []; // every drawn line, sampled, for label collision tests
   const sample = (L: [number, number][][]) => { for (const l of L) for (let i = 1; i < l.length; i++) { const [a, b] = [l[i - 1], l[i]], n = Math.max(1, Math.ceil(Math.hypot(b[0] - a[0], b[1] - a[1]) / 3)); for (let j = 0; j <= n; j++) pts.push([a[0] + (b[0] - a[0]) * j / n, a[1] + (b[1] - a[1]) * j / n]); } };
   for (const f of c.network.features.filter((f) => f.properties.cls === 'paved')) { const d = V.path(f); sample(V.lines(f)); s += `<path d="${d}" class="ln" stroke="#fff" stroke-width="14"/><path d="${d}" class="ln" stroke="#333" stroke-width="10"/><path d="${d}" class="ln" stroke="#fff" stroke-width="2.2" stroke-dasharray="13.2 11"/>`; }
@@ -89,5 +88,5 @@ export function renderRaceMap(c, k: string, card?: { aspect: number }) {
       if (free(b)) { placed.push(b); labels += `<text x="${f1(al === 'start' ? x0 : al === 'end' ? x0 + bw : x0 + bw / 2)}" y="${f1(y0 + bh * 0.78)}" class="f-serif" font-size="22" font-style="italic" font-weight="700" fill="${cc}" text-anchor="${al}" stroke="#fff" stroke-width="6" paint-order="stroke">${t}</text>`; done = true; break; } }
     if (!done) throw new Error('[racemap 10K] no clear spot for the turnaround label'); }
   console.log(`  racemap ${k}: ${placed.length} labels placed clear of ${pts.length} line samples, ${ob.length} symbols`);
-  return `<svg class="racemap" data-race="${k}" data-f="${RACE_F}" viewBox="${card ? `${f1(cbx)} ${f1(cby)} ${f1(Wn)} ${f1(Hn)}` : `0 0 ${f1(W)} ${f1(H)}`}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${k} course map"><defs><clipPath id="rc${k}"><rect x="${f1(Math.min(0, cbx))}" y="${f1(Math.min(0, cby))}" width="${f1(Math.max(W, Wn))}" height="${f1(Math.max(H, Hn))}"/></clipPath></defs><rect x="${f1(Math.min(0, cbx))}" y="${f1(Math.min(0, cby))}" width="${f1(Math.max(W, Wn))}" height="${f1(Math.max(H, Hn))}" fill="#fff"/><g clip-path="url(#rc${k})">${s}${labels}</g>${bibSvg}${northSvg}${card ? '' : `<rect width="${f1(W)}" height="${f1(H)}" fill="none" stroke="#d4d4d4" stroke-width="2"/>`}</svg>`;
+  return `<svg class="racemap" data-race="${k}" data-f="${RACE_F}" viewBox="0 0 ${f1(W)} ${f1(H)}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${k} course map"><defs><clipPath id="rc${k}"><rect width="${f1(W)}" height="${f1(H)}"/></clipPath></defs><rect width="${f1(W)}" height="${f1(H)}" fill="#fff"/><g clip-path="url(#rc${k})">${s}${labels}</g>${bibSvg}${northSvg}${card ? '' : `<rect width="${f1(W)}" height="${f1(H)}" fill="none" stroke="#d4d4d4" stroke-width="2"/>`}</svg>`;
 }

@@ -181,11 +181,11 @@ for (const k of ORDER) {
   if (R.some((_, i) => startDelay(i, R.length) < 0 || startDelay(i, R.length) > 2)) throw new Error(`[timeline] ${k}: a start before the gun`);
   const onCourse = bins(nb); stByCourse[k] = {};
   R.forEach((r, ri) => { const S0 = SG + startDelay(ri, R.length);
-    // a DNF runner drops at their aid station but stays counted on course until that station visit's cutoff (when the sweep / transport brings
-    // runners in), not the moment they stop: every DNF dropping at the same instant made the bands fall before anyone had finished
+    // a DNF runner leaves the course at their own arrival at the drop station + a short 10-30 min delay (spread per runner), not all together at
+    // the station cutoff (that made a cliff in the stacked chart at each cutoff time, e.g. 100K at 4:30p)
     const dropAt = r.stop != null ? S0 + r.T * fracAt(k, r.stop, r.T) : 0, cutQ = r.stop != null ? cuts.find((c: any) => Math.abs(c.mile - r.stop!) < 1e-6) : null;
     const cutT = cutQ && /\d/.test(cutQ.cutoff) ? (() => { const m = cutQ.cutoff.match(/^(\d+):(\d\d) (AM|PM)$/); let v = (Number(m[1]) % 12 + (m[3] === 'PM' ? 12 : 0)) * 60 + Number(m[2]); if (v < SG) v += 1440; return v; })() : null;
-    const endMin = r.stop != null ? Math.max(dropAt, cutT ?? dropAt) : S0 + r.T;
+    const endMin = r.stop != null ? dropAt + 10 + 20 * ((ri * 0.618034 + 0.3) % 1) : S0 + r.T; void cutT;
     for (let b = 0; b < nb; b++) { const t = T0 + (b + 0.5) * BIN; if (t >= S0 && t <= endMin) onCourse[b] += W8[k]; }
     presence(k, S0); if (r.stop == null) presence(k, S0 + r.T);
     for (const c of cuts) { if (c.station === 'S/F' && c.mile > 0 && c.mile < total - 0.01 && (r.stop == null || c.mile <= r.stop)) presence(k, S0 + r.T * fracAt(k, c.mile, r.T)); }
@@ -217,7 +217,7 @@ out.pace_model = { params: PAR, grid: GRID, validation, mean_abs_error_min: +bes
 out.assumptions = [
   'Expected runners per course = sources/curated/site.json expectedRunners (default 2026 starters). All counts (on course, aid-station passes, finish crowd) are the 2026-shaped simulation scaled by N / 2026 starters, i.e. the expected value of resampling N runners from the 2026 finish-time distribution. Map dots bootstrap whole 2026 runners (seeded, ±1% time jitter) when N differs, keeping 2026 clustering.',
   'Start: nobody crosses the line before the gun; each runner starts 0-2 min after it (mass-start crossing delay, skewed early: runner quantile u -> 2u² min, faster runners nearer the front).',
-  `Start / Finish heat row: runners crossing the line per 15 min (start crossings, mid-race pass-throughs, finishes), like every other station (passes, no early-arrival or lingering model). Finish-area floor-plan overlay (inactive runners): each runner arrives ${ARR.lo}-${ARR.hi} min before their start (triangular, mode ${ARR.mode}); finishers stay ${STAY.lo}-${STAY.hi} min after finishing. DNF runners stay counted on course until the cutoff of the station where they drop.`,
+  `Start / Finish heat row: runners crossing the line per 15 min (start crossings, mid-race pass-throughs, finishes), like every other station (passes, no early-arrival or lingering model). Finish-area floor-plan overlay (inactive runners): each runner arrives ${ARR.lo}-${ARR.hi} min before their start (triangular, mode ${ARR.mode}); finishers stay ${STAY.lo}-${STAY.hi} min after finishing. DNF runners leave the course 10-30 min after arriving at the station where they drop.`,
   'Finish-time distributions per 2027 distance = 2026 RunSignup results for the identically named event (same start times); one simulated runner per 2026 finisher.',
   'Expected 2027 starters = 2026 starters (finishers + DNF): 2027 registrant counts are not public (RunSignup participants endpoint returns Permission Denied). 2027 caps from RunSignup are shown for reference only.',
   'Pre-2026 years ran 50M / 50K / 30K (plus 10K, 20K) on different courses: used for volume history only, not for times.',

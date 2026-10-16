@@ -101,7 +101,7 @@ bootstrap whole 2026 runners (seeded, ±1 % time jitter) when N differs, so they
 
 ### Temperatures
 
-The small °F readings under the timeline hours (and in its hover) are last year's race day: hourly 2 m air temperature on Jan 17 2026 at the Start / Finish (Barton Warnock), from the [Open-Meteo historical weather API](https://open-meteo.com/) (ERA5 reanalysis), shifted to CST. Refresh with `bun scripts/fetch-temps.ts` (writes `sources/temps.json`).
+The small °F readings under the timeline hours are the **median of every past Big Bend Ultra race day** (last 10 race years, or all available: currently 2019, 2020, 2022–2026); the hover adds the min–max range. Race dates come from the RunSignup API (race 163892); temperatures are hourly 2 m air temperature at the Start / Finish (Barton Warnock) from the [Open-Meteo historical weather API](https://open-meteo.com/) (ERA5 reanalysis), shifted to CST. Per-year data: `sources/curated/race-temps.json` and `sources/curated/race-temps.csv`. Refresh with `bun scripts/fetch-race-temps.ts`.
 
 ### Aid-station details
 

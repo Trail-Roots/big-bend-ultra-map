@@ -74,19 +74,21 @@ export function renderTimeline(c: Ctx) {
       xs.forEach((x, i) => { if (x > dx0 - 4 && x < dx1 + 4 && Y(acc[i]) < dy + 6) throw new Error('[timeline] date label overlaps the chart'); }); }
     s += `<script type="application/json" class="tldata">${JSON.stringify({ xs: xs.map((x) => +x.toFixed(1)), v: Object.fromEntries(order.map((k) => [k, ts.map((tt) => +valAt(k, tt).toFixed(2))])), base, hgt })}</script>`;
   }
-  // temperatures (2026 race day at the Start / Finish, hourly; sources/temps.json): one small reading under each 2-hour tick
+  // temperatures: median of every past race day (sources/curated/race-temps.json) under each 2-hour tick; range in the tooltip
   s += tempRow(X, t0, t1, AX + 4 + TR - 7, col.mute);
   s += heatRows(c, { X, LX, RX, sTop, SR, sts, races: order, t0, t1 });
   s += `<g class="tlcursor" style="display:none;pointer-events:none"><path d="M0,${AX}V${f1(bottom)}" stroke="#111" stroke-width="1.5" stroke-dasharray="4 3"/><g class="tip"><rect class="tlbox" fill="#fff" fill-opacity=".94" stroke="#bbb" rx="4"/><text class="tlread" font-size="17" font-weight="700"></text></g></g>`;
   return `<svg class="strips timeline" data-t0="${t0}" data-t1="${t1}" data-lx="${LX}" data-stop="${f1(sTop)}" data-sr="${f1(SR)}" data-sbot="${f1(sTop + sts.length * SR)}" data-stations="${sts.join(',')}" data-rx="${f1(RX)}" viewBox="0 0 ${f1(W)} ${f1(H)}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Race-day timeline: runners on course and at aid stations by time of day">${s}</svg>`;
 }
 
-import temps from '../../sources/temps.json';
-/** °F at minute m of Jan 17 (CST), linear between hourly readings */
-export const tempAt = (m: number) => { const h = temps.hourly as number[][]; const i = h.findIndex((p) => p[0] >= m); if (i <= 0) return h[Math.max(0, i)][1]; const [ma, va] = h[i - 1], [mb, vb] = h[i]; return va + ((vb - va) * (m - ma)) / (mb - ma); };
+import RT from '../../sources/curated/race-temps.json';
+/** race-day temperatures, every past race year (sources/curated/race-temps.json): per hour [min, min°F, median°F, max°F] */
+export const TEMP_SUM = RT.summary as number[][], TEMP_YEARS = (RT.years as { year: number }[]).map((y) => y.year);
+/** median °F at minute m of race day (CST), linear between hourly values */
+export const tempAt = (m: number) => { const h = TEMP_SUM.map((q) => [q[0], q[2]]); const i = h.findIndex((p) => p[0] >= m); if (i <= 0) return h[Math.max(0, i)][1]; const [ma, va] = h[i - 1], [mb, vb] = h[i]; return va + ((vb - va) * (m - ma)) / (mb - ma); };
 function tempRow(X: (t: number) => number, t0: number, t1: number, y: number, mute: string) {
   let s = '<g class="temps">';
-  for (let t = Math.ceil(t0 / 120) * 120; t <= t1; t += 120) { const x = X(t); if (x < 24 || x > X(t1) - 18) continue; s += `<text x="${f1(x)}" y="${f1(y)}" font-size="15" text-anchor="middle" fill="${mute}">${Math.round(tempAt(t))}°</text>`; }
+  for (let t = Math.ceil(t0 / 120) * 120; t <= t1; t += 120) { const x = X(t); if (x < 24 || x > X(t1) - 18) continue; const q = TEMP_SUM.find((p) => p[0] === ((t % 1800) + 1800) % 1800) ?? TEMP_SUM.find((p) => p[0] === t); s += `<text x="${f1(x)}" y="${f1(y)}" font-size="15" text-anchor="middle" fill="${mute}">${q ? `<title>${Math.round(q[2])}°F median, range ${Math.round(q[1])}–${Math.round(q[3])}°F (${TEMP_YEARS[0]}–${TEMP_YEARS[TEMP_YEARS.length - 1]}, ${TEMP_YEARS.length} race days)</title>` : ''}${Math.round(tempAt(t))}°</text>`; }
   return s + `<text x="${f1(X(t0) + 2)}" y="${f1(y)}" font-size="13" fill="${mute}">°F</text></g>`;
 }
 /** multi-step heat ramp (cream -> amber -> red -> deep red), v in 0..1; sqrt-scaled by the caller so quiet stations still read */
@@ -112,7 +114,7 @@ export function heatRows(c: Ctx, o: HO) {
     for (const kk of order) { const C = T.courses[kk]; for (const q of C.passes) { if (q.station !== k || q.mile === 0) continue; const tm = cutMin(q.cutoff); if (tm == null) continue; const t = tm < C.start ? tm + 1440 : tm; if (t >= t0 && t <= t1) (cm.get(t) ?? cm.set(t, []).get(t)!).push(kk); } }
     const rowLo = y0 + 2, rowHi = y0 + SR - 2;
     for (const t of [...cm.keys()].sort((p, q) => p - q)) { const ks = cm.get(t)!, tx = X(t), sh = (rowHi - rowLo) / ks.length;
-      g += `<g class="tlcut"><title>${esc(name)} cutoff ${clock(t, false)} (${ks.join(', ')})</title>` + ks.map((kk, j) => { const ya = rowLo + j * sh + (j ? 0.75 : 0), yb = rowLo + (j + 1) * sh - (j < ks.length - 1 ? 0.75 : 0);
+      g += `<g class="tlcut" data-r="${f1(rowLo)},${f1(rowHi)}"><title>${esc(name)} cutoff ${clock(t, false)} (${ks.join(', ')})</title>` + ks.map((kk, j) => { const ya = rowLo + j * sh + (j ? 0.75 : 0), yb = rowLo + (j + 1) * sh - (j < ks.length - 1 ? 0.75 : 0);
         cplaced.push({ b: { x0: tx - CW / 2, x1: tx + CW / 2, y0: ya, y1: yb }, row: [rowLo, rowHi] });
         return `<rect data-course="${kk}" x="${f1(tx - CW / 2)}" y="${f1(ya)}" width="${CW}" height="${f1(yb - ya)}" fill="url(#${pid(kk)})"/>`; }).join('') + '</g>'; }
     // station number icon inset at the row's left edge on a white disc, nudged right until it clears every cutoff mark in this row
