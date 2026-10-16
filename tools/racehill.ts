@@ -6,7 +6,7 @@ const tiles = new Map<string, PNG>();
 async function tile(z: number, x: number, y: number) { const k = `${z}/${x}/${y}`; if (!tiles.has(k)) { const r = await fetch(`https://s3.amazonaws.com/elevation-tiles-prod/terrarium/${k}.png`); tiles.set(k, PNG.sync.read(Buffer.from(await r.arrayBuffer()))); } return tiles.get(k)!; }
 for (const k of Object.keys(RV)) {
   const v = RV[k], W = OW, H = Math.round(OW * (v.y[1] - v.y[0]) / (v.x[1] - v.x[0])), mpp = (v.x[1] - v.x[0]) / W;
-  const z = Math.min(12, Math.max(9, Math.round(Math.log2((2 * Math.PI * R) / 256 / (mpp * 0.9))))), n = 2 ** z, ts = (2 * Math.PI * R) / n;
+  const z = Math.min(14, Math.max(9, Math.round(Math.log2((2 * Math.PI * R) / 256 / (mpp * 0.9))))), n = 2 ** z, ts = (2 * Math.PI * R) / n;
   const need = new Set<string>(); for (const X of [v.x[0], v.x[1]]) for (const Y of [v.y[0], v.y[1]]) need.add(`${Math.floor((X + Math.PI * R) / ts)},${Math.floor((Math.PI * R - Y) / ts)}`);
   const tx0 = Math.floor((v.x[0] + Math.PI * R) / ts), tx1 = Math.floor((v.x[1] + Math.PI * R) / ts), ty0 = Math.floor((Math.PI * R - v.y[1]) / ts), ty1 = Math.floor((Math.PI * R - v.y[0]) / ts);
   for (let tx = tx0 - 1; tx <= tx1 + 1; tx++) for (let ty = ty0 - 1; ty <= ty1 + 1; ty++) await tile(z, tx, ty);
