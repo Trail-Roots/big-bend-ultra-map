@@ -33,6 +33,10 @@ try {
     await p.click('.navlayers > summary');
     await p.uncheck('input[data-race="100K"]'); await p.uncheck('input[data-race="20K"]'); await p.waitForTimeout(600); await p.screenshot({ path: `${out}-${w}-panel.png` }); await p.click('.navlayers > summary');
     await p.locator('svg.profile').scrollIntoViewIfNeeded(); await p.waitForTimeout(300); await p.screenshot({ path: `${out}-${w}-filter.png` }); await p.locator('#finish-plan').scrollIntoViewIfNeeded(); await p.screenshot({ path: `${out}-${w}-finish.png` });
+    // milestone strips: every label inside its frame (no clipped text) in every rendered variant; print variant checked under print media
+    const msClip = (sel: string) => p.evaluate((sel) => { const bad: string[] = []; document.querySelectorAll<SVGSVGElement>(sel).forEach((svg) => { const vb = svg.viewBox.baseVal; svg.querySelectorAll<SVGGraphicsElement>('text').forEach((t) => { const b = t.getBBox(); if (b.x < vb.x - 0.5 || b.x + b.width > vb.x + vb.width + 0.5 || b.y < vb.y - 0.5 || b.y + b.height > vb.y + vb.height + 0.5) bad.push(svg.getAttribute('class') + ' ' + svg.dataset.course + ': ' + t.textContent); }); }); return bad; }, sel);
+    for (const v of ['msl-w', 'msl-c', 'msl-p']) { const bad = await msClip('svg.msline.' + v); if (bad.length) throw new Error('[qa] milestone text clipped: ' + [...new Set(bad)].slice(0, 8).join(' | ')); }
+    { const vis = await p.evaluate(() => [...document.querySelectorAll<SVGSVGElement>('svg.msline')].filter((s) => s.getBoundingClientRect().width > 0).map((s) => { const r = s.getBoundingClientRect(), pr = s.closest('figure')!.getBoundingClientRect(); return Math.abs(r.width - pr.width); })); if (vis.some((d) => d > 1)) throw new Error('[qa] milestone strip narrower than its figure'); }
     console.log(w, 'station coord links 6/6', 'overflow', ov, 'overflow(lightbox)', ov2, 'errors', errs.length ? errs : 'none');
     await p.close();
   }
