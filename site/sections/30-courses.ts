@@ -8,24 +8,14 @@ import { SITE_URL } from './10-map';
 import { icon } from '../lib/icons';
 import { renderRaceHeat } from '../lib/timeline';
 import siteCfg from '../../content/site.json';
-/** Strava-route-card style thumbnail: the route alone on a light map tile + elevation sparkline (web cards only) */
-function thumb(c, k: string) {
-  const g = c.courseGeo[k].features[0].geometry.coordinates as number[][], cc = c.courses.colors[k], W = 320, H = 200, m = 14;
-  const kx = Math.cos((29.35 * Math.PI) / 180), xs = g.map((p) => p[0] * kx), ys = g.map((p) => p[1]);
-  const x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...ys), y1 = Math.max(...ys), s = Math.min((W - 2 * m) / (x1 - x0), (H - 2 * m) / (y1 - y0));
-  const ox = (W - (x1 - x0) * s) / 2, oy = (H - (y1 - y0) * s) / 2, step = Math.max(1, Math.floor(g.length / 600));
-  const d = 'M' + g.filter((_, i) => i % step === 0 || i === g.length - 1).map((p) => `${f1(ox + (p[0] * kx - x0) * s)},${f1(H - oy - (p[1] - y0) * s)}`).join('L');
-  const P = c.profiles[k], lo = Math.min(...P.ft), hi = Math.max(...P.ft), D = P.mi[P.mi.length - 1], SW = 320, SH = 46;
-  const sp = P.mi.map((mi: number, i: number) => `${f1((mi / D) * SW)},${f1(SH - 3 - ((P.ft[i] - lo) / (hi - lo || 1)) * (SH - 8))}`).join('L');
-  return `<svg class="rc-map" viewBox="0 0 ${W} ${H}" aria-hidden="true"><rect width="${W}" height="${H}" fill="#eceae4"/><path d="${d}" fill="none" stroke="#fff" stroke-width="7" stroke-linejoin="round" stroke-linecap="round"/><path d="${d}" fill="none" stroke="${cc}" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/></svg>`
-    + `<svg class="rc-elev" viewBox="0 0 ${SW} ${SH}" preserveAspectRatio="none" aria-hidden="true"><path d="M0,${SH}L${sp}L${SW},${SH}Z" fill="${cc}" fill-opacity=".18"/><path d="M${sp}" fill="none" stroke="${cc}" stroke-width="2" vector-effect="non-scaling-stroke"/></svg>`;
-}
+/** card thumbnail: the race's own map in the established race-map style (ids made unique) */
+const thumb = (c, k: string) => uniq(renderRaceMap(c, k), `card${k}`).replace('class="racemap"', 'class="racemap rc-map"').replace(/ data-race="[^"]*"/, '');
 function card(c, k: string) {
   const C = c.courses.courses[k], cc = c.courses.colors[k], club = (siteCfg as any).stravaClub as string;
   return `<article class="racecard" data-course="${k}" style="--rc:${cc}"><button type="button" class="rc-open" data-course="${k}" aria-label="Open the full ${k} race page">${thumb(c, k)}</button>
 <div class="rc-body"><h3 class="bibh">${miniBibSvg(k, cc, 0.8)}<span>Big Bend Ultra ${k}</span></h3>
 <dl class="rc-stats"><div><dt>Distance</dt><dd>${C.distance_mi.toFixed(1)} mi</dd></div><div><dt>Elev gain</dt><dd>${totalGain(c, k).toLocaleString('en-US')} ft</dd></div><div><dt>Start</dt><dd>${esc(C.start)}</dd></div></dl>
-<div class="rc-btns"><button type="button" class="rc-open rc-full" data-course="${k}">${icon('expand')}Full page</button>${C.stravaUrl ? `<a class="rc-strava" href="${esc(C.stravaUrl)}" target="_blank" rel="noopener" title="Open the ${k} route in the Strava app on your phone (save it there for offline navigation)">${icon('phone')}Send to phone</a>` : ''}${club ? `<a class="rc-club" href="${esc(club)}" target="_blank" rel="noopener" title="Trail Roots club on Strava">${icon('users')}Join our club</a>` : ''}<a href="${SITE_URL}${esc(C.gpx)}" download title="Download the ${k} GPX">${icon('route')}.GPX</a></div></div></article>`;
+<div class="rc-btns"><button type="button" class="rc-open rc-full" data-course="${k}">${icon('expand')}Full page</button>${C.stravaUrl ? `<span class="splitbtn"><a href="${esc(C.stravaUrl)}" target="_blank" rel="noopener" title="${k} route on Strava (opens the Strava app on a phone)">${icon('strava')}Strava</a>${club ? `<a href="${esc(club)}" target="_blank" rel="noopener" title="Trail Roots club on Strava">${icon('users')}Join our club</a>` : ''}</span>` : ''}<a href="${SITE_URL}${esc(C.gpx)}" download title="Download the ${k} GPX">${icon('route')}.GPX</a></div></div></article>`;
 }
 export const meta = { id: 'courses', title: 'Race pages' };
 const uniq = (svg: string, k: string) => svg.replace(/\bid="([^"]+)"/g, `id="$1-cp${k}"`).replace(/url\(#([^)]+)\)/g, `url(#$1-cp${k})`).replace('class="mini"', 'class="mini mini-cp"').replace(/ data-mini="[^"]*"/, '');

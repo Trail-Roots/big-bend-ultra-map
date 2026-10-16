@@ -136,12 +136,12 @@ notice next to Download PDF on the web page. Set it to `false` and rebuild (`bun
 
 ### Routes
 
-- Open the 100K route in the Strava app on your phone (save it there for offline navigation): <https://www.strava.com/routes/3450526029363380036>
+- 100K route on Strava (opens the Strava app on a phone): <https://www.strava.com/routes/3450526029363380036>
 - Trail Roots club on Strava: <https://www.strava.com/clubs/trailroots>
-- Open the 55K route in the Strava app on your phone (save it there for offline navigation): <https://www.strava.com/routes/3450532671815509296>
-- Open the 35K route in the Strava app on your phone (save it there for offline navigation): <https://www.strava.com/routes/3450543498764908848>
-- Open the 20K route in the Strava app on your phone (save it there for offline navigation): <https://www.strava.com/routes/3476258112199931088>
-- Open the 10K route in the Strava app on your phone (save it there for offline navigation): <https://www.strava.com/routes/3476252579046666448>
+- 55K route on Strava (opens the Strava app on a phone): <https://www.strava.com/routes/3450532671815509296>
+- 35K route on Strava (opens the Strava app on a phone): <https://www.strava.com/routes/3450543498764908848>
+- 20K route on Strava (opens the Strava app on a phone): <https://www.strava.com/routes/3476258112199931088>
+- 10K route on Strava (opens the Strava app on a phone): <https://www.strava.com/routes/3476252579046666448>
 
 ### Downloads
 

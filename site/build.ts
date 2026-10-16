@@ -29,7 +29,8 @@ const body = sections.map((s) => `<section class="sec sec-${s.meta.id}${s.meta.p
 // draft markings: one flag in content/site.json (source: sources/curated/site.json)
 const site = J('site.json'), draft = site.draft === true;
 const gen = new Date().toLocaleDateString('en-US', { timeZone: 'America/Chicago', year: 'numeric', month: 'short', day: 'numeric' });
-let html = tpl.replace('{{bodyclass}}', draft ? 'draft' : '')
+const { layersNav } = await import('./sections/10-map');
+let html = tpl.replace('{{layers}}', layersNav(ctx)).replace('{{bodyclass}}', draft ? 'draft' : '')
   .replace('{{draftbanner}}', draft ? WATERMARK + `<style>@page{@top-center{content:"DRAFT — NOT FINAL · Subject to change · Generated ${gen}";font:800 8pt system-ui,sans-serif;letter-spacing:.06em;color:#fff;background:#b3261e;margin:.05in 0 .05in;width:100%;-webkit-print-color-adjust:exact;print-color-adjust:exact}}</style>` : '')
   .replace('{{draftnote}}', draft ? `<span class="draftnote" title="Generated ${gen}">Draft · subject to change</span>` : '').replace('{{base}}', './').replace(/{{ic:(\w+)}}/g, (_: string, n: string) => icon(n)).replace(/{{title}}/g, sections[0].meta.title).replace('{{defs}}', markerDefs(ctx.colors)).replace('{{body}}', body).replace(/{{year}}/g, '2027');
 // ---- link footnotes: every clickable link on the page, collected from the rendered HTML (same data the links come from) ----
@@ -55,6 +56,10 @@ if (rm2 !== rm) fs.writeFileSync(RM, rm2);
 fs.writeFileSync(path.join(D, 'links.json'), JSON.stringify([...seen.values()], null, 1));
 console.log('links', seen.size);
 fs.writeFileSync(path.join(D, 'index.html'), html);
+// race filter: page-1 elevation chart for every visible-race subset (fetched by app.ts on the first filter change)
+{ const { profileBody } = await import('./lib/panels'); const O: string[] = ctx.courses.order, V: Record<string, unknown> = {};
+  for (let m = 1; m < (1 << O.length) - 1; m++) { const vis = O.filter((_, i) => m & (1 << i)), p = profileBody(ctx, vis); V[vis.join(',')] = { s: p.s, x: p.x, y: p.y }; }
+  fs.writeFileSync(path.join(D, 'profiles.json'), JSON.stringify(V)); console.log('profile variants', Object.keys(V).length); }
 console.log('index.html', (html.length / 1024).toFixed(0) + ' KB,', sections.length, 'sections:', sections.map((s) => s.meta.id).join(', '));
 fs.cpSync(path.join(here, 'public'), D, { recursive: true });
 const app = await Bun.build({ entrypoints: [path.join(here, 'app.ts')], outdir: D, minify: true, target: 'browser' });

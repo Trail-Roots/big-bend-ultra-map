@@ -1,3 +1,4 @@
+import { northG, NORTH_INSET } from './north';
 import { stationLabel, poiLabel, areaLabel } from './labels';
 import { chaikin, mergeChains, simplifyPts, leaderLine, poiDot, SHEET, viewProjection, esc, f1, lineD, dash, STYLE, station, textBlock, gmapLink, tireTrack } from './util';
 // user-toggleable layers (off-course roads, access styles, arrows, aid stations, distances and all labels are always shown)
@@ -83,9 +84,8 @@ export function renderMain(c) {
   const sb = c.layout.scalebar, sx = (sb.x - c.layout.views.main.x[0]) * V.ppm, sy = (c.layout.views.main.y[1] - sb.y) * V.ppm, m5 = sb.m5 * V.ppm, tick = H * 0.006;
   let fur = `<g class="scalebar" data-sx="${f1(sx)}" data-sy="${f1(sy)}" data-ppmi="${(m5 / 5).toFixed(3)}" data-tick="${f1(tick)}" data-max="${f1(m5)}"><path stroke="${col.ink}" stroke-width="3" d="M${f1(sx)},${f1(sy)}h${f1(m5)}M${f1(sx)},${f1(sy)}v${f1(-tick)}M${f1(sx + m5 / 2)},${f1(sy)}v${f1(-tick)}M${f1(sx + m5)},${f1(sy)}v${f1(-tick)}" fill="none"/>`;
   fur += `<text x="${f1(sx)}" y="${f1(sy + H * .008)}" font-size="26" text-anchor="middle" dominant-baseline="hanging" fill="${col.ink}">0</text><text x="${f1(sx + m5)}" y="${f1(sy + H * .008)}" font-size="26" text-anchor="middle" dominant-baseline="hanging" fill="${col.ink}">5 mi</text></g>`;
-  // north arrow: small and subtle
-  const nx = W * 0.05, ny = H * 0.04, na = H * 0.012, nc = col.mute;
-  fur += `<g class="north" opacity=".8"><line x1="${f1(nx)}" y1="${f1(ny + na)}" x2="${f1(nx)}" y2="${f1(ny - na)}" stroke="${nc}" stroke-width="1.6"/><path d="M${f1(nx - 5)},${f1(ny - na + 6)}L${f1(nx)},${f1(ny - na - 3)}L${f1(nx + 5)},${f1(ny - na + 6)}z" fill="${nc}"/><text x="${f1(nx)}" y="${f1(ny + na + 14)}" class="f-serif" font-size="17" text-anchor="middle" fill="${nc}">N</text></g>`;
+  // north arrow (SSOT site/lib/north.ts), top-left corner
+  fur += northG(W, W * NORTH_INSET, W * NORTH_INSET);
   fur += `<a href="https://trailroots.com/big-bend-ultra" target="_blank" rel="noopener"><image class="maplogo" href="logo_ink_crop.png" x="${f1(W * 0.08)}" y="${f1(H * (1 - 0.985))}" width="${f1(LOGO_PT)}" height="${f1(LOGO_PT * 776 / 730)}" preserveAspectRatio="xMidYMid meet"/></a>`;
   fur += legend(c, W, H);
   const order = ['topo', 'park', 'roads', 'access', 'courses', 'zoom', 'arrows', 'stations', 'pois', 'stationLabels', 'labels', 'dots'];

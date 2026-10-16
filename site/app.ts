@@ -33,7 +33,9 @@ if (hdEl && prof) {
   const tipG = el('g', { class: 'tip' }, pg) as SVGGElement, box = el('rect', { fill: '#fff', 'fill-opacity': 0.94, stroke: '#bbb', 'stroke-width': 1, rx: 4 }, tipG);
   const lab = el('text', { 'font-size': 19, 'font-weight': 700 }, tipG), bibs = el('g', {}, tipG);
   const BW: number = (HD.courses as any)._bibw, BH: number = (HD.courses as any)._bibh; delete (HD.courses as any)._bibw; delete (HD.courses as any)._bibh;
-  const { W, H, x: [x0, x1], y: [y0, y1] } = HD.profile;
+  const { W, H } = HD.profile; let [x0, x1] = HD.profile.x, [y0, y1] = HD.profile.y;
+  // race filter swaps the chart body (rescaled to the longest visible route): keep the hover's scale in step
+  prof.addEventListener('profilescale', (e) => { const d = (e as CustomEvent).detail; [x0, x1] = d.x; [y0, y1] = d.y; });
   const X = (m: number) => ((m - x0) / (x1 - x0)) * W, Y = (ft: number) => (1 - (ft - y0) / (y1 - y0)) * H;
   const all = () => [...Object.values(mains), ...Object.values(minis)];
   const glide = makeGlide(HD.courses, mains, minis, zoomOf); void all;
@@ -132,6 +134,10 @@ if (hdEl && prof) {
     const sTop = +tl.dataset.stop!, sr = +tl.dataset.sr!, sBot = +tl.dataset.sbot!, order = Object.keys(TM.courses).filter((k) => raceOn(k));
     if (hovY >= sTop && hovY < sBot) { // busiest-times row: that station's next cutoff per course + required pace
       const st = (tl.dataset.stations || '').split(',')[Math.floor((hovY - sTop) / sr)]; if (!st) return [];
+      // cutoffs whose mark (its full width) overlaps the hovered 15-min cell
+      const gEl = tl.querySelector<SVGGElement>(`g.tlst[data-station="${CSS.escape(st)}"]`), cw = +(gEl?.dataset.cw || 0), bs = TM.t0 + Math.floor((t - TM.t0) / 15) * 15;
+      const here: Row[] = (JSON.parse(gEl?.dataset.cuts || '[]') as [number, string][]).filter(([ct, k]) => raceOn(k) && ct + cw / 2 >= bs && ct - cw / 2 <= bs + 15).map(([ct, k]) => ({ b: `${k} cutoff ${fmt(ct)}`, l: 'at this station', c: HD.courses[k].color }));
+      if (here.length) return here;
       return order.flatMap((k) => { const n = nextCut(k, t, st); return n ? [{ b: k, c: HD.courses[k].color, l: `cutoff ${fmt(TM.courses[k].start + n[1])} · ${pc(n[1] / n[0])}/mi needed` }] : []; });
     }
     return order.flatMap((k) => { const n = nextCut(k, t); if (!n || t < TM.courses[k].start) return [];
@@ -147,7 +153,7 @@ if (hdEl && prof) {
   const dark = (t: number) => { const m = ((t % 1440) + 1440) % 1440; return 0.24 * (m < 720 ? 1 - ss(sky.dawn - 20, sky.sunrise + 10, m) : ss(sky.sunset - 10, sky.dusk + 20, m)); };
   const phase = (t: number) => { const m = ((t % 1440) + 1440) % 1440; return m < sky.dawn || m >= sky.dusk ? 'night' : m < sky.sunrise || m >= sky.sunset ? 'twilight' : 'day'; };
   const setTime = (t: number) => {
-    tShown = t; const z = 1 / zoomOf(main);
+    tShown = t; const z = 1 / zoomOf(main); document.dispatchEvent(new CustomEvent('racetime', { detail: t }));
     { const ph = phase(t); badge.style.display = ''; badge.dataset.phase = ph; badge.textContent = `${ph === 'day' ? '☀' : ph === 'twilight' ? '◐' : '☾'} ${fmt(t)} · ${ph === 'day' ? 'daylight' : ph === 'twilight' ? 'twilight' : 'dark'}`; if (tint) tint.setAttribute('fill-opacity', dark(t).toFixed(3)); }
     const ends: Record<string, { lead?: [number, any]; last?: [number, any] }> = {};
     for (const d of dots2) {
@@ -289,13 +295,19 @@ if (document.documentElement.classList.contains('embed') && parent !== window) {
   const TL = tld ? JSON.parse(tld.textContent || '{}') : null;
   const HDt = JSON.parse(document.getElementById('hoverdata')?.textContent || '{}').time;
   const heatRamp = (v: number) => { const S = [[255, 244, 222], [247, 182, 92], [214, 72, 40], [140, 18, 18], [74, 8, 8]], x = Math.min(1, Math.max(0, v)) * (S.length - 1), i = Math.min(S.length - 2, Math.floor(x)), f = x - i; return 'rgb(' + S[i].map((a, j) => Math.round(a + (S[i + 1][j] - a) * f)).join(',') + ')'; };
+  const HD0 = JSON.parse(document.getElementById('hoverdata')?.textContent || '{}'); let origProf: { s: string; x: number[]; y: number[] } | null = null, profVariants: Promise<any> | null = null;
   const heatSrc = JSON.parse(document.getElementById('heatdata')?.textContent || 'null');
-  const apply = () => {
-    const on = [...document.querySelectorAll<HTMLInputElement>('input[data-race]')].filter((i) => i.checked).map((i) => i.dataset.race!);
+  const apply = (force?: string[]) => {
+    const on = force ?? [...document.querySelectorAll<HTMLInputElement>('input[data-race]')].filter((i) => i.checked).map((i) => i.dataset.race!);
     const all = [...document.querySelectorAll<HTMLInputElement>('input[data-race]')].map((i) => i.dataset.race!);
     for (const k of all) { const key = 'off' + k.replace(/\W/g, ''); if (on.includes(k)) delete root.dataset[key]; else root.dataset[key] = '1'; }
     // main map + page 1 charts + race cards
-    document.querySelectorAll<SVGElement | HTMLElement>('.mainmap [data-course], svg.profile [data-course], svg.timeline .tlcut [data-course], .racecard[data-course], svg.profile .legend [data-course]').forEach((e) => (e.style.display = on.includes(e.dataset.course!) ? '' : 'none'));
+    document.querySelectorAll<SVGElement | HTMLElement>('.mainmap [data-course], svg.timeline .tlcut [data-course], .racecard[data-course]').forEach((e) => (e.style.display = on.includes(e.dataset.course!) ? '' : 'none'));
+    // page-1 elevation chart: body for exactly the visible races, scaled to the longest visible route
+    { const pb = document.querySelector<SVGGElement>('svg.profile g.pbody'), prof2 = pb?.ownerSVGElement; if (pb && prof2) { const key = on.join(',');
+      origProf ??= { s: pb.innerHTML, x: HD0.profile.x, y: HD0.profile.y };
+      const put = (v: { s: string; x: number[]; y: number[] }) => { pb.innerHTML = v.s; prof2.dispatchEvent(new CustomEvent('profilescale', { detail: v })); };
+      if (on.length === all.length || !on.length) put(origProf); else (profVariants ??= fetch('profiles.json').then((r) => r.json())).then((V) => { if (V[key] && [...document.querySelectorAll<HTMLInputElement>('input[data-race]')].filter((i) => i.checked).map((i) => i.dataset.race).join(',') === key) put(V[key]); }); } }
     // timeline: restack the visible races
     if (TL && tlsvg) { const acc = TL.xs.map(() => 0), mx = Math.max(1, ...TL.xs.map((_: number, i: number) => on.reduce((s, k) => s + (TL.v[k]?.[i] ?? 0), 0)));
       const Y = (v: number) => TL.base - (v / mx) * TL.hgt;
@@ -311,7 +323,9 @@ if (document.documentElement.classList.contains('embed') && parent !== window) {
         g.querySelectorAll<SVGRectElement>('rect.hc').forEach((rc) => { const v = a[+rc.dataset.i!] || 0; rc.style.display = v ? '' : 'none'; rc.setAttribute('fill-opacity', (0.06 + 0.9 * Math.sqrt(Math.min(1, v / m))).toFixed(2)); }); }); }
     void NSf; void HDt;
   };
-  document.querySelectorAll<HTMLInputElement>('input[data-race]').forEach((cb) => cb.addEventListener('change', apply));
+  document.querySelectorAll<HTMLInputElement>('input[data-race]').forEach((cb) => cb.addEventListener('change', () => apply()));
+  // print always shows every race (the filter is a screen view only)
+  addEventListener('beforeprint', () => apply([...document.querySelectorAll<HTMLInputElement>('input[data-race]')].map((i) => i.dataset.race!))); addEventListener('afterprint', () => apply());
 }
 
 // ---- lightboxes: race card -> full (print-view) race page; aid station -> station details ----
@@ -324,7 +338,7 @@ if (document.documentElement.classList.contains('embed') && parent !== window) {
   rbox?.addEventListener('close', () => { restore(); if (/^#course-/.test(location.hash)) history.replaceState(null, '', location.pathname + location.search); });
   document.querySelectorAll<HTMLButtonElement>('.rc-open').forEach((b) => b.addEventListener('click', () => { openRace(b.dataset.course!); history.replaceState(null, '', `#course-${b.dataset.course}`); }));
   // print from inside a lightbox: put the page back first so print order is unchanged
-  addEventListener('beforeprint', () => { if (rbox?.open) { const k = moved?.el.dataset.course; rbox.close(); if (k && document.body.classList.contains('printone')) document.querySelectorAll('.coursepage').forEach((p) => p.classList.toggle('on', (p as HTMLElement).dataset.course === k)); } if (sbox?.open) sbox.close(); });
+  addEventListener('beforeprint', () => { if (rbox?.open) { const k = moved?.el.dataset.course; restore(); rbox.close(); /* put the race page back synchronously (the dialog close event is async) */ if (k && document.body.classList.contains('printone')) document.querySelectorAll('.coursepage').forEach((p) => p.classList.toggle('on', (p as HTMLElement).dataset.course === k)); } if (sbox?.open) sbox.close(); });
   const openStation = (k: string) => { if (!sbox) return; const t = document.getElementById(`st-${k === 'S/F' ? 'SF' : k}`) as HTMLTemplateElement | null; if (!t) return;
     const body = sbox.querySelector('.lb-body')!; body.innerHTML = ''; body.appendChild(t.content.cloneNode(true));
     // zoomed map: a copy of the main map framed on this station (zoom transform reset)
@@ -341,4 +355,13 @@ if (document.documentElement.classList.contains('embed') && parent !== window) {
   for (const box of [rbox, sbox]) if (box) { box.querySelector('.lb-close')!.addEventListener('click', () => box.close()); box.addEventListener('click', (e) => { if (e.target === box) box.close(); }); }
   const fromHash = () => { const h = decodeURIComponent(location.hash); let m; if ((m = /^#course-(.+)$/.exec(h))) openRace(m[1]); else if ((m = /^#station-(.+)$/.exec(h))) openStation(m[1]); };
   addEventListener('hashchange', fromHash); fromHash();
+}
+
+// ---- finish-area floor plan: heat overlay of runners off course (not yet started / finished); scrubber, follows the race-day playback ----
+{
+  const D = JSON.parse(document.getElementById('idledata')?.textContent || 'null'), rg = document.querySelector<HTMLInputElement>('.fp-range'), out = document.querySelector<HTMLOutputElement>('.fp-read'), g = document.querySelector<SVGGElement>('.fp-heat-g');
+  if (D && rg && out && g) { const mx = Math.max(1, ...D.v);
+    const fm = (m: number) => { m = ((Math.round(m) % 1440) + 1440) % 1440; return `${Math.floor(m / 60) % 12 || 12}:${String(m % 60).padStart(2, '0')}${m < 720 ? 'a' : 'p'}`; };
+    const set = (t: number) => { const i = Math.max(0, Math.min(D.v.length - 1, Math.floor((t - D.t0) / D.bin))), v = D.v[i] || 0; g.style.opacity = String(v ? 0.12 + 0.88 * Math.sqrt(v / mx) : 0); out.textContent = `${fm(D.t0 + i * D.bin)} · ~${v} runners`; };
+    rg.addEventListener('input', () => set(+rg.value)); document.addEventListener('racetime', (e) => { const t = (e as CustomEvent).detail as number; rg.value = String(t); set(t); }); set(+rg.value); }
 }

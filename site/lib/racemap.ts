@@ -1,3 +1,4 @@
+import { northG, northBox, NORTH_INSET } from './north';
 // Race-page map: ONLY one race's route, main-map styling (hillshade, paved roads, race-coloured route, arrows, aid stations with
 // full-name subtitles), full bib with START band. No zoom / pan, no zoom boxes. Labels are auto-placed against every drawn element;
 // the build fails if a label cannot be placed clear of the route, roads, markers, arrows, bib and the other labels.
@@ -38,6 +39,12 @@ export function renderRaceMap(c, k: string) {
   // full bib (START band), top-right, scaled up to race-page size
   const BS = 2.2, bx = W - 18 - BIB.w * BS, by = 18; ob.push({ x0: bx - 4, x1: W, y0: 0, y1: by + BIB.h * BS + 4 });
   const bibSvg = `<g transform="translate(${f1(bx)} ${f1(by)}) scale(${BS})">${bib(k, c.courses.courses[k].start, cc, BIB.w, BIB.h, col, 'band', [0, 0])}</g>`;
+  // north arrow (SSOT site/lib/north.ts): first clear corner (top-left, bottom-left, bottom-right) by the shared size rule
+  let northSvg = ''; { const ins = W * NORTH_INSET, nb0 = northBox(W, 0, 0);
+    for (const [nx, ny] of [[ins, ins], [ins, H - ins - nb0.h], [W - ins - nb0.w, H - ins - nb0.h]]) { const nb = northBox(W, nx, ny);
+      if (pts.some(([px, py]) => px > nb.x0 - 4 && px < nb.x1 + 4 && py > nb.y0 - 4 && py < nb.y1 + 4) || ob.some((o) => nb.x0 < o.x1 && o.x0 < nb.x1 && nb.y0 < o.y1 && o.y0 < nb.y1)) continue;
+      ob.push({ x0: nb.x0, x1: nb.x1, y0: nb.y0, y1: nb.y1 }); northSvg = northG(W, nx, ny); break; }
+    if (!northSvg) throw new Error(`[racemap ${k}] no clear corner for the north arrow`); }
   // ---- labels: name (serif) + full-name subtitle (sans, wraps after " / "), placed at the nearest clear spot ----
   const T = STATION_TPL, placed: Bx[] = [];
   const free = (b: Bx) => b.x0 > 4 && b.x1 < W - 4 && b.y0 > 4 && b.y1 < H - 4 && !ob.some((o) => b.x0 < o.x1 + 3 && o.x0 < b.x1 + 3 && b.y0 < o.y1 + 3 && o.y0 < b.y1 + 3)
@@ -78,5 +85,5 @@ export function renderRaceMap(c, k: string) {
       if (free(b)) { placed.push(b); labels += `<text x="${f1(al === 'start' ? x0 : al === 'end' ? x0 + bw : x0 + bw / 2)}" y="${f1(y0 + bh * 0.78)}" class="f-serif" font-size="22" font-style="italic" font-weight="700" fill="${cc}" text-anchor="${al}" stroke="#fff" stroke-width="6" paint-order="stroke">${t}</text>`; done = true; break; } }
     if (!done) throw new Error('[racemap 10K] no clear spot for the turnaround label'); }
   console.log(`  racemap ${k}: ${placed.length} labels placed clear of ${pts.length} line samples, ${ob.length} symbols`);
-  return `<svg class="racemap" data-race="${k}" data-f="${RACE_F}" viewBox="0 0 ${f1(W)} ${f1(H)}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${k} course map"><defs><clipPath id="rc${k}"><rect width="${f1(W)}" height="${f1(H)}"/></clipPath></defs><rect width="${f1(W)}" height="${f1(H)}" fill="#fff"/><g clip-path="url(#rc${k})">${s}${labels}</g>${bibSvg}<rect width="${f1(W)}" height="${f1(H)}" fill="none" stroke="#c8c2b8" stroke-width="2"/></svg>`;
+  return `<svg class="racemap" data-race="${k}" data-f="${RACE_F}" viewBox="0 0 ${f1(W)} ${f1(H)}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${k} course map"><defs><clipPath id="rc${k}"><rect width="${f1(W)}" height="${f1(H)}"/></clipPath></defs><rect width="${f1(W)}" height="${f1(H)}" fill="#fff"/><g clip-path="url(#rc${k})">${s}${labels}</g>${bibSvg}${northSvg}<rect width="${f1(W)}" height="${f1(H)}" fill="none" stroke="#c8c2b8" stroke-width="2"/></svg>`;
 }

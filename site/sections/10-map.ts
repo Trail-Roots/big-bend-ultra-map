@@ -20,9 +20,13 @@ function place(w: number, h: number, force?: 'portrait' | 'landscape') {
   const a = opt(LETTER.w, LETTER.h, 'portrait'), b = opt(LETTER.h, LETTER.w, 'landscape');
   return force ? (force === 'portrait' ? a : b) : a.z >= b.z ? a : b;
 }
+/** navbar "Layers" button: map layer toggles + race filter in one dropdown panel (build.ts puts it in the sticky navbar) */
+export function layersNav(c: Ctx) {
+  const toggles = mainLayers.map(([k, lab, on]) => `<label><input type="checkbox" data-layer="${k}"${on ? ' checked' : ''}> ${lab}</label>`).join('');
+  return `<details class="ui layers navlayers"><summary>${icon('layers')}Layers</summary><div class="lpanel"><div class="toggles">${toggles}</div><div class="toggles racefilter" role="group" aria-label="Show races"><span class="rf-lab">Races</span>${c.courses.order.map((k) => `<label class="ck" style="--c:${c.courses.colors[k]}"><input type="checkbox" data-race="${k}" checked> ${k}</label>`).join('')}</div></div></details>`;
+}
 export function render(c: Ctx) {
   const L = c.layout, hdr = L.header, st = L.strips;
-  const toggles = mainLayers.map(([k, lab, on]) => `<label><input type="checkbox" data-layer="${k}"${on ? ' checked' : ''}> ${lab}</label>`).join('');
   const stripBox = [st.rx, st.top - 5 * st.rh, st.w, 5 * st.rh];
   const evb = L.elev, evBox = [evb[0], evb[1] - 40 / SHEET.h, evb[2], evb[3] + 40 / SHEET.h];
   const notice = hdr[2].text.split('\n');
@@ -47,7 +51,7 @@ export function render(c: Ctx) {
   const css = pg('.pg1', 'pmain', w1, h1, P1) + `@media print{${p1.map(([id, q]) => `#${id}${id === 'pb-hdr' ? hdrCss(q) : px(q)}`).join('')}}`
     + `@media screen and (min-width:1100px){${p1.map(([id, q]) => `html #${id}${pct(q)}`).join('')}}`;
   return `<style>${css}</style>
-<details class="ui layers" open><summary>Map layers</summary><div class="toggles">${toggles}</div><div class="toggles racefilter" role="group" aria-label="Show races"><span class="rf-lab">Races</span>${c.courses.order.map((k) => `<label class="ck" style="--c:${c.courses.colors[k]}"><input type="checkbox" data-race="${k}" checked> ${k}</label>`).join('')}</div></details>
+
 <div class="sheet">
   <div class="pg1">
   <section class="main" id="pb-main">${renderMain(c)}</section>

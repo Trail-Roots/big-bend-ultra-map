@@ -208,7 +208,7 @@ function passes(q: XY[], s: XY, n: number) {
   }
   return { idx: idx.sort((a, b) => a - b), dd };
 }
-const EVP: [number, number, string][] = []; let rincon: { mi: number; ft: number }[] = [];
+const EVP: [number, number, string][] = [], EVPK: [number, number, string, string][] = []; let rincon: { mi: number; ft: number }[] = [];
 for (const k of ORDER) {
   const g = G[k], d0 = g.d.map((v) => v / 1609.34), e = g.el.map((v) => v * 3.281), q = g.lat.map((la, i) => merc([g.lon[i], la]));
   const mid = S[k].slice(1, -1), labs = [...new Set(mid.map((x) => x[0]))];
@@ -216,7 +216,7 @@ for (const k of ORDER) {
   for (const lab of labs) { const mis = mid.filter((x) => x[0] === lab).map((x) => x[1]); const { idx } = passes(q, merc(SLL[lab]), mis.length); idx.forEach((i, j) => kn.push([d0[i], mis[j]])); }
   kn.sort((a, b) => a[0] - b[0] || a[1] - b[1]);
   void kn; const d = d0; // GPX distance as is (source of truth)
-  for (const lab of labs) { const { idx } = passes(q, merc(SLL[lab]), mid.filter((x) => x[0] === lab).length); for (const i of idx) EVP.push([d[i], STEL[lab], lab]); }
+  for (const lab of labs) { const { idx } = passes(q, merc(SLL[lab]), mid.filter((x) => x[0] === lab).length); for (const i of idx) { EVP.push([d[i], STEL[lab], lab]); EVPK.push([Math.round(d[i] * 1000) / 1000, Math.round(STEL[lab] * 10) / 10, lab, k]); } }
   if (k === '100K') { const { idx } = passes(q, merc(SLL.RIN), 1); rincon = [{ mi: Math.round(d[idx[0]] * 100) / 100, ft: Math.round(STEL.RIN) }]; }
   const n = Math.min(d.length, 1500), ii = [...new Set(Array.from({ length: n }, (_, j) => Math.trunc(n === 1 ? 0 : (j * (d.length - 1)) / (n - 1))))];
   w(`profiles/${k}.json`, { course: k, mi: ii.map((i) => Math.round(d[i] * 1000) / 1000), ft: ii.map((i) => Math.round(e[i])) });
@@ -236,7 +236,7 @@ for (const [xs, y, lab] of grp) {
   }
   placed.push([bx, by]); callouts.push({ xs, y, bx, by, lab });
 }
-w('profiles/callouts.json', { callouts, rincon });
+w('profiles/callouts.json', { callouts, rincon, evp: EVPK }); // evp: every station pass per course (mi, ft, station, course) for the filtered elevation chart
 
 // direction arrows: sources/arrows.json lists mile markers per course and map (show true/false); geometry comes from the route
 const layout = rj('curated/layout.json');

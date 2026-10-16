@@ -282,3 +282,32 @@ a.stlink{color:inherit;text-decoration:none}@media screen{a.stlink{border-bottom
   .cpheat figcaption{font-size:7pt}.cpheat{margin-top:4pt}.cprofile{margin:.2rem 0 .3rem}
   .coursepage .cuttab td,.coursepage .cuttab th{padding:1.5pt 3pt}
 }
+/* ---------- sticky navbar (title, Layers, PDF, DRAFT status always visible) ---------- */
+@media screen{html body .topnav{position:sticky!important;top:0;z-index:40;flex-wrap:nowrap}html .topnav .brand{white-space:nowrap;min-width:0;overflow:hidden;text-overflow:ellipsis}}
+.topnav .draftnote{white-space:nowrap}
+@media (max-width:560px){html body .printctl{display:flex!important}.printctl .pdflab{display:none}.topnav .brand{font-size:.9rem}.topnav .brand img{height:22px}.topnav .draftnote{font-size:.62rem;padding:.2rem .35rem}}
+/* Layers button + dropdown panel (map layers and race filter) */
+.navlayers{position:relative;margin:0!important;padding:0!important;border:0!important;background:none!important;width:auto!important;font-size:.9rem}
+.navlayers > summary{list-style:none;display:inline-flex;align-items:center;gap:.35em;cursor:pointer;padding:.25rem .7rem;border:1px solid #888;border-radius:4px;background:#fff;user-select:none;white-space:nowrap}
+.navlayers > summary::-webkit-details-marker{display:none}.navlayers[open] > summary{background:#f2f0ec}
+.navlayers .lpanel{position:absolute;left:0;top:calc(100% + 6px);z-index:41;background:#fff;border:1px solid #ddd;border-radius:6px;box-shadow:0 4px 14px #0002;padding:.5rem .8rem;width:max-content;max-width:min(92vw,760px);display:flex;flex-wrap:wrap;column-gap:1.2rem}
+.navlayers .lpanel .racefilter{border-top:0}
+@media (max-width:699px){.navlayers .lpanel{position:fixed;left:8px;right:8px;top:48px;width:auto;max-width:none}}
+@media print{.navlayers{display:none!important}}
+
+/* north arrow (SSOT site/lib/north.ts): needle height 6.5 % of the map width, inset 1.5 % of the width, on every map */
+.fp-zoom{container-type:inline-size}.plan svg.fp-north,html body .plan svg.fp-north{position:absolute;top:1.5cqw!important;width:auto!important;height:6.5cqw!important;pointer-events:none;z-index:2}.plan svg.fp-tr{right:1.5cqw!important;left:auto}.plan svg.fp-tl{left:1.5cqw!important}
+
+/* race cards: site styling (no brand colours); thumbnail = the race map itself; Strava | Join our club split button */
+@media screen{
+  .racecard svg.rc-map{display:block;width:auto!important;max-width:100%;height:240px!important;max-height:240px!important;margin:0 auto;box-shadow:none}
+  .racecard .rc-open:not(.rc-full){background:#f6f5f2!important}
+  .rc-btns .splitbtn{display:inline-flex}.rc-btns .splitbtn a{border-radius:0}.rc-btns .splitbtn a:first-child{border-radius:4px 0 0 4px}.rc-btns .splitbtn a:last-child{border-radius:0 4px 4px 0;margin-left:-1px}.rc-btns .splitbtn a:only-child{border-radius:4px}
+  .rc-btns .splitbtn a:hover{position:relative;z-index:1}
+}
+
+/* finish-area heat overlay (web only; Erik's drawing untouched underneath) */
+.fp-stage{position:relative}svg.fp-heat{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;mix-blend-mode:multiply}
+.fp-heatctl{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;margin:.4rem 0;font-size:.82rem;color:#555}.fp-heatctl .fp-range{flex:1 1 160px;accent-color:#b3261e}.fp-read{font-weight:700;color:#222;min-width:9em}
+.fp-hkey{width:28px;height:12px;border-radius:6px;background:linear-gradient(90deg,#b3261e10,#b3261ef0)}
+@media print{.fp-heatctl,svg.fp-heat{display:none!important}}

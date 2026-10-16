@@ -15,9 +15,9 @@ try {
     await p.screenshot({ path: `${out}-${w}-racebox.png` }); await p.keyboard.press('Escape');
     await p.evaluate(() => document.querySelector("svg.timeline a.stlink[data-station=\"4\"]")!.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true }))); await p.waitForTimeout(300);
     await p.screenshot({ path: `${out}-${w}-stbox.png` }); await p.keyboard.press('Escape');
-    await p.locator('.layers').scrollIntoViewIfNeeded();
-    await p.uncheck('input[data-race="100K"]'); await p.uncheck('input[data-race="20K"]'); await p.waitForTimeout(200);
-    await p.locator('svg.timeline').scrollIntoViewIfNeeded(); await p.screenshot({ path: `${out}-${w}-filter.png` });
+    await p.click('.navlayers > summary');
+    await p.uncheck('input[data-race="100K"]'); await p.uncheck('input[data-race="20K"]'); await p.waitForTimeout(600); await p.screenshot({ path: `${out}-${w}-panel.png` }); await p.click('.navlayers > summary');
+    await p.locator('svg.profile').scrollIntoViewIfNeeded(); await p.waitForTimeout(300); await p.screenshot({ path: `${out}-${w}-filter.png` }); await p.locator('#finish-plan').scrollIntoViewIfNeeded(); await p.screenshot({ path: `${out}-${w}-finish.png` });
     console.log(w, 'overflow', ov, 'overflow(lightbox)', ov2, 'errors', errs.length ? errs : 'none');
     await p.close();
   }

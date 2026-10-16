@@ -95,7 +95,7 @@ export function heatRows(c: Ctx, o: HO) {
   type Bx = { x0: number; x1: number; y0: number; y1: number };
   const CW = 9, ticons: Bx[] = [], cplaced: { b: Bx; row: [number, number] }[] = [], hitB = (p: Bx, q: Bx, m: number) => p.x0 < q.x1 + m && q.x0 < p.x1 + m && p.y0 < q.y1 + m && q.y0 < p.y1 + m;
   const pid = (kk: string) => `cutpat${o.only ?? ''}-${kk}`;
-  let s = `<defs>${order.map((kk) => `<pattern id="${pid(kk)}" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="6" height="6" fill="${c.courses.colors[kk]}"/><rect width="2.2" height="6" fill="#fff"/></pattern>`).join('')}</defs>`;
+  let s = `<defs>${order.map((kk) => `<pattern id="${pid(kk)}" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="2.6" height="6" fill="${c.courses.colors[kk]}" fill-opacity=".8"/></pattern>`).join('')}</defs>`;
   sts.forEach((k, r) => {
     const sf = k === 'S/F', v15 = series(k) ?? [], maxP = Math.max(1, ...v15), y0 = sTop + r * SR, name = sf ? 'Start / Finish' : T.stations[k]?.name ?? c.stations.stations[k].name;
     const ms = Math.min(950, (SR - 6) ** 2 / 1.8), mr = Math.sqrt(ms * 1.8) / 2;
@@ -108,7 +108,7 @@ export function heatRows(c: Ctx, o: HO) {
     for (const t of [...cm.keys()].sort((p, q) => p - q)) { const ks = cm.get(t)!, tx = X(t), sh = (rowHi - rowLo) / ks.length;
       g += `<g class="tlcut"><title>${esc(name)} cutoff ${clock(t, false)} (${ks.join(', ')})</title>` + ks.map((kk, j) => { const ya = rowLo + j * sh + (j ? 0.75 : 0), yb = rowLo + (j + 1) * sh - (j < ks.length - 1 ? 0.75 : 0);
         cplaced.push({ b: { x0: tx - CW / 2, x1: tx + CW / 2, y0: ya, y1: yb }, row: [rowLo, rowHi] });
-        return `<rect data-course="${kk}" x="${f1(tx - CW / 2)}" y="${f1(ya)}" width="${CW}" height="${f1(yb - ya)}" fill="url(#${pid(kk)})" stroke="#fff" stroke-width="1.5"/><rect data-course="${kk}" x="${f1(tx - CW / 2 - 1.6)}" y="${f1(ya - 0.8)}" width="${f1(CW + 3.2)}" height="${f1(yb - ya + 1.6)}" fill="none" stroke="${c.courses.colors[kk]}" stroke-width="1"/>`; }).join('') + '</g>'; }
+        return `<rect data-course="${kk}" x="${f1(tx - CW / 2)}" y="${f1(ya)}" width="${CW}" height="${f1(yb - ya)}" fill="url(#${pid(kk)})"/>`; }).join('') + '</g>'; }
     // station number icon inset at the row's left edge on a white disc, nudged right until it clears every cutoff mark in this row
     const iy = y0 + SR / 2, mine = cplaced.filter((P) => P.row[0] === rowLo); let ix = LX + mr + 1 + 5.5;
     const clear = (x: number) => mine.every((P) => P.b.x1 + 3 < x - mr - 1 || P.b.x0 - 3 > x + mr + 1);
@@ -116,7 +116,8 @@ export function heatRows(c: Ctx, o: HO) {
     ticons.push({ x0: ix - mr - 1, x1: ix + mr + 1, y0: iy - mr - 1, y1: iy + mr + 1 });
     const stn = c.stations.stations[k];
     g += `<a class="stlink" href="#station-${encodeURIComponent(k)}" data-station="${esc(k)}" aria-label="${esc(stn.name)} aid station details"><circle cx="${f1(ix)}" cy="${f1(iy)}" r="${f1(mr + 1)}" fill="#fff"/>` + station(ix, iy, k, stn.spectator, { s: ms, fs: Math.sqrt(ms / 950) * 24, badge: false, colors: c.colors }) + '</a>';
-    s += `<g class="tlst" data-station="${esc(k)}">${g}</g>`;
+    const cl = [...cm.entries()].flatMap(([tt, ks]) => ks.map((kk) => [tt, kk]));
+    s += `<g class="tlst" data-station="${esc(k)}" data-cuts='${JSON.stringify(cl)}' data-cw="${f1((CW / (RX - LX)) * (t1 - t0))}">${g}</g>`;
   });
   cplaced.forEach((P, i) => { if (P.b.y0 < P.row[0] - 0.01 || P.b.y1 > P.row[1] + 0.01) throw new Error('[timeline] a cutoff mark enters another station row');
     cplaced.forEach((Q, j) => { if (i !== j && hitB(P.b, Q.b, 0.5)) throw new Error('[timeline] cutoff marks overlap'); }); });

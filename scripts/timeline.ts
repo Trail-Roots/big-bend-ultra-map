@@ -158,10 +158,17 @@ const nb = Math.ceil((T1 - T0) / BIN), bins = (n: number) => new Array(n).fill(0
 const out: any = { source: RS.source, fetched: RS.fetched, generated: new Date().toISOString(), date: '2027-01-17', window: [T0, T1], bin_min: BIN, sun, caps, history, courses: {}, stations: {} };
 const stBins: Record<string, number[]> = Object.fromEntries(stations.order.map((s: string) => [s, bins(nb)]));
 const stByCourse: Record<string, Record<string, number[]>> = {};
-// start/finish crowd: runners arrive PRE min before their own start and stay until it; finishers linger LINGER min after finishing; mid-race S/F pass-throughs stay PASS_LINGER min
-const PRE = 60, LINGER = 60, PASS_LINGER = 5, crowd = bins(nb), crowdBy: Record<string, number[]> = {};
+// Start/Finish heat row = runners actually crossing the line per 15 min (start crossings, mid-race pass-throughs, finishes); no early-arrival or
+// lingering model. Runners NOT on course but at the finish area (waiting to start / done) are a separate series (inactive15) for the floor-plan overlay:
+// arrive 15-75 min before their start (triangular, mode 45 min before), finishers stay 60-120 min (uniform) after finishing.
+const PRE = 0, LINGER = 0, PASS_LINGER = 0, crowd = bins(nb), crowdBy: Record<string, number[]> = {}, idle = bins(nb), idleBy: Record<string, number[]> = {};
+const ARR = { lo: 15, mode: 45, hi: 75 }, STAY = { lo: 60, hi: 120 };
+const triQ = (u: number) => { const { lo, mode, hi } = ARR, F = (mode - lo) / (hi - lo); return u < F ? lo + Math.sqrt(u * (hi - lo) * (mode - lo)) : hi - Math.sqrt((1 - u) * (hi - lo) * (hi - mode)); };
+const idleSpan = (k: string, a: number, b: number) => { for (let bb = 0; bb < nb; bb++) { const t = T0 + (bb + 0.5) * BIN; if (t >= a && t < b) { idle[bb] += W8[k]; (idleBy[k] ??= bins(nb))[bb] += W8[k]; } } };
 const W8: Record<string, number> = Object.fromEntries(ORDER.map((k) => [k, dist[k].scale]));
-const presence = (k: string, a: number, d: number) => { for (let b = 0; b < nb; b++) { const t = T0 + (b + 0.5) * BIN; if (t >= a && t < a + d) { crowd[b] += W8[k]; (crowdBy[k] ??= bins(nb))[b] += W8[k]; } } };
+void PRE; void LINGER; void PASS_LINGER;
+/** one line crossing at minute a -> its 15-min bin */
+const presence = (k: string, a: number) => { const b = Math.floor((a - T0) / BIN); if (b >= 0 && b < nb) { crowd[b] += W8[k]; (crowdBy[k] ??= bins(nb))[b] += W8[k]; } };
 // mass-start crossing delay: nobody crosses before the gun; 0..2 min after it, skewed early (quantile u -> 2*u^2 min), deterministic per runner
 const startDelay = (i: number, n: number) => 2 * ((i + 0.5) / n) ** 2;
 const runners: Record<string, { T: number; stop?: number }[]> = {};
@@ -174,11 +181,17 @@ for (const k of ORDER) {
   if (R.some((_, i) => startDelay(i, R.length) < 0 || startDelay(i, R.length) > 2)) throw new Error(`[timeline] ${k}: a start before the gun`);
   const onCourse = bins(nb); stByCourse[k] = {};
   R.forEach((r, ri) => { const S0 = SG + startDelay(ri, R.length);
-    const endMin = r.stop != null ? S0 + r.T * fracAt(k, r.stop, r.T) : S0 + r.T;
+    // a DNF runner drops at their aid station but stays counted on course until that station visit's cutoff (when the sweep / transport brings
+    // runners in), not the moment they stop: every DNF dropping at the same instant made the bands fall before anyone had finished
+    const dropAt = r.stop != null ? S0 + r.T * fracAt(k, r.stop, r.T) : 0, cutQ = r.stop != null ? cuts.find((c: any) => Math.abs(c.mile - r.stop!) < 1e-6) : null;
+    const cutT = cutQ && /\d/.test(cutQ.cutoff) ? (() => { const m = cutQ.cutoff.match(/^(\d+):(\d\d) (AM|PM)$/); let v = (Number(m[1]) % 12 + (m[3] === 'PM' ? 12 : 0)) * 60 + Number(m[2]); if (v < SG) v += 1440; return v; })() : null;
+    const endMin = r.stop != null ? Math.max(dropAt, cutT ?? dropAt) : S0 + r.T;
     for (let b = 0; b < nb; b++) { const t = T0 + (b + 0.5) * BIN; if (t >= S0 && t <= endMin) onCourse[b] += W8[k]; }
-    presence(k, S0 - PRE, PRE);
-    if (r.stop == null) presence(k, S0 + r.T, LINGER);
-    for (const c of cuts) { if (c.station === 'S/F' && c.mile > 0 && c.mile < total - 0.01 && (r.stop == null || c.mile <= r.stop)) presence(k, S0 + r.T * fracAt(k, c.mile, r.T), PASS_LINGER); }
+    presence(k, S0); if (r.stop == null) presence(k, S0 + r.T);
+    for (const c of cuts) { if (c.station === 'S/F' && c.mile > 0 && c.mile < total - 0.01 && (r.stop == null || c.mile <= r.stop)) presence(k, S0 + r.T * fracAt(k, c.mile, r.T)); }
+    // inactive runners at the finish area (deterministic quantiles per runner)
+    const u = (ri + 0.5) / R.length, v = ((ri * 0.618034) % 1);
+    idleSpan(k, SG - triQ(u), SG); if (r.stop == null) idleSpan(k, S0 + r.T, S0 + r.T + STAY.lo + v * (STAY.hi - STAY.lo));
     for (const c of cuts) { if (c.mile === 0 || (r.stop != null && c.mile > r.stop)) continue; const t = S0 + r.T * fracAt(k, c.mile, r.T), b = Math.floor((t - T0) / BIN); if (b >= 0 && b < nb) { stBins[c.station][b] += W8[k]; (stByCourse[k][c.station] ??= bins(nb))[b] += W8[k]; } }
   });
   const S0 = SG;
@@ -192,19 +205,19 @@ for (const k of ORDER) {
 }
 const parseHours = (h: string) => { const t = (s: string) => { const m = s.trim().match(/^(\d+)(?::(\d\d))?([ap])$/)!; let H = Number(m[1]) % 12 + (m[3] === 'p' ? 12 : 0); return H * 60 + Number(m[2] ?? 0); }; const [a, b] = h.split('-').map(t); return [a, b < a ? b + 1440 : b]; };
 const rnd = (a: number[]) => a.forEach((v, i) => (a[i] = Math.round(v)));
-for (const s of stations.order) rnd(stBins[s]); for (const k of ORDER) Object.values(stByCourse[k]).forEach(rnd); rnd(crowd); Object.values(crowdBy).forEach(rnd);
+for (const s of stations.order) rnd(stBins[s]); for (const k of ORDER) Object.values(stByCourse[k]).forEach(rnd); rnd(crowd); Object.values(crowdBy).forEach(rnd); rnd(idle); Object.values(idleBy).forEach(rnd);
 for (const s of stations.order) {
   const B = stBins[s], peak = B.reduce((bi, v, i) => (v > B[bi] ? i : bi), 0), b30 = bins(Math.ceil(nb / 2)); B.forEach((v, i) => (b30[i >> 1] += v));
   const p30 = b30.reduce((bi, v, i) => (v > b30[bi] ? i : bi), 0);
   out.stations[s] = { name: stations.stations[s].name, hours: stations.stations[s].hours, window: stations.stations[s].hours ? parseHours(stations.stations[s].hours) : null, passes15: B, by_course15: Object.fromEntries(ORDER.filter((k) => stByCourse[k][s]).map((k) => [k, stByCourse[k][s]])), total_passes: B.reduce((a, b) => a + b, 0), peak15: { start: T0 + peak * BIN, count: B[peak] }, peak30: { start: T0 + p30 * 30, count: b30[p30] } };
 }
 { const pk = crowd.reduce((bi, v, i) => (v > crowd[bi] ? i : bi), 0), half = crowd.map((v, i) => [v, i]).filter(([v]) => v >= 0.5 * crowd[pk]).map(([, i]) => i);
-  out.finish_crowd = { name: 'Start / Finish', pre_start_min: PRE, linger_min: LINGER, pass_linger_min: PASS_LINGER, present15: crowd, by_course15: crowdBy, peak15: { start: T0 + pk * BIN, count: crowd[pk] }, above_half_peak: { from: T0 + half[0] * BIN, to: T0 + (half[half.length - 1] + 1) * BIN }, above_quarter_peak: (() => { const q = crowd.map((v, i) => [v, i]).filter(([v]) => v >= 0.25 * crowd[pk]).map(([, i]) => i); return { from: T0 + q[0] * BIN, to: T0 + (q[q.length - 1] + 1) * BIN }; })() }; }
+  out.finish_crowd = { name: 'Start / Finish', present15: crowd, by_course15: crowdBy, inactive15: idle, inactive_by_course15: idleBy, inactive_model: { arrive_before_start_min: ARR, stay_after_finish_min: STAY }, peak15: { start: T0 + pk * BIN, count: crowd[pk] }, above_half_peak: { from: T0 + half[0] * BIN, to: T0 + (half[half.length - 1] + 1) * BIN }, above_quarter_peak: (() => { const q = crowd.map((v, i) => [v, i]).filter(([v]) => v >= 0.25 * crowd[pk]).map(([, i]) => i); return { from: T0 + q[0] * BIN, to: T0 + (q[q.length - 1] + 1) * BIN }; })() }; }
 out.pace_model = { params: PAR, grid: GRID, validation, mean_abs_error_min: +best!.err.toFixed(1), previous_model_mean_abs_error_min: +baselineErr.toFixed(1), same_without_fitness_scaling_min: +noFitnessErr.toFixed(1), beta_note: 'beta ≥ 0.5 enforced (faster runners less affected, per spec); the splits alone slightly prefer beta = 0', reference_runner_20min_mi: pace20, validated_points: VAL.reduce((a, v) => a + v.pts.length, 0) };
 out.assumptions = [
   'Expected runners per course = sources/curated/site.json expectedRunners (default 2026 starters). All counts (on course, aid-station passes, finish crowd) are the 2026-shaped simulation scaled by N / 2026 starters, i.e. the expected value of resampling N runners from the 2026 finish-time distribution. Map dots bootstrap whole 2026 runners (seeded, ±1% time jitter) when N differs, keeping 2026 clustering.',
   'Start: nobody crosses the line before the gun; each runner starts 0-2 min after it (mass-start crossing delay, skewed early: runner quantile u -> 2u² min, faster runners nearer the front).',
-  `Start / Finish crowd (one row, same place): every runner (finisher or DNF) arrives ${PRE} min before their own start and stays until the gun; every finisher (all five distances) stays ${LINGER} min after their modelled finish; runners passing S/F mid-race (not finishing there) count for ${PASS_LINGER} min. DNF runners and spectators/crew are not counted. Count = people present at the middle of each 15 min bin.`,
+  `Start / Finish heat row: runners crossing the line per 15 min (start crossings, mid-race pass-throughs, finishes), like every other station (passes, no early-arrival or lingering model). Finish-area floor-plan overlay (inactive runners): each runner arrives ${ARR.lo}-${ARR.hi} min before their start (triangular, mode ${ARR.mode}); finishers stay ${STAY.lo}-${STAY.hi} min after finishing. DNF runners stay counted on course until the cutoff of the station where they drop.`,
   'Finish-time distributions per 2027 distance = 2026 RunSignup results for the identically named event (same start times); one simulated runner per 2026 finisher.',
   'Expected 2027 starters = 2026 starters (finishers + DNF): 2027 registrant counts are not public (RunSignup participants endpoint returns Permission Denied). 2027 caps from RunSignup are shown for reference only.',
   'Pre-2026 years ran 50M / 50K / 30K (plus 10K, 20K) on different courses: used for volume history only, not for times.',
