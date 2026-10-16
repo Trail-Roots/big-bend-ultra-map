@@ -9,13 +9,13 @@ import { icon } from '../lib/icons';
 import { renderRaceHeat } from '../lib/timeline';
 import siteCfg from '../../content/site.json';
 /** card thumbnail: the race's own map in the established race-map style (ids made unique) */
-const thumb = (c, k: string) => uniq(renderRaceMap(c, k), `card${k}`).replace('class="racemap"', 'class="racemap rc-map"').replace(/ data-race="[^"]*"/, '');
+const thumb = (c, k: string) => uniq(renderRaceMap(c, k, { aspect: 330 / 240 }), `card${k}`).replace('class="racemap"', 'class="racemap rc-map"').replace(/ data-race="[^"]*"/, '').replace('<svg ', '<svg preserveAspectRatio="xMidYMid slice" ');
 function card(c, k: string) {
   const C = c.courses.courses[k], cc = c.courses.colors[k], club = (siteCfg as any).stravaClub as string;
   return `<article class="racecard" data-course="${k}" style="--rc:${cc}"><button type="button" class="rc-open" data-course="${k}" aria-label="Open the full ${k} race page">${thumb(c, k)}</button>
 <div class="rc-body"><h3 class="bibh">${miniBibSvg(k, cc, 0.8)}<span>Big Bend Ultra ${k}</span></h3>
 <dl class="rc-stats"><div><dt>Distance</dt><dd>${C.distance_mi.toFixed(1)} mi</dd></div><div><dt>Elev gain</dt><dd>${totalGain(c, k).toLocaleString('en-US')} ft</dd></div><div><dt>Start</dt><dd>${esc(C.start)}</dd></div></dl>
-<div class="rc-btns"><button type="button" class="rc-open rc-full" data-course="${k}">${icon('expand')}Full page</button><a href="${SITE_URL}${esc(C.gpx)}" download title="Download the ${k} GPX">${icon('route')}.GPX</a>${C.stravaUrl ? `<span class="splitbtn"><a href="${esc(C.stravaUrl)}" target="_blank" rel="noopener" title="${k} route on Strava (opens the Strava app on a phone)">${icon('strava')}Strava</a>${club ? `<a href="${esc(club)}" target="_blank" rel="noopener" title="Trail Roots club on Strava">${icon('users')}Join our club</a>` : ''}</span>` : ''}<a href="${SITE_URL}${esc(C.gpx)}" download title="Download the ${k} GPX">${icon('route')}.GPX</a></div></div></article>`;
+<div class="rc-btns"><button type="button" class="rc-open rc-full" data-course="${k}">${icon('expand')}Full page</button><a href="${SITE_URL}${esc(C.gpx)}" download title="Download the ${k} GPX">${icon('route')}.GPX</a>${C.stravaUrl ? `<span class="splitbtn"><a href="${esc(C.stravaUrl)}" target="_blank" rel="noopener" title="${k} route on Strava (opens the Strava app on a phone)">${icon('strava')}Strava</a>${club ? `<a href="${esc(club)}" target="_blank" rel="noopener" title="Trail Roots club on Strava">${icon('users')}Join our club</a>` : ''}</span>` : ''}</div></div></article>`;
 }
 export const meta = { id: 'courses', title: 'Race pages' };
 const uniq = (svg: string, k: string) => svg.replace(/\bid="([^"]+)"/g, `id="$1-cp${k}"`).replace(/url\(#([^)]+)\)/g, `url(#$1-cp${k})`).replace('class="mini"', 'class="mini mini-cp"').replace(/ data-mini="[^"]*"/, '');

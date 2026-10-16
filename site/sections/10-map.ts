@@ -23,7 +23,7 @@ function place(w: number, h: number, force?: 'portrait' | 'landscape') {
 /** navbar "Layers" button: map layer toggles + race filter in one dropdown panel (build.ts puts it in the sticky navbar) */
 export function layersNav(c: Ctx) {
   const toggles = mainLayers.map(([k, lab, on]) => `<label><input type="checkbox" data-layer="${k}"${on ? ' checked' : ''}> ${lab}</label>`).join('');
-  return `<details class="ui layers navlayers"><summary>${icon('layers')}Layers</summary><div class="lpanel"><div class="toggles">${toggles}</div><div class="toggles racefilter" role="group" aria-label="Show races"><span class="rf-lab">Races</span><label class="ck rf-all"><input type="checkbox" data-race-all checked> All</label>${c.courses.order.map((k) => `<label class="ck" style="--c:${c.courses.colors[k]}"><input type="checkbox" data-race="${k}" checked> ${k}</label>`).join('')}</div></div></details>`;
+  return `<details class="ui layers navlayers"><summary>${icon('layers')}Layers</summary><div class="lpanel"><div class="toggles">${toggles}</div><div class="toggles racefilter" role="group" aria-label="Show races"><span class="rf-lab">Races</span><label class="ck rf-all"><input type="checkbox" data-race-all checked> All</label>${c.courses.order.map((k) => `<label class="ck" style="--c:${c.courses.colors[k]}"><input type="checkbox" data-race="${k}"> ${k}</label>`).join('')}</div></div></details>`;
 }
 export function render(c: Ctx) {
   const L = c.layout, hdr = L.header, st = L.strips;

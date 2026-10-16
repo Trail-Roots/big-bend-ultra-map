@@ -17,3 +17,11 @@ try {
   await p.evaluate(() => document.body.classList.remove('printone'));
 } finally { await b.close(); srv.stop(true); }
 console.log('pdf', path.relative(process.cwd(), OUT), (fs.statSync(OUT).size / 1024 / 1024).toFixed(2) + ' MB');
+// print images for embed.js: a host page can't print the cross-origin iframe (it comes out blank), so embed.js prints these page images instead
+{ const P = path.join(D, 'print'); fs.rmSync(P, { recursive: true, force: true }); fs.mkdirSync(P);
+  const r = Bun.spawnSync(['pdftoppm', '-r', '150', '-jpeg', '-jpegopt', 'quality=82', OUT, path.join(P, 'p')]); if (r.exitCode) throw new Error('pdftoppm failed: ' + r.stderr);
+  const info = new TextDecoder().decode(Bun.spawnSync(['pdfinfo', '-f', '1', '-l', '99', OUT]).stdout), pages = [...info.matchAll(/Page\s+\d+ size:\s+([\d.]+) x ([\d.]+)/g)].map((m) => +m[1] > +m[2] ? 'L' : 'P');
+  const files = fs.readdirSync(P).filter((f) => f.endsWith('.jpg')).sort();
+  if (files.length !== pages.length) throw new Error(`print images ${files.length} != pages ${pages.length}`);
+  fs.writeFileSync(path.join(P, 'pages.json'), JSON.stringify(files.map((f, i) => ({ src: 'print/' + f, o: pages[i] }))));
+  console.log('print images', files.length, pages.join('')); }

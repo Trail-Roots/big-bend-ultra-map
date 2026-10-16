@@ -21,9 +21,9 @@ export function renderTimeline(c: Ctx) {
   let s = `<rect width="${f1(W)}" height="${f1(H)}" fill="#fff"/>`;
   // sky: night / civil twilight / daylight
   const sun = T.sun, d17 = sun.jan17, d18 = sun.jan18;
-  const night = "#1f2a44", band = (a: number, b: number, op: number) => (Math.min(b, t1) > Math.max(a, t0) ? `<rect x="${f1(X(Math.max(a, t0)))}" y="0" width="${f1(X(Math.min(b, t1)) - X(Math.max(a, t0)))}" height="${f1(H)}" fill="${night}" fill-opacity="${op}"/>` : '');
+  const night = col.shade, band = (a: number, b: number, op: number) => (Math.min(b, t1) > Math.max(a, t0) ? `<rect x="${f1(X(Math.max(a, t0)))}" y="0" width="${f1(X(Math.min(b, t1)) - X(Math.max(a, t0)))}" height="${f1(H)}" fill="${night}" fill-opacity="${op}"/>` : '');
   // night shading blends through civil twilight (no hard edges): full at dawn−20 min / dusk+20 min, clear at sunrise+10 / sunset−10
-  void band; const N = 0.17, keys: [number, number][] = [[t0, N], [d17.dawn - 20, N], [d17.sunrise + 10, 0], [d17.sunset - 10, 0], [d17.dusk + 20, N], [d18.dawn - 20, N], [d18.sunrise + 10, 0]];
+  void band; const N = Number(col.shade_op), keys: [number, number][] = [[t0, N], [d17.dawn - 20, N], [d17.sunrise + 10, 0], [d17.sunset - 10, 0], [d17.dusk + 20, N], [d18.dawn - 20, N], [d18.sunrise + 10, 0]];
   const stops = keys.map(([t, o]) => `<stop offset="${Math.min(1, Math.max(0, (X(t) - X(t0)) / (X(t1) - X(t0)))).toFixed(4)}" stop-color="${night}" stop-opacity="${o}"/>`).join('');
   s += `<defs><linearGradient id="skygrad" x1="0" x2="1" y1="0" y2="0">${stops}</linearGradient></defs><rect class="sky" x="${f1(X(t0))}" y="0" width="${f1(X(t1) - X(t0))}" height="${f1(H)}" fill="url(#skygrad)"/>`;
   // hour grid + axis
@@ -34,8 +34,11 @@ export function renderTimeline(c: Ctx) {
   }
   if (t1 > 1440) s += `<text x="${f1(X(1440) + 4)}" y="${AX - 10}" font-size="15" fill="${col.mute}" dx="22">Mon</text>`;
   // sunrise / sunset markers
-  const sunMark = (t: number, lab: string) => { const x = X(t), y = bottom + 14, up = lab === 'Sunrise'; let rays = ''; for (let i = 0; i < 5; i++) { const a = Math.PI * (i / 4); rays += `M${f1(x + Math.cos(a) * 9)},${f1(y - Math.sin(a) * 9)}L${f1(x + Math.cos(a) * 13)},${f1(y - Math.sin(a) * 13)}`; } return `<path d="M${f1(x)},${AX}V${f1(bottom)}" stroke="#d08a1e" stroke-width="2" stroke-dasharray="6 4"/><g class="sun"><title>${lab} ${clock(t, false)}</title><path d="M${f1(x - 7)},${f1(y)}a7,7 0 0 1 14,0z" fill="#f2a93b"/><path d="${rays}" stroke="#f2a93b" stroke-width="2" stroke-linecap="round"/><path d="M${f1(x - 14)},${f1(y)}h28" stroke="#a86a10" stroke-width="1.5"/><text x="${f1(x + 17)}" y="${f1(y)}" font-size="17" font-weight="700" fill="#a86a10" stroke="#fff" stroke-width="4" paint-order="stroke">${up ? '↑' : '↓'}${clock(t, false)}</text></g>`; };
+  const sunMark = (t: number, lab: string) => { const x = X(t), y = bottom + 14, up = lab === 'Sunrise'; let rays = ''; for (let i = 0; i < 5; i++) { const a = Math.PI * (i / 4); rays += `M${f1(x + Math.cos(a) * 9)},${f1(y - Math.sin(a) * 9)}L${f1(x + Math.cos(a) * 13)},${f1(y - Math.sin(a) * 13)}`; } return `<path d="M${f1(x)},${AX}V${f1(bottom)}" stroke="#d08a1e" stroke-width="2" stroke-dasharray="6 4"/><g class="sun"><title>${lab} ${clock(t, false)}</title><path d="M${f1(x - 7)},${f1(y)}a7,7 0 0 1 14,0z" fill="#f2a93b"/><path d="${rays}" stroke="#f2a93b" stroke-width="2" stroke-linecap="round"/><path d="M${f1(x - 14)},${f1(y)}h28" stroke="#a86a10" stroke-width="1.5"/><text x="${f1(x + 17 + 74 > RX ? x - 17 : x + 17)}" text-anchor="${x + 17 + 74 > RX ? 'end' : 'start'}" y="${f1(y)}" font-size="17" font-weight="700" fill="#a86a10" stroke="#fff" stroke-width="4" paint-order="stroke">${up ? '↑' : '↓'}${clock(t, false)}</text></g>`; };
   s += sunMark(d17.sunrise, 'Sunrise') + sunMark(d17.sunset, 'Sunset');
+  // build overlap check: sunrise / sunset labels (icon + ~74 px of text) must not collide with each other
+  { const box = (tt: number) => { const x = X(tt), e = x + 17 + 74 > RX; return e ? [x - 17 - 74, x + 14] : [x - 14, x + 17 + 74]; }, A = box(d17.sunrise), B = box(d17.sunset);
+    if (A[1] > B[0] && B[1] > A[0]) throw new Error('[timeline] sunrise and sunset labels overlap'); }
   {
     const B = T.bin_min, n = T.courses[order[0]].on_course.length, top = vTop + 30, base = bottom, hgt = base - top;
     // time grid: 15-min bin centres plus an explicit zero anchor just before each gun and the gun itself, so every band is exactly 0
@@ -48,7 +51,9 @@ export function renderTimeline(c: Ctx) {
     const acc = ts.map(() => 0), maxT = Math.max(...ts.map((t) => order.reduce((q, k) => q + valAt(k, t), 0)));
     const xs = ts.map((t) => X(t)), Y = (v: number) => base - (v / maxT) * hgt;
     s += `<path d="M${f1(LX)},${f1(base)}H${f1(RX)}" stroke="${ink}" stroke-width="1"/>`;
-    let bands = '', tops = '';
+    let bands = ''; const topsA: string[] = [];
+    // top line only where the band has thickness (a finished race leaves no line riding on the band above)
+    const segD = (up: number[], lo: number[]) => { let d = '', pen = false; for (let i = 0; i < xs.length - 1; i++) { const on = Math.abs(lo[i] - up[i]) > 0.05 || Math.abs(lo[i + 1] - up[i + 1]) > 0.05; if (on) { if (!pen) d += `M${f1(xs[i])},${f1(up[i])}`; d += `L${f1(xs[i + 1])},${f1(up[i + 1])}`; } pen = on; } return d || 'M0,0'; };
     order.forEach((k) => {
       const C = T.courses[k], cc = c.courses.colors[k], lo = acc.slice();
       ts.forEach((t, i) => { acc[i] += valAt(k, t); });
@@ -57,8 +62,9 @@ export function renderTimeline(c: Ctx) {
       const upper = xs.map((x, i) => `${f1(x)},${f1(Y(acc[i]))}`), lower = xs.map((x, i) => `${f1(x)},${f1(Y(lo[i]))}`).reverse();
       bands += `<g class="tlrow" data-course="${k}"><path d="M${upper.join('L')}L${lower.join('L')}Z" fill="${cc}" fill-opacity=".55" stroke="none"/></g>`;
       // course-colour line along the top edge of this race's band, drawn after every fill so no band covers it
-      tops += `<path d="M${upper.join('L')}" class="ln" data-course="${k}" fill="none" stroke="${cc}" stroke-width="2.6" stroke-linejoin="round"/>`;
+      topsA.push(`<path d="${segD(acc.map(Y), lo.map(Y))}" class="ln" data-course="${k}" fill="none" stroke="${cc}" stroke-width="2.6" stroke-linejoin="round"/>`);
     });
+    const tops = topsA.reverse().join(''); // top race's line first, bottom race's last (lower lines win)
     // build check on the rendered geometry: before the first gun the stacked total sits exactly on the baseline
     ts.forEach((t, i) => { if (t < Math.min(...order.map((k) => T.courses[k].start)) && f1(Y(acc[i])) !== f1(base)) throw new Error('[timeline] runners on course before the first start'); });
     console.log(`timeline: every race band is 0 until its gun (${ts.length} samples, gun anchors)`);
@@ -95,13 +101,13 @@ export function heatRows(c: Ctx, o: HO) {
   type Bx = { x0: number; x1: number; y0: number; y1: number };
   const CW = 9, ticons: Bx[] = [], cplaced: { b: Bx; row: [number, number] }[] = [], hitB = (p: Bx, q: Bx, m: number) => p.x0 < q.x1 + m && q.x0 < p.x1 + m && p.y0 < q.y1 + m && q.y0 < p.y1 + m;
   const pid = (kk: string) => `cutpat${o.only ?? ''}-${kk}`;
-  let s = `<defs>${order.map((kk) => `<pattern id="${pid(kk)}" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="2.6" height="6" fill="${c.courses.colors[kk]}" fill-opacity=".8"/></pattern>`).join('')}</defs>`;
+  let s = `<defs>${order.map((kk) => `<pattern id="${pid(kk)}" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="6" height="6" fill="#fff"/><rect width="3.2" height="6" fill="${c.courses.colors[kk]}"/></pattern>`).join('')}</defs>`;
   sts.forEach((k, r) => {
     const sf = k === 'S/F', v15 = series(k) ?? [], maxP = Math.max(1, ...v15), y0 = sTop + r * SR, name = sf ? 'Start / Finish' : T.stations[k]?.name ?? c.stations.stations[k].name;
     const ms = Math.min(950, (SR - 6) ** 2 / 1.8), mr = Math.sqrt(ms * 1.8) / 2;
     let g = o.title ? `<title>${esc(o.title)}</title>` : sf ? `<title>Start / Finish shaded on its own scale (peak ${Math.round(maxP)} people); aid stations share one scale</title>` : '';
     v15.forEach((v: number, i: number) => { if (!v) return; const x = X(t0 + i * B); if (x > RX) return; g += `<rect class="hc" data-i="${i}" x="${f1(x)}" y="${f1(y0 + 4)}" width="${f1(X(t0 + B) - X(t0) + 0.3)}" height="${f1(SR - 8)}" fill="#b3261e" fill-opacity="${(0.06 + 0.9 * Math.sqrt(Math.min(1, v / maxP))).toFixed(2)}"/>`; });
-    // cutoffs: a thick bar in the race colour with white diagonal "barrier" slashes, white edge, confined to this row; races sharing a station + time split the row
+    // cutoffs: a thick bar in the race colour with white diagonal "barrier" slashes (no outline), confined to this row; races sharing a station + time split the row
     const cm = new Map<number, string[]>();
     for (const kk of order) { const C = T.courses[kk]; for (const q of C.passes) { if (q.station !== k || q.mile === 0) continue; const tm = cutMin(q.cutoff); if (tm == null) continue; const t = tm < C.start ? tm + 1440 : tm; if (t >= t0 && t <= t1) (cm.get(t) ?? cm.set(t, []).get(t)!).push(kk); } }
     const rowLo = y0 + 2, rowHi = y0 + SR - 2;
@@ -117,7 +123,7 @@ export function heatRows(c: Ctx, o: HO) {
     const stn = c.stations.stations[k];
     g += `<a class="stlink" href="#station-${encodeURIComponent(k)}" data-station="${esc(k)}" aria-label="${esc(stn.name)} aid station details"><circle cx="${f1(ix)}" cy="${f1(iy)}" r="${f1(mr + 1)}" fill="#fff"/>` + station(ix, iy, k, stn.spectator, { s: ms, fs: Math.sqrt(ms / 950) * 24, badge: false, colors: c.colors }) + '</a>';
     const cl = [...cm.entries()].flatMap(([tt, ks]) => ks.map((kk) => [tt, kk]));
-    s += `<g class="tlst" data-station="${esc(k)}" data-cuts='${JSON.stringify(cl)}' data-cw="${f1((CW / (RX - LX)) * (t1 - t0))}">${g}</g>`;
+    s += `<g class="tlst" data-station="${esc(k)}" data-name="${esc(k === "S/F" ? "Start / Finish" : c.stations.stations[k].name)}" data-cuts='${JSON.stringify(cl)}' data-cw="${f1((CW / (RX - LX)) * (t1 - t0))}">${g}</g>`;
   });
   cplaced.forEach((P, i) => { if (P.b.y0 < P.row[0] - 0.01 || P.b.y1 > P.row[1] + 0.01) throw new Error('[timeline] a cutoff mark enters another station row');
     cplaced.forEach((Q, j) => { if (i !== j && hitB(P.b, Q.b, 0.5)) throw new Error('[timeline] cutoff marks overlap'); }); });

@@ -73,7 +73,7 @@ export function renderMini(c, k) {
   s += bib(k, c.courses.courses[k].start, c.courses.colors[k], W, H, col);
   return `<svg class="mini" data-mini="${k}" viewBox="0 0 ${f1(W)} ${f1(H)}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${k} course map"><defs><clipPath id="mc${k}"><rect width="${f1(W)}" height="${f1(H)}"/></clipPath></defs><rect width="${f1(W)}" height="${f1(H)}" fill="#fff"/><g clip-path="url(#mc${k})">${s}</g><rect width="${f1(W)}" height="${f1(H)}" fill="none" stroke="#b8ae9c" stroke-width="1.6"/></svg>`;
 }
-function turnaround(c, V) {
+export function turnaround(c, V) {
   const f = c.pois.features.find(f => f.properties.kind === 'turnaround'), [p, q] = f.geometry.coordinates.map(V.p), col = c.courses.colors['10K'];
   let v = [p[0] - q[0], p[1] - q[1]]; const n0 = Math.hypot(...v); v = [v[0] / n0, v[1] / n0]; const n = [-v[1], v[0]];
   const h = 15 * 1.4, r = h * 0.75, L = h * 0.9, P = (a, b, s1, s2) => [a[0] + b[0] * s1 + n[0] * s2, a[1] + b[1] * s1 + n[1] * s2];
@@ -104,6 +104,8 @@ export function renderStrips(c) {
 }
 /** page-1 elevation chart for the visible races (race filter). All five = the established layout (layout.json limits, curated callouts);
  *  a subset is rescaled to its longest visible route and re-placed (same placement rule as scripts/content.ts). Returns the inner body + scale. */
+/** station icon size on the page-1 elevation chart: renders at the main-map legend icon size (950 x (9.8/17.1)^2, measured on screen) */
+const PST = 312;
 export function profileBody(c, vis?: string[]) {
   const L = c.layout, W = L.elev[2] * SHEET.w, H = L.elev[3] * SHEET.h, col = c.colors, O: string[] = c.courses.order, pr = c.profiles;
   const V = vis ?? O, all = V.length === O.length, longest = O.find((k) => V.includes(k)) ?? O[0];
@@ -120,7 +122,7 @@ export function profileBody(c, vis?: string[]) {
   if (minor) for (let v = 1; v < x1; v++) if (v % step) s += `<path d="M${f1(X(v))},${f1(H)}v6" stroke="#c8c8c8" stroke-width="1"/>`;
   for (let v = 0; v <= D + 0.01; v += step) s += `<path d="M${f1(X(v))},${f1(H)}v10" stroke="${col.mute}" stroke-width="1"/><text class="dist" x="${f1(X(v))}" y="${f1(H + 10)}" font-size="19" text-anchor="middle" dominant-baseline="hanging" fill="${col.mute}">${v}m</text>`;
   const pts = k => pr[k].mi.map((m, i) => [X(m), Y(pr[k].ft[i])]);
-  if (V.includes(longest)) { const pl = pts(longest), base = Math.max(y0, Math.min(2200, y0)); s += `<path data-course="${longest}" d="${lineD(pl)}L${f1(pl[pl.length - 1][0])},${f1(Y(base))}L${f1(pl[0][0])},${f1(Y(base))}z" fill="#888" fill-opacity=".10"/>`; }
+  if (V.includes(longest)) { const pl = pts(longest), base = Math.max(y0, Math.min(2200, y0)); s += `<path data-course="${longest}" d="${lineD(pl)}L${f1(pl[pl.length - 1][0])},${f1(Y(base))}L${f1(pl[0][0])},${f1(Y(base))}z" fill="${col.shade}" fill-opacity="${col.shade_op}"/>`; }
   for (const k of O) if (V.includes(k)) s += `<path class="ln prof" data-course="${k}" d="${lineD(pts(k))}" stroke="${c.courses.colors[k]}" stroke-width="${k === '100K' ? 4 : 3}"/>`;
   const lgx = W - 46 - MINIBIB.w, lgy = 16; s += `<rect x="${lgx - 10}" y="${lgy - 6}" width="${W - lgx + 10}" height="${O.length * 32 + 10}" fill="#fff" fill-opacity=".9"/>`;
   // legend keeps every race; hidden races at low opacity, clickable (app.ts toggles the race)
@@ -134,8 +136,8 @@ export function profileBody(c, vis?: string[]) {
       outer: for (const dy of [380, -380, 680, -680, 980]) for (const dx of [0, 0.9, -0.9, 1.6, -1.6]) { bx = x + dx * sx; by = y + dy * sy; if (by > y0 + 150 * sy && by < y1 - 250 * sy && placed.every(([px, py]) => Math.abs(bx - px) > 1.8 * sx || Math.abs(by - py) > 260 * sy)) break outer; }
       placed.push([bx, by]); callouts.push({ xs, y, bx, by, lab }); } }
   for (const q of callouts) {
-    for (const x of q.xs) s += leaderLine(X(q.bx), Y(q.by), X(x), Y(q.y), Math.sqrt(950) / 2, 3) + `<circle cx="${f1(X(x))}" cy="${f1(Y(q.y))}" r="3" fill="${col.ink}"/>`;
-    s += `<g class="pcall" data-st="${q.lab}" data-mi="${(q.xs.reduce((a, b) => a + b, 0) / q.xs.length).toFixed(2)}">` + station(X(q.bx), Y(q.by), q.lab, c.stations.stations[q.lab].spectator, { s: 950, fs: 24, badge: false, colors: col }) + '</g>';
+    for (const x of q.xs) s += leaderLine(X(q.bx), Y(q.by), X(x), Y(q.y), Math.sqrt(PST) / 2, 3) + `<circle cx="${f1(X(x))}" cy="${f1(Y(q.y))}" r="3" fill="${col.ink}"/>`;
+    s += `<g class="pcall" data-st="${q.lab}" data-mi="${(q.xs.reduce((a, b) => a + b, 0) / q.xs.length).toFixed(2)}">` + station(X(q.bx), Y(q.by), q.lab, c.stations.stations[q.lab].spectator, { s: PST, fs: 14, badge: false, colors: col }) + '</g>';
   }
   if (V.includes('100K')) for (const r of pr.callouts.rincon) s += `<circle cx="${f1(X(r.mi))}" cy="${f1(Y(r.ft))}" r="6.3" fill="#fff" stroke="${col.ink}" stroke-width="3"/>`;
   return { s, x: [x0, x1], y: [y0, y1], W, H };

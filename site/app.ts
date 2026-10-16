@@ -144,21 +144,23 @@ if (hdEl && prof) {
       const st = (tl.dataset.stations || '').split(',')[Math.floor((hovY - sTop) / sr)]; if (!st) return [];
       // cutoffs whose mark (its full width) overlaps the hovered 15-min cell
       const gEl = tl.querySelector<SVGGElement>(`g.tlst[data-station="${CSS.escape(st)}"]`), cw = +(gEl?.dataset.cw || 0), bs = TM.t0 + Math.floor((t - TM.t0) / 15) * 15;
-      const here: Row[] = (JSON.parse(gEl?.dataset.cuts || '[]') as [number, string][]).filter(([ct, k]) => raceOn(k) && ct + cw / 2 >= bs && ct - cw / 2 <= bs + 15).map(([ct, k]) => ({ b: `${k} cutoff ${fmt(ct)}`, l: 'at this station', c: HD.courses[k].color }));
+      const here: Row[] = (JSON.parse(gEl?.dataset.cuts || '[]') as [number, string][]).filter(([ct, k]) => raceOn(k) && ct + cw / 2 >= bs && ct - cw / 2 <= bs + 15).map(([ct, k]) => ({ b: `${gEl?.dataset.name ?? st} cutoff ${fmt(ct)}`, l: k, c: HD.courses[k].color }));
       if (here.length) return here;
       return order.flatMap((k) => { const n = nextCut(k, t, st); return n ? [{ b: k, c: HD.courses[k].color, l: `cutoff ${fmt(TM.courses[k].start + n[1])} · ${pc(n[1] / n[0])}/mi needed` }] : []; });
     }
     return order.flatMap((k) => { const n = nextCut(k, t); if (!n || t < TM.courses[k].start) return [];
       return [{ b: k, c: HD.courses[k].color, l: `next cutoff ${fmt(TM.courses[k].start + n[1])} · ${pc(n[1] / n[0])}/mi needed` }]; });
   };
+  // ONE shade (the elevation profile's background gray) for map night, timeline night and the notice box: colors.json shade / shade_op
+  const SHADE: [string, number] = ['#888888', 0.1];
   // day / night indicator on the big map during the race-day simulation: badge (sun / twilight / moon + clock) and a light night tint
   const sky = TM.sun as { dawn: number; sunrise: number; sunset: number; dusk: number };
-  const tint = dotLayer ? el('rect', { x: -5000, y: -5000, width: 20000, height: 20000, fill: '#1f2a44', 'fill-opacity': 0, style: 'pointer-events:none' }, dotLayer) as SVGRectElement : null;
+  const tint = dotLayer ? el('rect', { x: -5000, y: -5000, width: 20000, height: 20000, fill: SHADE[0], 'fill-opacity': 0, style: 'pointer-events:none' }, dotLayer) as SVGRectElement : null;
   if (tint) dotLayer!.insertBefore(tint, dotLayer!.firstChild);
   const badge = document.createElement('div'); badge.className = 'daynight ui'; badge.style.display = 'none'; main.parentElement!.appendChild(badge);
   // darkness 0..1 blended through civil twilight (dawn -> sunrise, sunset -> dusk), smoothstep for a gradual change
   const ss = (a: number, b: number, x: number) => { const u = Math.min(1, Math.max(0, (x - a) / (b - a))); return u * u * (3 - 2 * u); };
-  const dark = (t: number) => { const m = ((t % 1440) + 1440) % 1440; return 0.24 * (m < 720 ? 1 - ss(sky.dawn - 20, sky.sunrise + 10, m) : ss(sky.sunset - 10, sky.dusk + 20, m)); };
+  const dark = (t: number) => { const m = ((t % 1440) + 1440) % 1440; return SHADE[1] * (m < 720 ? 1 - ss(sky.dawn - 20, sky.sunrise + 10, m) : ss(sky.sunset - 10, sky.dusk + 20, m)); };
   const phase = (t: number) => { const m = ((t % 1440) + 1440) % 1440; return m < sky.dawn || m >= sky.dusk ? 'night' : m < sky.sunrise || m >= sky.sunset ? 'twilight' : 'day'; };
   // runner-dot size: slightly larger on desktop, noticeably larger on phones (DS = factor over the original 3.4 radius)
   const DS = matchMedia('(max-width:699px)').matches ? 1.9 : 1.25;
@@ -199,9 +201,12 @@ if (hdEl && prof) {
       rich(txt as SVGTextElement, [{ b: fmt(t), l: Number.isFinite(tc) ? `· ${tc}°F last year` : '' }, ...paceRows(t)], 20, 0, 17);
       const bb = (txt as SVGTextElement).getBBox(); bx.setAttribute('x', String(bb.x - 5)); bx.setAttribute('y', String(bb.y - 3)); bx.setAttribute('width', String(bb.width + 10)); bx.setAttribute('height', String(bb.height + 6));
       if (hovY >= 0) placeTip(tl, tg, x, hovY); else placeTip(tl, tg, x, 0);
+      // sunrise / sunset labels step aside (fade) wherever the time tooltip covers them
+      { const tb = tg.getBBox(), m = tg.transform.baseVal.consolidate()?.matrix, ox = m?.e ?? 0, oy = m?.f ?? 0;
+        tl.querySelectorAll<SVGGElement>('g.sun').forEach((g) => { const sb = g.getBBox(), hit = sb.x < tb.x + ox + tb.width && tb.x + ox < sb.x + sb.width && sb.y < tb.y + oy + tb.height && tb.y + oy < sb.y + sb.height; g.style.opacity = hit ? '0' : ''; }); }
     }
   };
-  const clearTime = () => { tShown = -1; hovY = -1; badge.style.display = 'none'; tint?.setAttribute('fill-opacity', '0'); Object.values(recDot).forEach((g) => (g.style.display = 'none')); Object.values(leadRing).forEach((g) => (g.style.display = 'none')); dots2.forEach((d) => (d.c.style.display = 'none')); glide.clear(); const cur = tl?.querySelector<SVGGElement>('g.tlcursor'); if (cur) cur.style.display = 'none'; };
+  const clearTime = () => { tShown = -1; hovY = -1; badge.style.display = 'none'; tint?.setAttribute('fill-opacity', '0'); Object.values(recDot).forEach((g) => (g.style.display = 'none')); Object.values(leadRing).forEach((g) => (g.style.display = 'none')); dots2.forEach((d) => (d.c.style.display = 'none')); glide.clear(); tl?.querySelectorAll<SVGGElement>('g.sun').forEach((g) => (g.style.opacity = '')); const cur = tl?.querySelector<SVGGElement>('g.tlcursor'); if (cur) cur.style.display = 'none'; };
   main.addEventListener('zoomchange', () => { glide.redraw(); if (tShown >= 0) setTime(tShown); });
   document.querySelectorAll('svg.mini').forEach((m) => m.addEventListener('zoomchange', () => glide.redraw()));
   // auto-play (web only): slow sweep of the race-day clock, looping; off for reduced motion; pause persisted
@@ -294,6 +299,10 @@ if (document.documentElement.classList.contains('embed') && parent !== window) {
   let hv = '';
   addEventListener('message', (e) => { const d = e.data; if (e.source !== parent || !d || d.type !== 'bbu-host-viewport' || !(d.w > 0 && d.h > 0)) return;
     const v = d.w + 'x' + d.h; if (v === hv) return; hv = v; const s = document.documentElement.style; s.setProperty('--host-vw', d.w / 100 + 'px'); s.setProperty('--host-vh', d.h / 100 + 'px'); });
+  // pinned navbar inside the auto-height iframe: embed.js sends the iframe's top edge in the host window; shift the navbar down by what scrolled out
+  addEventListener('message', (e) => { const d = e.data; if (e.source !== parent || !d || d.type !== 'bbu-host-scroll' || !Number.isFinite(d.top)) return;
+    const nav = document.querySelector<HTMLElement>('.topnav'); if (!nav) return; const y = Math.max(0, Math.min(-d.top, document.documentElement.scrollHeight - nav.offsetHeight - nav.offsetTop));
+    nav.style.transform = y ? `translateY(${y}px)` : ''; nav.classList.toggle('pinned', y > 0); });
   new ResizeObserver(post).observe(document.body); addEventListener('load', post); post();
 }
 
@@ -307,9 +316,10 @@ if (document.documentElement.classList.contains('embed') && parent !== window) {
   const heatRamp = (v: number) => { const S = [[255, 244, 222], [247, 182, 92], [214, 72, 40], [140, 18, 18], [74, 8, 8]], x = Math.min(1, Math.max(0, v)) * (S.length - 1), i = Math.min(S.length - 2, Math.floor(x)), f = x - i; return 'rgb(' + S[i].map((a, j) => Math.round(a + (S[i + 1][j] - a) * f)).join(',') + ')'; };
   const HD0 = JSON.parse(document.getElementById('hoverdata')?.textContent || '{}'); let origProf: { s: string; x: number[]; y: number[] } | null = null, profVariants: Promise<any> | null = null;
   const heatSrc = JSON.parse(document.getElementById('heatdata')?.textContent || 'null');
+  // race filter: "All" checked + no individual race checked = every race; checking races shows only those; unchecking the last reverts to All
+  const picked = (all: string[]) => { const p = [...document.querySelectorAll<HTMLInputElement>('input[data-race]')].filter((i) => i.checked).map((i) => i.dataset.race!); return p.length ? p : all; };
   const apply = (force?: string[]) => {
-    const on = force ?? [...document.querySelectorAll<HTMLInputElement>('input[data-race]')].filter((i) => i.checked).map((i) => i.dataset.race!);
-    const all = [...document.querySelectorAll<HTMLInputElement>('input[data-race]')].map((i) => i.dataset.race!);
+    const all = [...document.querySelectorAll<HTMLInputElement>('input[data-race]')].map((i) => i.dataset.race!), on = force ?? picked(all);
     for (const k of all) { const key = 'off' + k.replace(/\W/g, ''); if (on.includes(k)) delete root.dataset[key]; else root.dataset[key] = '1'; }
     // main map + page 1 charts + race cards
     document.querySelectorAll<SVGElement | HTMLElement>('.mainmap [data-course], svg.timeline .tlcut [data-course], .racecard[data-course]').forEach((e) => (e.style.display = on.includes(e.dataset.course!) ? '' : 'none'));
@@ -317,13 +327,13 @@ if (document.documentElement.classList.contains('embed') && parent !== window) {
     { const pb = document.querySelector<SVGGElement>('svg.profile g.pbody'), prof2 = pb?.ownerSVGElement; if (pb && prof2) { const key = on.join(',');
       origProf ??= { s: pb.innerHTML, x: HD0.profile.x, y: HD0.profile.y };
       const put = (v: { s: string; x: number[]; y: number[] }) => { pb.innerHTML = v.s; prof2.dispatchEvent(new CustomEvent('profilescale', { detail: v })); };
-      if (on.length === all.length) put(origProf); else (profVariants ??= fetch('profiles.json').then((r) => r.json())).then((V) => { if (V[key] && [...document.querySelectorAll<HTMLInputElement>('input[data-race]')].filter((i) => i.checked).map((i) => i.dataset.race).join(',') === key) put(V[key]); }); } }
+      if (on.length === all.length) put(origProf); else (profVariants ??= fetch('profiles.json').then((r) => r.json())).then((V) => { if (V[key] && picked(all).join(',') === key) put(V[key]); }); } }
     // main map: race routes in race colours when fewer than all races are shown, and zoom to fit them (reset for all / none)
     { const mm = document.querySelector<SVGSVGElement>('svg.mainmap'), sub = on.length > 0 && on.length < all.length, bb = [Infinity, Infinity, -Infinity, -Infinity];
       document.querySelectorAll<SVGGElement>('.mainmap g.raceroute').forEach((g) => { const vis = sub && on.includes(g.dataset.rc!); g.style.display = vis ? '' : 'none'; if (vis) { const b = g.dataset.bb!.split(',').map(Number); bb[0] = Math.min(bb[0], b[0]); bb[1] = Math.min(bb[1], b[1]); bb[2] = Math.max(bb[2], b[2]); bb[3] = Math.max(bb[3], b[3]); } });
       if (mm) zoomToBox(mm, sub && !force ? { x0: bb[0], y0: bb[1], x1: bb[2], y1: bb[3] } : null); }
     // "All" checkbox mirrors the state: checked = all, indeterminate = some, unchecked = none
-    { const ab = document.querySelector<HTMLInputElement>('input[data-race-all]'); if (ab && !force) { ab.checked = on.length === all.length; ab.indeterminate = on.length > 0 && on.length < all.length; } }
+    { const ab = document.querySelector<HTMLInputElement>('input[data-race-all]'); if (ab && !force) ab.checked = !document.querySelector('input[data-race]:checked'); }
     // timeline: restack the visible races
     if (TL && tlsvg) { const acc = TL.xs.map(() => 0), mx = Math.max(1, ...TL.xs.map((_: number, i: number) => on.reduce((s, k) => s + (TL.v[k]?.[i] ?? 0), 0)));
       const Y = (v: number) => TL.base - (v / mx) * TL.hgt;
@@ -331,7 +341,7 @@ if (document.documentElement.classList.contains('embed') && parent !== window) {
         const vis = on.includes(k); band.style.display = top.style.display = vis ? '' : 'none'; if (!vis) continue;
         const lo = acc.slice(); TL.xs.forEach((_: number, i: number) => (acc[i] += TL.v[k][i]));
         const up = TL.xs.map((x: number, i: number) => `${x},${Y(acc[i]).toFixed(1)}`), dn = TL.xs.map((x: number, i: number) => `${x},${Y(lo[i]).toFixed(1)}`).reverse();
-        band.setAttribute('d', `M${up.join('L')}L${dn.join('L')}Z`); top.setAttribute('d', `M${up.join('L')}`); } }
+        band.setAttribute('d', `M${up.join('L')}L${dn.join('L')}Z`); { let d = '', pen = false; for (let i = 0; i < TL.xs.length - 1; i++) { const th = (j: number) => Math.abs(TL.v[k][j] ?? 0) > 1e-6, on2 = th(i) || th(i + 1); if (on2) { if (!pen) d += `M${up[i]}`; d += `L${up[i + 1]}`; } pen = on2; } top.setAttribute('d', d || 'M0,0'); } } }
     // heat map: per-race counts summed over the visible races (same scales: S/F own, aid stations shared)
     if (heatSrc && tlsvg) { const sum = (st: string) => { const by = heatSrc[st] as Record<string, number[]>; const n = Math.max(...Object.values(by).map((a) => a.length)); return Array.from({ length: n }, (_, i) => on.reduce((s, k) => s + (by[k]?.[i] ?? 0), 0)); };
       const sums: Record<string, number[]> = Object.fromEntries(Object.keys(heatSrc).map((st) => [st, sum(st)])), G = Math.max(1, ...Object.entries(sums).filter(([st]) => st !== 'S/F').flatMap(([, a]) => a));
@@ -340,7 +350,7 @@ if (document.documentElement.classList.contains('embed') && parent !== window) {
     void NSf; void HDt;
   };
   document.querySelectorAll<HTMLInputElement>('input[data-race]').forEach((cb) => cb.addEventListener('change', () => apply()));
-  document.querySelector<HTMLInputElement>('input[data-race-all]')?.addEventListener('change', (e) => { const v = (e.target as HTMLInputElement).checked; document.querySelectorAll<HTMLInputElement>('input[data-race]').forEach((i) => (i.checked = v)); apply(); });
+  document.querySelector<HTMLInputElement>('input[data-race-all]')?.addEventListener('change', () => { document.querySelectorAll<HTMLInputElement>('input[data-race]').forEach((i) => (i.checked = false)); apply(); });
   // elevation legend: click a race to toggle it (same as its checkbox)
   document.querySelector('svg.profile')?.addEventListener('click', (e) => { const g = (e.target as Element).closest<SVGGElement>('g.plegend'); if (!g) return; const cb = document.querySelector<HTMLInputElement>(`input[data-race="${g.dataset.legend}"]`); if (cb) { cb.checked = !cb.checked; apply(); } });
   // print always shows every race (the filter is a screen view only)
