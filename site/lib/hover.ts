@@ -3,6 +3,7 @@ import { cutMin } from './timeline';
 // [mile, ft, main-map x, y, mini-map x, y, cumulative gain ft] in each SVG's own viewBox units.
 import { SHEET, viewProjection } from './util';
 import { miniBib, MINIBIB } from './panels';
+import { raceProjection } from './racemap';
 import type { Ctx } from './types';
 
 export const lerp = (x: number, xs: number[], ys: number[]) => {
@@ -28,14 +29,14 @@ export function hoverData(c: Ctx) {
   const VM = view('main'), r1 = (v: number) => Math.round(v * 10) / 10;
   const courses: Record<string, { color: string; dist: number; s: number[][] }> = {};
   for (const k of c.courses.order) {
-    const f = c.courseGeo[k].features[0], mi: number[] = f.properties.mi, co: [number, number][] = f.geometry.coordinates, VK = view(k), pr = c.profiles[k];
+    const f = c.courseGeo[k].features[0], mi: number[] = f.properties.mi, co: [number, number][] = f.geometry.coordinates, VK = view(k), VR = raceProjection(c, k), pr = c.profiles[k];
     const lon = co.map((q) => q[0]), lat = co.map((q) => q[1]), dist = f.properties.distance_mi, s: number[][] = [];
     for (let m = 0; m <= dist + 1e-9; m += 0.05) {
-      const ll: [number, number] = [lerp(m, mi, lon), lerp(m, mi, lat)], a = VM.p(ll), b = VK.p(ll);
-      s.push([Math.round(m * 100) / 100, Math.round(lerp(m, pr.mi, pr.ft)), r1(a[0]), r1(a[1]), r1(b[0]), r1(b[1])]);
+      const ll: [number, number] = [lerp(m, mi, lon), lerp(m, mi, lat)], a = VM.p(ll), b = VK.p(ll), rr = VR.p(ll);
+      s.push([Math.round(m * 100) / 100, Math.round(lerp(m, pr.mi, pr.ft)), r1(a[0]), r1(a[1]), r1(b[0]), r1(b[1]), r1(rr[0]), r1(rr[1])]);
     }
     const g = cumGain(s.map((q) => lerp(q[0], pr.mi, pr.ft)));
-    s.forEach((q, i) => q.push(g[i]));
+    s.forEach((q, i) => q.splice(6, 0, g[i])); // [mile, ft, main x, y, mini x, y, gain, race-page x, y]
     courses[k] = { color: c.courses.colors[k], dist, s, bib: miniBib(k, c.courses.colors[k], 0, 0, c.colors, 0.85),
       // cutoffs as [mile, minutes after the start] for the "pace to make the next cutoff" readout
       // every aid-station visit after the start: [mile, station name] (distance-to-next readout)

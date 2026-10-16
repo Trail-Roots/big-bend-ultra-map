@@ -106,7 +106,7 @@ if (hdEl && prof) {
         : [{ b: `${v[0].toFixed(1)} mi`, l: ns ? `${(ns[0] - mile).toFixed(1)} mi to ${ns[1]}` : 'at the finish' }], 21); void n;
       const bb = (tx as SVGTextElement).getBBox(); bx.setAttribute('x', String(bb.x - 5)); bx.setAttribute('y', String(bb.y - 3)); bx.setAttribute('width', String(bb.width + 10)); bx.setAttribute('height', String(bb.height + 6));
       placeTip(cp, tg, x, p.y);
-      if (mm) { const f = (mm as any).f; mm.g.style.display = ''; mm.g.setAttribute('transform', `translate(${v[4] * f} ${v[5] * f})`); } };
+      if (mm) { const f = (mm as any).f; mm.g.style.display = ''; mm.g.setAttribute('transform', `translate(${v[7]} ${v[8]})`); void f; /* race-page map coords (its own projection) */ } };
     cp.style.touchAction = 'none'; cp.style.cursor = 'crosshair';
     cp.addEventListener('pointermove', cmove); cp.addEventListener('pointerdown', cmove);
     cp.addEventListener('pointerleave', (e) => { if (e.pointerType === 'mouse') hideC(); });
@@ -227,9 +227,10 @@ if (hdEl && prof) {
   };
   const start = () => { if (!raf && running()) { t0 = 0; raf = requestAnimationFrame(tick); } };
   const stop = () => { if (raf) cancelAnimationFrame(raf); raf = 0; };
-  const btn = document.createElement('button'); btn.type = 'button'; btn.className = 'autoplay ui';
-  const label = () => { btn.innerHTML = paused ? `${icon('play')}Play race day` : `${icon('pause')}Pause`; btn.setAttribute('aria-label', paused ? 'Play race-day animation' : 'Pause race-day animation'); btn.setAttribute('aria-pressed', String(!paused)); };
-  if (!reduced) { label(); prof.parentElement!.appendChild(btn); }
+  const btn = document.createElement('button'); btn.type = 'button'; btn.className = 'zplay'; btn.dataset.z = 'play'; // icon-only play / pause on the main map, beside its zoom reset (same control style)
+  const label = () => { btn.innerHTML = paused ? icon('play') : icon('pause'); btn.setAttribute('aria-label', paused ? 'Play race-day animation' : 'Pause race-day animation'); btn.setAttribute('aria-pressed', String(!paused)); };
+  if (!reduced) { label(); const zc = document.querySelector('svg.mainmap')?.parentElement?.querySelector('.zctl'); (zc ?? prof.parentElement!).appendChild(btn); }
+  if (!reduced) setTimeout(() => { const zc = document.querySelector('svg.mainmap')?.parentElement?.querySelector('.zctl'); if (zc && btn.parentElement !== zc) zc.appendChild(btn); }); // zoom controls are created later (initZoom)
   btn.addEventListener('click', () => { paused = !paused; localStorage.setItem(KEY, paused ? '1' : '0'); label(); if (paused) { stop(); clearTime(); } else start(); });
   const suspend = () => { user = true; stop(); };
   const resume = () => { user = false; start(); };
@@ -280,7 +281,7 @@ document.querySelectorAll<HTMLButtonElement>('button.printone').forEach((b) => b
 }));
 
 // ---- floor plans: wheel zoom toward the cursor, drag / touch pan, pinch, double-click reset; web only (reset in print) ----
-document.querySelectorAll<HTMLElement>('.fp-zoom').forEach((box) => {
+document.querySelectorAll<HTMLElement>('.fp-zoom:not(.fp-static)').forEach((box) => {
   const st = box.querySelector<HTMLElement>('.fp-stage')!; let k = 1, x = 0, y = 0;
   const clamp = () => { k = Math.min(8, Math.max(1, k)); const w = box.clientWidth, h = box.clientHeight; x = Math.min(0, Math.max(w - w * k, x)); y = Math.min(0, Math.max(h - h * k, y)); st.style.transform = k === 1 ? '' : `translate(${x}px,${y}px) scale(${k})`; };
   const zoomAt = (f: number, cx: number, cy: number) => { const nk = Math.min(8, Math.max(1, k * f)); x = cx - ((cx - x) * nk) / k; y = cy - ((cy - y) * nk) / k; k = nk; clamp(); };
@@ -390,7 +391,7 @@ if (document.documentElement.classList.contains('embed') && parent !== window) {
   function stMap(host: HTMLElement | null, k: string, hh: number, zf = 4.5) {
     const main = document.querySelector<SVGSVGElement>('svg.mainmap'), mk = main?.querySelector<SVGGElement>(`g.stpick[data-station="${CSS.escape(k)}"] g.marker`);
     if (main && host && mk) { const m = /translate\(([-\d.]+)[ ,]+([-\d.]+)\)/.exec(mk.getAttribute('transform') || ''); if (m) { const x = +m[1], y = +m[2], R = main.viewBox.baseVal.width / zf;
-      const cl = main.cloneNode(true) as SVGSVGElement; cl.removeAttribute('id'); cl.classList.remove('mainmap'); cl.classList.add('stzoom'); cl.querySelectorAll('g.hov,.daynight,g.layer[data-layer="dots"] circle,image.maplogo').forEach((e) => e.remove()); cl.querySelectorAll('[filter]').forEach((e) => e.removeAttribute('filter')); /* no filters: they make Chromium rasterize the whole PDF page */ cl.querySelectorAll<SVGGElement>('g.zv').forEach((g) => g.removeAttribute('transform'));
+      const cl = main.cloneNode(true) as SVGSVGElement; cl.removeAttribute('id'); cl.classList.remove('mainmap'); cl.classList.add('stzoom'); cl.querySelectorAll('g.hov,.daynight,g.layer[data-layer="dots"] circle,image.maplogo,g.legend,g.scalebar').forEach((e) => e.remove()); cl.querySelectorAll('[filter]').forEach((e) => e.removeAttribute('filter')); /* no filters: they make Chromium rasterize the whole PDF page */ cl.querySelectorAll<SVGGElement>('g.zv').forEach((g) => g.removeAttribute('transform'));
       const VB = main.viewBox.baseVal, vx = Math.max(VB.x, Math.min(VB.x + VB.width - 2 * R, x - R)), vy = Math.max(VB.y, Math.min(VB.y + VB.height - 2 * hh * R, y - R * hh)); /* frame clamped inside the map */ cl.setAttribute('viewBox', `${vx} ${vy} ${2 * R} ${2 * hh * R}`); /* north arrow: top-left of the zoomed frame, same proportion as on the main map */ { const nG = cl.querySelector<SVGGElement>('g.north'), W0 = main.viewBox.baseVal.width, f = (2 * R) / W0, mt = /translate\(([-\d.]+)[ ,]+([-\d.]+)\)\s*scale\(([-\d.]+)/.exec(nG?.getAttribute('transform') || ''); if (nG && mt) { nG.setAttribute('transform', `translate(${(vx + +mt[1] * f).toFixed(1)} ${(vy + +mt[2] * f).toFixed(1)}) scale(${(+mt[3] * f).toFixed(4)})`); nG.parentNode!.appendChild(nG); /* solid white backing so the needle never disappears over route / roads (e.g. S/F) */ const bk = document.createElementNS('http://www.w3.org/2000/svg', 'rect'); bk.setAttribute('x', '-5'); bk.setAttribute('y', '-5'); bk.setAttribute('width', '38'); bk.setAttribute('height', '62'); bk.setAttribute('rx', '5'); bk.setAttribute('fill', '#fff'); nG.insertBefore(bk, nG.firstChild); } } cl.removeAttribute('width'); cl.removeAttribute('height'); cl.style.cssText = `width:100%;height:auto;aspect-ratio:2/${2 * hh}`; host.appendChild(cl); } }
   }
   // print-only aid-station pages: fill their zoomed maps once
@@ -401,7 +402,8 @@ if (document.documentElement.classList.contains('embed') && parent !== window) {
   sbox?.addEventListener('close', () => { embedModal(sbox, false); if (/^#station-/.test(location.hash)) history.replaceState(null, '', location.pathname + location.search); });
   // clicks: station markers on the main map (instead of jumping to Google Maps; the lightbox links there), heat-map icons, race-table names
   document.addEventListener('click', (e) => { const t = e.target as Element; if (!(t instanceof Element)) return;
-    const a = t.closest<Element>('g.stpick, a.stlink, g.marker[data-station], g.pcall[data-st]'); if (!a || a.closest('.lightbox.stbox, .sec-stpages, .st-badge')) return; /* never inside a station's own details */ const k = a.getAttribute('data-station') ?? a.getAttribute('data-st'); if (!k) return;
+    const a = t.closest<Element>('g.stpick, a.stlink, g.marker[data-station], g.pcall[data-st]'); if (!a) return; const k = a.getAttribute('data-station') ?? a.getAttribute('data-st');
+    const ms = a.closest<HTMLElement>('.msfig-here'); if (ms ? k === ms.dataset.here : a.closest('.lightbox.stbox, .sec-stpages, .st-badge')) return; /* never a station's own details; milestone strips there link to the OTHER stations */ if (!k) return;
     if (document.querySelector('svg.mainmap.panning')) return; e.preventDefault(); openStation(k); history.replaceState(null, '', `#station-${encodeURIComponent(k)}`); });
   for (const box of [rbox, sbox]) if (box) { box.querySelector('.lb-close')!.addEventListener('click', () => box.close()); box.addEventListener('click', (e) => { const t = e.target as Element; if (t === box || t.classList?.contains('lb-body')) box.close(); }); /* backdrop + the empty padding around the content close it; Esc closes natively */ }
   const fromHash = () => { const h = decodeURIComponent(location.hash); let m; if ((m = /^#course-(.+)$/.exec(h))) openRace(m[1]); else if ((m = /^#station-(.+)$/.exec(h))) openStation(m[1]); };

@@ -272,7 +272,7 @@ svg.st-badge{width:56px;height:56px;flex:none;overflow:visible}
 .am-y .amv{background:#2f8f46;color:#fff}.am-n .amv{background:#e6e6e6;color:#777}.am-u .amv{background:var(--bg-hover);color:#555;border:1px solid var(--line)}.am em{color:#666;font-style:normal;font-size:.75rem}.am-n em{color:#888}
 .st-cuts{border-collapse:collapse;font-size:.9rem}.st-cuts th{text-align:left;padding:2px 10px 2px 0;font-weight:700}.st-cuts td{padding:2px 0}.cutv{margin-right:10px;white-space:nowrap}.cutv small{color:#777}
 @media (max-width:699px){.st-grid,.st-info{grid-template-columns:1fr}.stbox .lb-body > *{padding:10px 12px}}
-a.stlink{color:inherit;text-decoration:none}@media screen{a.stlink{border-bottom:1px dotted #999;cursor:pointer}g.stpick,g.marker[data-station],g.pcall[data-st]{cursor:pointer}.stbox g.marker[data-station],.stbox g.pcall,.stbox a.stlink,.sec-stpages g.marker,.sec-stpages a.stlink,.st-badge g.marker{cursor:default!important;pointer-events:none}.stbox a.stlink,.sec-stpages a.stlink{border-bottom:0}}
+a.stlink{color:inherit;text-decoration:none}@media screen{a.stlink{border-bottom:1px dotted #999;cursor:pointer}g.stpick,g.marker[data-station],g.pcall[data-st]{cursor:pointer}.stbox g.marker[data-station]:not(.msfig g.marker),.stbox g.pcall,.stbox a.stlink,.sec-stpages g.marker,.sec-stpages a.stlink,.st-badge g.marker{cursor:default!important;pointer-events:none}.stbox a.stlink,.sec-stpages a.stlink{border-bottom:0}}
 /* race page heat map */
 .cpheat{margin:.5rem 0 0}.cpheat figcaption{font-size:.75rem;color:#666;margin-bottom:2px}.cpheat svg{width:100%;height:auto}
 @media screen and (min-width:1100px){html .sec-courses .coursepage .cpheat figcaption{font-size:calc(var(--S) * .008)}}
@@ -329,3 +329,18 @@ html.embed dialog.lightbox .lb-close{position:sticky;top:10px;float:right;margin
 /* aid-station details: zoomed map and photo / placeholder share ONE fixed 4:3 frame on every station (web + print) */
 .st-grid{grid-template-columns:1fr 1fr!important;align-items:start}.st-grid>.st-map,.st-grid>.st-photo{aspect-ratio:4/3;width:100%;overflow:hidden}.st-grid>.st-map svg.stzoom{width:100%!important;height:100%!important;aspect-ratio:4/3!important}.st-photo .ph-empty{min-height:0;height:100%}.st-photo img{height:100%}
 @media (max-width:699px){.st-grid{grid-template-columns:1fr!important}}
+.fp-zoom.fp-static{cursor:default!important;touch-action:auto}
+/* station details: coordinates + Nearby links in the page's own type (muted ink, no default blue; underline on hover) */
+.st-coordp{margin:.3rem 0 0}.st-coord,.st-near{color:var(--ink);text-decoration:none;font-weight:600;display:inline-flex;align-items:center;gap:4px}.st-near{color:var(--mute);font-weight:400}
+.st-coord svg.ic{width:1em;height:1em;color:var(--mute)}.st-coord:hover,.st-near:hover{text-decoration:underline;text-underline-offset:2px}
+@media print{.st-coord,.st-near{color:var(--ink)!important;text-decoration:none!important}}
+/* station details: cutoffs as a single-column list (each cutoff on its own line) */
+.st-cuts .cutv{display:block;margin:0 0 2px}
+/* milestone strips (race pages + station details): wide variant on desktop / print, compact staggered variant on phones */
+.msfig{margin:.4rem 0 .5rem}.msfig figcaption{font-size:.78rem;color:var(--mute);margin:0 0 2px}.msfig svg.msline{display:block;width:100%;height:auto}
+.msfig svg.msl-c{display:none}@media screen and (max-width:699px){.msfig svg.msl-w{display:none}.msfig svg.msl-c{display:block}}
+@media screen{.msfig g.marker[data-station]{cursor:pointer;pointer-events:auto!important}}@media print{.msfig svg.msl-c{display:none!important}.msfig{margin:2pt 0 3pt}.msfig figcaption{font-size:7pt}}
+.st-msl .msfig{margin:.2rem 0 .4rem}
+@media screen{.msfig .ms-me g.marker{cursor:default!important;pointer-events:none!important}}
+.zctl button.zplay svg.ic{width:13px;height:13px}
+@media print{.sec-stpages .st-msl .msfig{margin:0 0 1pt}.sec-stpages .st-msl .msfig svg.msline{width:74%}.sec-stpages .st-msl h3{margin:2pt 0}}

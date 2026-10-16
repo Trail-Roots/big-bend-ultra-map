@@ -22,6 +22,13 @@ try {
       const ok = await p.evaluate(() => { const a = document.querySelector<HTMLAnchorElement>('#stationbox[open] a.st-coord'); if (!a) return false; const r = a.getBoundingClientRect(), cs = getComputedStyle(a);
         return r.width > 20 && r.height > 8 && cs.visibility !== 'hidden' && cs.display !== 'none' && /maps\?q=-?\d+\.\d+,-?\d+\.\d+$/.test(a.href) && /^Map: -?\d+\.\d+, -?\d+\.\d+$/.test(a.textContent!.trim()); });
       if (!ok) noCoord.push(k); await p.keyboard.press('Escape'); await p.waitForTimeout(150); }
+    // heat maps: ONE source (heatSeries) — station lightbox / print rows match the page-1 row cell for cell (same bins, same bins); race pages are subsets at the same x
+    if (w === 1440) { const bad = await p.evaluate(() => { const out: string[] = []; const cells = (g: Element | null) => g ? [...g.querySelectorAll('rect.hc')].map((r) => { const W = (r.ownerSVGElement as SVGSVGElement).viewBox.baseVal.width; void W; return r.getAttribute('data-i') + '@' + r.getAttribute('fill-opacity'); }) : [];
+      for (const k of ['S/F', '1', '2', '3', '4', '5']) { const main = cells(document.querySelector(`svg.timeline g.tlst[data-station="${k}"]`)).join(',');
+        const t = document.getElementById(`st-${k === 'S/F' ? 'SF' : k}`) as HTMLTemplateElement, st = cells(t.content.querySelector('svg.stheat g.tlst')).join(','), pr = cells(document.querySelector(`.sec-stpages .stpage[data-st="${k}"] svg.stheat g.tlst`)).join(',');
+        if (st !== main) out.push(k + ' lightbox'); if (pr !== main) out.push(k + ' print');
+        document.querySelectorAll(`svg.raceheat g.tlst[data-station="${k}"]`).forEach((g) => { const m = new Set(main.split(',').map((x) => x.split('@')[0])); if (cells(g).some((x) => !m.has(x.split('@')[0]))) out.push(k + ' race ' + g.closest('svg')!.getAttribute('data-course')); }); }
+      return out; }); if (bad.length) throw new Error('[qa] heat rows differ from page 1: ' + bad.join(', ')); console.log('heat rows match page 1 cell for cell (6 stations; lightbox, print, race pages)'); }
     if (noCoord.length) throw new Error(`[qa ${w}] station lightbox without visible coordinates link: ${noCoord.join(', ')}`);
     await p.click('.navlayers > summary');
     await p.uncheck('input[data-race="100K"]'); await p.uncheck('input[data-race="20K"]'); await p.waitForTimeout(600); await p.screenshot({ path: `${out}-${w}-panel.png` }); await p.click('.navlayers > summary');

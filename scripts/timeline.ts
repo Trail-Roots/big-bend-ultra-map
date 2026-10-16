@@ -163,8 +163,9 @@ const stByCourse: Record<string, Record<string, number[]>> = {};
 // arrive 15-75 min before their start (triangular, mode 45 min before), finishers stay 60-120 min (uniform) after finishing.
 const PRE = 0, LINGER = 0, PASS_LINGER = 0, crowd = bins(nb), crowdBy: Record<string, number[]> = {}, idle = bins(nb), idleBy: Record<string, number[]> = {};
 const ARR = { lo: 15, mode: 45, hi: 75 }, STAY = { lo: 60, hi: 120 };
-// post-finish stay 60-120 min, capped at 60 min for finishes after 7p and 30 min after 9p
-const stayFor = (fin: number, v: number) => { const m = ((fin % 1440) + 1440) % 1440, cap = m >= 21 * 60 || fin >= 1440 ? 30 : m >= 19 * 60 ? 60 : 120; return Math.min(cap, STAY.lo + v * (STAY.hi - STAY.lo)); };
+// post-finish stay falls off clearly as it gets dark (fewer runners and supporters linger): 60-120 min by day, max 75 min after sunset (~6:20p),
+// 45 min after 7p, 20 min after 8p, 10 min after 9p
+const stayFor = (fin: number, v: number) => { const m = fin >= 1440 ? 1440 + (fin % 1440) : ((fin % 1440) + 1440) % 1440, cap = m >= 21 * 60 ? 10 : m >= 20 * 60 ? 20 : m >= 19 * 60 ? 45 : m >= 18 * 60 + 20 ? 75 : 120; return Math.min(cap, STAY.lo + v * (STAY.hi - STAY.lo)); };
 const triQ = (u: number) => { const { lo, mode, hi } = ARR, F = (mode - lo) / (hi - lo); return u < F ? lo + Math.sqrt(u * (hi - lo) * (mode - lo)) : hi - Math.sqrt((1 - u) * (hi - lo) * (hi - mode)); };
 const idleSpan = (k: string, a: number, b: number) => { for (let bb = 0; bb < nb; bb++) { const t = T0 + (bb + 0.5) * BIN; if (t >= a && t < b) { idle[bb] += W8[k]; (idleBy[k] ??= bins(nb))[bb] += W8[k]; } } };
 const W8: Record<string, number> = Object.fromEntries(ORDER.map((k) => [k, dist[k].scale]));
@@ -219,7 +220,7 @@ out.pace_model = { params: PAR, grid: GRID, validation, mean_abs_error_min: +bes
 out.assumptions = [
   'Expected runners per course = sources/curated/site.json expectedRunners (default 2026 starters). All counts (on course, aid-station passes, finish crowd) are the 2026-shaped simulation scaled by N / 2026 starters, i.e. the expected value of resampling N runners from the 2026 finish-time distribution. Map dots bootstrap whole 2026 runners (seeded, ±1% time jitter) when N differs, keeping 2026 clustering.',
   'Start: nobody crosses the line before the gun; each runner starts 0-2 min after it (mass-start crossing delay, skewed early: runner quantile u -> 2u² min, faster runners nearer the front).',
-  `Start / Finish heat row: runners crossing the line per 15 min (start crossings, mid-race pass-throughs, finishes), like every other station (passes, no early-arrival or lingering model). Finish-area floor-plan overlay (inactive runners): each runner arrives ${ARR.lo}-${ARR.hi} min before their start (triangular, mode ${ARR.mode}); finishers stay ${STAY.lo}-${STAY.hi} min after finishing. DNF runners leave the course 10-30 min after arriving at the station where they drop.`,
+  `Start / Finish heat row: runners crossing the line per 15 min (start crossings, mid-race pass-throughs, finishes), like every other station (passes, no early-arrival or lingering model). Finish-area floor-plan overlay (inactive runners): each runner arrives ${ARR.lo}-${ARR.hi} min before their start (triangular, mode ${ARR.mode}); finishers stay ${STAY.lo}-${STAY.hi} min after finishing by day, falling after dark: max 75 min after sunset, 45 after 7p, 20 after 8p, 10 after 9p. DNF runners leave the course 10-30 min after arriving at the station where they drop.`,
   'Finish-time distributions per 2027 distance = 2026 RunSignup results for the identically named event (same start times); one simulated runner per 2026 finisher.',
   'Expected 2027 starters = 2026 starters (finishers + DNF): 2027 registrant counts are not public (RunSignup participants endpoint returns Permission Denied). 2027 caps from RunSignup are shown for reference only.',
   'Pre-2026 years ran 50M / 50K / 30K (plus 10K, 20K) on different courses: used for volume history only, not for times.',

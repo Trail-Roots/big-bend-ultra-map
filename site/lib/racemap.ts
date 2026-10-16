@@ -20,14 +20,16 @@ const wEst = (t: string, size: number) => t.length * size * 0.56;
 // race, roads, trails). The view is extended toward the top-left (bottom-right edge fixed, aspect kept) until that corner is clear.
 export const RACE_VIEWS: Record<string, { x: number[]; y: number[] }> = {}; // extended race views (build writes dist/race-views.json for tools/racehill.ts)
 const HILLV: Record<string, { x: number[]; y: number[] }> = (() => { try { return JSON.parse(fs.readFileSync(path.join(import.meta.dir, '../../sources/hillshade/race-views.json'), 'utf8')); } catch { return {}; } })();
-function clearCorner(c, k: string, view0) {
+/** race-page map projection (incl. the top-left-corner extension): hover markers on the race map must use THIS, not the mini-map view */
+export function raceProjection(c, k: string) { const v0 = c.layout.views[k], H = v0.fig[3] * SHEET.h * RACE_F, W = v0.fig[2] * SHEET.w * RACE_F; return viewProjection(clearCorner(c, k, v0, true), W, H); }
+function clearCorner(c, k: string, view0, quiet = false) {
   const H = view0.fig[3] * SHEET.h * RACE_F, W = view0.fig[2] * SHEET.w * RACE_F, ins = W * NORTH_INSET, nb = northBox(W, ins, ins), lw = W * 0.0915, lh = lw * 776 / 730;
   const box = { x0: 0, y0: 0, x1: W * 0.08 + lw + 10, y1: Math.max(nb.y1, W * 0.0214 + lh) + 10 };
   const nk = c.courses.order[c.courses.order.indexOf(k) - 1], feats = [c.courseGeo[k].features[0], ...(nk ? [c.courseGeo[nk].features[0]] : []), ...c.network.features];
   for (let f = 1; f <= 1.8; f += 0.02) {
     const [x0, x1] = view0.x, [y0, y1] = view0.y, v = { ...view0, x: [x1 - (x1 - x0) * f, x1], y: [y0, y0 + (y1 - y0) * f] }, V = viewProjection(v, W, H);
     const hit = feats.some((ft) => V.lines(ft).some((l) => l.some(([x, y], i) => { if (x >= box.x0 && x <= box.x1 && y >= box.y0 && y <= box.y1) return true; const q = l[i + 1]; if (!q) return false; const n = Math.ceil(Math.hypot(q[0] - x, q[1] - y) / 3); for (let j = 1; j < n; j++) { const px = x + (q[0] - x) * j / n, py = y + (q[1] - y) * j / n; if (px >= box.x0 && px <= box.x1 && py >= box.y0 && py <= box.y1) return true; } return false; })));
-    if (!hit) { if (f > 1) RACE_VIEWS[k] = { x: v.x, y: v.y }; if (f > 1) console.log(`  racemap ${k}: view extended x${f.toFixed(2)} to clear the top-left corner`); return v; }
+    if (!hit) { if (f > 1) RACE_VIEWS[k] = { x: v.x, y: v.y }; if (f > 1 && !quiet) console.log(`  racemap ${k}: view extended x${f.toFixed(2)} to clear the top-left corner`); return v; }
   }
   throw new Error(`[racemap ${k}] cannot clear the top-left corner for north arrow + logo`);
 }

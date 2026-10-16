@@ -2,6 +2,7 @@
 // map in site/app.ts), photo slot, amenities (sources/curated/amenities.json; unknowns flagged "TBC"), busiest times, hours, cutoffs per race.
 import { esc, station } from '../lib/util';
 import { renderStationHeat } from '../lib/timeline';
+import { milestones } from '../lib/milestones';
 import { icon } from '../lib/icons';
 import amen from '../../sources/curated/amenities.json';
 import type { Ctx } from '../lib/types';
@@ -22,7 +23,8 @@ export function stCard(c: Ctx, k: string, print = false) {
 <div class="st-info"><section><h3>Open</h3><p class="st-hours"><b>${esc(s.hours ?? 'TBC')}</b></p><p class="st-coordp"><a class="st-coord" href="https://www.google.com/maps?q=${ll}" target="_blank" rel="noopener">${icon('pin')}Map: ${llTxt}</a></p>${NEAR[k] ? `<p class="st-nearp">Nearby: <a class="st-near" href="https://www.google.com/maps/search/?api=1&amp;query=${encodeURIComponent(NEAR[k] + ', TX')}" target="_blank" rel="noopener">${esc(NEAR[k])}</a></p>` : ''}</section>
 <section><h3>Available</h3><ul class="amen">${am}</ul></section>
 <section><h3>Cutoffs</h3>${cuts ? `<table class="st-cuts">${cuts}</table>` : '<p class="note">No cutoffs here (start / finish).</p>'}</section></div>
-<section class="st-heat"><h3>Busiest times <small>(2026 runners, modelled per 15 min)</small></h3>${renderStationHeat(c, k)}</section>`;
+<section class="st-msl"><h3>Route</h3>${c.courses.order.filter((r) => c.cutoffs[r].some((q) => q.station === k)).map((r) => milestones(c, r, k)).join('')}</section>
+<section class="st-heat"><h3>Busiest times <small>(modelled per 15 min)</small></h3>${renderStationHeat(c, k)}</section>`;
 }
 export function render(c: Ctx) {
   const tpl = c.stations.order.map((k) => `<template id="st-${k === 'S/F' ? 'SF' : k}">${stCard(c, k)}</template>`).join('');
