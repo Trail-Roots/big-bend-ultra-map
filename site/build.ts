@@ -55,10 +55,22 @@ const rm2 = re.test(rm) ? rm.replace(re, linksMd) : rm.trimEnd() + '\n\n' + link
 if (rm2 !== rm) fs.writeFileSync(RM, rm2);
 fs.writeFileSync(path.join(D, 'links.json'), JSON.stringify([...seen.values()], null, 1));
 console.log('links', seen.size);
+// no native browser tooltips anywhere: drop SVG <title> elements and title="" attributes in the body (info uses the custom tip.ts tooltips)
+const noTitles = (h: string) => h.replace(/<title>[\s\S]*?<\/title>/g, '').replace(/\s(?:xlink:)?title="[^"]*"/g, '');
+{ const i = html.indexOf('<body'); html = html.slice(0, i) + noTitles(html.slice(i)); }
+// build check: every map link (station lightboxes, print station pages, maps, plans) must point at coordinates, never a place name
+{ const COORD = /^-?\d{1,2}\.\d+(?:,|%2C)-?\d{1,3}\.\d+$/i, bad: string[] = []; let n = 0;
+  // the only exception: the subtle secondary "Nearby: <named place>" links (a.st-near) on aid-station details
+  const scan = html.replace(/<a class="st-near"[^>]*>/g, '');
+  for (const m of scan.matchAll(/https?:\/\/(?:www\.)?(?:google\.[a-z.]+\/maps|maps\.google\.[a-z.]+|goo\.gl\/maps|maps\.app\.goo\.gl|maps\.apple\.com)[^"'\s<]*/g)) {
+    const u = m[0].replace(/&amp;/g, '&'); if (/\/maps\/d\//.test(u)) continue; n++; // My Maps (KML) is a layer, not a place link
+    const v = /[?&](?:query|q|destination)=([^&#]+)/.exec(u)?.[1]; if (!v || !COORD.test(v)) bad.push(u); }
+  if (bad.length) throw new Error('[links] map links not coordinate-based:\n' + bad.join('\n'));
+  console.log('map links', n, 'all coordinate-based'); }
 fs.writeFileSync(path.join(D, 'index.html'), html);
 // race filter: page-1 elevation chart for every visible-race subset (fetched by app.ts on the first filter change)
 { const { profileBody } = await import('./lib/panels'); const O: string[] = ctx.courses.order, V: Record<string, unknown> = {};
-  for (let m = 0; m < (1 << O.length) - 1; m++) { const vis = O.filter((_, i) => m & (1 << i)), p = profileBody(ctx, vis); V[vis.join(',')] = { s: p.s, x: p.x, y: p.y }; }
+  for (let m = 0; m < (1 << O.length) - 1; m++) { const vis = O.filter((_, i) => m & (1 << i)), p = profileBody(ctx, vis); V[vis.join(',')] = { s: noTitles(p.s), x: p.x, y: p.y }; }
   fs.writeFileSync(path.join(D, 'profiles.json'), JSON.stringify(V)); console.log('profile variants', Object.keys(V).length); }
 console.log('index.html', (html.length / 1024).toFixed(0) + ' KB,', sections.length, 'sections:', sections.map((s) => s.meta.id).join(', '));
 fs.cpSync(path.join(here, 'public'), D, { recursive: true });

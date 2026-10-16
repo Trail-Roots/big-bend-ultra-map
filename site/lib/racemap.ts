@@ -7,7 +7,7 @@ import { turnaround } from './panels';
 import { hillImage, chevron, LOGO_PT } from './mainmap';
 import { bib, BIB } from './panels';
 import { accessPatterns, offRoads } from './mainmap';
-import { BAND_TINT, tint, offsetLine, viewProjection, SHEET, f1, esc, station, gmapLink, leaderLine } from './util';
+import { BAND_TINT, tint, offsetLine, viewProjection, SHEET, f1, esc, station, leaderLine } from './util';
 import { STATION_TPL } from './labels';
 
 /** sheet-unit scale vs the mini-map view, so symbols and text use the main map's sizes at race-page print size */
@@ -43,7 +43,7 @@ export function renderRaceMap(c, k: string, card?: boolean) {
   const sts = [...new Set<string>(c.cutoffs[k].map((q) => q.station))];
   const R = (st: string) => (st === 'S/F' ? Math.sqrt(2900 * 1.8) / 2 : c.stations.stations[st].spectator ? Math.sqrt(2000 * 1.8) / 2 : Math.sqrt(2000) / 2);
   for (const st of sts) { const S = c.stations.stations[st], [x, y] = V.p(S.lonlat), r = R(st); const rb = r * 1.45; ob.push({ x0: x - rb, x1: x + rb, y0: y - rb, y1: y + rb }); // includes the aid badge
-    s += gmapLink(S.link_lonlat ?? S.lonlat, st === 'S/F' ? S.name : `Aid station ${st} · ${S.name}`, station(x, y, st, S.spectator, st === 'S/F' ? { s: 2900, fs: 34, colors: col } : { colors: col })); }
+    s += station(x, y, st, S.spectator, st === 'S/F' ? { s: 2900, fs: 34, colors: col } : { colors: col }); } /* circle opens the aid-station lightbox (app.ts) */
   // full bib (START band), top-right, scaled up to race-page size
   const BS = card ? (0.2 * W) / BIB.w /* card: bib ~20% of the frame width, readable at card size */ : 2.2, bx = W - 18 - BIB.w * BS, by = 18; ob.push({ x0: bx - 4, x1: W, y0: 0, y1: by + BIB.h * BS + 4 });
   const bibSvg = `<g transform="translate(${f1(bx)} ${f1(by)}) scale(${BS})">${bib(k, c.courses.courses[k].start, cc, BIB.w, BIB.h, col, 'band', [0, 0])}</g>`;
@@ -55,7 +55,7 @@ export function renderRaceMap(c, k: string, card?: boolean) {
     if (!northSvg) throw new Error(`[racemap ${k}] no clear corner for the north arrow`); }
   // BBU logo (white halo, drawn last = on top): race pages only (not cards); the clear spot nearest a corner, clear of route / roads / markers /
   // bib / north arrow; labels are then placed around it. Build fails if no clear spot exists.
-  let logoSvg = ''; if (!card) { const lw = LOGO_PT * 0.85, lh = lw * 776 / 730, m = W * NORTH_INSET, cand: [number, number][] = [];
+  let logoSvg = ''; if (!card) { const lw = W * 0.17, lh = lw * 776 / 730, m = W * NORTH_INSET, cand: [number, number][] = [];
     for (let y = m; y <= H - m - lh; y += 12) for (let x = m; x <= W - m - lw; x += 12) cand.push([x, y]);
     const dC = ([x, y]: [number, number]) => Math.min(Math.hypot(x - m, y - m), Math.hypot(x - m, H - m - lh - y), Math.hypot(W - m - lw - x, H - m - lh - y), Math.hypot(W - m - lw - x, y - m));
     cand.sort((a, b) => dC(a) - dC(b));

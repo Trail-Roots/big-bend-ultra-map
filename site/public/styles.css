@@ -272,7 +272,7 @@ svg.st-badge{width:44px;height:44px;flex:none}
 .am-y .amv{background:#2f8f46;color:#fff}.am-n .amv{background:#e6e6e6;color:#777}.am-u .amv{background:var(--bg-hover);color:#555;border:1px solid var(--line)}.am em{color:#666;font-style:normal;font-size:.75rem}.am-n em{color:#888}
 .st-cuts{border-collapse:collapse;font-size:.9rem}.st-cuts th{text-align:left;padding:2px 10px 2px 0;font-weight:700}.st-cuts td{padding:2px 0}.cutv{margin-right:10px;white-space:nowrap}.cutv small{color:#777}
 @media (max-width:699px){.st-grid,.st-info{grid-template-columns:1fr}.stbox .lb-body > *{padding:10px 12px}}
-a.stlink{color:inherit;text-decoration:none}@media screen{a.stlink{border-bottom:1px dotted #999;cursor:pointer}g.stpick{cursor:pointer}}
+a.stlink{color:inherit;text-decoration:none}@media screen{a.stlink{border-bottom:1px dotted #999;cursor:pointer}g.stpick,g.marker[data-station],g.pcall[data-st]{cursor:pointer}.stbox g.marker[data-station],.st-badge g.marker{cursor:default}}
 /* race page heat map */
 .cpheat{margin:.5rem 0 0}.cpheat figcaption{font-size:.75rem;color:#666;margin-bottom:2px}.cpheat svg{width:100%;height:auto}
 @media screen and (min-width:1100px){html .sec-courses .coursepage .cpheat figcaption{font-size:calc(var(--S) * .008)}}
@@ -322,3 +322,7 @@ html.embed body{padding-top:0!important}
 html.embed dialog.lightbox .lb-close{position:sticky;top:10px;float:right;margin:10px 12px -50px auto}
 /* print safety (blank-page causes on some browsers): no deferred rendering, containment, compositing hints or fixed/transformed nav; normal document flow */
 @media print{html,body{height:auto!important;min-height:0!important;overflow:visible!important}*,*::before,*::after{content-visibility:visible!important;will-change:auto!important;backdrop-filter:none!important;animation:none!important;transition:none!important}html body .topnav{position:static!important;transform:none!important}main,.sheet,.sec,.doc{contain:none!important;filter:none!important;opacity:1!important}}
+/* aid-station detail pages: print / PDF only, two stations per portrait page */
+@media screen{.sec-stpages{display:none!important}}
+@media print{.sec-stpages .stpage{break-before:page;display:grid;grid-template-rows:1fr 1fr;gap:.22in;height:10.3in;overflow:hidden}.stcard{display:flex;flex-direction:column;gap:5pt;overflow:hidden;border-top:1.2pt solid var(--line-strong);padding-top:6pt;min-height:0;font-size:9pt}.stcard .st-head .st-badge{width:30pt;height:30pt}.stcard .st-head h2{font-size:15pt}.stcard .st-map svg.stzoom{width:100%!important;overflow:hidden;border:.8pt solid var(--line)}.stcard .st-info{gap:10pt}.stcard .amen{font-size:8.5pt}.stcard .st-cuts{font-size:9pt}.stcard .st-heat svg{width:100%;height:auto}}
+.st-nearp{margin:.2rem 0 0;font-size:.8rem;color:var(--mute)}.st-near{color:var(--mute)}

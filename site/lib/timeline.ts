@@ -13,12 +13,13 @@ export const cutMin = (t: string) => { const m = t.match(/^(\d+):(\d\d) (AM|PM)$
 export function renderTimeline(c: Ctx) {
   const T = c.timeline, st = c.layout.strips, W = st.w * SHEET.w, H = 5 * st.rh * SHEET.h, col = c.colors, ink = col.ink;
   const [t0, t1] = T.window, LX = 2, RX = W - 8, X = (t: number) => LX + ((t - t0) / (t1 - t0)) * (RX - LX);
-  const AX = 34, CR = 50, SH = 24, TR = 24, order: string[] = c.courses.order, sts: string[] = c.stations.order, PADL = 14; void PADL;
+  const AX = 34, CR = 34, SH = 24, TR = 24, order: string[] = c.courses.order, sts: string[] = c.stations.order, PADL = 14; void PADL;
   const SUNR = 22; // sunrise/sunset row, at the bottom, under the temperature row 
-  const VOL = order.length * CR + SH; // volume chart block (incl. room for the date at its top-left)
-  const SR = Math.min(36, (H - 50 - (AX + 4 + TR + SUNR + VOL + 8)) / sts.length); // station rows shrink to keep the footer inside the fixed strip height
+  const VOL = order.length * CR + SH; // stacked runners-on-course chart block
+  const CAPH = 30, GAPV = 44; // caption + breathing space above the heat map, and between heat map and stacked chart
+  const SR = Math.min(36, (H - 50 - (AX + 4 + CAPH + TR + SUNR + VOL + GAPV)) / sts.length); // station rows shrink to keep the footer inside the fixed strip height
   // order top -> bottom: hour axis, temperatures, aid-station heat map rows, runners-on-course volume chart
-  const sTop = AX + 4, vTop = sTop + sts.length * SR + 8, bottom = vTop + VOL - 6;
+  const sTop = AX + 4 + CAPH, vTop = sTop + sts.length * SR + GAPV, bottom = vTop + VOL - 6;
   let s = `<rect width="${f1(W)}" height="${f1(H)}" fill="#fff"/>`;
   // sky: night / civil twilight / daylight
   const sun = T.sun, d17 = sun.jan17, d18 = sun.jan18;
@@ -70,9 +71,8 @@ export function renderTimeline(c: Ctx) {
     ts.forEach((t, i) => { if (t < Math.min(...order.map((k) => T.courses[k].start)) && f1(Y(acc[i])) !== f1(base)) throw new Error('[timeline] runners on course before the first start'); });
     console.log(`timeline: every race band is 0 until its gun (${ts.length} samples, gun anchors)`);
     s += bands + tops;
-    // date at the volume chart's top-left corner (the left edge is the start of the race day); build fails if any race band reaches it
-    { const dw = 10 * 21 * 0.6, dx0 = LX + 6, dx1 = dx0 + dw, dy = top - 6; s += `<text class="tldate" x="${f1(dx0)}" y="${f1(dy)}" font-size="21" font-weight="700" text-anchor="start" fill="${ink}" stroke="#fff" stroke-width="4" paint-order="stroke">Sun Jan 17</text>`;
-      xs.forEach((x, i) => { if (x > dx0 - 4 && x < dx1 + 4 && Y(acc[i]) < dy + 6) throw new Error('[timeline] date label overlaps the chart'); }); }
+    // subdued captions: above the heat map and above the stacked chart
+    s += `<text class="tlcap" x="${f1(LX + 4)}" y="${f1(sTop - 9)}" font-size="15" fill="${col.mute}" fill-opacity=".8">Runners at aid stations</text><text class="tlcap" x="${f1(LX + 4)}" y="${f1(vTop + 8)}" font-size="15" fill="${col.mute}" fill-opacity=".8">Runners on course</text>`;
     s += `<script type="application/json" class="tldata">${JSON.stringify({ xs: xs.map((x) => +x.toFixed(1)), v: Object.fromEntries(order.map((k) => [k, ts.map((tt) => +valAt(k, tt).toFixed(2))])), base, hgt })}</script>`;
   }
   // temperatures: median of every past race day (sources/curated/race-temps.json) under each 2-hour tick; range in the tooltip
@@ -107,12 +107,12 @@ export function heatRows(c: Ctx, o: HO) {
   type Bx = { x0: number; x1: number; y0: number; y1: number };
   const CW = 9, ticons: Bx[] = [], cplaced: { b: Bx; row: [number, number] }[] = [], hitB = (p: Bx, q: Bx, m: number) => p.x0 < q.x1 + m && q.x0 < p.x1 + m && p.y0 < q.y1 + m && q.y0 < p.y1 + m;
   const pid = (kk: string) => `cutpat${o.only ?? ''}-${kk}`;
-  let s = `<defs>${order.map((kk) => `<pattern id="${pid(kk)}" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="6" height="6" fill="#fff"/><rect width="3.2" height="6" fill="${c.courses.colors[kk]}"/></pattern>`).join('')}</defs>`;
+  let s = `<defs>${order.map((kk) => `<pattern id="${pid(kk)}" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="6" height="6" fill="#111"/><rect width="3.2" height="6" fill="${c.courses.colors[kk]}"/></pattern>`).join('')}</defs>`;
   sts.forEach((k, r) => {
     const sf = k === 'S/F', v15 = series(k) ?? [], maxP = Math.max(1, ...v15), y0 = sTop + r * SR, name = sf ? 'Start / Finish' : T.stations[k]?.name ?? c.stations.stations[k].name;
     const ms = Math.min(950, (SR - 6) ** 2 / 1.8), mr = Math.sqrt(ms * 1.8) / 2;
     let g = o.title ? `<title>${esc(o.title)}</title>` : sf ? `<title>Start / Finish shaded on its own scale (peak ${Math.round(maxP)} people); aid stations share one scale</title>` : '';
-    v15.forEach((v: number, i: number) => { if (!v) return; const x = X(t0 + i * B); if (x > RX) return; g += `<rect class="hc" data-i="${i}" x="${f1(x)}" y="${f1(y0 + 4)}" width="${f1(X(t0 + B) - X(t0) + 0.3)}" height="${f1(SR - 8)}" fill="#b3261e" fill-opacity="${(0.06 + 0.9 * Math.sqrt(Math.min(1, v / maxP))).toFixed(2)}"/>`; });
+    v15.forEach((v: number, i: number) => { if (!v) return; const x = X(t0 + i * B); if (x > RX) return; g += `<rect class="hc" data-i="${i}" x="${f1(x)}" y="${f1(y0 + 4)}" width="${f1(X(t0 + B) - X(t0) + 0.3)}" height="${f1(SR - 8)}" fill="#333" fill-opacity="${(0.06 + 0.9 * Math.sqrt(Math.min(1, v / maxP))).toFixed(2)}"/>`; });
     // cutoffs: a thick bar in the race colour with white diagonal "barrier" slashes (no outline), confined to this row; races sharing a station + time split the row
     const cm = new Map<number, string[]>();
     for (const kk of order) { const C = T.courses[kk]; for (const q of C.passes) { if (q.station !== k || q.mile === 0) continue; const tm = cutMin(q.cutoff); if (tm == null) continue; const t = tm < C.start ? tm + 1440 : tm; if (t >= t0 && t <= t1) (cm.get(t) ?? cm.set(t, []).get(t)!).push(kk); } }
