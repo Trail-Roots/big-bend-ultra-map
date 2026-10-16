@@ -79,7 +79,7 @@ Always shown: off-course roads, access styles, arrows, aid stations, distances a
 Layout: side-by-side ≥ 1000 px wide, stacked below.
 
 ## Print / PDF
-PDF page order (11 pages): 1 = main map, 2 = header, mini maps, timelines and elevation profile, 3–6 = race pages (landscape), 7–9 = aid-station detail pages (2 stations per portrait page: zoomed map, hours, amenities, cutoffs, busiest-times row; no photo), 10 = finish area plan, 11 = parking plan. Every section in `site/sections/` follows on its own letter pages (opt out with `meta.print: false`; table rows never split).
+PDF page order (11 pages): 1 = main map sheet (map, header, mini maps, timelines, elevation profile), 2–6 = race pages 100K, 55K, 35K, 20K, 10K (landscape), 7–9 = aid-station detail pages (2 stations per portrait page: zoomed map, hours, amenities, cutoffs, busiest-times row; no photo), 10 = finish area plan, 11 = parking plan. Every section in `site/sections/` follows on its own letter pages (opt out with `meta.print: false`; table rows never split).
 (One letter page would shrink the 36×24 design to ~30 %, making map labels ~6 pt; two pages keep them ~10 pt.)
 `scripts/pdf.ts` prints the built page with headless Chromium using the same print CSS, so the **Download PDF**
 button (`dist/big-bend-ultra-2027-map.pdf`) matches what the browser prints. Everything is vector except the hillshade.
