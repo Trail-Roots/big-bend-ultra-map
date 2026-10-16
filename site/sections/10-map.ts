@@ -1,3 +1,4 @@
+import temps from '../../sources/temps.json';
 import { renderMain, mainLayers } from '../lib/mainmap';
 import { renderProfile } from '../lib/panels';
 import { icon } from '../lib/icons';
@@ -29,10 +30,10 @@ export function render(c: Ctx) {
   // one landscape letter page, split ~50/50: main map left half; right half = header, timeline / heat map, elevation (charts drawn larger: scale K)
   const strIn = inch(stripBox as Box), evIn = inch(evBox as Box), hdIn = inch([L.logo[0], L.logo[1], st.w, L.logo[3]] as Box);
   const GAPIN = 0.2, HALF = (LETTER.h - 2 * LETTER.margin - GAPIN) / 2, Z = Math.min(HALF / mainIn.w, (LETTER.w - 2 * LETTER.margin) / mainIn.h);
-  const K = mainIn.w / strIn.w, cx0 = mainIn.w + GAPIN / Z, colH = K * (hdIn.h + 0.25 + (evIn.t - strIn.t) + evIn.h), c0 = Math.max(0, (mainIn.h - colH) / 2);
+  const K = mainIn.w / strIn.w, cx0 = mainIn.w + GAPIN / Z, GS = 0.5, colH = K * (hdIn.h + 0.25 + evIn.h + GS + strIn.h), c0 = Math.max(0, (mainIn.h - colH) / 2);
   const p1: [string, { l: number; t: number; w: number; h: number }][] = [['pb-main', { l: 0, t: 0, w: mainIn.w, h: mainIn.h }],
     ['pb-hdr', { l: cx0, t: c0, w: K * hdIn.w, h: K * hdIn.h }],
-    ['pb-strips', { l: cx0, t: c0 + K * (hdIn.h + 0.25), w: K * strIn.w, h: K * strIn.h }], ['pb-prof', { l: cx0, t: c0 + K * (hdIn.h + 0.25 + evIn.t - strIn.t), w: K * evIn.w, h: K * evIn.h }]];
+    ['pb-prof', { l: cx0, t: c0 + K * (hdIn.h + 0.25), w: K * evIn.w, h: K * evIn.h }], ['pb-strips', { l: cx0, t: c0 + K * (hdIn.h + 0.25 + evIn.h + GS), w: K * strIn.w, h: K * strIn.h }]]; // elevation above the timeline; calendar links in the gap between them
   const w1 = Math.max(...p1.map(([, q]) => q.l + q.w)), h1 = mainIn.h;
   const P1 = { ...place(w1, h1, 'landscape') };
   const px = (b: { l: number; t: number; w: number; h: number }, x0 = 0, y0 = 0) => `{left:${(b.l - x0).toFixed(3)}in;top:${(b.t - y0).toFixed(3)}in;width:${b.w.toFixed(3)}in;height:${b.h.toFixed(3)}in}`;
@@ -46,7 +47,7 @@ export function render(c: Ctx) {
   const css = pg('.pg1', 'pmain', w1, h1, P1) + `@media print{${p1.map(([id, q]) => `#${id}${id === 'pb-hdr' ? hdrCss(q) : px(q)}`).join('')}}`
     + `@media screen and (min-width:1100px){${p1.map(([id, q]) => `html #${id}${pct(q)}`).join('')}}`;
   return `<style>${css}</style>
-<details class="ui layers" open><summary>Map layers</summary><div class="toggles">${toggles}</div></details>
+<details class="ui layers" open><summary>Map layers</summary><div class="toggles">${toggles}</div><div class="toggles racefilter" role="group" aria-label="Show races"><span class="rf-lab">Races</span>${c.courses.order.map((k) => `<label class="ck" style="--c:${c.courses.colors[k]}"><input type="checkbox" data-race="${k}" checked> ${k}</label>`).join('')}</div></details>
 <div class="sheet">
   <div class="pg1">
   <section class="main" id="pb-main">${renderMain(c)}</section>
@@ -56,10 +57,10 @@ export function render(c: Ctx) {
       <div class="titles"><h1>${esc(hdr[0].text)}</h1><p class="subtitle">${esc(hdr[1].text)}</p></div>
       <div class="notice"><strong>${esc(notice[0])}</strong>${notice.slice(1).map(l => `<br>${/^\(\d/.test(l) ? `<span class="dist">${esc(l)}</span>` : esc(l)}`).join('')}</div>
     </header>
-    <div class="stripsbox" id="pb-strips">${renderTimeline(c)}<div class="minilinks callinks"><span class="calnote">Save race day to your phone (times + GPS, works offline):</span><a href="https://calendar.google.com/calendar/u/0?cid=Njc1ZWZhYmI1ZmY0MDE1OTZlNDk5Mzg5YWRiNzdiZTU4YTUxODhkMWFkOTc1MjE1MzgxZDUzNjI1OWVlMTU0NkBncm91cC5jYWxlbmRhci5nb29nbGUuY29t" target="_blank" rel="noopener" title="Subscribe to the Race: Big Bend Ultra Google Calendar">${icon('calplus')}Google Calendar</a><a href="webcal://calendar.google.com/calendar/ical/675efabb5ff401596e499389adb77be58a5188d1ad975215381d536259ee1546%40group.calendar.google.com/public/basic.ics" title="Subscribe in Apple / iCal (public calendar feed)">${icon('calendar')}iCal / Apple</a></div></div>
     <div class="profilebox" id="pb-prof">${renderProfile(c)}</div>
+    <div class="stripsbox" id="pb-strips">${renderTimeline(c)}<div class="minilinks callinks"><span class="calnote">Save race day to your phone (times + GPS, works offline):</span><a href="https://calendar.google.com/calendar/u/0?cid=Njc1ZWZhYmI1ZmY0MDE1OTZlNDk5Mzg5YWRiNzdiZTU4YTUxODhkMWFkOTc1MjE1MzgxZDUzNjI1OWVlMTU0NkBncm91cC5jYWxlbmRhci5nb29nbGUuY29t" target="_blank" rel="noopener" title="Subscribe to the Race: Big Bend Ultra Google Calendar">${icon('calplus')}Google Calendar</a><a href="webcal://calendar.google.com/calendar/ical/675efabb5ff401596e499389adb77be58a5188d1ad975215381d536259ee1546%40group.calendar.google.com/public/basic.ics" title="Subscribe in Apple / iCal (public calendar feed)">${icon('calendar')}iCal / Apple</a></div></div>
   </div>
   </div>
-  <script type="application/json" id="hoverdata">${JSON.stringify(hoverData(c))}</script>
+  <script type="application/json" id="hoverdata">${JSON.stringify(hoverData(c))}</script><script type="application/json" id="heatdata">${JSON.stringify(Object.fromEntries(c.stations.order.map((k) => [k, k === 'S/F' ? c.timeline.finish_crowd.by_course15 : c.timeline.stations[k].by_course15])))}</script><script type="application/json" id="tempdata">${JSON.stringify(temps.hourly)}</script>
 </div>`;
 }

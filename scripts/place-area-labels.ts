@@ -73,7 +73,7 @@ function fillMask(polys: any[], holes: any[]) { // even-odd scanline fill in px;
 }
 // what to label. region: optional extra constraint in map units (relative to stations)
 type Spec = { text: string[]; area: string; polys: any[]; holes: any[]; inside?: boolean; region?: (x: number, y: number) => boolean };
-const S3 = P(st['3'].lonlat), S4 = P(st['4'].lonlat), S5 = P(st['5'].lonlat);
+const S3 = P(st['4'].lonlat), S4 = P(st['5'].lonlat), S5 = P(st['2'].lonlat);
 const SPECS: Spec[] = [
   { text: ['Private'], area: 'private:contrabando', polys: [priv[0]], holes: [] },
   { text: ['Private'], area: 'private:waterhole', polys: [priv[1]], holes: [] },

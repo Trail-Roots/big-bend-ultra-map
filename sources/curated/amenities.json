@@ -1,0 +1,9 @@
+{
+  "_note": "Aid-station amenities shown in the station lightbox. true = confirmed, false = confirmed not available, null = unknown (shown as 'TBC'). Sources: logistics My Map (Start/Finish: Main aid, Medic, Portable Restrooms, Water hose, Picnic Area, Radio Command, Parking), race sheet (Drop Bags column), stations.json (spectator access). Everything null still needs confirming by the race team.",
+  "S/F": { "aid": true, "water": true, "snacks": null, "toilet": true, "medic": true, "dropBags": null, "spectators": true, "parking": true, "photo": null },
+  "1": { "aid": true, "water": null, "snacks": null, "toilet": null, "medic": null, "dropBags": false, "spectators": false, "parking": null, "photo": null },
+  "2": { "aid": true, "water": null, "snacks": null, "toilet": null, "medic": null, "dropBags": false, "spectators": true, "parking": null, "photo": null },
+  "3": { "aid": true, "water": null, "snacks": null, "toilet": null, "medic": null, "dropBags": true, "spectators": false, "parking": null, "photo": null },
+  "4": { "aid": true, "water": null, "snacks": null, "toilet": null, "medic": null, "dropBags": true, "spectators": false, "parking": null, "photo": null },
+  "5": { "aid": true, "water": null, "snacks": null, "toilet": null, "medic": null, "dropBags": false, "spectators": false, "parking": null, "photo": null }
+}

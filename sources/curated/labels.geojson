@@ -855,7 +855,7 @@
    "type": "Feature",
    "properties": {
     "kind": "station_number",
-    "text": "2",
+    "text": "3",
     "fs": 28,
     "color": "#ffffff",
     "alpha": null,
@@ -882,7 +882,7 @@
    "type": "Feature",
    "properties": {
     "kind": "station_number",
-    "text": "3",
+    "text": "4",
     "fs": 28,
     "color": "#ffffff",
     "alpha": null,
@@ -909,7 +909,7 @@
    "type": "Feature",
    "properties": {
     "kind": "station_number",
-    "text": "4",
+    "text": "5",
     "fs": 28,
     "color": "#ffffff",
     "alpha": null,
@@ -936,7 +936,7 @@
    "type": "Feature",
    "properties": {
     "kind": "station_number",
-    "text": "5",
+    "text": "2",
     "fs": 28,
     "color": "#ffffff",
     "alpha": null,

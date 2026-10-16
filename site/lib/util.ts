@@ -155,3 +155,17 @@ export const finishFlag = (x: number, base: number, top: number, ink = '#2a2a2a'
   for (let i = 0; i < 4; i++) for (let j = 0; j < 3; j++) if ((i + j) % 2 === 0) s += `<rect x="${f1(x + i * 3.5)}" y="${f1(top + j * 3.5)}" width="3.5" height="3.5" fill="${ink}"/>`;
   return s;
 };
+/** 4x4 track as a tire tread (Erik's reference): two rows of slanted blocks forming chevrons along the line, a small gap down the middle.
+ *  lines = polylines in page units; w = tread width; one chevron every `gap` units. */
+export function tireTrack(lines: number[][][], color: string, w = 7, gap = 4.2, casing?: string) {
+  const hw = w / 2, mid = w * 0.12, dep = w * 0.34, sw = Math.max(0.9, w * 0.32);
+  let chev = '', cas = '';
+  for (const l of lines) { let acc = gap / 2;
+    for (let i = 1; i < l.length; i++) { const [ax, ay] = l[i - 1], [bx, by] = l[i], L = Math.hypot(bx - ax, by - ay); if (!L) continue; const tx = (bx - ax) / L, ty = (by - ay) / L, nx = -ty, ny = tx;
+      while (acc <= L) { const px = ax + tx * acc, py = ay + ty * acc;
+        for (const sgn of [1, -1]) chev += `M${f1(px - tx * dep + sgn * nx * hw)},${f1(py - ty * dep + sgn * ny * hw)}L${f1(px - tx * dep * (mid / hw) + sgn * nx * mid)},${f1(py - ty * dep * (mid / hw) + sgn * ny * mid)}`;
+        acc += gap; }
+      acc -= L; } }
+  if (casing) cas = `<path d="${lines.filter((l) => l.length > 1).map((l) => 'M' + l.map((q) => `${f1(q[0])},${f1(q[1])}`).join('L')).join('')}" class="ln" stroke="${casing}" stroke-width="${f1(w + 4)}"/>`;
+  return chev ? cas + `<path d="${chev}" fill="none" stroke="${color}" stroke-width="${f1(sw)}" stroke-linecap="butt"/>` : '';
+}

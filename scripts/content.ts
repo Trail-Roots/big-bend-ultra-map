@@ -17,17 +17,17 @@ const w = (n: string, o: unknown) => { const f = path.join(OUT, n); fs.mkdirSync
 export const ORDER = ['100K', '55K', '35K', '20K', '10K'] as const;
 type Course = (typeof ORDER)[number];
 const C: Record<Course, string> = { '100K': '#d6336c', '55K': '#e8891c', '35K': '#3d8b3d', '20K': '#1f6fb2', '10K': '#7b3fa0' };
-const NAME: Record<string, string> = { 'S/F': 'Start / Finish', '1': 'Waterhole', '2': 'Whit Roy', '3': 'Shutup', '4': 'Solitario', '5': 'Contrabando' };
+const NAME: Record<string, string> = { 'S/F': 'Start / Finish', '1': 'Waterhole', '2': 'Contrabando', '3': 'Whit Roy', '4': 'Shutup', '5': 'Solitario' };
 // long (full) names: official race-sheet names; Start/Finish from the race calendar location
-const LONG: Record<string, string> = { 'S/F': 'Barton Warnock Visitor Center', '1': 'On Access Rd', '2': 'Whit Roy Mine', '3': 'Righthand Shutup', '4': 'Paso al Solitario', '5': 'West Contrabando' };
-const KN: Record<string, string> = { 'S/F': 'Start / Finish Line', '1': 'Waterhole Aid', '2': 'Whit Roy Aid', '3': 'Right Hand Shutup Aid', '4': 'Solitario Aid', '5': 'Contrabando Aid' };
-const SPEC = new Set(['S/F', '5']);
+const LONG: Record<string, string> = { 'S/F': 'Barton Warnock Visitor Center', '1': 'On Access Rd', '2': 'West Contrabando', '3': 'Whit Roy Mine', '4': 'Righthand Shutup', '5': 'Paso al Solitario' };
+const KN: Record<string, string> = { 'S/F': 'Start / Finish Line', '1': 'Waterhole Aid', '2': 'Contrabando Aid', '3': 'Whit Roy Aid', '4': 'Right Hand Shutup Aid', '5': 'Solitario Aid' };
+const SPEC = new Set(['S/F', '2']);
 const RINCON: XY = [-103.8572918, 29.4076521];
 // opening-hours rule: earliest start + miles × pace (min/mile), rounded to nearest 15 min, never before 5a
-const PACE = (st: string) => (st === '1' || st === '2' ? 4 : 5);
+const PACE = (st: string) => (st === '1' || st === '3' ? 4 : 5);
 const SF_HOURS = '4:30a - 1a'; // opens 1 h before the earliest start (100K 5:30a per RunSignup)
 // sheet station names -> station ids
-const SHEET_ID: Record<string, string> = { 'Barton Warnock': 'S/F', Finish: 'S/F', Waterhole: '1', 'Whit Roy': '2', 'Whit Roy Mine': '2', 'Right Hand Shutup': '3', 'Paso al Solitario': '4', Contrabando: '5', Contabando: '5' };
+const SHEET_ID: Record<string, string> = { 'Barton Warnock': 'S/F', Finish: 'S/F', Waterhole: '1', 'Whit Roy': '3', 'Whit Roy Mine': '3', 'Right Hand Shutup': '4', 'Paso al Solitario': '5', Contrabando: '2', Contabando: '2' };
 
 // ---------- official stations sheet (CSV export of the Google Sheet) ----------
 function csvRows(t: string): string[][] {
@@ -167,7 +167,7 @@ const GH = !!process.env.GITHUB_ACTIONS, soft: string[] = [], hard: string[] = [
 const warn = (m: string) => { soft.push(m); console.warn((GH ? '::warning title=Data check::' : 'SOFT CHECK: ') + m); };
 const fail = (m: string) => { hard.push(m); console.error((GH ? '::error title=Timing check::' : 'TIMING CHECK FAILED: ') + m); };
 // station <- calendar events (by summary); place = the event LOCATION text (place name / address, or coordinates when that is all it gives)
-const ST_RE: Record<string, RegExp> = { 'S/F': /Race Start|Finish/, '1': /Waterhole|Alpha/i, '2': /Whit ?Roy|Bravo/i, '3': /Right ?hand Shutup/i, '4': /Solitario/i, '5': /Contrabando|Delta/i };
+const ST_RE: Record<string, RegExp> = { 'S/F': /Race Start|Finish/, '1': /Waterhole|Alpha/i, '2': /Contrabando|Delta/i, '3': /Whit ?Roy|Bravo/i, '4': /Right ?hand Shutup/i, '5': /Solitario/i };
 const CAL: Record<string, { place?: string; lat?: number; lon?: number }> = {};
 for (const [k, re] of Object.entries(ST_RE)) {
   const locs = EV.filter((e) => re.test(e.summary) && e.location).map((e) => e.location), uniq = [...new Set(locs)];

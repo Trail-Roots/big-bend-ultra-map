@@ -6,6 +6,27 @@ import { courseTable, totalGain } from '../lib/coursetable';
 import { renderRaceMap } from '../lib/racemap';
 import { SITE_URL } from './10-map';
 import { icon } from '../lib/icons';
+import { renderRaceHeat } from '../lib/timeline';
+import siteCfg from '../../content/site.json';
+/** Strava-route-card style thumbnail: the route alone on a light map tile + elevation sparkline (web cards only) */
+function thumb(c, k: string) {
+  const g = c.courseGeo[k].features[0].geometry.coordinates as number[][], cc = c.courses.colors[k], W = 320, H = 200, m = 14;
+  const kx = Math.cos((29.35 * Math.PI) / 180), xs = g.map((p) => p[0] * kx), ys = g.map((p) => p[1]);
+  const x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...ys), y1 = Math.max(...ys), s = Math.min((W - 2 * m) / (x1 - x0), (H - 2 * m) / (y1 - y0));
+  const ox = (W - (x1 - x0) * s) / 2, oy = (H - (y1 - y0) * s) / 2, step = Math.max(1, Math.floor(g.length / 600));
+  const d = 'M' + g.filter((_, i) => i % step === 0 || i === g.length - 1).map((p) => `${f1(ox + (p[0] * kx - x0) * s)},${f1(H - oy - (p[1] - y0) * s)}`).join('L');
+  const P = c.profiles[k], lo = Math.min(...P.ft), hi = Math.max(...P.ft), D = P.mi[P.mi.length - 1], SW = 320, SH = 46;
+  const sp = P.mi.map((mi: number, i: number) => `${f1((mi / D) * SW)},${f1(SH - 3 - ((P.ft[i] - lo) / (hi - lo || 1)) * (SH - 8))}`).join('L');
+  return `<svg class="rc-map" viewBox="0 0 ${W} ${H}" aria-hidden="true"><rect width="${W}" height="${H}" fill="#eceae4"/><path d="${d}" fill="none" stroke="#fff" stroke-width="7" stroke-linejoin="round" stroke-linecap="round"/><path d="${d}" fill="none" stroke="${cc}" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/></svg>`
+    + `<svg class="rc-elev" viewBox="0 0 ${SW} ${SH}" preserveAspectRatio="none" aria-hidden="true"><path d="M0,${SH}L${sp}L${SW},${SH}Z" fill="${cc}" fill-opacity=".18"/><path d="M${sp}" fill="none" stroke="${cc}" stroke-width="2" vector-effect="non-scaling-stroke"/></svg>`;
+}
+function card(c, k: string) {
+  const C = c.courses.courses[k], cc = c.courses.colors[k], club = (siteCfg as any).stravaClub as string;
+  return `<article class="racecard" data-course="${k}" style="--rc:${cc}"><button type="button" class="rc-open" data-course="${k}" aria-label="Open the full ${k} race page">${thumb(c, k)}</button>
+<div class="rc-body"><h3 class="bibh">${miniBibSvg(k, cc, 0.8)}<span>Big Bend Ultra ${k}</span></h3>
+<dl class="rc-stats"><div><dt>Distance</dt><dd>${C.distance_mi.toFixed(1)} mi</dd></div><div><dt>Elev gain</dt><dd>${totalGain(c, k).toLocaleString('en-US')} ft</dd></div><div><dt>Start</dt><dd>${esc(C.start)}</dd></div></dl>
+<div class="rc-btns"><button type="button" class="rc-open rc-full" data-course="${k}">${icon('expand')}Full page</button>${C.stravaUrl ? `<a class="rc-strava" href="${esc(C.stravaUrl)}" target="_blank" rel="noopener" title="Open the ${k} route in the Strava app on your phone (save it there for offline navigation)">${icon('phone')}Send to phone</a>` : ''}${club ? `<a class="rc-club" href="${esc(club)}" target="_blank" rel="noopener" title="Trail Roots club on Strava">${icon('users')}Join our club</a>` : ''}<a href="${SITE_URL}${esc(C.gpx)}" download title="Download the ${k} GPX">${icon('route')}.GPX</a></div></div></article>`;
+}
 export const meta = { id: 'courses', title: 'Race pages' };
 const uniq = (svg: string, k: string) => svg.replace(/\bid="([^"]+)"/g, `id="$1-cp${k}"`).replace(/url\(#([^)]+)\)/g, `url(#$1-cp${k})`).replace('class="mini"', 'class="mini mini-cp"').replace(/ data-mini="[^"]*"/, '');
 function profile(c, k: string) {
@@ -41,7 +62,10 @@ export function render(c) {
   const pages = c.courses.order.map((k) => {
     const C = c.courses.courses[k];
     return `<article class="doc coursepage" id="course-${k}" data-course="${k}"><figure class="cpmap">${renderRaceMap(c, k)}</figure><div class="cpright"><header class="cphead"><h2 class="bibh" style="color:${c.courses.colors[k]}">${miniBibSvg(k, c.courses.colors[k], 1)} ${C.distance_mi.toFixed(1)} mi · ${totalGain(c, k).toLocaleString('en-US')} ft gain · start ${esc(C.start)}</h2><span class="cplinks">${C.stravaUrl ? `<a href="${esc(C.stravaUrl)}" target="_blank" rel="noopener" title="${k} route on Strava">${icon('strava')}Strava</a>` : ''}<a href="${SITE_URL}${esc(C.gpx)}" download title="Download the ${k} GPX">${icon('route')}.GPX</a></span><span class="ui cpbtns"><button type="button" class="printone" data-course="${k}">${icon('printer')}Print this course</button><a href="course-${k}.pdf" download aria-label="${k} course page (PDF)">${icon('filedown')}PDF</a></span></header>
-${profile(c, k)}${courseTable(c, k)}</div></article>`;
+${profile(c, k)}${courseTable(c, k)}<figure class="cpheat"><figcaption>Busiest times at ${k} aid stations (2026 runners) · cutoffs</figcaption>${renderRaceHeat(c, k)}</figure></div></article>`;
   }).join('');
-  return `<nav class="ui cpnav"><strong>Course pages</strong> ${nav}</nav>${pages}`;
+  void nav;
+  // web: compact Strava-style race cards; each opens its full (print-view) race page in a lightbox. Print / PDF: the full pages, unchanged order.
+  return `<div class="ui racecards" role="list">${c.courses.order.map((k) => card(c, k)).join('')}</div><div class="cppages">${pages}</div>
+<dialog class="lightbox" id="racebox" aria-label="Race page"><button type="button" class="lb-close" aria-label="Close">${icon('x')}</button><div class="lb-body"></div></dialog>`;
 }

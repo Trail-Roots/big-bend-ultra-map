@@ -34,7 +34,7 @@
   {
    "type": "Feature",
    "properties": {
-    "station": "2",
+    "station": "3",
     "align": "center"
    },
    "geometry": {
@@ -48,7 +48,7 @@
   {
    "type": "Feature",
    "properties": {
-    "station": "3",
+    "station": "4",
     "align": "left"
    },
    "geometry": {
@@ -62,7 +62,7 @@
   {
    "type": "Feature",
    "properties": {
-    "station": "4",
+    "station": "5",
     "align": "center"
    },
    "geometry": {
@@ -76,7 +76,7 @@
   {
    "type": "Feature",
    "properties": {
-    "station": "5",
+    "station": "2",
     "align": "center"
    },
    "geometry": {

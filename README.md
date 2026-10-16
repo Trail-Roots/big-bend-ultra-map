@@ -99,6 +99,14 @@ Change a number and run `bun run build`: the on-course bands, aid-station heat r
 (the expected value of resampling N runners from the 2026 empirical finish-time distribution, so the shape is unchanged). The map's runner dots
 bootstrap whole 2026 runners (seeded, ±1 % time jitter) when N differs, so they keep the real 2026 clustering. The assumption is recorded in `content/timeline.json`.
 
+### Temperatures
+
+The small °F readings under the timeline hours (and in its hover) are last year's race day: hourly 2 m air temperature on Jan 17 2026 at the Start / Finish (Barton Warnock), from the [Open-Meteo historical weather API](https://open-meteo.com/) (ERA5 reanalysis), shifted to CST. Refresh with `bun scripts/fetch-temps.ts` (writes `sources/temps.json`).
+
+### Aid-station details
+
+The station lightbox (click a station on the map, a heat-map row icon or a race-table name) reads amenities and photos from `sources/curated/amenities.json` (null = unknown, shown as TBC). The Strava club for the race cards is `stravaClub` in `sources/curated/site.json`.
+
 ## Draft markings
 
 One flag controls all draft markings: `sources/curated/site.json` (copied to `content/site.json` by `bun run content`).
@@ -118,33 +126,35 @@ notice next to Download PDF on the web page. Set it to `false` and rebuild (`bun
 
 - Start / Finish: <https://www.google.com/maps/search/?api=1&query=Barton%20Warnock%20Visitor%20Center%2C%2021800%20FM170%2C%20Terlingua%2C%20TX%2079852%2C%20USA>
 - Aid station 1 · Waterhole: <https://www.google.com/maps/search/?api=1&query=29.317977,-103.795332>
-- Aid station 2 · Whit Roy: <https://www.google.com/maps/search/?api=1&query=Whit-Roy%20Cinnabar%20Mine%2C%201900%20Sauceda%20Ranch%20Road%2C%20Redford%2C%20TX%2079846%2C%20USA>
-- Aid station 3 · Shutup: <https://www.google.com/maps/search/?api=1&query=Righthand%20Shutup%2C%20Texas%2079846%2C%20USA>
-- Aid station 4 · Solitario: <https://www.google.com/maps/search/?api=1&query=Paso%20al%20Solitario%2C%20Solitario%20Road%2C%20Redford%2C%20TX%2079846%2C%20USA>
-- Aid station 5 · Contrabando: <https://www.google.com/maps/search/?api=1&query=West%20Contrabondo%20Trailhead%2C%20W%20Main%20Trail%2C%20Redford%2C%20TX%2079846%2C%20USA>
+- Aid station 2 · Contrabando: <https://www.google.com/maps/search/?api=1&query=West%20Contrabondo%20Trailhead%2C%20W%20Main%20Trail%2C%20Redford%2C%20TX%2079846%2C%20USA>
+- Aid station 3 · Whit Roy: <https://www.google.com/maps/search/?api=1&query=Whit-Roy%20Cinnabar%20Mine%2C%201900%20Sauceda%20Ranch%20Road%2C%20Redford%2C%20TX%2079846%2C%20USA>
+- Aid station 4 · Shutup: <https://www.google.com/maps/search/?api=1&query=Righthand%20Shutup%2C%20Texas%2079846%2C%20USA>
+- Aid station 5 · Solitario: <https://www.google.com/maps/search/?api=1&query=Paso%20al%20Solitario%2C%20Solitario%20Road%2C%20Redford%2C%20TX%2079846%2C%20USA>
 - Rincon: <https://www.google.com/maps/search/?api=1&query=29.407652,-103.857292>
 - Sauceda: <https://www.google.com/maps/search/?api=1&query=29.469013,-103.957010>
+- Open in Google Maps: <https://www.google.com/maps/search/?api=1&query=29.31797692590845%2C-103.79533238192568>
 
 ### Routes
 
-- 100K route on Strava: <https://www.strava.com/routes/3450526029363380036>
-- 55K route on Strava: <https://www.strava.com/routes/3450532671815509296>
-- 35K route on Strava: <https://www.strava.com/routes/3450543498764908848>
-- 20K route on Strava: <https://www.strava.com/routes/3476258112199931088>
-- 10K route on Strava: <https://www.strava.com/routes/3476252579046666448>
+- Open the 100K route in the Strava app on your phone (save it there for offline navigation): <https://www.strava.com/routes/3450526029363380036>
+- Trail Roots club on Strava: <https://www.strava.com/clubs/trailroots>
+- Open the 55K route in the Strava app on your phone (save it there for offline navigation): <https://www.strava.com/routes/3450532671815509296>
+- Open the 35K route in the Strava app on your phone (save it there for offline navigation): <https://www.strava.com/routes/3450543498764908848>
+- Open the 20K route in the Strava app on your phone (save it there for offline navigation): <https://www.strava.com/routes/3476258112199931088>
+- Open the 10K route in the Strava app on your phone (save it there for offline navigation): <https://www.strava.com/routes/3476252579046666448>
 
 ### Downloads
 
 - Download PDF: <https://trail-roots.github.io/big-bend-ultra-map/big-bend-ultra-2027-map.pdf>
 - Download the 100K GPX: <https://trail-roots.github.io/big-bend-ultra-map/gpx/big-bend-ultra-100k.gpx>
-- 100K course page (PDF): <https://trail-roots.github.io/big-bend-ultra-map/course-100K.pdf>
 - Download the 55K GPX: <https://trail-roots.github.io/big-bend-ultra-map/gpx/big-bend-ultra-55k.gpx>
-- 55K course page (PDF): <https://trail-roots.github.io/big-bend-ultra-map/course-55K.pdf>
 - Download the 35K GPX: <https://trail-roots.github.io/big-bend-ultra-map/gpx/big-bend-ultra-35k.gpx>
-- 35K course page (PDF): <https://trail-roots.github.io/big-bend-ultra-map/course-35K.pdf>
 - Download the 20K GPX: <https://trail-roots.github.io/big-bend-ultra-map/gpx/big-bend-ultra-20k.gpx>
-- 20K course page (PDF): <https://trail-roots.github.io/big-bend-ultra-map/course-20K.pdf>
 - Download the 10K GPX: <https://trail-roots.github.io/big-bend-ultra-map/gpx/big-bend-ultra-10k.gpx>
+- 100K course page (PDF): <https://trail-roots.github.io/big-bend-ultra-map/course-100K.pdf>
+- 55K course page (PDF): <https://trail-roots.github.io/big-bend-ultra-map/course-55K.pdf>
+- 35K course page (PDF): <https://trail-roots.github.io/big-bend-ultra-map/course-35K.pdf>
+- 20K course page (PDF): <https://trail-roots.github.io/big-bend-ultra-map/course-20K.pdf>
 - 10K course page (PDF): <https://trail-roots.github.io/big-bend-ultra-map/course-10K.pdf>
 
 ### Calendar

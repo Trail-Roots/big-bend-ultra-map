@@ -124,7 +124,7 @@ svg.mainmap,svg.mini{touch-action:pan-x pan-y}svg.panning{cursor:grabbing}
 }
 /* ---------- small screens: timeline + profile up, mini maps lower ---------- */
 @media screen and (max-width:1000px){
-  .sheet .side{display:contents}.hdr{order:0}.stripsbox{order:1}.profilebox{order:2}.minis{order:3}
+  .sheet .side{display:contents}.hdr{order:0}.stripsbox{order:2}.profilebox{order:1}.minis{order:3}
 }
 /* ---------- ?view=embed ---------- */
 /* ?view=embed renders exactly the same paper layout; only the background behind the sheets is neutral (transparent) */
@@ -133,7 +133,7 @@ html.embed,html.embed body,html.embed .sec.noprint{background:transparent!import
 /* ---------- wide / desktop: whole main map visible, fitted to the screen height ---------- */
 @media screen and (min-width:1001px){
   .sheet{grid-template-columns:auto minmax(0,1fr);grid-template-rows:auto auto auto 1fr;align-items:start;column-gap:calc(var(--host-vw, 1vw) * 1.5);row-gap:calc(var(--host-vw, 1vw) * 1.2)}
-  .sheet .side{display:contents}.sheet .main{grid-column:1;grid-row:1/5}.sheet .hdr,.sheet .minis,.sheet .stripsbox,.sheet .profilebox{grid-column:2}.sheet .hdr{grid-row:1}.sheet .minis{grid-row:2}.sheet .stripsbox{grid-row:3}.sheet .profilebox{grid-row:4}
+  .sheet .side{display:contents}.sheet .main{grid-column:1;grid-row:1/5}.sheet .hdr,.sheet .minis,.sheet .stripsbox,.sheet .profilebox{grid-column:2}.sheet .hdr{grid-row:1}.sheet .minis{grid-row:2}.sheet .stripsbox{grid-row:4}.sheet .profilebox{grid-row:3}
   .main{justify-self:start}
   .main svg.mainmap{height:calc(calc(var(--host-vh, 1vh) * 100) - 140px);min-height:520px;width:auto;max-width:min(calc(var(--host-vw, 1vw) * 62),100%)}
 }
@@ -223,3 +223,62 @@ svg.ic{width:1.15em;height:1.15em;flex:none;display:inline-block;vertical-align:
 html body svg.ic{width:1.15em!important;height:1.15em!important;max-width:none!important;min-width:0!important;min-height:0!important;background:none!important;box-shadow:none!important;margin:0!important}html body .zctl button svg.ic{width:15px!important;height:15px!important}html body .fp-zoomctl button svg.ic{width:17px!important;height:17px!important}
 @media print{html body svg.ic{display:none!important}}
 @media print{.cphead{flex-wrap:nowrap}html body .cphead h2{white-space:nowrap;font-size:13pt;flex:0 1 auto;min-width:0}.cphead h2 svg{flex:none}.cphead .cplinks{flex:none}}
+
+/* page 1: elevation above the timeline; the calendar links sit in the gap just ABOVE the timeline (print + paper view), clear of both charts */
+@media print{.stripsbox .callinks{top:auto!important;bottom:100%;margin:0 0 3pt!important}}
+@media screen and (min-width:1100px){html .sec-map .pg1 .stripsbox .callinks{position:absolute;bottom:100%;left:0;margin:0 0 .3cqw;font-size:.75cqw;flex-wrap:nowrap;white-space:nowrap}}
+/* ---------- race filter (Map layers box) ---------- */
+.racefilter{border-top:1px solid #eee;align-items:center}.racefilter .rf-lab{font-weight:700;color:#555;margin-right:.2rem}
+/* ---------- race cards (web, modeled on the Strava route cards on trailroots.com/sky-island); full pages open in a lightbox ---------- */
+@media screen{
+  .sec-courses .cppages > .coursepage{display:none}
+  .racecards{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px;max-width:var(--SW,1200px);margin:24px auto;padding:0 1rem;box-sizing:border-box}
+  .racecard{background:#fff;border:1px solid #dcdcdc;border-radius:8px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 1px 3px #0000001a;font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+  .racecard .rc-open:not(.rc-full){display:block;padding:0;border:0;background:none;cursor:zoom-in;border-bottom:1px solid #eee}
+  .racecard svg.rc-map{display:block;width:100%;height:auto}.racecard svg.rc-elev{display:block;width:100%;height:38px;background:#fafafa}
+  .rc-body{padding:10px 12px 12px;display:flex;flex-direction:column;gap:8px}
+  .rc-body h3{margin:0;font-size:1rem;display:flex;align-items:center;gap:.45rem;color:#242428}
+  .rc-stats{display:flex;gap:16px;margin:0}.rc-stats div{display:flex;flex-direction:column}.rc-stats dt{font-size:.68rem;color:#6d6d78;text-transform:none}.rc-stats dd{margin:0;font-weight:700;font-size:.95rem;color:#242428}
+  .rc-btns{display:flex;flex-wrap:wrap;gap:6px}
+  .rc-btns a,.rc-btns button{display:inline-flex;align-items:center;gap:.35em;font:600 .78rem/1 system-ui,sans-serif;padding:.45rem .65rem;border-radius:4px;border:1px solid #c9c9cf;background:#fff;color:#242428;text-decoration:none;cursor:pointer;white-space:nowrap}
+  .rc-btns a:hover,.rc-btns button:hover{border-color:#242428}
+  .rc-btns .rc-strava{background:#fc4c02;border-color:#fc4c02;color:#fff}.rc-btns .rc-strava:hover{background:#e34402;border-color:#e34402}
+  .rc-btns .rc-club{color:#fc4c02;border-color:#fc4c02}.rc-btns .rc-club:hover{background:#fff3ee;border-color:#e34402}
+}
+/* ---------- lightboxes (race page, aid station) ---------- */
+dialog.lightbox{border:0;padding:0;background:transparent;max-width:none;max-height:none;width:100vw;height:100vh;overflow:auto}
+dialog.lightbox::backdrop{background:#111c}
+dialog.lightbox .lb-close{position:fixed;top:10px;right:12px;z-index:5;width:40px;height:40px;border-radius:50%;border:0;background:#fff;color:#111;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;box-shadow:0 1px 4px #0005}
+dialog.lightbox .lb-body{min-height:100%;display:flex;align-items:flex-start;justify-content:center;padding:24px 8px}
+dialog#racebox .coursepage{display:grid!important;margin:0 auto!important;background:#fff}
+@media screen and (max-width:1099px){dialog#racebox .coursepage{grid-template-columns:1fr;max-width:100%;padding:.6rem 9px}}
+dialog.stbox .lb-body > *{max-width:960px}
+dialog.stbox .lb-body{flex-direction:column;align-items:center}
+dialog.stbox .lb-body{background:none}
+dialog.stbox .st-wrap{background:#fff}
+.stbox .lb-body{gap:0}.stbox .lb-body > header,.stbox .lb-body > div,.stbox .lb-body > section{width:min(960px,100%);background:#fff;padding:12px 18px;box-sizing:border-box}
+.stbox .lb-body > header{border-radius:8px 8px 0 0}.stbox .lb-body > section:last-child{border-radius:0 0 8px 8px;padding-bottom:18px}
+.st-head{display:flex;align-items:center;gap:12px}.st-head h2{margin:0;font-family:"DejaVu Serif",serif;font-weight:400}.st-head .note{margin:.15rem 0 0;color:#666;font-size:.9rem}
+svg.st-badge{width:44px;height:44px;flex:none}
+.st-grid{display:grid;grid-template-columns:3fr 2fr;gap:12px}.st-map svg{border:1px solid #ddd;display:block}
+.st-photo{margin:0;display:flex}.st-photo img{width:100%;height:100%;object-fit:cover;border-radius:4px}
+.ph-empty{flex:1;min-height:160px;border:2px dashed #ccc;border-radius:6px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;color:#888;font-size:.9rem;background:#fafafa}
+.st-info{display:grid;grid-template-columns:1fr 1.4fr 1.4fr;gap:16px}.st-info h3,.st-heat h3{margin:.2rem 0 .4rem;font-size:.8rem;text-transform:uppercase;letter-spacing:.05em;color:#666}
+.st-heat h3 small{text-transform:none;letter-spacing:0;font-weight:400}
+.st-hours b{font-size:1.25rem}.st-gmap{display:inline-flex;align-items:center;gap:.35em;color:#1f6fb2;font-size:.9rem}
+.amen{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:1fr 1fr;gap:4px 10px;font-size:.88rem}
+.am{display:flex;align-items:center;gap:6px}.am .amv{width:18px;height:18px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:700;flex:none}
+.am-y .amv{background:#2f8f46;color:#fff}.am-n .amv{background:#e6e6e6;color:#777}.am-u .amv{background:#fff4d6;color:#8a6200;border:1px solid #e5c56a}.am em{color:#8a6200;font-style:normal;font-size:.75rem}.am-n em{color:#888}
+.st-cuts{border-collapse:collapse;font-size:.9rem}.st-cuts th{text-align:left;padding:2px 10px 2px 0;font-weight:700}.st-cuts td{padding:2px 0}.cutv{margin-right:10px;white-space:nowrap}.cutv small{color:#777}
+@media (max-width:699px){.st-grid,.st-info{grid-template-columns:1fr}.stbox .lb-body > *{padding:10px 12px}}
+a.stlink{color:inherit;text-decoration:none}@media screen{a.stlink{border-bottom:1px dotted #999;cursor:pointer}g.stpick{cursor:pointer}}
+/* race page heat map */
+.cpheat{margin:.5rem 0 0}.cpheat figcaption{font-size:.75rem;color:#666;margin-bottom:2px}.cpheat svg{width:100%;height:auto}
+@media screen and (min-width:1100px){html .sec-courses .coursepage .cpheat figcaption{font-size:calc(var(--S) * .008)}}
+/* ---------- print fixes ---------- */
+@media print{
+  .racecards,dialog.lightbox{display:none!important}
+  .cphead{flex-wrap:wrap!important;row-gap:2pt}html body .cphead h2{flex:1 0 100%!important;font-size:12pt!important;white-space:nowrap}.cphead .cplinks{margin-left:auto}
+  .cpheat figcaption{font-size:7pt}.cpheat{margin-top:4pt}.cprofile{margin:.2rem 0 .3rem}
+  .coursepage .cuttab td,.coursepage .cuttab th{padding:1.5pt 3pt}
+}

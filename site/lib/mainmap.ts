@@ -1,5 +1,5 @@
 import { stationLabel, poiLabel, areaLabel } from './labels';
-import { chaikin, mergeChains, simplifyPts, leaderLine, poiDot, SHEET, viewProjection, esc, f1, lineD, dash, STYLE, station, textBlock, gmapLink } from './util';
+import { chaikin, mergeChains, simplifyPts, leaderLine, poiDot, SHEET, viewProjection, esc, f1, lineD, dash, STYLE, station, textBlock, gmapLink, tireTrack } from './util';
 // user-toggleable layers (off-course roads, access styles, arrows, aid stations, distances and all labels are always shown)
 const LAYERS: [string, string, boolean][] = [
   ['topo', 'Topo shading', true], ['park', 'Park boundary', true],
@@ -30,6 +30,8 @@ export function renderMain(c) {
   for (const f of net.filter(f => f.properties.cls === 'connector')) { const d = V.path(f); add('roads', `<path d="${d}" class="ln" stroke="${col.cream}" stroke-width="12" stroke-linecap="butt"/><path d="${d}" class="ln" stroke="#000" stroke-width="7"/>`); }
   for (const f of net.filter(f => !f.properties.on_course && STYLE.off[f.properties.cls])) {
     const s = STYLE.off[f.properties.cls], d = V.path(f);
+    if (f.properties.cls === 'unpaved') { add('roads', `<path d="${d}" class="ln" stroke="${s.color}" stroke-width="${s.lw}" stroke-linecap="butt"/><path d="${d}" class="ln" stroke="#fff" stroke-width="0.7" stroke-linecap="butt"/>`); continue; } // unpaved: two solid tracks (former 4x4 style, no dashes)
+    if (f.properties.cls === '4x4') { add('roads', tireTrack(V.lines(f), s.color, 4, 3)); continue; } // 4x4: tire tread
     add('roads', `<path d="${d}" class="ln" data-name="${esc(f.properties.name || '')}" stroke="${s.color}" stroke-width="${s.lw}" stroke-dasharray="${dash(s.pat, s.lw)}" stroke-linecap="butt"/>` + (s.rail ? `<path d="${d}" class="ln" stroke="#fff" stroke-width="${s.rail}" stroke-linecap="butt"/>` : ''));
   }
   // on-course access runs: casing first, then patterns (draw order as in make.py)
@@ -40,20 +42,24 @@ export function renderMain(c) {
   const smoothD = (cls: string) => mergeChains(on.filter(f => f.properties.cls === cls).flatMap(f => V.lines(f)))
     .map(l => 'M' + chaikin(simplifyPts(l, 1.5), 2).map(q => `${f1(q[0])},${f1(q[1])}`).join('L')).join('');
   const D: Record<string, string> = Object.fromEntries(['foot_bike', 'unpaved', '4x4', 'foot'].map(k => [k, smoothD(k)]));
+  const T4 = mergeChains(on.filter(f => f.properties.cls === '4x4').flatMap(f => V.lines(f))).map(l => chaikin(simplifyPts(l, 1.5), 2));
   for (const cls of ['foot_bike', 'unpaved', '4x4']) if (D[cls]) cas += `<path d="${D[cls]}" class="ln" stroke="#fff" stroke-width="12"/>`;
+  const d0 = (k: string) => D[k];
   for (const cls of ['foot_bike', 'unpaved', '4x4', 'foot']) if (D[cls]) {
+    if (cls === 'unpaved') { pat += `<path d="${d0(cls)}" class="ln" stroke="${col.ink}" stroke-width="6" stroke-linecap="butt"/><path d="${d0(cls)}" class="ln" stroke="#fff" stroke-width="1.4" stroke-linecap="butt"/>`; continue; } // unpaved: former 4x4 style, no dashes
+    if (cls === '4x4') { pat += tireTrack(T4, col.ink, 8.5, 4.6); continue; } // 4x4: tire tread (Erik's reference image)
     const s = STYLE.on[cls], d = D[cls];
     pat += `<path d="${d}" class="ln" stroke="${col.ink}" stroke-width="${s.lw}" stroke-dasharray="${dash(s.pat, s.lw)}" stroke-linecap="butt"/>` + (s.rail ? `<path d="${d}" class="ln" stroke="#fff" stroke-width="${s.rail}" stroke-linecap="butt"/>` : '');
   }
   add('access', cas + pat);
   // zoom boxes
-  for (const f of c.zoom.features) add('zoom', `<path d="${V.path(f)}" fill="none" stroke="${f.properties.color}" stroke-width="2.4" stroke-dasharray="${dash([5, 3], 2.4)}"/>`);
+  for (const f of c.zoom.features) add('zoom', `<path data-course="${f.properties.course}" d="${V.path(f)}" fill="none" stroke="${f.properties.color}" stroke-width="2.4" stroke-dasharray="${dash([5, 3], 2.4)}"/>`);
   // arrows
   for (const f of c.arrows.features.filter(f => f.properties.map === 'main')) add('arrows', chevron(f, V, col));
   // stations
   for (const k of c.stations.order) {
     const s = c.stations.stations[k], [x, y] = V.p(s.lonlat);
-    add('stations', gmapLink(s.place ?? s.link_lonlat ?? s.lonlat, k === 'S/F' ? s.name : `Aid station ${k} · ${s.name}`, station(x, y, k, s.spectator, k === 'S/F' ? { s: 2900, fs: 34, colors: col } : { colors: col })));
+    add('stations', `<g class="stpick" data-station="${esc(k)}">` + gmapLink(s.place ?? s.link_lonlat ?? s.lonlat, k === 'S/F' ? s.name : `Aid station ${k} · ${s.name}`, station(x, y, k, s.spectator, k === 'S/F' ? { s: 2900, fs: 34, colors: col } : { colors: col })) + '</g>');
   }
   // POIs
   for (const f of c.pois.features) if (f.geometry.type === 'Point') { const [x, y] = V.p(f.geometry.coordinates); add('pois', gmapLink(f.geometry.coordinates, f.properties.name ?? 'Point of interest', poiDot(x, y))); }
@@ -67,7 +73,7 @@ export function renderMain(c) {
     const layer = p.kind === 'station_number' || p.kind === 'station_label' ? 'stations' : p.kind === 'zoombox_label' ? 'zoom' : 'labels';
     if (p.kind === 'station_label' || p.kind === 'poi_label') continue; // replaced by the label templates below
     if (p.kind === 'station_number') continue; // numbers are part of the station marker template
-    add(layer === 'stations' ? 'stationLabels' : layer, lead + textBlock(x, y, p));
+    add(layer === 'stations' ? 'stationLabels' : layer, p.kind === 'zoombox_label' ? `<g data-course="${esc(String(p.text).trim())}">${lead + textBlock(x, y, p)}</g>` : lead + textBlock(x, y, p));
   }
   // standard station + POI label templates
   const rad = (k: string) => (k === 'S/F' ? Math.sqrt(2900 * 1.8) / 2 : c.stations.stations[k].spectator ? Math.sqrt(2000 * 1.8) / 2 : Math.sqrt(2000) / 2);
@@ -120,8 +126,8 @@ function legend(c, W, H) {
     if (kk === 'pk') s += `<path d="${L}" stroke="${col.boundary}" stroke-width="2.6" stroke-dasharray="${dash([0.6, 2.6], 2.6)}" stroke-linecap="round"/>`;
     else if (kk === 'fm') s += `<path d="${L}" stroke="#333" stroke-width="10"/><path d="${L}" stroke="#fff" stroke-width="2.2" stroke-dasharray="${dash([6, 5], 2.2)}"/>`;
     else if (kk === 'za') s += `<path d="${L}" stroke="${col.ink}" stroke-width="6" stroke-dasharray="${whole(6, [4, .6, 1.6, .6])}"/>`;
-    else if (kk === 'zt') s += `<path d="${L}" stroke="${col.ink}" stroke-width="6" stroke-dasharray="${whole(6, [11.7, .83])}"/>`;
-    else if (kk === 'z4') s += `<path d="${L}" stroke="${col.ink}" stroke-width="6" stroke-dasharray="${whole(6, [7.3, .7])}"/><path d="${L}" stroke="#fff" stroke-width="1.9"/>`;
+    else if (kk === 'zt') s += `<path d="${L}" stroke="${col.ink}" stroke-width="6"/><path d="${L}" stroke="#fff" stroke-width="1.9"/>`;
+    else if (kk === 'z4') s += tireTrack([[[x, y], [x + sw, y]]], col.ink, 8.5, 4.6);
     else if (kk === 'zn') s += `<path d="${L}" stroke="${col.ink}" stroke-width="6" stroke-dasharray="${whole(6, [0.58, 0.25])}"/>`;
     else if (kk === 'rin') s += poiDot(x + sw / 2, y, 0.85);
     else if (kk === 'ring') s += station(x + sw / 2, y, '', true, { s: 420, badge: false, colors: col });
