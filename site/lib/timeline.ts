@@ -29,7 +29,7 @@ export function renderTimeline(c: Ctx) {
   // hour grid + axis
   for (let t = Math.ceil(t0 / 60) * 60; t <= t1; t += 60) {
     const x = X(t), major = t % 120 === 0;
-    s += `<path d="M${f1(x)},${AX}V${f1(bottom)}" stroke="${major ? '#d6d0c4' : '#ece8e0'}" stroke-width="1"/>`;
+    s += `<path d="M${f1(x)},${AX}V${f1(bottom)}" stroke="${major ? '#d4d4d4' : '#ececec'}" stroke-width="1"/>`;
     if (major) s += `<text x="${f1(x)}" y="${AX - 10}" font-size="21" text-anchor="${x < 24 ? "start" : "middle"}" fill="${ink}">${t % 1440 === 0 ? '12a' : clock(t)}</text>`;
   }
   if (t1 > 1440) s += `<text x="${f1(X(1440) + 4)}" y="${AX - 10}" font-size="15" fill="${col.mute}" dx="22">Mon</text>`;
@@ -85,11 +85,11 @@ function tempRow(X: (t: number) => number, t0: number, t1: number, y: number, mu
 }
 /** multi-step heat ramp (cream -> amber -> red -> deep red), v in 0..1; sqrt-scaled by the caller so quiet stations still read */
 export const heat = (v: number) => { const S = [[255, 244, 222], [247, 182, 92], [214, 72, 40], [140, 18, 18], [74, 8, 8]], x = Math.min(1, Math.max(0, v)) * (S.length - 1), i = Math.min(S.length - 2, Math.floor(x)), f = x - i; return 'rgb(' + S[i].map((a, j) => Math.round(a + (S[i + 1][j] - a) * f)).join(',') + ')'; };
-type HO = { X: (t: number) => number; LX: number; RX: number; sTop: number; SR: number; sts: string[]; races: string[]; t0: number; t1: number; only?: string; gmaxFrom?: string[] };
+type HO = { X: (t: number) => number; LX: number; RX: number; sTop: number; SR: number; sts: string[]; races: string[]; t0: number; t1: number; only?: string; gmaxFrom?: string[]; series?: number[]; title?: string };
 /** aid-station heat map rows: modelled people per 15 min (S/F on its own scale, aid stations share one), cutoff marks per race confined to the row */
 export function heatRows(c: Ctx, o: HO) {
   const T = c.timeline, { X, LX, RX, sTop, SR, sts, races: order, t0, t1 } = o, B = T.bin_min, FC = T.finish_crowd;
-  const series = (k: string) => { const sf = k === 'S/F', S = sf ? FC : T.stations[k]; if (!S) return null; const by = S.by_course15 as Record<string, number[]>, base = sf ? S.present15 : S.passes15;
+  const series = (k: string) => { if (o.series) return o.series; const sf = k === 'S/F', S = sf ? FC : T.stations[k]; if (!S) return null; const by = S.by_course15 as Record<string, number[]>, base = sf ? S.present15 : S.passes15;
     return o.only ? (by?.[o.only] ?? base.map(() => 0)) : base; };
   const GMAX = Math.max(1, ...(o.gmaxFrom ?? sts).filter((k) => k !== 'S/F').map((k) => Math.max(0, ...(series(k) ?? [0]))));
   type Bx = { x0: number; x1: number; y0: number; y1: number };
@@ -99,7 +99,7 @@ export function heatRows(c: Ctx, o: HO) {
   sts.forEach((k, r) => {
     const sf = k === 'S/F', v15 = series(k) ?? [], maxP = Math.max(1, ...v15), y0 = sTop + r * SR, name = sf ? 'Start / Finish' : T.stations[k]?.name ?? c.stations.stations[k].name;
     const ms = Math.min(950, (SR - 6) ** 2 / 1.8), mr = Math.sqrt(ms * 1.8) / 2;
-    let g = sf ? `<title>Start / Finish shaded on its own scale (peak ${Math.round(maxP)} people); aid stations share one scale</title>` : '';
+    let g = o.title ? `<title>${esc(o.title)}</title>` : sf ? `<title>Start / Finish shaded on its own scale (peak ${Math.round(maxP)} people); aid stations share one scale</title>` : '';
     v15.forEach((v: number, i: number) => { if (!v) return; const x = X(t0 + i * B); if (x > RX) return; g += `<rect class="hc" data-i="${i}" x="${f1(x)}" y="${f1(y0 + 4)}" width="${f1(X(t0 + B) - X(t0) + 0.3)}" height="${f1(SR - 8)}" fill="#b3261e" fill-opacity="${(0.06 + 0.9 * Math.sqrt(Math.min(1, v / maxP))).toFixed(2)}"/>`; });
     // cutoffs: a thick bar in the race colour with white diagonal "barrier" slashes, white edge, confined to this row; races sharing a station + time split the row
     const cm = new Map<number, string[]>();
@@ -133,7 +133,7 @@ export function renderRaceHeat(c: Ctx, k: string) {
   const AX = 30, SR = 30, LX = 2, RX = W - 8, X = (t: number) => LX + ((t - t0) / (t1 - t0)) * (RX - LX), sTop = AX + 6, H = sTop + sts.length * SR + 4;
   let s = `<rect width="${W}" height="${H}" fill="#fff"/>`;
   const step = t1 - t0 > 720 ? 120 : 60;
-  for (let t = Math.ceil(t0 / 60) * 60; t <= t1; t += 60) { const x = X(t), major = t % step === 0; s += `<path d="M${f1(x)},${AX}V${f1(H - 4)}" stroke="${major ? '#d6d0c4' : '#ece8e0'}"/>`; if (major && x > 20 && x < W - 20) s += `<text x="${f1(x)}" y="${AX - 9}" font-size="17" text-anchor="middle" fill="${ink}">${t % 1440 === 0 ? '12a' : clock(t)}</text>`; }
+  for (let t = Math.ceil(t0 / 60) * 60; t <= t1; t += 60) { const x = X(t), major = t % step === 0; s += `<path d="M${f1(x)},${AX}V${f1(H - 4)}" stroke="${major ? '#d4d4d4' : '#ececec'}"/>`; if (major && x > 20 && x < W - 20) s += `<text x="${f1(x)}" y="${AX - 9}" font-size="17" text-anchor="middle" fill="${ink}">${t % 1440 === 0 ? '12a' : clock(t)}</text>`; }
   s += heatRows(c, { X, LX, RX, sTop, SR, sts, races: [k], t0, t1, only: k });
   return `<svg class="raceheat" data-course="${k}" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${k} aid-station heat map">${s}</svg>`;
 }
@@ -145,8 +145,17 @@ export function renderStationHeat(c: Ctx, k: string) {
   const t0 = Math.max(T.window[0], Math.floor((first - 30) / 60) * 60), t1 = Math.min(T.window[1], Math.ceil((last + 30) / 60) * 60);
   const AX = 30, SR = 40, LX = 2, RX = W - 8, X = (t: number) => LX + ((t - t0) / (t1 - t0)) * (RX - LX), sTop = AX + 6, H = sTop + SR + 4, step = t1 - t0 > 720 ? 120 : 60;
   let s = `<rect width="${W}" height="${H}" fill="#fff"/>`;
-  for (let t = Math.ceil(t0 / 60) * 60; t <= t1; t += 60) { const x = X(t), major = t % step === 0; s += `<path d="M${f1(x)},${AX}V${f1(H - 4)}" stroke="${major ? '#d6d0c4' : '#ece8e0'}"/>`; if (major && x > 20 && x < W - 20) s += `<text x="${f1(x)}" y="${AX - 9}" font-size="17" text-anchor="middle" fill="${ink}">${t % 1440 === 0 ? '12a' : clock(t)}</text>`; }
+  for (let t = Math.ceil(t0 / 60) * 60; t <= t1; t += 60) { const x = X(t), major = t % step === 0; s += `<path d="M${f1(x)},${AX}V${f1(H - 4)}" stroke="${major ? '#d4d4d4' : '#ececec'}"/>`; if (major && x > 20 && x < W - 20) s += `<text x="${f1(x)}" y="${AX - 9}" font-size="17" text-anchor="middle" fill="${ink}">${t % 1440 === 0 ? '12a' : clock(t)}</text>`; }
   // shading scale shared with page 1 (aid stations share one scale; S/F its own)
   s += heatRows(c, { X, LX, RX, sTop, SR, sts: [k], races, t0, t1, gmaxFrom: c.stations.order });
   return `<svg class="stheat" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${esc(c.stations.stations[k].name)} busiest times">${s}</svg>`;
+}
+
+/** finish-area page: one heat row of runners off course at the Start / Finish (waiting to start / finished), same style and time axis as page 1 */
+export function renderIdleHeat(c: Ctx) {
+  const T = c.timeline, col = c.colors, ink = col.ink, W = 900, [t0, t1] = T.window, AX = 30, SR = 40, LX = 2, RX = W - 8, X = (t: number) => LX + ((t - t0) / (t1 - t0)) * (RX - LX), sTop = AX + 6, H = sTop + SR + 4;
+  let s = `<rect width="${W}" height="${H}" fill="#fff"/>`;
+  for (let t = Math.ceil(t0 / 60) * 60; t <= t1; t += 60) { const x = X(t), major = t % 120 === 0; s += `<path d="M${f1(x)},${AX}V${f1(H - 4)}" stroke="${major ? '#d4d4d4' : '#ececec'}"/>`; if (major && x > 20 && x < W - 20) s += `<text x="${f1(x)}" y="${AX - 9}" font-size="17" text-anchor="middle" fill="${ink}">${t % 1440 === 0 ? '12a' : clock(t)}</text>`; }
+  s += heatRows(c, { X, LX, RX, sTop, SR, sts: ['S/F'], races: [], t0, t1, series: T.finish_crowd.inactive15, title: 'Runners off course at the Start / Finish (modelled)' });
+  return `<svg class="idleheat" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Runners off course at the Start / Finish by time of day">${s}</svg>`;
 }

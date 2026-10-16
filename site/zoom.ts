@@ -90,3 +90,9 @@ export function initZoom() {
   document.querySelectorAll<SVGSVGElement>('svg.mainmap').forEach(setup); // mini maps are static (no zoom/pan)
   addEventListener('beforeprint', resetAllZoom);
 }
+/** zoom an svg so the box (viewBox units) fills it (with a margin); null = reset */
+export function zoomToBox(svg: SVGSVGElement, b: { x0: number; y0: number; x1: number; y1: number } | null) {
+  const z = Zs.get(svg); if (!z) return; if (!b) return reset(z);
+  const m = 0.06, w = (b.x1 - b.x0) * (1 + 2 * m), h = (b.y1 - b.y0) * (1 + 2 * m), k = Math.min(MAX, Math.max(MIN, Math.min(z.W / w, z.H / h)));
+  const cx = (b.x0 + b.x1) / 2, cy = (b.y0 + b.y1) / 2; z.k = k; z.tx = z.W / 2 - cx * k; z.ty = z.H / 2 - cy * k; apply(z);
+}

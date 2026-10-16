@@ -5,16 +5,13 @@ import { icon } from './icons';
 // Nothing is drawn on top of the drawing.
 type View = { x: number; y: number; w: number; h: number };
 export const FINISH_VIEW: View = { x: 1010, y: 1690, w: 830, h: 650 }; // lot, picnic area, S/F, building front, gate + drop-off at the Y
-export const PARKING_VIEW: View = { x: 0, y: 0, w: 4100, h: 2900 }; // the whole drawing: every parking / no-parking stretch along FM 170
+export const PARKING_VIEW: View = { x: 40, y: 560, w: 3800, h: 2240 }; // cropped to the parking: parking zones span x 109-3762, y 643-2663 (no unused space on the right)
 // classic split-needle north arrow, an overlay layer fixed in a map corner (outside the zoom stage, so it never scales or pans)
 const NORTH = (corner: 'tl' | 'tr') => northIcon(`fp-north fp-${corner}`); // SSOT site/lib/north.ts
 const ZOOM = `<div class="fp-zoomctl"><button type="button" data-z="in" aria-label="Zoom in">${icon('plus')}</button><button type="button" data-z="out" aria-label="Zoom out">${icon('minus')}</button><button type="button" data-z="reset" aria-label="Reset zoom">${icon('reset')}</button></div>`;
 const img = (v: View, alt: string, corner: 'tl' | 'tr', over = '') =>
   `<div class="fp-zoom" style="--ar:${(v.w / v.h).toFixed(4)}" title="Wheel to zoom, drag to pan, double-click to reset"><div class="fp-stage"><img class="floorplan-img" src="plans/floorplan.svg#svgView(viewBox(${v.x},${v.y},${v.w},${v.h}))" width="${v.w}" height="${v.h}" alt="${alt}" style="display:block;width:100%;height:auto;aspect-ratio:${v.w}/${v.h};background:#fff" draggable="false">${over}</div>${NORTH(corner)}${ZOOM}</div>`;
-/** web-only heat overlay (separate layer above Erik's untouched drawing): runners off course at the finish area. Blobs at the S/F arch and the
- *  picnic area (positions measured from sources/floorplan.svg: arch 1413-1496 x 1948-1986, picnic label ~1632, 2114); opacity set by app.ts. */
-const HEAT = (v: View) => `<svg class="ui fp-heat" viewBox="${v.x} ${v.y} ${v.w} ${v.h}" aria-hidden="true"><defs><radialGradient id="fpheat"><stop offset="0" stop-color="#b3261e" stop-opacity=".95"/><stop offset=".6" stop-color="#b3261e" stop-opacity=".45"/><stop offset="1" stop-color="#b3261e" stop-opacity="0"/></radialGradient></defs><g class="fp-heat-g" style="opacity:0"><ellipse cx="1470" cy="1990" rx="105" ry="70" fill="url(#fpheat)"/><ellipse cx="1630" cy="2100" rx="90" ry="65" fill="url(#fpheat)"/></g></svg>`;
-export const renderFinishPlan = () => img(FINISH_VIEW, 'Finish area floor plan', 'tr', HEAT(FINISH_VIEW)) // top-right is open ground;
+export const renderFinishPlan = () => img(FINISH_VIEW, 'Finish area floor plan', 'tr') // top-right is open ground;
 export const renderParkingPlan = () => img(PARKING_VIEW, 'Parking plan', 'tl') // top-left is open ground (property line runs down the right);
 
 // legend swatches drawn with the drawing's own fills/strokes (taken from sources/floorplan.svg)

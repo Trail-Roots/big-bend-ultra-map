@@ -5,9 +5,10 @@
 @font-face{font-family:"DejaVu Serif";src:url(fonts/DejaVuSerif.ttf)}
 @font-face{font-family:"DejaVu Serif";font-style:italic;src:url(fonts/DejaVuSerif-Italic.ttf)}
 @font-face{font-family:"DejaVu Serif";font-weight:700;src:url(fonts/DejaVuSerif-Bold.ttf)}
-:root{--ink:#2a2a2a;--mute:#7d766b}
+/* neutral design tokens: every page / panel / card / tooltip colour comes from here (no warm tints) */
+:root{--ink:#2a2a2a;--mute:#737373;--bg-page:var(--bg-page);--bg-panel:#ffffff;--bg-subtle:#f3f3f3;--bg-hover:#ececec;--line:#d4d4d4;--line-soft:#e6e6e6;--line-strong:#8a8a8a;--tip-bg:#ffffffef;--badge-day-bg:#f3f3f3;--badge-day-ink:#3a3a3a;--badge-day-line:#cfcfcf;--badge-tw-bg:#e4e4e8;--badge-tw-ink:#3a3a48;--badge-tw-line:#b8b8c2}
 *{box-sizing:border-box}
-body{margin:0;font-family:"DejaVu Sans",system-ui,sans-serif;color:var(--ink);background:#f4f2ee}
+body{margin:0;font-family:"DejaVu Sans",system-ui,sans-serif;color:var(--ink);background:var(--bg-page)}
 svg{font-family:"DejaVu Sans",sans-serif;display:block;width:100%;height:auto}
 svg .f-serif{font-family:"DejaVu Serif",Georgia,serif}
 svg .ln{fill:none;stroke-linejoin:round}
@@ -28,7 +29,7 @@ svg .stnum{fill:#fff;font-weight:700}
 .logo img{width:clamp(56px,calc(var(--host-vw, 1vw) * 6),120px);display:block}
 .hdr h1{font-family:"DejaVu Serif",serif;font-weight:400;font-size:clamp(1.4rem,calc(var(--host-vw, 1vw) * 2.4),2.6rem);margin:0}
 .subtitle{font-family:"DejaVu Serif",serif;font-style:italic;color:var(--mute);margin:.2rem 0 0;font-size:clamp(.9rem,calc(var(--host-vw, 1vw) * 1.3),1.4rem)}
-.notice{background:#efefef;padding:.5rem .7rem;font-size:clamp(.7rem,calc(var(--host-vw, 1vw) * .85),.95rem);line-height:1.4;text-align:right}
+.notice{background:var(--bg-subtle);padding:.5rem .7rem;font-size:clamp(.7rem,calc(var(--host-vw, 1vw) * .85),.95rem);line-height:1.4;text-align:right}
 .minis{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:calc(var(--host-vw, 1vw) * .3)}.minibox{margin:0}
 .doc{max-width:900px;margin:1rem auto;background:#fff;padding:1rem 2rem}.doc table{border-collapse:collapse;width:100%}.doc td,.doc th{border-bottom:1px solid #ddd;padding:.3rem;text-align:left}
 @media (max-width:1000px){
@@ -69,25 +70,25 @@ svg .stnum{fill:#fff;font-weight:700}
 /* ---------- web zoom & pan (site/zoom.ts) ---------- */
 @media screen{.zhost{position:relative}}
 .zctl{position:absolute;right:6px;top:6px;display:flex;flex-direction:column;gap:2px;z-index:2;opacity:.85}
-.zctl button{width:24px;height:24px;padding:0;border:1px solid #bbb;border-radius:4px;background:#fffffff0;color:#333;font:600 15px/1 system-ui,sans-serif;cursor:pointer}
-.zctl button:hover{background:#f2f0ec}.zctl button[data-z=reset]{font-size:13px;visibility:hidden}.zctl.zoomed button[data-z=reset]{visibility:visible}
+.zctl button{width:24px;height:24px;padding:0;border:1px solid #bbb;border-radius:4px;background:var(--tip-bg);color:#333;font:600 15px/1 system-ui,sans-serif;cursor:pointer}
+.zctl button:hover{background:var(--bg-hover)}.zctl button[data-z=reset]{font-size:13px;visibility:hidden}.zctl.zoomed button[data-z=reset]{visibility:visible}
 .minibox .zctl{top:4px;left:4px;right:auto;flex-direction:row}.minibox .zctl button{width:20px;height:20px;font-size:13px}
 svg.mainmap,svg.mini{touch-action:pan-x pan-y}svg.panning{cursor:grabbing}
 @media print{.zctl{display:none!important}g.zv{transform:none!important}}
 /* compact Strava / .GPX buttons in a row just below each mini map, outside the map frame (web + print) */
 @media screen{.minibox{position:relative}}
 .minilinks{position:static;display:flex;justify-content:flex-end;gap:2px;margin:2px 0 0;font:600 9px/1 system-ui,sans-serif}
-.minilinks a{display:inline-flex;align-items:center;gap:2px;padding:2px 4px;color:#555;background:#ffffffd9;border:1px solid #c8c2b8;border-radius:3px;text-decoration:none}
+.minilinks a{display:inline-flex;align-items:center;gap:2px;padding:2px 4px;color:#555;background:var(--tip-bg);border:1px solid var(--line);border-radius:3px;text-decoration:none}
 .minilinks a:hover{color:#111;border-color:#888}.minibox .minilinks svg.dlico{width:.8em;height:.8em;flex:none;box-shadow:none}
 @media print{/* side page is zoomed ~0.42: these print at ~6pt */.minilinks{position:absolute;top:100%;right:0;margin-top:4pt;font-size:14pt;gap:4pt}.minilinks a{padding:2pt 6pt;border-width:1.2pt;gap:3pt}.minibox .minilinks svg.dlico{width:.8em;height:.8em}}
 @media screen{.profilebox{position:relative}}
-.autoplay{position:absolute;left:0;top:6px;padding:2px 8px;border:1px solid #ccc;border-radius:4px;background:#fffffff0;color:#555;font:600 11px/1.4 system-ui,sans-serif;cursor:pointer}
+.autoplay{position:absolute;left:0;top:6px;padding:2px 8px;border:1px solid #ccc;border-radius:4px;background:var(--tip-bg);color:#555;font:600 11px/1.4 system-ui,sans-serif;cursor:pointer}
 .autoplay:hover{color:#111;border-color:#888}
 @media print{.autoplay{display:none!important}}
 /* draft markings (content/site.json "draft": true) */
 .draftbanner{display:none}
 .draftnote{font:700 .75rem/1 system-ui,sans-serif;letter-spacing:.04em;text-transform:uppercase;color:#b3261e;border:1px solid #b3261e;border-radius:4px;padding:.25rem .5rem;background:#fff5f4}
-.runkey{justify-content:flex-end;flex-wrap:wrap;margin:2px 8px 0;font:600 11px/1 system-ui,sans-serif;color:#555;background:#fffffff0;padding:3px 6px;border-radius:4px;display:flex;gap:4px;align-items:center}
+.runkey{justify-content:flex-end;flex-wrap:wrap;margin:2px 8px 0;font:600 11px/1 system-ui,sans-serif;color:#555;background:var(--tip-bg);padding:3px 6px;border-radius:4px;display:flex;gap:4px;align-items:center}
 .runkey svg{width:12px!important;height:12px!important;flex:none}
 .runkey span{font-weight:400;color:#888}
 @media print{.runkey{display:none!important}}
@@ -96,8 +97,8 @@ svg.mainmap,svg.mini{touch-action:pan-x pan-y}svg.panning{cursor:grabbing}
 @media print{.stripsbox{overflow:visible!important}.stripsbox .callinks{position:absolute;z-index:3;top:100%;left:0;right:auto;width:max-content;flex-wrap:nowrap;white-space:nowrap;margin-top:2pt;font-size:13pt;gap:4pt}.stripsbox .callinks a{padding:2pt 6pt;border-width:1.2pt;gap:3pt}}
 .doc .note{font-size:.85rem;color:#666}.doc td.n,.doc th.n{text-align:right;font-variant-numeric:tabular-nums}.cuttab th{font-size:.8rem}
 @media print{.cuttab{font-size:9pt}.course-cut{margin-bottom:6pt}}
-.daynight{position:absolute;left:50%;top:8px;transform:translateX(-50%);padding:3px 10px;border-radius:12px;font:700 13px/1.3 system-ui,sans-serif;background:#fff8e1;color:#7a5a00;border:1px solid #e9c46a;pointer-events:none}
-.daynight[data-phase=twilight]{background:#e8e4f0;color:#3c3a5a;border-color:#a9a3c4}.daynight[data-phase=night]{background:#1f2a44;color:#e6ecff;border-color:#1f2a44}
+.daynight{position:absolute;left:50%;top:8px;transform:translateX(-50%);padding:3px 10px;border-radius:12px;font:700 13px/1.3 system-ui,sans-serif;background:var(--badge-day-bg);color:var(--badge-day-ink);border:1px solid var(--badge-day-line);pointer-events:none}
+.daynight[data-phase=twilight]{background:var(--badge-tw-bg);color:var(--badge-tw-ink);border-color:var(--badge-tw-line)}.daynight[data-phase=night]{background:#1f2a44;color:#e6ecff;border-color:#1f2a44}
 /* ---------- course pages ---------- */
 .cpnav{display:flex;gap:.5rem;align-items:center;max-width:1200px;margin:1rem auto 0;padding:0 1rem}
 .coursepage{max-width:1200px}.cphead{display:flex;align-items:center;justify-content:space-between;gap:1rem}.cphead h2{margin:.2rem 0}
@@ -114,7 +115,7 @@ svg.mainmap,svg.mini{touch-action:pan-x pan-y}svg.panning{cursor:grabbing}
 }
 /* ---------- calendar + placeholders ---------- */
 .calview iframe{border:1px solid #ddd;border-radius:6px;background:#fff}
-.phbox{border:2px dashed #b9b2a6;border-radius:8px;padding:2.5rem 1rem;text-align:center;color:#8a8580;font-weight:700;letter-spacing:.03em;background:repeating-linear-gradient(45deg,#faf9f6,#faf9f6 10px,#f3f1ec 10px,#f3f1ec 20px)}
+.phbox{border:2px dashed var(--line);border-radius:8px;padding:2.5rem 1rem;text-align:center;color:var(--mute);font-weight:700;letter-spacing:.03em;background:repeating-linear-gradient(45deg,#faf9f6,#faf9f6 10px,#f3f1ec 10px,#f3f1ec 20px)}
 @media print{.phbox{padding:.6in .2in}}
 /* ---------- web header: compact (nav already carries the logo + title) ---------- */
 @media screen{
@@ -154,7 +155,7 @@ html.embed,html.embed body,html.embed .sec.noprint{background:transparent!import
 /* ---------- screen "paper" view: every printed page shown as a letter sheet (portrait, 8.5 x 11) on a subtle neutral gray background.
    Screen-only (@media screen), so print / PDF are untouched; narrow screens keep the normal flow; ?view=embed is identical (transparent background). ---------- */
 @media screen and (min-width:1100px){
-  html body{background:#f4f4f4}
+  html body{background:var(--bg-page)}
   /* navbar: full-width bar, items constrained to the landscape sheet width and centred */
   html .topnav{padding-inline:max(1rem,calc((calc(var(--host-vw, 1vw) * 100) - min(calc(calc(var(--host-vw, 1vw) * 100) - 48px),calc((calc(var(--host-vh, 1vh) * 100) - 90px) * 11 / 8.5),1600px)) / 2))}
   html .topnav{position:relative;z-index:1}
@@ -166,7 +167,7 @@ html.embed,html.embed body,html.embed .sec.noprint{background:transparent!import
   html .sec-map .side{display:flex;width:8.5in;max-width:calc(calc(var(--host-vw, 1vw) * 100) - 48px);min-height:11in;background:#fff;box-shadow:0 1px 6px #0000001f;padding:.28in}
   /* every other printed section = its own sheet(s) */
   html .sec:not(.noprint):not(.sec-map):not(.sec-courses) > .doc{width:8.5in;max-width:none;min-height:11in;margin:28px auto;padding:.28in;box-shadow:0 1px 6px #0000001f;font-size:10.5pt}
-  html .sec.noprint{background:#f4f2ee;padding:1px 0}
+  html .sec.noprint{background:var(--bg-page);padding:1px 0}
 }
 /* one-page print: the header shares the right half with the charts; the main map already carries the logo */
 @media print{.pg1 .hdr .logo{display:none}.pg1 .hdr .titles{left:0}.pg1 .hdr h1{font-size:30pt}.pg1 .hdr .subtitle{font-size:18pt;margin-top:.08in}.pg1 .notice{font-size:14pt;top:0;padding:9pt}}
@@ -210,7 +211,7 @@ html.embed,html.embed body,html.embed .sec.noprint{background:transparent!import
 .cplinks{display:flex;gap:.4rem;margin-left:auto}.cplinks a{display:inline-flex;align-items:center;gap:.25em;font:600 .8rem system-ui,sans-serif;padding:.25rem .6rem;border:1px solid #888;border-radius:4px;background:#fff;color:var(--ink);text-decoration:none}.cplinks a:hover{border-color:#111}
 .cplinks svg.dlico{width:.85em;height:.85em;flex:none;box-shadow:none}
 @media screen and (min-width:1100px){html .sec-courses .coursepage .cplinks a{font-size:calc(var(--S) * .009)}}
-@media print{.cplinks{gap:4pt}.cplinks a{font-size:7pt;padding:1.5pt 4pt;border:.8pt solid #c8c2b8;border-radius:3px;color:#555;gap:2pt}}
+@media print{.cplinks{gap:4pt}.cplinks a{font-size:7pt;padding:1.5pt 4pt;border:.8pt solid var(--line);border-radius:3px;color:#555;gap:2pt}}
 @media screen{.cphead{flex-wrap:wrap;justify-content:flex-start;row-gap:.35rem;column-gap:.4rem}.cphead h2{flex:1 0 100%;white-space:nowrap}.cphead .cplinks{margin-left:0}.cplinks a,.cpbtns a,.cpbtns button{white-space:nowrap}}
 @media screen and (max-width:699px){.cphead h2{font-size:1.35rem}}
 /* one icon set on every action button (site/lib/icons.ts); icons are web-only */
@@ -225,8 +226,8 @@ html body svg.ic{width:1.15em!important;height:1.15em!important;max-width:none!i
 @media print{.cphead{flex-wrap:nowrap}html body .cphead h2{white-space:nowrap;font-size:13pt;flex:0 1 auto;min-width:0}.cphead h2 svg{flex:none}.cphead .cplinks{flex:none}}
 
 /* page 1: elevation above the timeline; the calendar links sit in the gap just ABOVE the timeline (print + paper view), clear of both charts */
-@media print{.stripsbox .callinks{top:auto!important;bottom:100%;margin:0 0 3pt!important}}
-@media screen and (min-width:1100px){html .sec-map .pg1 .stripsbox .callinks{position:absolute;bottom:100%;left:0;margin:0 0 .3cqw;font-size:.75cqw;flex-wrap:nowrap;white-space:nowrap}}
+@media print{.stripsbox .callinks{top:100%!important;bottom:auto;margin:4pt 0 0!important}}
+@media screen and (min-width:1100px){html .sec-map .pg1 .stripsbox .callinks{position:absolute;top:100%;left:0;margin:.4cqw 0 0;font-size:.75cqw;flex-wrap:nowrap;white-space:nowrap}}
 /* ---------- race filter (Map layers box) ---------- */
 .racefilter{border-top:1px solid #eee;align-items:center}.racefilter .rf-lab{font-weight:700;color:#555;margin-right:.2rem}
 /* ---------- race cards (web, modeled on the Strava route cards on trailroots.com/sky-island); full pages open in a lightbox ---------- */
@@ -235,7 +236,7 @@ html body svg.ic{width:1.15em!important;height:1.15em!important;max-width:none!i
   .racecards{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px;max-width:var(--SW,1200px);margin:24px auto;padding:0 1rem;box-sizing:border-box}
   .racecard{background:#fff;border:1px solid #dcdcdc;border-radius:8px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 1px 3px #0000001a;font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
   .racecard .rc-open:not(.rc-full){display:block;padding:0;border:0;background:none;cursor:zoom-in;border-bottom:1px solid #eee}
-  .racecard svg.rc-map{display:block;width:100%;height:auto}.racecard svg.rc-elev{display:block;width:100%;height:38px;background:#fafafa}
+  .racecard svg.rc-map{display:block;width:100%;height:auto}.racecard svg.rc-elev{display:block;width:100%;height:38px;background:var(--bg-subtle)}
   .rc-body{padding:10px 12px 12px;display:flex;flex-direction:column;gap:8px}
   .rc-body h3{margin:0;font-size:1rem;display:flex;align-items:center;gap:.45rem;color:#242428}
   .rc-stats{display:flex;gap:16px;margin:0}.rc-stats div{display:flex;flex-direction:column}.rc-stats dt{font-size:.68rem;color:#6d6d78;text-transform:none}.rc-stats dd{margin:0;font-weight:700;font-size:.95rem;color:#242428}
@@ -262,13 +263,13 @@ dialog.stbox .st-wrap{background:#fff}
 svg.st-badge{width:44px;height:44px;flex:none}
 .st-grid{display:grid;grid-template-columns:3fr 2fr;gap:12px}.st-map svg{border:1px solid #ddd;display:block}
 .st-photo{margin:0;display:flex}.st-photo img{width:100%;height:100%;object-fit:cover;border-radius:4px}
-.ph-empty{flex:1;min-height:160px;border:2px dashed #ccc;border-radius:6px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;color:#888;font-size:.9rem;background:#fafafa}
+.ph-empty{flex:1;min-height:160px;border:2px dashed #ccc;border-radius:6px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;color:#888;font-size:.9rem;background:var(--bg-subtle)}
 .st-info{display:grid;grid-template-columns:1fr 1.4fr 1.4fr;gap:16px}.st-info h3,.st-heat h3{margin:.2rem 0 .4rem;font-size:.8rem;text-transform:uppercase;letter-spacing:.05em;color:#666}
 .st-heat h3 small{text-transform:none;letter-spacing:0;font-weight:400}
 .st-hours b{font-size:1.25rem}.st-gmap{display:inline-flex;align-items:center;gap:.35em;color:#1f6fb2;font-size:.9rem}
 .amen{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:1fr 1fr;gap:4px 10px;font-size:.88rem}
 .am{display:flex;align-items:center;gap:6px}.am .amv{width:18px;height:18px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:700;flex:none}
-.am-y .amv{background:#2f8f46;color:#fff}.am-n .amv{background:#e6e6e6;color:#777}.am-u .amv{background:#fff4d6;color:#8a6200;border:1px solid #e5c56a}.am em{color:#8a6200;font-style:normal;font-size:.75rem}.am-n em{color:#888}
+.am-y .amv{background:#2f8f46;color:#fff}.am-n .amv{background:#e6e6e6;color:#777}.am-u .amv{background:var(--bg-hover);color:#555;border:1px solid var(--line)}.am em{color:#666;font-style:normal;font-size:.75rem}.am-n em{color:#888}
 .st-cuts{border-collapse:collapse;font-size:.9rem}.st-cuts th{text-align:left;padding:2px 10px 2px 0;font-weight:700}.st-cuts td{padding:2px 0}.cutv{margin-right:10px;white-space:nowrap}.cutv small{color:#777}
 @media (max-width:699px){.st-grid,.st-info{grid-template-columns:1fr}.stbox .lb-body > *{padding:10px 12px}}
 a.stlink{color:inherit;text-decoration:none}@media screen{a.stlink{border-bottom:1px dotted #999;cursor:pointer}g.stpick{cursor:pointer}}
@@ -289,7 +290,7 @@ a.stlink{color:inherit;text-decoration:none}@media screen{a.stlink{border-bottom
 /* Layers button + dropdown panel (map layers and race filter) */
 .navlayers{position:relative;margin:0!important;padding:0!important;border:0!important;background:none!important;width:auto!important;font-size:.9rem}
 .navlayers > summary{list-style:none;display:inline-flex;align-items:center;gap:.35em;cursor:pointer;padding:.25rem .7rem;border:1px solid #888;border-radius:4px;background:#fff;user-select:none;white-space:nowrap}
-.navlayers > summary::-webkit-details-marker{display:none}.navlayers[open] > summary{background:#f2f0ec}
+.navlayers > summary::-webkit-details-marker{display:none}.navlayers[open] > summary{background:var(--bg-hover)}
 .navlayers .lpanel{position:absolute;left:0;top:calc(100% + 6px);z-index:41;background:#fff;border:1px solid #ddd;border-radius:6px;box-shadow:0 4px 14px #0002;padding:.5rem .8rem;width:max-content;max-width:min(92vw,760px);display:flex;flex-wrap:wrap;column-gap:1.2rem}
 .navlayers .lpanel .racefilter{border-top:0}
 @media (max-width:699px){.navlayers .lpanel{position:fixed;left:8px;right:8px;top:48px;width:auto;max-width:none}}
@@ -301,13 +302,16 @@ a.stlink{color:inherit;text-decoration:none}@media screen{a.stlink{border-bottom
 /* race cards: site styling (no brand colours); thumbnail = the race map itself; Strava | Join our club split button */
 @media screen{
   .racecard svg.rc-map{display:block;width:auto!important;max-width:100%;height:240px!important;max-height:240px!important;margin:0 auto;box-shadow:none}
-  .racecard .rc-open:not(.rc-full){background:#f6f5f2!important}
+  .racecard .rc-open:not(.rc-full){background:var(--bg-subtle)!important}
   .rc-btns .splitbtn{display:inline-flex}.rc-btns .splitbtn a{border-radius:0}.rc-btns .splitbtn a:first-child{border-radius:4px 0 0 4px}.rc-btns .splitbtn a:last-child{border-radius:0 4px 4px 0;margin-left:-1px}.rc-btns .splitbtn a:only-child{border-radius:4px}
   .rc-btns .splitbtn a:hover{position:relative;z-index:1}
 }
 
-/* finish-area heat overlay (web only; Erik's drawing untouched underneath) */
-.fp-stage{position:relative}svg.fp-heat{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;mix-blend-mode:multiply}
-.fp-heatctl{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;margin:.4rem 0;font-size:.82rem;color:#555}.fp-heatctl .fp-range{flex:1 1 160px;accent-color:#b3261e}.fp-read{font-weight:700;color:#222;min-width:9em}
-.fp-hkey{width:28px;height:12px;border-radius:6px;background:linear-gradient(90deg,#b3261e10,#b3261ef0)}
-@media print{.fp-heatctl,svg.fp-heat{display:none!important}}
+/* finish page: off-course runners heat row (same style as the station heat maps) */
+.idlebox{margin:.5rem 0 .2rem}.idlebox figcaption{font-size:.78rem;color:var(--mute);margin-bottom:2px}.idlebox svg{width:100%;height:auto}
+@media print{.idlebox figcaption{font-size:7.5pt}.idlebox{margin:4pt 0 0}}
+/* parking plan: larger, readable parking / no-parking legend icons and labels */
+#parking-plan .planlegend{font-size:1rem;gap:.45rem 1.1rem}#parking-plan .planlegend svg{height:30px!important;width:auto!important}
+@media print{#parking-plan .planlegend{font-size:10.5pt}#parking-plan .planlegend svg{height:21pt!important}}
+/* cards: Full page + .GPX on the first line, the Strava | Join our club split button may take the second (max two lines) */
+@media screen{.rc-btns .splitbtn{flex:0 0 auto}.rc-btns{row-gap:6px}}

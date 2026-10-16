@@ -58,7 +58,7 @@ console.log('links', seen.size);
 fs.writeFileSync(path.join(D, 'index.html'), html);
 // race filter: page-1 elevation chart for every visible-race subset (fetched by app.ts on the first filter change)
 { const { profileBody } = await import('./lib/panels'); const O: string[] = ctx.courses.order, V: Record<string, unknown> = {};
-  for (let m = 1; m < (1 << O.length) - 1; m++) { const vis = O.filter((_, i) => m & (1 << i)), p = profileBody(ctx, vis); V[vis.join(',')] = { s: p.s, x: p.x, y: p.y }; }
+  for (let m = 0; m < (1 << O.length) - 1; m++) { const vis = O.filter((_, i) => m & (1 << i)), p = profileBody(ctx, vis); V[vis.join(',')] = { s: p.s, x: p.x, y: p.y }; }
   fs.writeFileSync(path.join(D, 'profiles.json'), JSON.stringify(V)); console.log('profile variants', Object.keys(V).length); }
 console.log('index.html', (html.length / 1024).toFixed(0) + ' KB,', sections.length, 'sections:', sections.map((s) => s.meta.id).join(', '));
 fs.cpSync(path.join(here, 'public'), D, { recursive: true });

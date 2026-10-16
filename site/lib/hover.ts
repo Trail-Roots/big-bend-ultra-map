@@ -38,6 +38,8 @@ export function hoverData(c: Ctx) {
     s.forEach((q, i) => q.push(g[i]));
     courses[k] = { color: c.courses.colors[k], dist, s, bib: miniBib(k, c.courses.colors[k], 0, 0, c.colors, 0.85),
       // cutoffs as [mile, minutes after the start] for the "pace to make the next cutoff" readout
+      // every aid-station visit after the start: [mile, station name] (distance-to-next readout)
+      stops: c.cutoffs[k].slice(1).map((q: any, i: number, arr: any[]) => [q.mile, i === arr.length - 1 ? 'Finish' : c.stations.stations[q.station].name]),
       cut: (() => { const st = cutMin(c.courses.courses[k].start)!; return c.cutoffs[k].slice(1).map((q: any) => { let m = cutMin(q.cutoff); if (m == null) return null; if (m < st) m += 1440; return [q.mile, m - st, q.station]; }).filter(Boolean); })() } as any;
   }
   (courses as any)._bibw = MINIBIB.w * 0.85; (courses as any)._bibh = MINIBIB.h * 0.85;

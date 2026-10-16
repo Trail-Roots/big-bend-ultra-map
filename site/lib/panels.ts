@@ -106,24 +106,25 @@ export function renderStrips(c) {
  *  a subset is rescaled to its longest visible route and re-placed (same placement rule as scripts/content.ts). Returns the inner body + scale. */
 export function profileBody(c, vis?: string[]) {
   const L = c.layout, W = L.elev[2] * SHEET.w, H = L.elev[3] * SHEET.h, col = c.colors, O: string[] = c.courses.order, pr = c.profiles;
-  const V = vis ?? O, all = V.length === O.length, longest = O.find((k) => V.includes(k))!;
-  const D = c.courses.courses[longest].distance_mi, ftAll = V.flatMap((k) => pr[k].ft as number[]), fmin = Math.min(...ftAll), fmax = Math.max(...ftAll);
+  const V = vis ?? O, all = V.length === O.length, longest = O.find((k) => V.includes(k)) ?? O[0];
+  const D = c.courses.courses[longest].distance_mi, ftAll = (V.length ? V : O).flatMap((k) => pr[k].ft as number[]), fmin = Math.min(...ftAll), fmax = Math.max(...ftAll);
   const [x0, x1] = all ? L.elev_xlim : [-D * 5.5 / 62, D * 63 / 62];
   const [y0, y1] = all ? L.elev_ylim : [Math.floor((fmin - 170) / 100) * 100, Math.ceil((fmax + Math.max(500, (fmax - fmin) * 0.55)) / 100) * 100];
   const X = v => (v - x0) / (x1 - x0) * W, Y = v => (1 - (v - y0) / (y1 - y0)) * H;
   let s = `<rect width="${f1(W)}" height="${f1(H)}" fill="${col.cream}"/>`;
   const span = y1 - y0, ys = span > 2400 ? 1000 : span > 1200 ? 500 : span > 500 ? 200 : 100, yt: number[] = [];
   { const off = ys === 1000 ? 500 : 0; for (let v = Math.ceil((y0 + 0.05 * span - off) / ys) * ys + off; v < y1 - 0.15 * span; v += ys) yt.push(v); }
-  for (const tk of all ? [2500, 3500, 4500] : yt) s += `<path d="M0,${f1(Y(tk))}H${f1(W)}" stroke="#d8d0c0" stroke-width="1"/><text class="yax" x="0" y="${f1(Y(tk) - 6)}" font-size="19" fill="${col.mute}">${tk.toLocaleString('en-US')} ft</text>`;
+  for (const tk of all ? [2500, 3500, 4500] : yt) s += `<path d="M0,${f1(Y(tk))}H${f1(W)}" stroke="#d9d9d9" stroke-width="1"/><text class="yax" x="0" y="${f1(Y(tk) - 6)}" font-size="19" fill="${col.mute}">${tk.toLocaleString('en-US')} ft</text>`;
   s += `<path d="M0,${f1(H)}H${f1(W)}" stroke="${col.ink}" stroke-width="1"/>`;
   const step = D > 30 ? 10 : D > 12 ? 5 : D > 6 ? 2 : 1, minor = D > 12 ? 1 : 0;
-  if (minor) for (let v = 1; v < x1; v++) if (v % step) s += `<path d="M${f1(X(v))},${f1(H)}v6" stroke="#c9c2b6" stroke-width="1"/>`;
-  for (let v = 0; v <= D + 0.01; v += step) s += `<path d="M${f1(X(v))},${f1(H)}v10" stroke="${col.ink}" stroke-width="1"/><text class="dist" x="${f1(X(v))}" y="${f1(H + 10)}" font-size="24" text-anchor="middle" dominant-baseline="hanging" fill="${col.ink}">${v}m</text>`;
+  if (minor) for (let v = 1; v < x1; v++) if (v % step) s += `<path d="M${f1(X(v))},${f1(H)}v6" stroke="#c8c8c8" stroke-width="1"/>`;
+  for (let v = 0; v <= D + 0.01; v += step) s += `<path d="M${f1(X(v))},${f1(H)}v10" stroke="${col.mute}" stroke-width="1"/><text class="dist" x="${f1(X(v))}" y="${f1(H + 10)}" font-size="19" text-anchor="middle" dominant-baseline="hanging" fill="${col.mute}">${v}m</text>`;
   const pts = k => pr[k].mi.map((m, i) => [X(m), Y(pr[k].ft[i])]);
-  const pl = pts(longest), base = Math.max(y0, Math.min(2200, y0)); s += `<path data-course="${longest}" d="${lineD(pl)}L${f1(pl[pl.length - 1][0])},${f1(Y(base))}L${f1(pl[0][0])},${f1(Y(base))}z" fill="#888" fill-opacity=".10"/>`;
+  if (V.includes(longest)) { const pl = pts(longest), base = Math.max(y0, Math.min(2200, y0)); s += `<path data-course="${longest}" d="${lineD(pl)}L${f1(pl[pl.length - 1][0])},${f1(Y(base))}L${f1(pl[0][0])},${f1(Y(base))}z" fill="#888" fill-opacity=".10"/>`; }
   for (const k of O) if (V.includes(k)) s += `<path class="ln prof" data-course="${k}" d="${lineD(pts(k))}" stroke="${c.courses.colors[k]}" stroke-width="${k === '100K' ? 4 : 3}"/>`;
-  const lgx = W - 46 - MINIBIB.w, lgy = 16; s += `<rect x="${lgx - 10}" y="${lgy - 6}" width="${W - lgx + 10}" height="${V.length * 32 + 10}" fill="#fff" fill-opacity=".9"/>`;
-  V.forEach((k, i) => { s += `<path d="M${lgx},${lgy + 14 + i * 32}h36" stroke="${c.courses.colors[k]}" stroke-width="4"/>` + miniBib(k, c.courses.colors[k], lgx + 46, lgy + 14 + i * 32 - 13, col); });
+  const lgx = W - 46 - MINIBIB.w, lgy = 16; s += `<rect x="${lgx - 10}" y="${lgy - 6}" width="${W - lgx + 10}" height="${O.length * 32 + 10}" fill="#fff" fill-opacity=".9"/>`;
+  // legend keeps every race; hidden races at low opacity, clickable (app.ts toggles the race)
+  O.forEach((k, i) => { s += `<g class="plegend" data-legend="${k}" opacity="${V.includes(k) ? 1 : 0.18}" style="cursor:pointer"><rect x="${lgx - 6}" y="${lgy + i * 32}" width="${W - lgx + 6}" height="30" fill="#fff" fill-opacity="0"/><path d="M${lgx},${lgy + 14 + i * 32}h36" stroke="${c.courses.colors[k]}" stroke-width="4"/>` + miniBib(k, c.courses.colors[k], lgx + 46, lgy + 14 + i * 32 - 13, col) + '</g>'; });
   let callouts = pr.callouts.callouts;
   if (!all) { // re-place station badges for the visible races only (thresholds scaled to this chart's ranges)
     const sx = (x1 - x0) / 68.5, sy = (y1 - y0) / 3200, grp: [number[], number, string][] = [];
@@ -134,7 +135,7 @@ export function profileBody(c, vis?: string[]) {
       placed.push([bx, by]); callouts.push({ xs, y, bx, by, lab }); } }
   for (const q of callouts) {
     for (const x of q.xs) s += leaderLine(X(q.bx), Y(q.by), X(x), Y(q.y), Math.sqrt(950) / 2, 3) + `<circle cx="${f1(X(x))}" cy="${f1(Y(q.y))}" r="3" fill="${col.ink}"/>`;
-    s += station(X(q.bx), Y(q.by), q.lab, c.stations.stations[q.lab].spectator, { s: 950, fs: 24, badge: false, colors: col });
+    s += `<g class="pcall" data-st="${q.lab}" data-mi="${(q.xs.reduce((a, b) => a + b, 0) / q.xs.length).toFixed(2)}">` + station(X(q.bx), Y(q.by), q.lab, c.stations.stations[q.lab].spectator, { s: 950, fs: 24, badge: false, colors: col }) + '</g>';
   }
   if (V.includes('100K')) for (const r of pr.callouts.rincon) s += `<circle cx="${f1(X(r.mi))}" cy="${f1(Y(r.ft))}" r="6.3" fill="#fff" stroke="${col.ink}" stroke-width="3"/>`;
   return { s, x: [x0, x1], y: [y0, y1], W, H };
