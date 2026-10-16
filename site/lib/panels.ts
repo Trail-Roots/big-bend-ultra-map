@@ -73,7 +73,7 @@ export function renderMini(c, k) {
   s += bib(k, c.courses.courses[k].start, c.courses.colors[k], W, H, col);
   return `<svg class="mini" data-mini="${k}" viewBox="0 0 ${f1(W)} ${f1(H)}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${k} course map"><defs><clipPath id="mc${k}"><rect width="${f1(W)}" height="${f1(H)}"/></clipPath></defs><rect width="${f1(W)}" height="${f1(H)}" fill="#fff"/><g clip-path="url(#mc${k})">${s}</g><rect width="${f1(W)}" height="${f1(H)}" fill="none" stroke="#b8ae9c" stroke-width="1.6"/></svg>`;
 }
-export function turnaround(c, V) {
+export function turnaround(c, V, label = true) {
   const f = c.pois.features.find(f => f.properties.kind === 'turnaround'), [p, q] = f.geometry.coordinates.map(V.p), col = c.courses.colors['10K'];
   let v = [p[0] - q[0], p[1] - q[1]]; const n0 = Math.hypot(...v); v = [v[0] / n0, v[1] / n0]; const n = [-v[1], v[0]];
   const h = 15 * 1.4, r = h * 0.75, L = h * 0.9, P = (a, b, s1, s2) => [a[0] + b[0] * s1 + n[0] * s2, a[1] + b[1] * s1 + n[1] * s2];
@@ -83,7 +83,7 @@ export function turnaround(c, V) {
   const head = DART.map(([x, y]) => [tip[0] + ((x - 0.6) * d[0] - y * d[1]) * u, tip[1] + ((x - 0.6) * d[1] + y * d[0]) * u]);
   const hd = `M${head.map((q) => `${f1(q[0])},${f1(q[1])}`).join('L')}Z`;
   const lx = p[0] - 1, ly = p[1] + 95;
-  return `<g class="turn"><path d="${lineD(U)}" fill="none" stroke="#fff" stroke-width="${f1(tw + halo)}" stroke-linejoin="round" stroke-linecap="round"/><path d="${hd}" fill="#fff" stroke="#fff" stroke-width="${f1(halo)}" stroke-linejoin="round"/><path d="${lineD(U)}" fill="none" stroke="#111111" stroke-width="${f1(tw)}" stroke-linejoin="round"/><path d="${hd}" fill="#111111"/><path d="M${f1(p[0])},${f1(p[1] + 8)}L${f1(lx)},${f1(ly - 22)}" stroke="${col}" stroke-width="1.2"/><text x="${f1(lx)}" y="${f1(ly)}" font-size="18" font-style="italic" font-weight="700" fill="${col}" text-anchor="middle" stroke="#fff" stroke-width="5" paint-order="stroke"><tspan x="${f1(lx)}" dy="-0.6em">10K</tspan><tspan x="${f1(lx)}" dy="1.2em">turnaround</tspan></text></g>`;
+  return `<g class="turn"><path d="${lineD(U)}" fill="none" stroke="#fff" stroke-width="${f1(tw + halo)}" stroke-linejoin="round" stroke-linecap="round"/><path d="${hd}" fill="#fff" stroke="#fff" stroke-width="${f1(halo)}" stroke-linejoin="round"/><path d="${lineD(U)}" fill="none" stroke="#111111" stroke-width="${f1(tw)}" stroke-linejoin="round"/><path d="${hd}" fill="#111111"/><path d="M${f1(p[0])},${f1(p[1] + 8)}L${f1(lx)},${f1(ly - 22)}" stroke="${col}" stroke-width="1.2"/>${label ? `<text x="${f1(lx)}" y="${f1(ly)}" font-size="18" font-style="italic" font-weight="700" fill="${col}" text-anchor="middle" stroke="#fff" stroke-width="5" paint-order="stroke"><tspan x="${f1(lx)}" dy="-0.6em">10K</tspan><tspan x="${f1(lx)}" dy="1.2em">turnaround</tspan></text>` : ''}</g>`;
 }
 export function renderStrips(c) {
   const st = c.layout.strips, W = st.w * SHEET.w, RH = st.rh * SHEET.h, col = c.colors, [a, b] = st.xlim;

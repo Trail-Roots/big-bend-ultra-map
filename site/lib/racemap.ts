@@ -33,7 +33,7 @@ export function renderRaceMap(c, k: string, card?: { aspect: number }) {
   const ob: Bx[] = [];
   for (const f of arrows) { s += chevron(f, V, col); const [x, y] = V.p(f.geometry.coordinates[1]); ob.push({ x0: x - 16, x1: x + 16, y0: y - 16, y1: y + 16 }); }
   // 10K turnaround: a U-turn note at the far end
-  if (k === '10K') { const f = c.pois.features.find((f) => f.properties.kind === 'turnaround'), [x, y] = V.p(f.geometry.coordinates[0]); ob.push({ x0: x - 12, x1: x + 12, y0: y - 12, y1: y + 12 }); s += turnaround(c, V); ob.push({ x0: x - 40, x1: x + 40, y0: y - 40, y1: y + 40 }); // black U-turn arrow (restored)
+  if (k === '10K') { const f = c.pois.features.find((f) => f.properties.kind === 'turnaround'), [x, y] = V.p(f.geometry.coordinates[0]); ob.push({ x0: x - 12, x1: x + 12, y0: y - 12, y1: y + 12 }); s += turnaround(c, V, false); ob.push({ x0: x - 40, x1: x + 40, y0: y - 40, y1: y + 40 }); // black U-turn arrow (restored)
     s += `<g class="turnlab" data-at="${f1(x)},${f1(y)}"></g>`; }
   // aid stations on this race (each once)
   const sts = [...new Set<string>(c.cutoffs[k].map((q) => q.station))];
