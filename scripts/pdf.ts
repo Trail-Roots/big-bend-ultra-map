@@ -25,3 +25,14 @@ console.log('pdf', path.relative(process.cwd(), OUT), (fs.statSync(OUT).size / 1
   if (files.length !== pages.length) throw new Error(`print images ${files.length} != pages ${pages.length}`);
   fs.writeFileSync(path.join(P, 'pages.json'), JSON.stringify(files.map((f, i) => ({ src: 'print/' + f, o: pages[i] }))));
   console.log('print images', files.length, pages.join('')); }
+// PDF check: every aid-station print page carries its visible primary coordinates link text ("Map: lat, lng")
+{ const st = JSON.parse(fs.readFileSync(path.join(import.meta.dir, '../content/stations.json'), 'utf8')), txt = new TextDecoder().decode(Bun.spawnSync(['pdftotext', '-layout', OUT, '-']).stdout);
+  const miss = st.order.filter((k: string) => { const L = st.stations[k].link_lonlat ?? st.stations[k].lonlat; return !txt.includes(`Map: ${L[1].toFixed(5)}, ${L[0].toFixed(5)}`); });
+  if (miss.length) throw new Error('[pdf] station pages without coordinates link: ' + miss.join(', '));
+  console.log('pdf station coord links', st.order.length, 'ok'); }
+// PDF check: every aid-station page is a named destination for the internal links from station number graphics
+{ const raw = fs.readFileSync(OUT).toString('latin1'), st = JSON.parse(fs.readFileSync(path.join(import.meta.dir, '../content/stations.json'), 'utf8'));
+  const name = (k: string) => '/station-' + encodeURIComponent(k).replace(/%/g, '#25');
+  const miss = st.order.filter((k: string) => !new RegExp(name(k).replace(/[#/]/g, '\\$&') + ' ?\\[').test(raw)), links = (raw.match(/\/Dest \/station-/g) || []).length;
+  if (miss.length || !links) throw new Error('[pdf] station page destinations missing: ' + miss.join(', ') + ' links ' + links);
+  console.log('pdf internal station links', links, '-> 6 station pages'); }

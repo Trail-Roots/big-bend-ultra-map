@@ -64,14 +64,16 @@ export function markerDefs(colors: Record<string, string>) {
     + `</defs></svg>`;
 }
 /** station marker centred exactly on (x, y): optional spectator ring, dot, number, aid badge — all from the shared symbols */
-export function station(x, y, lab, spec, { s = 2000, fs = 28, badge = true, colors = null as any, numberText = true }) {
+export function station(x, y, lab, spec, { s = 2000, fs = 28, badge = true, colors = null as any, numberText = true, link = true }) {
   const k = Math.sqrt(s / BASE_S), sc = `transform="scale(${k.toFixed(4)})"`;
   let out = `<g class="marker"${lab ? ` data-station="${esc(lab)}"` : ''} data-ax="0" data-ay="0" transform="translate(${f1(x)} ${f1(y)})">`;
   if (spec) out += `<use href="#mk-ring" ${sc}/>`;
   out += `<use href="#mk-dot" ${sc}/>`;
   if (numberText && lab) out += `<text class="stnum" font-size="${lab.length === 1 ? fs : f1(fs * 0.6)}" text-anchor="middle" dominant-baseline="central">${esc(lab)}</text>`;
   if (badge) out += `<use href="#mk-badge" ${sc}/>`;
-  return out + '</g>';
+  out += '</g>';
+  // PDF: the number graphic is an internal link to that station's print page (id station-<key>); on the web the click opens the lightbox (app.ts)
+  return link && lab ? `<a class="stjump" href="#station-${encodeURIComponent(lab)}">${out}</a>` : out;
 }
 /** POI dot (Rincon, Sauceda, …) centred on (x, y) */
 export const poiDot = (x: number, y: number, scale = 1) => `<use class="marker" href="#mk-poi" transform="translate(${f1(x)} ${f1(y)}) scale(${scale})"/>`;

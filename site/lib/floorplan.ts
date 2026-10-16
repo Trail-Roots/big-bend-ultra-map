@@ -399,7 +399,7 @@ export function renderParkingPlan(c, labels: Record<string, [number, number]>) {
         top += gmapLink(where, 'No parking — park entrance', `<g transform="translate(${f1(r.x)} ${f1(r.y)}) scale(.85)">${PICON(true)}</g>`);
         labelQ.unshift(() => { const q = sc.place(key + ':label', [r.x, r.y], [0, -22], T('', 'No parking at park entrance', 13), { leader: false, rings: [22, 26, 32, 40, 50, 62, 76] }); top += lbl(q.x, q.y, 'No parking at park entrance', { fs: 13, color: C.red }); }); });
       continue; }
-    if (p.name === 'Start / Finish Line') { sc.add(circleOb(key + ':icon', x, y, 17)); top += gmapLink(where, lab, station(x, y, 'S/F', true, { s: 1000, fs: 20, badge: false, colors: c.colors }));
+    if (p.name === 'Start / Finish Line') { sc.add(circleOb(key + ':icon', x, y, 17)); top += gmapLink(where, lab, station(x, y, 'S/F', true, { s: 1000, fs: 20, badge: false, colors: c.colors, link: false }));
       labelQ.push(() => { const r = sc.place(key + ':label', [x, y], [ox, oy], T('', lab, 17), { iconR: 17 }); if (r.leader) top += leaderLine(r.leader[0][0], r.leader[0][1], r.leader[1][0], r.leader[1][1]); top += lbl(r.x, r.y, lab); }); continue; }
     // Parking icon: at the KML point unless that touches the route / a label / a zone (strips excepted) -> nearest clear spot
     iconQ.push(() => { const r = sc.place(key + ':icon', [x, y], labels[key + 'icon'] ?? [0, 0], (X, Y) => circleOb('', X, Y, 15), { leader: false, ignore: (o) => o.id.startsWith('strip'), rings: [16, 22, 28, 36, 46] });

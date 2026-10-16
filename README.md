@@ -79,7 +79,7 @@ Always shown: off-course roads, access styles, arrows, aid stations, distances a
 Layout: side-by-side ≥ 1000 px wide, stacked below.
 
 ## Print / PDF
-PDF page order (11 pages): 1 = main map sheet (map, header, mini maps, timelines, elevation profile), 2–6 = race pages 100K, 55K, 35K, 20K, 10K (landscape), 7–9 = aid-station detail pages (2 stations per portrait page: zoomed map, hours, amenities, cutoffs, busiest-times row; no photo), 10 = finish area plan, 11 = parking plan. Every section in `site/sections/` follows on its own letter pages (opt out with `meta.print: false`; table rows never split).
+PDF page order (14 pages): 1 = main map sheet (map, header, mini maps, timelines, elevation profile), 2–6 = race pages 100K, 55K, 35K, 20K, 10K (landscape), 7 = finish area plan, 8 = parking plan, 9–14 = aid-station detail pages, one per portrait page (S/F, 1–5: zoomed map, photo placeholder, hours, coordinates map link, amenities, cutoffs, busiest-times row). Station number graphics link to their station page inside the PDF. Every section in `site/sections/` follows on its own letter pages (opt out with `meta.print: false`; table rows never split).
 (One letter page would shrink the 36×24 design to ~30 %, making map labels ~6 pt; two pages keep them ~10 pt.)
 `scripts/pdf.ts` prints the built page with headless Chromium using the same print CSS, so the **Download PDF**
 button (`dist/big-bend-ultra-2027-map.pdf`) matches what the browser prints. Everything is vector except the hillshade.
@@ -124,24 +124,24 @@ notice next to Download PDF on the web page. Set it to `false` and rebuild (`bun
 
 ### Locations
 
-- Start / Finish: <https://www.google.com/maps/search/?api=1&query=29.270540,-103.757188>
-- Aid station 1 · Waterhole: <https://www.google.com/maps/search/?api=1&query=29.317977,-103.795332>
-- Aid station 2 · Contrabando: <https://www.google.com/maps/search/?api=1&query=29.300373,-103.845625>
-- Aid station 3 · Whit Roy: <https://www.google.com/maps/search/?api=1&query=29.344005,-103.818072>
-- Aid station 4 · Shutup: <https://www.google.com/maps/search/?api=1&query=29.445718,-103.863270>
-- Aid station 5 · Solitario: <https://www.google.com/maps/search/?api=1&query=29.491795,-103.803597>
 - Rincon: <https://www.google.com/maps/search/?api=1&query=29.407652,-103.857292>
 - Sauceda: <https://www.google.com/maps/search/?api=1&query=29.469013,-103.957010>
+- Start / Finish: <https://www.google.com/maps/search/?api=1&query=29.270540,-103.757188>
+- Waterhole: <https://www.google.com/maps/search/?api=1&query=29.317977,-103.795332>
+- Contrabando: <https://www.google.com/maps/search/?api=1&query=29.300373,-103.845625>
+- Whit Roy: <https://www.google.com/maps/search/?api=1&query=29.344005,-103.818072>
+- Shutup: <https://www.google.com/maps/search/?api=1&query=29.445718,-103.863270>
+- Solitario: <https://www.google.com/maps/search/?api=1&query=29.491795,-103.803597>
+- Map: 29.27054, -103.75719: <https://www.google.com/maps?q=29.270540,-103.757188>
 - Barton Warnock Visitor Center: <https://www.google.com/maps/search/?api=1&query=Barton%20Warnock%20Visitor%20Center%2C%20TX>
+- Map: 29.31798, -103.79533: <https://www.google.com/maps?q=29.317977,-103.795332>
+- Map: 29.30037, -103.84563: <https://www.google.com/maps?q=29.300373,-103.845625>
 - West Contrabando Trailhead: <https://www.google.com/maps/search/?api=1&query=West%20Contrabando%20Trailhead%2C%20TX>
+- Map: 29.34401, -103.81807: <https://www.google.com/maps?q=29.344005,-103.818072>
 - Whit-Roy Cinnabar Mine: <https://www.google.com/maps/search/?api=1&query=Whit-Roy%20Cinnabar%20Mine%2C%20TX>
+- Map: 29.44572, -103.86327: <https://www.google.com/maps?q=29.445718,-103.863270>
+- Map: 29.49180, -103.80360: <https://www.google.com/maps?q=29.491795,-103.803597>
 - Paso al Solitario: <https://www.google.com/maps/search/?api=1&query=Paso%20al%20Solitario%2C%20TX>
-- Open in Google Maps: <https://www.google.com/maps/search/?api=1&query=29.270539792542188%2C-103.75718815843129>
-- Open in Google Maps: <https://www.google.com/maps/search/?api=1&query=29.31797692590845%2C-103.79533238192568>
-- Open in Google Maps: <https://www.google.com/maps/search/?api=1&query=29.300372549553572%2C-103.84562511477459>
-- Open in Google Maps: <https://www.google.com/maps/search/?api=1&query=29.344005493038026%2C-103.81807186482354>
-- Open in Google Maps: <https://www.google.com/maps/search/?api=1&query=29.445718309498755%2C-103.86327034213237>
-- Open in Google Maps: <https://www.google.com/maps/search/?api=1&query=29.491795134487283%2C-103.80359661347411>
 
 ### Routes
 

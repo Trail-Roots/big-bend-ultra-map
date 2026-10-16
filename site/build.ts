@@ -6,8 +6,11 @@ import type { Ctx, Section } from './lib/types';
 import { markerDefs } from './lib/util';
 
 // big semi-transparent red diagonal DRAFT watermark: print / PDF only (fixed element repeats on every printed page); never shown on screen
-const WM_SVG = `url("data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"><text x="500" y="500" transform="rotate(-35 500 500)" text-anchor="middle" dominant-baseline="central" font-family="system-ui,sans-serif" font-weight="900" font-size="220" fill="#b3261e" fill-opacity=".16" letter-spacing="10">DRAFT</text></svg>')}")`;
-const WATERMARK = `<style>.wm{display:none}@media print{.wm{display:block;position:fixed;inset:0;background:${WM_SVG} center/contain no-repeat;pointer-events:none;z-index:9999}}</style><div class="wm" aria-hidden="true"></div>`;
+const WM_SVG = `url("data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"><text x="512" y="500" transform="rotate(-35 500 500)" text-anchor="middle" dominant-baseline="central" font-family="system-ui,sans-serif" font-weight="900" font-size="220" fill="#b3261e" fill-opacity=".16" letter-spacing="10">DRAFT</text></svg>')}")`;
+// one watermark per printed page, drawn by that page's root box (a position:fixed element is sized by the FIRST page, so it sat off-centre on
+// portrait pages): the overlay spans the full printable area (equal .28in margins all round => centred on the sheet), contain => never clipped
+const WM_LAND = 'html body section.sec-map, html body .sec-courses .coursepage', WM_PORT = 'html body .sec-finish-plan, html body .sec-parking-plan, html body .sec-stpages .stpage';
+const WATERMARK = `<style>@media print{${WM_LAND},${WM_PORT}{position:relative}${WM_LAND.split(', ').map((q) => q + '::after').join(',')},${WM_PORT.split(', ').map((q) => q + '::after').join(',')}{content:"";position:absolute;left:0;top:0;width:100%;background:${WM_SVG} center/contain no-repeat;pointer-events:none;z-index:9999}${WM_LAND.split(', ').map((q) => q + '::after').join(',')}{height:7.94in}html body section.sec-map::after{top:-.283in}${WM_PORT.split(', ').map((q) => q + '::after').join(',')}{height:10.44in}}</style>`;
 const here = import.meta.dir, root = path.resolve(here, '..');
 const C = path.join(root, 'content'), D = path.join(root, 'dist');
 const J = (p: string) => JSON.parse(fs.readFileSync(path.join(C, p), 'utf8'));
@@ -67,6 +70,10 @@ const noTitles = (h: string) => h.replace(/<title>[\s\S]*?<\/title>/g, '').repla
     const v = /[?&](?:query|q|destination)=([^&#]+)/.exec(u)?.[1]; if (!v || !COORD.test(v)) bad.push(u); }
   if (bad.length) throw new Error('[links] map links not coordinate-based:\n' + bad.join('\n'));
   console.log('map links', n, 'all coordinate-based'); }
+// build check: every aid-station detail (web lightbox template + print page) shows a visible primary coordinates link
+{ const n = ctx.stations.order.length, cards = [...html.matchAll(/<a class="st-coord" href="https:\/\/www\.google\.com\/maps\?q=(-?\d+\.\d+),(-?\d+\.\d+)"[^>]*>[\s\S]*?Map: (-?\d+\.\d+), (-?\d+\.\d+)<\/a>/g)];
+  if (cards.length !== 2 * n) throw new Error(`[stations] ${cards.length} coordinate links for ${n} stations (need lightbox + print each)`);
+  console.log('station coord links', cards.length, 'ok'); }
 fs.writeFileSync(path.join(D, 'index.html'), html);
 // race filter: page-1 elevation chart for every visible-race subset (fetched by app.ts on the first filter change)
 { const { profileBody } = await import('./lib/panels'); const O: string[] = ctx.courses.order, V: Record<string, unknown> = {};

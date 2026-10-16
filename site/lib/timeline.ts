@@ -106,8 +106,11 @@ export function heatRows(c: Ctx, o: HO) {
   const GMAX = Math.max(1, ...(o.gmaxFrom ?? sts).filter((k) => k !== 'S/F').map((k) => Math.max(0, ...(series(k) ?? [0]))));
   type Bx = { x0: number; x1: number; y0: number; y1: number };
   const CW = 9, ticons: Bx[] = [], cplaced: { b: Bx; row: [number, number] }[] = [], hitB = (p: Bx, q: Bx, m: number) => p.x0 < q.x1 + m && q.x0 < p.x1 + m && p.y0 < q.y1 + m && q.y0 < p.y1 + m;
-  const pid = (kk: string) => `cutpat${o.only ?? ''}-${kk}`;
-  let s = `<defs>${order.map((kk) => `<pattern id="${pid(kk)}" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="6" height="6" fill="#111"/><rect width="3.2" height="6" fill="${c.courses.colors[kk]}"/></pattern>`).join('')}</defs>`;
+  // cutoff mark fill: explicit vector geometry (no <pattern>, which Chromium rasterizes in PDF): a nested <svg> clips a race-colour rect
+  // + thin semi-opaque black 45° slashes; the slashes span 64 px of height so the mark can be re-split (app.ts) without redrawing
+  const SL = Array.from({ length: Math.ceil((CW + 64) / 4.5) }, (_, i) => -64 + i * 4.5).map((d) => `M${f1(d)},64L${f1(d + 64)},0`).join('');
+  const cutFill = (kk: string) => `<rect width="100%" height="100%" fill="${c.courses.colors[kk]}"/><path d="${SL}" stroke="#000" stroke-width="1.1" stroke-opacity=".6" fill="none"/>`;
+  let s = '';
   sts.forEach((k, r) => {
     const sf = k === 'S/F', v15 = series(k) ?? [], maxP = Math.max(1, ...v15), y0 = sTop + r * SR, name = sf ? 'Start / Finish' : T.stations[k]?.name ?? c.stations.stations[k].name;
     const ms = Math.min(950, (SR - 6) ** 2 / 1.8), mr = Math.sqrt(ms * 1.8) / 2;
@@ -120,14 +123,14 @@ export function heatRows(c: Ctx, o: HO) {
     for (const t of [...cm.keys()].sort((p, q) => p - q)) { const ks = cm.get(t)!, tx = X(t), sh = (rowHi - rowLo) / ks.length;
       g += `<g class="tlcut" data-r="${f1(rowLo)},${f1(rowHi)}"><title>${esc(name)} cutoff ${clock(t, false)} (${ks.join(', ')})</title>` + ks.map((kk, j) => { const ya = rowLo + j * sh + (j ? 0.75 : 0), yb = rowLo + (j + 1) * sh - (j < ks.length - 1 ? 0.75 : 0);
         cplaced.push({ b: { x0: tx - CW / 2, x1: tx + CW / 2, y0: ya, y1: yb }, row: [rowLo, rowHi] });
-        return `<rect data-course="${kk}" x="${f1(tx - CW / 2)}" y="${f1(ya)}" width="${CW}" height="${f1(yb - ya)}" fill="url(#${pid(kk)})"/>`; }).join('') + '</g>'; }
+        return `<svg class="cutm" data-course="${kk}" x="${f1(tx - CW / 2)}" y="${f1(ya)}" width="${CW}" height="${f1(yb - ya)}" overflow="hidden">${cutFill(kk)}</svg>`; }).join('') + '</g>'; }
     // station number icon inset at the row's left edge on a white disc, nudged right until it clears every cutoff mark in this row
     const iy = y0 + SR / 2, mine = cplaced.filter((P) => P.row[0] === rowLo); let ix = LX + mr + 1 + 5.5;
     const clear = (x: number) => mine.every((P) => P.b.x1 + 3 < x - mr - 1 || P.b.x0 - 3 > x + mr + 1);
     while (!clear(ix) && ix < RX - mr) ix += 1; if (!clear(ix)) throw new Error(`[timeline] no clear spot for the ${k} row icon`);
     ticons.push({ x0: ix - mr - 1, x1: ix + mr + 1, y0: iy - mr - 1, y1: iy + mr + 1 });
     const stn = c.stations.stations[k];
-    g += `<a class="stlink" href="#station-${encodeURIComponent(k)}" data-station="${esc(k)}" aria-label="${esc(stn.name)} aid station details"><circle cx="${f1(ix)}" cy="${f1(iy)}" r="${f1(mr + 1)}" fill="#fff"/>` + station(ix, iy, k, stn.spectator, { s: ms, fs: Math.sqrt(ms / 950) * 24, badge: false, colors: c.colors }) + '</a>';
+    g += `<a class="stlink" href="#station-${encodeURIComponent(k)}" data-station="${esc(k)}" aria-label="${esc(stn.name)} aid station details"><circle cx="${f1(ix)}" cy="${f1(iy)}" r="${f1(mr + 1)}" fill="#fff"/>` + station(ix, iy, k, stn.spectator, { s: ms, fs: Math.sqrt(ms / 950) * 24, badge: false, colors: c.colors, link: false /* already inside a.stlink (#station-k) */ }) + '</a>';
     const cl = [...cm.entries()].flatMap(([tt, ks]) => ks.map((kk) => [tt, kk]));
     s += `<g class="tlst" data-station="${esc(k)}" data-name="${esc(k === "S/F" ? "Start / Finish" : c.stations.stations[k].name)}" data-cuts='${JSON.stringify(cl)}' data-cw="${f1((CW / (RX - LX)) * (t1 - t0))}">${g}</g>`;
   });

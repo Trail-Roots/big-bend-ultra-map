@@ -54,12 +54,10 @@ export function renderRaceMap(c, k: string, card?: boolean) {
     if (ob.some((o) => at[0] < o.x1 + 6 && o.x0 < at[0] + lw + 6 && at[1] < o.y1 + 6 && o.y0 < at[1] + lh + 6)) throw new Error(`[racemap ${k}] logo overlaps a marker / arrow / bib`);
     ob.push({ x0: at[0], x1: at[0] + lw, y0: at[1], y1: at[1] + lh });
     logoSvg = `<a href="https://trailroots.com/big-bend-ultra" target="_blank" rel="noopener"><image class="racelogo" filter="url(#logohalo${k})" href="logo_ink_crop.png" x="${f1(at[0])}" y="${f1(at[1])}" width="${f1(lw)}" height="${f1(lh)}" preserveAspectRatio="xMidYMid meet"/></a>`; }
-  // north arrow (SSOT site/lib/north.ts): first clear corner (top-left, bottom-left, bottom-right) by the shared size rule
-  let northSvg = ''; { const ins = W * NORTH_INSET, nb0 = northBox(W, 0, 0);
-    for (const [nx, ny] of [[ins, ins], [ins, H - ins - nb0.h], [W - ins - nb0.w, H - ins - nb0.h]]) { const nb = northBox(W, nx, ny);
-      if (pts.some(([px, py]) => px > nb.x0 - 4 && px < nb.x1 + 4 && py > nb.y0 - 4 && py < nb.y1 + 4) || ob.some((o) => nb.x0 < o.x1 && o.x0 < nb.x1 && nb.y0 < o.y1 && o.y0 < nb.y1)) continue;
-      ob.push({ x0: nb.x0, x1: nb.x1, y0: nb.y0, y1: nb.y1 }); northSvg = northG(W, nx, ny); break; }
-    if (!northSvg) throw new Error(`[racemap ${k}] no clear corner for the north arrow`); }
+  // north arrow (SSOT site/lib/north.ts): fixed TOP-LEFT, exactly as on the main map (logo to its right); build fails if it would cover a marker / arrow / the logo
+  let northSvg = ''; { const ins = W * NORTH_INSET, nb = northBox(W, ins, ins);
+    if (ob.some((o) => nb.x0 < o.x1 && o.x0 < nb.x1 && nb.y0 < o.y1 && o.y0 < nb.y1)) throw new Error(`[racemap ${k}] north arrow (top-left) overlaps a marker / arrow / logo`);
+    ob.push({ x0: nb.x0, x1: nb.x1, y0: nb.y0, y1: nb.y1 }); northSvg = northG(W, ins, ins); }
   // ---- labels: name (serif) + full-name subtitle (sans, wraps after " / "), placed at the nearest clear spot ----
   const T = STATION_TPL, placed: Bx[] = [];
   const free = (b: Bx) => b.x0 > 4 && b.x1 < W - 4 && b.y0 > 4 && b.y1 < H - 4 && !ob.some((o) => b.x0 < o.x1 + 3 && o.x0 < b.x1 + 3 && b.y0 < o.y1 + 3 && o.y0 < b.y1 + 3)

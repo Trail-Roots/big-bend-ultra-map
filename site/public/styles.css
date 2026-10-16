@@ -260,7 +260,7 @@ dialog.stbox .st-wrap{background:#fff}
 .stbox .lb-body{gap:0}.stbox .lb-body > header,.stbox .lb-body > div,.stbox .lb-body > section{width:min(960px,100%);background:#fff;padding:12px 18px;box-sizing:border-box}
 .stbox .lb-body > header{border-radius:8px 8px 0 0}.stbox .lb-body > section:last-child{border-radius:0 0 8px 8px;padding-bottom:18px}
 .st-head{display:flex;align-items:center;gap:12px}.st-head h2{margin:0;font-family:"DejaVu Serif",serif;font-weight:400}.st-head .note{margin:.15rem 0 0;color:#666;font-size:.9rem}
-svg.st-badge{width:44px;height:44px;flex:none}
+svg.st-badge{width:56px;height:56px;flex:none;overflow:visible}
 .st-grid{display:grid;grid-template-columns:3fr 2fr;gap:12px}.st-map svg{border:1px solid #ddd;display:block}
 .st-photo{margin:0;display:flex}.st-photo img{width:100%;height:100%;object-fit:cover;border-radius:4px}
 .ph-empty{flex:1;min-height:160px;border:2px dashed #ccc;border-radius:6px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;color:#888;font-size:.9rem;background:var(--bg-subtle)}
@@ -272,7 +272,7 @@ svg.st-badge{width:44px;height:44px;flex:none}
 .am-y .amv{background:#2f8f46;color:#fff}.am-n .amv{background:#e6e6e6;color:#777}.am-u .amv{background:var(--bg-hover);color:#555;border:1px solid var(--line)}.am em{color:#666;font-style:normal;font-size:.75rem}.am-n em{color:#888}
 .st-cuts{border-collapse:collapse;font-size:.9rem}.st-cuts th{text-align:left;padding:2px 10px 2px 0;font-weight:700}.st-cuts td{padding:2px 0}.cutv{margin-right:10px;white-space:nowrap}.cutv small{color:#777}
 @media (max-width:699px){.st-grid,.st-info{grid-template-columns:1fr}.stbox .lb-body > *{padding:10px 12px}}
-a.stlink{color:inherit;text-decoration:none}@media screen{a.stlink{border-bottom:1px dotted #999;cursor:pointer}g.stpick,g.marker[data-station],g.pcall[data-st]{cursor:pointer}.stbox g.marker[data-station],.st-badge g.marker{cursor:default}}
+a.stlink{color:inherit;text-decoration:none}@media screen{a.stlink{border-bottom:1px dotted #999;cursor:pointer}g.stpick,g.marker[data-station],g.pcall[data-st]{cursor:pointer}.stbox g.marker[data-station],.stbox g.pcall,.stbox a.stlink,.sec-stpages g.marker,.sec-stpages a.stlink,.st-badge g.marker{cursor:default!important;pointer-events:none}.stbox a.stlink,.sec-stpages a.stlink{border-bottom:0}}
 /* race page heat map */
 .cpheat{margin:.5rem 0 0}.cpheat figcaption{font-size:.75rem;color:#666;margin-bottom:2px}.cpheat svg{width:100%;height:auto}
 @media screen and (min-width:1100px){html .sec-courses .coursepage .cpheat figcaption{font-size:calc(var(--S) * .008)}}
@@ -322,7 +322,10 @@ html.embed body{padding-top:0!important}
 html.embed dialog.lightbox .lb-close{position:sticky;top:10px;float:right;margin:10px 12px -50px auto}
 /* print safety (blank-page causes on some browsers): no deferred rendering, containment, compositing hints or fixed/transformed nav; normal document flow */
 @media print{html,body{height:auto!important;min-height:0!important;overflow:visible!important}*,*::before,*::after{content-visibility:visible!important;will-change:auto!important;backdrop-filter:none!important;animation:none!important;transition:none!important}html body .topnav{position:static!important;transform:none!important}main,.sheet,.sec,.doc{contain:none!important;filter:none!important;opacity:1!important}}
-/* aid-station detail pages: print / PDF only, two stations per portrait page */
+/* aid-station detail pages: print / PDF only, one station per portrait page */
 @media screen{.sec-stpages{display:none!important}}
-@media print{.sec-stpages .stpage{break-before:page;display:grid;grid-template-rows:1fr 1fr;gap:.22in;height:10.3in;overflow:hidden}.stcard{display:flex;flex-direction:column;gap:5pt;overflow:hidden;border-top:1.2pt solid var(--line-strong);padding-top:6pt;min-height:0;font-size:9pt}.stcard .st-head .st-badge{width:30pt;height:30pt}.stcard .st-head h2{font-size:15pt}.stcard .st-map svg.stzoom{width:100%!important;overflow:hidden;border:.8pt solid var(--line)}.stcard .st-info{gap:10pt}.stcard .amen{font-size:8.5pt}.stcard .st-cuts{font-size:9pt}.stcard .st-heat svg{width:100%;height:auto}}
+@media print{.sec-stpages .stpage{break-before:page;display:flex;flex-direction:column;height:10.3in;overflow:hidden}.stcard{display:flex;flex-direction:column;gap:5pt;overflow:hidden;border-top:1.2pt solid var(--line-strong);padding-top:6pt;min-height:0;font-size:9pt}.stcard .st-head .st-badge{width:38pt;height:38pt}.stcard .st-head h2{font-size:15pt}.stcard .st-map svg.stzoom{width:100%!important;overflow:hidden;border:.8pt solid var(--line)}.stcard .st-info{gap:10pt}.stcard .amen{font-size:8.5pt}.stcard .st-cuts{font-size:9pt}.stcard .st-heat svg{width:100%;height:auto}}
 .st-nearp{margin:.2rem 0 0;font-size:.8rem;color:var(--mute)}.st-near{color:var(--mute)}
+/* aid-station details: zoomed map and photo / placeholder share ONE fixed 4:3 frame on every station (web + print) */
+.st-grid{grid-template-columns:1fr 1fr!important;align-items:start}.st-grid>.st-map,.st-grid>.st-photo{aspect-ratio:4/3;width:100%;overflow:hidden}.st-grid>.st-map svg.stzoom{width:100%!important;height:100%!important;aspect-ratio:4/3!important}.st-photo .ph-empty{min-height:0;height:100%}.st-photo img{height:100%}
+@media (max-width:699px){.st-grid{grid-template-columns:1fr!important}}

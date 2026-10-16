@@ -11,7 +11,7 @@ const NORTH = (corner: 'tl' | 'tr') => northIcon(`fp-north fp-${corner}`); // SS
 const ZOOM = `<div class="fp-zoomctl"><button type="button" data-z="in" aria-label="Zoom in">${icon('plus')}</button><button type="button" data-z="out" aria-label="Zoom out">${icon('minus')}</button><button type="button" data-z="reset" aria-label="Reset zoom">${icon('reset')}</button></div>`;
 const img = (v: View, alt: string, corner: 'tl' | 'tr', over = '') =>
   `<div class="fp-zoom" style="--ar:${(v.w / v.h).toFixed(4)}" title="Wheel to zoom, drag to pan, double-click to reset"><div class="fp-stage"><img class="floorplan-img" src="plans/floorplan.svg#svgView(viewBox(${v.x},${v.y},${v.w},${v.h}))" width="${v.w}" height="${v.h}" alt="${alt}" style="display:block;width:100%;height:auto;aspect-ratio:${v.w}/${v.h};background:#fff" draggable="false">${over}</div>${NORTH(corner)}${ZOOM}</div>`;
-export const renderFinishPlan = () => img(FINISH_VIEW, 'Finish area floor plan', 'tr') // top-right is open ground;
+export const renderFinishPlan = () => img(FINISH_VIEW, 'Finish area floor plan', 'tl') // north arrow top-left on every map (SSOT);
 export const renderParkingPlan = () => img(PARKING_VIEW, 'Parking plan', 'tl') // top-left is open ground (property line runs down the right);
 
 // legend swatches drawn with the drawing's own fills/strokes (taken from sources/floorplan.svg)

@@ -344,7 +344,7 @@ if (document.documentElement.classList.contains('embed') && parent !== window) {
       document.querySelectorAll<SVGGElement>('.mainmap g.raceroute').forEach((g) => { const vis = sub && on.includes(g.dataset.rc!); g.style.display = vis ? '' : 'none'; if (vis) { const b = g.dataset.bb!.split(',').map(Number); bb[0] = Math.min(bb[0], b[0]); bb[1] = Math.min(bb[1], b[1]); bb[2] = Math.max(bb[2], b[2]); bb[3] = Math.max(bb[3], b[3]); } });
       if (mm) zoomToBox(mm, sub && !force ? { x0: bb[0], y0: bb[1], x1: bb[2], y1: bb[3] } : null); }
     // heat-map cutoff marks shared by several races at one station + time: the row height is split evenly among the VISIBLE races (all heat maps)
-    document.querySelectorAll<SVGGElement>('g.tlcut[data-r]').forEach((g) => { const [lo, hi] = g.dataset.r!.split(',').map(Number), vis = [...g.querySelectorAll<SVGRectElement>('rect[data-course]')].filter((r) => on.includes(r.dataset.course!)), n = vis.length, sh = (hi - lo) / Math.max(1, n);
+    document.querySelectorAll<SVGGElement>('g.tlcut[data-r]').forEach((g) => { const [lo, hi] = g.dataset.r!.split(',').map(Number), vis = [...g.querySelectorAll<SVGElement>('[data-course]')].filter((r) => on.includes(r.dataset.course!)), n = vis.length, sh = (hi - lo) / Math.max(1, n);
       vis.forEach((r, j) => { const ya = lo + j * sh + (j ? 0.75 : 0), yb = lo + (j + 1) * sh - (j < n - 1 ? 0.75 : 0); r.setAttribute('y', ya.toFixed(1)); r.setAttribute('height', (yb - ya).toFixed(1)); }); });
     // "All" checkbox mirrors the state: checked = all, indeterminate = some, unchecked = none
     { const ab = document.querySelector<HTMLInputElement>('input[data-race-all]'); if (ab && !force) ab.checked = !document.querySelector('input[data-race]:checked'); }
@@ -384,21 +384,24 @@ if (document.documentElement.classList.contains('embed') && parent !== window) {
   addEventListener('beforeprint', () => { if (rbox?.open) { const k = moved?.el.dataset.course; restore(); rbox.close(); /* put the race page back synchronously (the dialog close event is async) */ if (k && document.body.classList.contains('printone')) document.querySelectorAll('.coursepage').forEach((p) => p.classList.toggle('on', (p as HTMLElement).dataset.course === k)); } if (sbox?.open) sbox.close(); });
   const openStation = (k: string) => { if (!sbox) return; const t = document.getElementById(`st-${k === 'S/F' ? 'SF' : k}`) as HTMLTemplateElement | null; if (!t) return;
     const body = sbox.querySelector('.lb-body')!; body.innerHTML = ''; body.appendChild(t.content.cloneNode(true));
-    stMap(body.querySelector<HTMLElement>('.st-map'), k, 0.7);
+    stMap(body.querySelector<HTMLElement>('.st-map'), k, 0.75);
     if (!sbox.open) { embedModal(sbox, true); sbox.showModal(); } };
   // zoomed map: a copy of the main map framed on station k (zoom transform reset); hh = half height / half width of the frame
   function stMap(host: HTMLElement | null, k: string, hh: number, zf = 4.5) {
     const main = document.querySelector<SVGSVGElement>('svg.mainmap'), mk = main?.querySelector<SVGGElement>(`g.stpick[data-station="${CSS.escape(k)}"] g.marker`);
     if (main && host && mk) { const m = /translate\(([-\d.]+)[ ,]+([-\d.]+)\)/.exec(mk.getAttribute('transform') || ''); if (m) { const x = +m[1], y = +m[2], R = main.viewBox.baseVal.width / zf;
-      const cl = main.cloneNode(true) as SVGSVGElement; cl.removeAttribute('id'); cl.classList.remove('mainmap'); cl.classList.add('stzoom'); cl.querySelectorAll('g.hov,.daynight,g.layer[data-layer="dots"] circle').forEach((e) => e.remove()); cl.querySelectorAll<SVGGElement>('g.zv').forEach((g) => g.removeAttribute('transform'));
-      cl.setAttribute('viewBox', `${x - R} ${y - R * hh} ${2 * R} ${2 * hh * R}`); cl.removeAttribute('width'); cl.removeAttribute('height'); cl.style.cssText = `width:100%;height:auto;aspect-ratio:2/${2 * hh}`; host.appendChild(cl); } }
+      const cl = main.cloneNode(true) as SVGSVGElement; cl.removeAttribute('id'); cl.classList.remove('mainmap'); cl.classList.add('stzoom'); cl.querySelectorAll('g.hov,.daynight,g.layer[data-layer="dots"] circle,image.maplogo').forEach((e) => e.remove()); cl.querySelectorAll('[filter]').forEach((e) => e.removeAttribute('filter')); /* no filters: they make Chromium rasterize the whole PDF page */ cl.querySelectorAll<SVGGElement>('g.zv').forEach((g) => g.removeAttribute('transform'));
+      const VB = main.viewBox.baseVal, vx = Math.max(VB.x, Math.min(VB.x + VB.width - 2 * R, x - R)), vy = Math.max(VB.y, Math.min(VB.y + VB.height - 2 * hh * R, y - R * hh)); /* frame clamped inside the map */ cl.setAttribute('viewBox', `${vx} ${vy} ${2 * R} ${2 * hh * R}`); /* north arrow: top-left of the zoomed frame, same proportion as on the main map */ { const nG = cl.querySelector<SVGGElement>('g.north'), W0 = main.viewBox.baseVal.width, f = (2 * R) / W0, mt = /translate\(([-\d.]+)[ ,]+([-\d.]+)\)\s*scale\(([-\d.]+)/.exec(nG?.getAttribute('transform') || ''); if (nG && mt) { nG.setAttribute('transform', `translate(${(vx + +mt[1] * f).toFixed(1)} ${(vy + +mt[2] * f).toFixed(1)}) scale(${(+mt[3] * f).toFixed(4)})`); nG.parentNode!.appendChild(nG); } } cl.removeAttribute('width'); cl.removeAttribute('height'); cl.style.cssText = `width:100%;height:auto;aspect-ratio:2/${2 * hh}`; host.appendChild(cl); } }
   }
   // print-only aid-station pages: fill their zoomed maps once
-  document.querySelectorAll<HTMLElement>('.sec-stpages .st-map').forEach((h) => stMap(h, h.dataset.station!, 0.27, 3));
+  document.querySelectorAll<HTMLElement>('.sec-stpages .st-map').forEach((h) => stMap(h, h.dataset.station!, 0.75, 3.5));
+  // print station pages: no link from a station's own page to itself (other stations' numbers keep their internal PDF links)
+  document.querySelectorAll<HTMLElement>('.sec-stpages .stpage').forEach((pg) => { const own = '#station-' + encodeURIComponent(pg.dataset.st!);
+    pg.querySelectorAll('a').forEach((a) => { if (a.getAttribute('href') === own) a.replaceWith(...a.childNodes); }); });
   sbox?.addEventListener('close', () => { embedModal(sbox, false); if (/^#station-/.test(location.hash)) history.replaceState(null, '', location.pathname + location.search); });
   // clicks: station markers on the main map (instead of jumping to Google Maps; the lightbox links there), heat-map icons, race-table names
   document.addEventListener('click', (e) => { const t = e.target as Element; if (!(t instanceof Element)) return;
-    const a = t.closest<Element>('g.stpick, a.stlink, g.marker[data-station], g.pcall[data-st]'); if (!a || a.closest('.lightbox.stbox')) return; if (a.closest('.st-badge')) return; const k = a.getAttribute('data-station') ?? a.getAttribute('data-st'); if (!k) return;
+    const a = t.closest<Element>('g.stpick, a.stlink, g.marker[data-station], g.pcall[data-st]'); if (!a || a.closest('.lightbox.stbox, .sec-stpages, .st-badge')) return; /* never inside a station's own details */ const k = a.getAttribute('data-station') ?? a.getAttribute('data-st'); if (!k) return;
     if (document.querySelector('svg.mainmap.panning')) return; e.preventDefault(); openStation(k); history.replaceState(null, '', `#station-${encodeURIComponent(k)}`); });
   for (const box of [rbox, sbox]) if (box) { box.querySelector('.lb-close')!.addEventListener('click', () => box.close()); box.addEventListener('click', (e) => { const t = e.target as Element; if (t === box || t.classList?.contains('lb-body')) box.close(); }); /* backdrop + the empty padding around the content close it; Esc closes natively */ }
   const fromHash = () => { const h = decodeURIComponent(location.hash); let m; if ((m = /^#course-(.+)$/.exec(h))) openRace(m[1]); else if ((m = /^#station-(.+)$/.exec(h))) openStation(m[1]); };
