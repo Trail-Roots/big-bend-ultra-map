@@ -5,7 +5,7 @@ import { esc, SHEET } from '../lib/util';
 export const meta = { id: 'map', title: 'Course & Access Map' };
 import type { Ctx } from '../lib/types';
 import { hoverData } from '../lib/hover';
-import { renderTimeline , TEMP_SUM, TEMP_YEARS } from '../lib/timeline';
+import { renderTimeline, TEMP_AVG } from '../lib/timeline';
 // Print = one US Letter landscape page: main map (left half) + header, timeline / heat map and elevation (right half). Mini maps live on the course pages.
 // Panels keep their 36x24 in design-sheet geometry (inches) and each page is uniformly zoomed to fit the printable area.
 /** live site; links in the PDF must be absolute */
@@ -64,6 +64,6 @@ export function render(c: Ctx) {
     <div class="stripsbox" id="pb-strips">${renderTimeline(c)}<div class="minilinks callinks"><span class="calnote">Save timeline to your phone (works offline):</span><a href="https://calendar.google.com/calendar/u/0?cid=Njc1ZWZhYmI1ZmY0MDE1OTZlNDk5Mzg5YWRiNzdiZTU4YTUxODhkMWFkOTc1MjE1MzgxZDUzNjI1OWVlMTU0NkBncm91cC5jYWxlbmRhci5nb29nbGUuY29t" target="_blank" rel="noopener" title="Subscribe to the Race: Big Bend Ultra Google Calendar">${icon('calendar')}Google Calendar</a><a href="webcal://calendar.google.com/calendar/ical/675efabb5ff401596e499389adb77be58a5188d1ad975215381d536259ee1546%40group.calendar.google.com/public/basic.ics" title="Subscribe in Apple / iCal (public calendar feed)">${icon('calendar')}Apple Calendar</a></div></div>
   </div>
   </div>
-  <script type="application/json" id="hoverdata">${JSON.stringify(hoverData(c))}</script><script type="application/json" id="heatdata">${JSON.stringify(Object.fromEntries(c.stations.order.map((k) => [k, k === 'S/F' ? c.timeline.finish_crowd.by_course15 : c.timeline.stations[k].by_course15])))}</script><script type="application/json" id="tempdata">${JSON.stringify({ s: TEMP_SUM, y: [TEMP_YEARS[0], TEMP_YEARS[TEMP_YEARS.length - 1], TEMP_YEARS.length] })}</script>
+  <script type="application/json" id="hoverdata">${JSON.stringify(hoverData(c))}</script><script type="application/json" id="heatdata">${JSON.stringify(Object.fromEntries(c.stations.order.map((k) => [k, k === 'S/F' ? c.timeline.finish_crowd.by_course15 : c.timeline.stations[k].by_course15])))}</script><script type="application/json" id="tempdata">${JSON.stringify({ s: TEMP_AVG })}</script>
 </div>`;
 }

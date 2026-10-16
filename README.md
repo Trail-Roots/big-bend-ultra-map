@@ -101,7 +101,7 @@ bootstrap whole 2026 runners (seeded, ±1 % time jitter) when N differs, so they
 
 ### Temperatures
 
-The small °F readings under the timeline hours are the **median of every past Big Bend Ultra race day** (last 10 race years, or all available: currently 2019, 2020, 2022–2026); the hover adds the min–max range. Race dates come from the RunSignup API (race 163892); temperatures are hourly 2 m air temperature at the Start / Finish (Barton Warnock) from the [Open-Meteo historical weather API](https://open-meteo.com/) (ERA5 reanalysis), shifted to CST. Per-year data: `sources/curated/race-temps.json` and `sources/curated/race-temps.csv`. Refresh with `bun scripts/fetch-race-temps.ts`.
+The "5y avg °F" readings on the timeline are the **hourly mean over the last 5 Big Bend Ultra race days (2022–2026)**; the hover shows that same value (e.g. "58°F"). Earlier years (2019, 2020) stay in the data file but are not averaged. Race dates come from the RunSignup API (race 163892); temperatures are hourly 2 m air temperature at the Start / Finish (Barton Warnock) from the [Open-Meteo historical weather API](https://open-meteo.com/) (ERA5 reanalysis), shifted to CST. Per-year data: `sources/curated/race-temps.json` and `sources/curated/race-temps.csv`. Refresh with `bun scripts/fetch-race-temps.ts`.
 
 ### Aid-station details
 
@@ -128,11 +128,12 @@ notice next to Download PDF on the web page. Set it to `false` and rebuild (`bun
 - Aid station 1 · Waterhole: <https://www.google.com/maps/search/?api=1&query=29.317977,-103.795332>
 - Aid station 2 · Contrabando: <https://www.google.com/maps/search/?api=1&query=West%20Contrabondo%20Trailhead%2C%20W%20Main%20Trail%2C%20Redford%2C%20TX%2079846%2C%20USA>
 - Aid station 3 · Whit Roy: <https://www.google.com/maps/search/?api=1&query=Whit-Roy%20Cinnabar%20Mine%2C%201900%20Sauceda%20Ranch%20Road%2C%20Redford%2C%20TX%2079846%2C%20USA>
-- Aid station 4 · Shutup: <https://www.google.com/maps/search/?api=1&query=Righthand%20Shutup%2C%20Texas%2079846%2C%20USA>
+- Aid station 4 · Shutup: <https://www.google.com/maps/search/?api=1&query=29.445718,-103.863270>
 - Aid station 5 · Solitario: <https://www.google.com/maps/search/?api=1&query=Paso%20al%20Solitario%2C%20Solitario%20Road%2C%20Redford%2C%20TX%2079846%2C%20USA>
 - Rincon: <https://www.google.com/maps/search/?api=1&query=29.407652,-103.857292>
 - Sauceda: <https://www.google.com/maps/search/?api=1&query=29.469013,-103.957010>
 - Open in Google Maps: <https://www.google.com/maps/search/?api=1&query=29.31797692590845%2C-103.79533238192568>
+- Open in Google Maps: <https://www.google.com/maps/search/?api=1&query=29.445718309498755%2C-103.86327034213237>
 
 ### Routes
 

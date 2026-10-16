@@ -4,7 +4,7 @@ import { turnaround } from './panels';
 // Race-page map: ONLY one race's route, main-map styling (hillshade, paved roads, race-coloured route, arrows, aid stations with
 // full-name subtitles), full bib with START band. No zoom / pan, no zoom boxes. Labels are auto-placed against every drawn element;
 // the build fails if a label cannot be placed clear of the route, roads, markers, arrows, bib and the other labels.
-import { hillImage, chevron } from './mainmap';
+import { hillImage, chevron, LOGO_PT } from './mainmap';
 import { bib, BIB } from './panels';
 import { accessPatterns, offRoads } from './mainmap';
 import { BAND_TINT, tint, offsetLine, viewProjection, SHEET, f1, esc, station, gmapLink, leaderLine } from './util';
@@ -53,6 +53,16 @@ export function renderRaceMap(c, k: string, card?: boolean) {
       if (pts.some(([px, py]) => px > nb.x0 - 4 && px < nb.x1 + 4 && py > nb.y0 - 4 && py < nb.y1 + 4) || ob.some((o) => nb.x0 < o.x1 && o.x0 < nb.x1 && nb.y0 < o.y1 && o.y0 < nb.y1)) continue;
       ob.push({ x0: nb.x0, x1: nb.x1, y0: nb.y0, y1: nb.y1 }); northSvg = northG(W, nx, ny); break; }
     if (!northSvg) throw new Error(`[racemap ${k}] no clear corner for the north arrow`); }
+  // BBU logo (white halo, drawn last = on top): race pages only (not cards); the clear spot nearest a corner, clear of route / roads / markers /
+  // bib / north arrow; labels are then placed around it. Build fails if no clear spot exists.
+  let logoSvg = ''; if (!card) { const lw = LOGO_PT * 0.85, lh = lw * 776 / 730, m = W * NORTH_INSET, cand: [number, number][] = [];
+    for (let y = m; y <= H - m - lh; y += 12) for (let x = m; x <= W - m - lw; x += 12) cand.push([x, y]);
+    const dC = ([x, y]: [number, number]) => Math.min(Math.hypot(x - m, y - m), Math.hypot(x - m, H - m - lh - y), Math.hypot(W - m - lw - x, H - m - lh - y), Math.hypot(W - m - lw - x, y - m));
+    cand.sort((a, b) => dC(a) - dC(b));
+    const hit = ([x, y]: [number, number]) => pts.some(([px, py]) => px > x - 8 && px < x + lw + 8 && py > y - 8 && py < y + lh + 8) || ob.some((o) => x < o.x1 + 6 && o.x0 < x + lw + 6 && y < o.y1 + 6 && o.y0 < y + lh + 6);
+    const at = cand.find((q) => !hit(q)); if (!at) throw new Error(`[racemap ${k}] no clear spot for the logo`);
+    ob.push({ x0: at[0], x1: at[0] + lw, y0: at[1], y1: at[1] + lh });
+    logoSvg = `<a href="https://trailroots.com/big-bend-ultra" target="_blank" rel="noopener"><image class="racelogo" filter="url(#logohalo${k})" href="logo_ink_crop.png" x="${f1(at[0])}" y="${f1(at[1])}" width="${f1(lw)}" height="${f1(lh)}" preserveAspectRatio="xMidYMid meet"/></a>`; }
   // ---- labels: name (serif) + full-name subtitle (sans, wraps after " / "), placed at the nearest clear spot ----
   const T = STATION_TPL, placed: Bx[] = [];
   const free = (b: Bx) => b.x0 > 4 && b.x1 < W - 4 && b.y0 > 4 && b.y1 < H - 4 && !ob.some((o) => b.x0 < o.x1 + 3 && o.x0 < b.x1 + 3 && b.y0 < o.y1 + 3 && o.y0 < b.y1 + 3)
@@ -93,5 +103,5 @@ export function renderRaceMap(c, k: string, card?: boolean) {
       if (free(b)) { placed.push(b); labels += `<text x="${f1(al === 'start' ? x0 : al === 'end' ? x0 + bw : x0 + bw / 2)}" y="${f1(y0 + bh * 0.78)}" class="f-serif" font-size="22" font-style="italic" font-weight="700" fill="${cc}" text-anchor="${al}" stroke="#fff" stroke-width="6" paint-order="stroke">${t}</text>`; done = true; break; } }
     if (!done) throw new Error('[racemap 10K] no clear spot for the turnaround label'); }
   console.log(`  racemap ${k}: ${placed.length} labels placed clear of ${pts.length} line samples, ${ob.length} symbols`);
-  return `<svg class="racemap" data-race="${k}" data-f="${RACE_F}" viewBox="0 0 ${f1(W)} ${f1(H)}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${k} course map"><defs><clipPath id="rc${k}"><rect width="${f1(W)}" height="${f1(H)}"/></clipPath></defs><rect width="${f1(W)}" height="${f1(H)}" fill="#fff"/><g clip-path="url(#rc${k})">${s}${labels}</g>${bibSvg}${northSvg}${card ? '' : `<rect width="${f1(W)}" height="${f1(H)}" fill="none" stroke="#d4d4d4" stroke-width="2"/>`}</svg>`;
+  return `<svg class="racemap" data-race="${k}" data-f="${RACE_F}" viewBox="0 0 ${f1(W)} ${f1(H)}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${k} course map"><defs><filter id="logohalo${k}" x="-10%" y="-10%" width="120%" height="120%"><feMorphology in="SourceAlpha" operator="dilate" radius="4" result="d"/><feFlood flood-color="#fff"/><feComposite in2="d" operator="in"/><feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge></filter><clipPath id="rc${k}"><rect width="${f1(W)}" height="${f1(H)}"/></clipPath></defs><rect width="${f1(W)}" height="${f1(H)}" fill="#fff"/><g clip-path="url(#rc${k})">${s}${labels}</g>${bibSvg}${northSvg}${card ? '' : `<rect width="${f1(W)}" height="${f1(H)}" fill="none" stroke="#d4d4d4" stroke-width="2"/>`}${logoSvg}</svg>`;
 }

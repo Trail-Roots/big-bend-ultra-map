@@ -114,9 +114,9 @@ if (hdEl && prof) {
   });
   // ---- race-day time: timeline cursor, median-runner markers, runner dots; auto-play sweeps the clock ----
   const TM = HD.time, tl = document.querySelector<SVGSVGElement>('svg.timeline');
-  // past race days: per hour [min, min°F, median°F, max°F]; y = [first year, last year, count]
+  // 5-year average race-day temperature: per hour [minute, °F]
   const TD = JSON.parse(document.getElementById('tempdata')?.textContent || '{"s":[],"y":[]}'), TS: number[][] = TD.s;
-  const tempAtJS = (m: number, j = 2) => { const i = TS.findIndex((p) => p[0] >= m); if (i < 1) return NaN; const [ma, va] = [TS[i - 1][0], TS[i - 1][j]], [mb, vb] = [TS[i][0], TS[i][j]]; return va + ((vb - va) * (m - ma)) / (mb - ma); };
+  const tempAtJS = (m: number, j = 1) => { const i = TS.findIndex((p) => p[0] >= m); if (i < 1) return NaN; const [ma, va] = [TS[i - 1][0], TS[i - 1][j]], [mb, vb] = [TS[i][0], TS[i][j]]; return va + ((vb - va) * (m - ma)) / (mb - ma); };
   // elapsed fraction -> mile on a runner's fitness-class curve (flat steps = aid-station dwell)
   const effAt = (e: { mi: number[]; f: number[] }, f: number) => { if (f <= 0) return 0; if (f >= 1) return e.mi[e.mi.length - 1]; let lo = 0, hi = e.f.length - 1; while (hi - lo > 1) { const m = (lo + hi) >> 1; if (e.f[m] <= f) lo = m; else hi = m; } return e.mi[lo] + ((e.mi[hi] - e.mi[lo]) * (f - e.f[lo])) / (e.f[hi] - e.f[lo] || 1); };
   const ptAt = (k: string, mile: number) => routeAt(HD.courses[k].s, mile);
@@ -199,7 +199,7 @@ if (hdEl && prof) {
       cur.style.display = ''; cur.querySelector('path')!.setAttribute('transform', `translate(${x} 0)`);
       const tc = Math.round(tempAtJS(t));
       txt.setAttribute('text-anchor', 'start'); txt.setAttribute('font-size', '15');
-      rich(txt as SVGTextElement, [{ b: fmt(t), l: Number.isFinite(tc) ? `· ${tc}°F median (${Math.round(tempAtJS(t, 1))}–${Math.round(tempAtJS(t, 3))}°, ${TD.y[0]}–${TD.y[1]})` : '' }, ...paceRows(t)], 20, 0, 17);
+      rich(txt as SVGTextElement, [{ b: fmt(t), l: Number.isFinite(tc) ? `· ${tc}°F` : '' }, ...paceRows(t)], 20, 0, 17);
       const bb = (txt as SVGTextElement).getBBox(); bx.setAttribute('x', String(bb.x - 5)); bx.setAttribute('y', String(bb.y - 3)); bx.setAttribute('width', String(bb.width + 10)); bx.setAttribute('height', String(bb.height + 6));
       if (hovY >= 0) placeTip(tl, tg, x, hovY); else placeTip(tl, tg, x, 0);
 

@@ -67,6 +67,8 @@ for (const [, f, body] of kml.matchAll(/<Folder>\s*<name>(.*?)<\/name>([\s\S]*?)
 const kpt = (n: string) => { const p = PTS.find((x) => x.folder === 'Aid' && x.name === n); if (!p) throw new Error('KML point ' + n); return p.pt; };
 const SLL: Record<string, XY> = Object.fromEntries(Object.entries(KN).map(([k, n]) => [k, kpt(n)]));
 SLL.RIN = RINCON;
+// Shutup (Righthand Shutup): true aid-station location from Erik (Oct 16 2026), overrides the My Map point
+SLL['4'] = [-103.86327034213237, 29.445718309498755];
 const STEL: Record<string, number> = Object.fromEntries(Object.entries(rj('stel.json') as Record<string, number>).map(([k, v]) => [k, v * 3.281])); // m -> ft (SRTM 30 m via opentopodata, cached)
 
 // ---------- GPX ----------

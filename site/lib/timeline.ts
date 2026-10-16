@@ -85,12 +85,15 @@ export function renderTimeline(c: Ctx) {
 import RT from '../../sources/curated/race-temps.json';
 /** race-day temperatures, every past race year (sources/curated/race-temps.json): per hour [min, min°F, median°F, max°F] */
 export const TEMP_SUM = RT.summary as number[][], TEMP_YEARS = (RT.years as { year: number }[]).map((y) => y.year);
-/** median °F at minute m of race day (CST), linear between hourly values */
-export const tempAt = (m: number) => { const h = TEMP_SUM.map((q) => [q[0], q[2]]); const i = h.findIndex((p) => p[0] >= m); if (i <= 0) return h[Math.max(0, i)][1]; const [ma, va] = h[i - 1], [mb, vb] = h[i]; return va + ((vb - va) * (m - ma)) / (mb - ma); };
+/** 5-year average: hourly mean °F over the last 5 race years (2022–2026), [minute of race day (CST), °F] */
+export const TEMP_AVG_YEARS = TEMP_YEARS.slice(-5);
+export const TEMP_AVG: number[][] = (() => { const Y = (RT.years as { year: number; hourly: number[][] }[]).filter((y) => TEMP_AVG_YEARS.includes(y.year)); return Y[0].hourly.map(([m]) => { const v = Y.map((y) => y.hourly.find((q) => q[0] === m)?.[1]).filter((x): x is number => Number.isFinite(x)); return [m, Math.round((v.reduce((a, b) => a + b, 0) / v.length) * 10) / 10]; }); })();
+/** 5y average °F at minute m of race day (CST), linear between hourly values */
+export const tempAt = (m: number) => { const h = TEMP_AVG; const i = h.findIndex((p) => p[0] >= m); if (i <= 0) return h[Math.max(0, i)][1]; const [ma, va] = h[i - 1], [mb, vb] = h[i]; return va + ((vb - va) * (m - ma)) / (mb - ma); };
 function tempRow(X: (t: number) => number, t0: number, t1: number, y: number, mute: string) {
   let s = '<g class="temps">';
-  for (let t = Math.ceil(t0 / 120) * 120; t <= t1; t += 120) { const x = X(t); if (x < 24 || x > X(t1) - 18) continue; const q = TEMP_SUM.find((p) => p[0] === ((t % 1800) + 1800) % 1800) ?? TEMP_SUM.find((p) => p[0] === t); s += `<text x="${f1(x)}" y="${f1(y)}" font-size="15" text-anchor="middle" fill="${mute}">${q ? `<title>${Math.round(q[2])}°F median, range ${Math.round(q[1])}–${Math.round(q[3])}°F (${TEMP_YEARS[0]}–${TEMP_YEARS[TEMP_YEARS.length - 1]}, ${TEMP_YEARS.length} race days)</title>` : ''}${Math.round(tempAt(t))}°</text>`; }
-  return s + `<text x="${f1(X(t0) + 2)}" y="${f1(y)}" font-size="13" fill="${mute}">°F</text></g>`;
+  for (let t = Math.ceil(t0 / 120) * 120; t <= t1; t += 120) { const x = X(t); if (x < X(t0) + 92 || x > X(t1) - 18) continue; /* clear of the "5y avg °F" unit label */ s += `<text x="${f1(x)}" y="${f1(y)}" font-size="15" text-anchor="middle" fill="${mute}">${Math.round(tempAt(t))}°</text>`; }
+  return s + `<text x="${f1(X(t0) + 2)}" y="${f1(y)}" font-size="13" fill="${mute}">5y avg °F</text></g>`;
 }
 /** multi-step heat ramp (cream -> amber -> red -> deep red), v in 0..1; sqrt-scaled by the caller so quiet stations still read */
 export const heat = (v: number) => { const S = [[255, 244, 222], [247, 182, 92], [214, 72, 40], [140, 18, 18], [74, 8, 8]], x = Math.min(1, Math.max(0, v)) * (S.length - 1), i = Math.min(S.length - 2, Math.floor(x)), f = x - i; return 'rgb(' + S[i].map((a, j) => Math.round(a + (S[i + 1][j] - a) * f)).join(',') + ')'; };
