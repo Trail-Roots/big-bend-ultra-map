@@ -1,3 +1,4 @@
+import fs from 'node:fs'; import path from 'node:path';
 import { northG, northBox, NORTH_INSET } from './north';
 import { cardView, CARD_ASPECT } from './cardview';
 import { turnaround } from './panels';
@@ -15,10 +16,32 @@ export const RACE_F = 4;
 type Bx = { x0: number; x1: number; y0: number; y1: number };
 const wEst = (t: string, size: number) => t.length * size * 0.56;
 
+// race pages: the top-left corner (north arrow + logo, laid out as on the main map) must be clear of every drawn line (route, next-longer
+// race, roads, trails). The view is extended toward the top-left (bottom-right edge fixed, aspect kept) until that corner is clear.
+export const RACE_VIEWS: Record<string, { x: number[]; y: number[] }> = {}; // extended race views (build writes dist/race-views.json for tools/racehill.ts)
+const HILLV: Record<string, { x: number[]; y: number[] }> = (() => { try { return JSON.parse(fs.readFileSync(path.join(import.meta.dir, '../../sources/hillshade/race-views.json'), 'utf8')); } catch { return {}; } })();
+function clearCorner(c, k: string, view0) {
+  const H = view0.fig[3] * SHEET.h * RACE_F, W = view0.fig[2] * SHEET.w * RACE_F, ins = W * NORTH_INSET, nb = northBox(W, ins, ins), lw = W * 0.0915, lh = lw * 776 / 730;
+  const box = { x0: 0, y0: 0, x1: W * 0.08 + lw + 10, y1: Math.max(nb.y1, W * 0.0214 + lh) + 10 };
+  const nk = c.courses.order[c.courses.order.indexOf(k) - 1], feats = [c.courseGeo[k].features[0], ...(nk ? [c.courseGeo[nk].features[0]] : []), ...c.network.features];
+  for (let f = 1; f <= 1.8; f += 0.02) {
+    const [x0, x1] = view0.x, [y0, y1] = view0.y, v = { ...view0, x: [x1 - (x1 - x0) * f, x1], y: [y0, y0 + (y1 - y0) * f] }, V = viewProjection(v, W, H);
+    const hit = feats.some((ft) => V.lines(ft).some((l) => l.some(([x, y], i) => { if (x >= box.x0 && x <= box.x1 && y >= box.y0 && y <= box.y1) return true; const q = l[i + 1]; if (!q) return false; const n = Math.ceil(Math.hypot(q[0] - x, q[1] - y) / 3); for (let j = 1; j < n; j++) { const px = x + (q[0] - x) * j / n, py = y + (q[1] - y) * j / n; if (px >= box.x0 && px <= box.x1 && py >= box.y0 && py <= box.y1) return true; } return false; })));
+    if (!hit) { if (f > 1) RACE_VIEWS[k] = { x: v.x, y: v.y }; if (f > 1) console.log(`  racemap ${k}: view extended x${f.toFixed(2)} to clear the top-left corner`); return v; }
+  }
+  throw new Error(`[racemap ${k}] cannot clear the top-left corner for north arrow + logo`);
+}
+// relief: the race's own hillshade, or for an extended view the matching full-frame relief from tools/racehill.ts (same generator as the cards)
+function raceHill(c, k: string, V, view, W: number, H: number) {
+  const e = RACE_VIEWS[k]; if (!e) return hillImage(c, k, V, view);
+  const h = HILLV[k], same = h && [0, 1].every((i) => Math.abs(h.x[i] - e.x[i]) < 1 && Math.abs(h.y[i] - e.y[i]) < 1);
+  if (!same) { if (process.env.RACEHILL) return ''; throw new Error(`[racemap ${k}] relief out of date for the extended view: RACEHILL=1 bun site/build.ts && bun tools/racehill.ts`); }
+  return `<image href="hillshade/race-${k}.png" x="0" y="0" width="${f1(W)}" height="${f1(H)}" preserveAspectRatio="none"/>`;
+}
 export function renderRaceMap(c, k: string, card?: boolean) {
   // card thumbnails: the race view re-fit to the card's exact aspect (site/lib/cardview.ts), same symbol scale, one generated relief image over the whole frame
-  const view0 = c.layout.views[k], view = card ? { ...view0, ...cardView(view0) } : view0, H = view0.fig[3] * SHEET.h * RACE_F, W = card ? H * CARD_ASPECT : view0.fig[2] * SHEET.w * RACE_F, V = viewProjection(view, W, H), col = c.colors, cc = c.courses.colors[k];
-  let s = `<g class="topo">${card ? `<image href="hillshade/card-${k}.png" x="0" y="0" width="${f1(W)}" height="${f1(H)}" preserveAspectRatio="none"/>` : hillImage(c, k, V)}</g>`;
+  const view0 = c.layout.views[k], view = card ? { ...view0, ...cardView(view0) } : clearCorner(c, k, view0), H = view0.fig[3] * SHEET.h * RACE_F, W = card ? H * CARD_ASPECT : view0.fig[2] * SHEET.w * RACE_F, V = viewProjection(view, W, H), col = c.colors, cc = c.courses.colors[k];
+  let s = `<g class="topo">${card ? `<image href="hillshade/card-${k}.png" x="0" y="0" width="${f1(W)}" height="${f1(H)}" preserveAspectRatio="none"/>` : raceHill(c, k, V, view, W, H)}</g>`;
   const pts: [number, number][] = []; // every drawn line, sampled, for label collision tests
   const sample = (L: [number, number][][]) => { for (const l of L) for (let i = 1; i < l.length; i++) { const [a, b] = [l[i - 1], l[i]], n = Math.max(1, Math.ceil(Math.hypot(b[0] - a[0], b[1] - a[1]) / 3)); for (let j = 0; j <= n; j++) pts.push([a[0] + (b[0] - a[0]) * j / n, a[1] + (b[1] - a[1]) * j / n]); } };
   let base = ''; for (const f of c.network.features.filter((f) => f.properties.cls === 'paved')) { const d = V.path(f); sample(V.lines(f)); base += `<path d="${d}" class="ln" stroke="#fff" stroke-width="14"/><path d="${d}" class="ln" stroke="#333" stroke-width="10"/><path d="${d}" class="ln" stroke="#fff" stroke-width="2.2" stroke-dasharray="13.2 11"/>`; }
@@ -51,12 +74,12 @@ export function renderRaceMap(c, k: string, card?: boolean) {
   // main map (x 8.0 %, y 2.14 %, width 9.15 % of the frame width). Placed before the north arrow and labels so those move around it;
   // build fails if a station marker, arrow or the bib would sit under it.
   let logoSvg = ''; if (!card) { const lw = W * 0.0915, lh = lw * 776 / 730, at: [number, number] = [W * 0.08, W * 0.0214];
-    if (ob.some((o) => at[0] < o.x1 + 6 && o.x0 < at[0] + lw + 6 && at[1] < o.y1 + 6 && o.y0 < at[1] + lh + 6)) throw new Error(`[racemap ${k}] logo overlaps a marker / arrow / bib`);
+    if (ob.some((o) => at[0] < o.x1 + 6 && o.x0 < at[0] + lw + 6 && at[1] < o.y1 + 6 && o.y0 < at[1] + lh + 6)) throw new Error(`[racemap ${k}] logo overlaps a marker / arrow / bib`); if (pts.some(([px, py]) => px > at[0] - 4 && px < at[0] + lw + 4 && py > at[1] - 4 && py < at[1] + lh + 4)) throw new Error(`[racemap ${k}] logo overlaps a route / road line`);
     ob.push({ x0: at[0], x1: at[0] + lw, y0: at[1], y1: at[1] + lh });
     logoSvg = `<a href="https://trailroots.com/big-bend-ultra" target="_blank" rel="noopener"><image class="racelogo" filter="url(#logohalo${k})" href="logo_ink_crop.png" x="${f1(at[0])}" y="${f1(at[1])}" width="${f1(lw)}" height="${f1(lh)}" preserveAspectRatio="xMidYMid meet"/></a>`; }
   // north arrow (SSOT site/lib/north.ts): fixed TOP-LEFT, exactly as on the main map (logo to its right); build fails if it would cover a marker / arrow / the logo
   let northSvg = ''; { const ins = W * NORTH_INSET, nb = northBox(W, ins, ins);
-    if (ob.some((o) => nb.x0 < o.x1 && o.x0 < nb.x1 && nb.y0 < o.y1 && o.y0 < nb.y1)) throw new Error(`[racemap ${k}] north arrow (top-left) overlaps a marker / arrow / logo`);
+    if (ob.some((o) => nb.x0 < o.x1 && o.x0 < nb.x1 && nb.y0 < o.y1 && o.y0 < nb.y1) || pts.some(([px, py]) => px > nb.x0 - 4 && px < nb.x1 + 4 && py > nb.y0 - 4 && py < nb.y1 + 4)) throw new Error(`[racemap ${k}] north arrow (top-left) overlaps a route / road line, marker, arrow or the logo`);
     ob.push({ x0: nb.x0, x1: nb.x1, y0: nb.y0, y1: nb.y1 }); northSvg = northG(W, ins, ins); }
   // ---- labels: name (serif) + full-name subtitle (sans, wraps after " / "), placed at the nearest clear spot ----
   const T = STATION_TPL, placed: Bx[] = [];

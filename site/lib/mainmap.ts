@@ -9,8 +9,8 @@ const LAYERS: [string, string, boolean][] = [
 export const mainLayers = LAYERS;
 /** logo width in sheet pt — identical to the header logo above the mini maps (1.45 in) */
 export const LOGO_PT = 1.45 * 72;
-export function hillImage(c, key, V) {
-  const h = c.layout.hillshade[key], [bx0, by0, bx1, by1] = h.bounds_3857, k = V.ppm, x0 = c.layout.views[key].x[0], y1 = c.layout.views[key].y[1];
+export function hillImage(c, key, V, view = c.layout.views[key]) {
+  const h = c.layout.hillshade[key], [bx0, by0, bx1, by1] = h.bounds_3857, k = V.ppm, x0 = view.x[0], y1 = view.y[1];
   return `<image href="${h.file}" x="${f1((bx0 - x0) * k)}" y="${f1((y1 - by1) * k)}" width="${f1((bx1 - bx0) * k)}" height="${f1((by1 - by0) * k)}" preserveAspectRatio="none"/>`;
 }
 export function renderMain(c) {

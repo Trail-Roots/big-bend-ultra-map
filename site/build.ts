@@ -74,6 +74,7 @@ const noTitles = (h: string) => h.replace(/<title>[\s\S]*?<\/title>/g, '').repla
 { const n = ctx.stations.order.length, cards = [...html.matchAll(/<a class="st-coord" href="https:\/\/www\.google\.com\/maps\?q=(-?\d+\.\d+),(-?\d+\.\d+)"[^>]*>[\s\S]*?Map: (-?\d+\.\d+), (-?\d+\.\d+)<\/a>/g)];
   if (cards.length !== 2 * n) throw new Error(`[stations] ${cards.length} coordinate links for ${n} stations (need lightbox + print each)`);
   console.log('station coord links', cards.length, 'ok'); }
+{ const { RACE_VIEWS } = await import('./lib/racemap'); fs.writeFileSync(path.join(D, 'race-views.json'), JSON.stringify(RACE_VIEWS)); }
 fs.writeFileSync(path.join(D, 'index.html'), html);
 // race filter: page-1 elevation chart for every visible-race subset (fetched by app.ts on the first filter change)
 { const { profileBody } = await import('./lib/panels'); const O: string[] = ctx.courses.order, V: Record<string, unknown> = {};
