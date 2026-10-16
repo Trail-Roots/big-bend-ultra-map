@@ -7,7 +7,7 @@ import { turnaround } from './panels';
 import { hillImage, chevron } from './mainmap';
 import { bib, BIB } from './panels';
 import { accessPatterns, offRoads } from './mainmap';
-import { BAND_TINT, tint, viewProjection, SHEET, f1, esc, station, gmapLink, leaderLine } from './util';
+import { BAND_TINT, tint, offsetLine, viewProjection, SHEET, f1, esc, station, gmapLink, leaderLine } from './util';
 import { STATION_TPL } from './labels';
 
 /** sheet-unit scale vs the mini-map view, so symbols and text use the main map's sizes at race-page print size */
@@ -25,7 +25,9 @@ export function renderRaceMap(c, k: string, card?: boolean) {
   for (const f of c.network.features.filter((f) => f.properties.cls === 'connector')) { const d = V.path(f); sample(V.lines(f)); base += `<path d="${d}" class="ln" stroke="${col.cream}" stroke-width="12" stroke-linecap="butt"/><path d="${d}" class="ln" stroke="#000" stroke-width="7"/>`; }
   // next longer race's route underneath at low opacity (as on the old mini maps); the 100K has none
   const O: string[] = c.courses.order, nk = O[O.indexOf(k) - 1];
-  if (nk) { const nf = c.courseGeo[nk].features[0]; sample(V.lines(nf)); s += `<path d="${V.path(nf)}" class="ln under" data-course="${nk}" stroke="${tint(c.courses.colors[nk], BAND_TINT * 0.4)}" stroke-width="${card ? 20 : 9}" stroke-linejoin="round"/>`; }
+  if (nk) { const nf = c.courseGeo[nk].features[0], o = card ? 15 : 7, sw = card ? 6 : 2.5; sample(V.lines(nf));
+    // next longer race: thin dashed line in its full colour, offset beside the road (never on the trail-type pattern); the current race band covers it where they share the road
+    s += `<path d="${V.lines(nf).filter((l) => l.length > 1).map((l) => 'M' + offsetLine(l, o).map((q) => `${f1(q[0])},${f1(q[1])}`).join('L')).join('')}" class="ln under" data-course="${nk}" fill="none" stroke="${c.courses.colors[nk]}" stroke-width="${sw}" stroke-dasharray="${f1(sw * 2.4)} ${f1(sw * 2)}" stroke-opacity=".8"/>`; }
   const rf = c.courseGeo[k].features[0], d = V.path(rf); sample(V.lines(rf));
   // race route = solid light tint band of the race colour BENEATH the full trail-type layer (every road / trail drawn exactly as without the band)
   s += `<path d="${d}" class="ln" stroke="${tint(cc, BAND_TINT)}" stroke-width="${card ? 42 : 18}" stroke-linejoin="round"/>` + base + offRoads(c.network.features, V) + accessPatterns(c.network.features.filter((f) => f.properties.on_course), V, col);
