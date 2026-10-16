@@ -8,7 +8,7 @@ import { turnaround } from './panels';
 import { hillImage, chevron, LOGO_PT } from './mainmap';
 import { bib, BIB } from './panels';
 import { accessPatterns, offRoads } from './mainmap';
-import { BAND_TINT, tint, offsetLine, viewProjection, SHEET, f1, esc, station, leaderLine } from './util';
+import { BAND_TINT, tint, offsetLine, viewProjection, SHEET, R, f1, esc, station, leaderLine } from './util';
 import { STATION_TPL } from './labels';
 
 /** sheet-unit scale vs the mini-map view, so symbols and text use the main map's sizes at race-page print size */
@@ -26,11 +26,19 @@ function clearCorner(c, k: string, view0, quiet = false) {
   const H = view0.fig[3] * SHEET.h * RACE_F, W = view0.fig[2] * SHEET.w * RACE_F, ins = W * NORTH_INSET, nb = northBox(W, ins, ins), lw = W * 0.0915, lh = lw * 776 / 730;
   const box = { x0: 0, y0: 0, x1: W * 0.08 + lw + 10, y1: Math.max(nb.y1, W * 0.0214 + lh) + 10 };
   const nk = c.courses.order[c.courses.order.indexOf(k) - 1], feats = [c.courseGeo[k].features[0], ...(nk ? [c.courseGeo[nk].features[0]] : []), ...c.network.features];
-  for (let f = 1; f <= 1.8; f += 0.02) {
-    const [x0, x1] = view0.x, [y0, y1] = view0.y, v = { ...view0, x: [x1 - (x1 - x0) * f, x1], y: [y0, y0 + (y1 - y0) * f] }, V = viewProjection(v, W, H);
-    const hit = feats.some((ft) => V.lines(ft).some((l) => l.some(([x, y], i) => { if (x >= box.x0 && x <= box.x1 && y >= box.y0 && y <= box.y1) return true; const q = l[i + 1]; if (!q) return false; const n = Math.ceil(Math.hypot(q[0] - x, q[1] - y) / 3); for (let j = 1; j < n; j++) { const px = x + (q[0] - x) * j / n, py = y + (q[1] - y) * j / n; if (px >= box.x0 && px <= box.x1 && py >= box.y0 && py <= box.y1) return true; } return false; })));
-    if (!hit) { if (f > 1) RACE_VIEWS[k] = { x: v.x, y: v.y }; if (f > 1 && !quiet) console.log(`  racemap ${k}: view extended x${f.toFixed(2)} to clear the top-left corner`); return v; }
-  }
+  const hits = (v) => { const V = viewProjection(v, W, H); return feats.some((ft) => V.lines(ft).some((l) => l.some(([x, y], i) => { if (x >= box.x0 && x <= box.x1 && y >= box.y0 && y <= box.y1) return true; const q = l[i + 1]; if (!q) return false; const n = Math.ceil(Math.hypot(q[0] - x, q[1] - y) / 3); for (let j = 1; j < n; j++) { const px = x + (q[0] - x) * j / n, py = y + (q[1] - y) * j / n; if (px >= box.x0 && px <= box.x1 && py >= box.y0 && py <= box.y1) return true; } return false; }))); };
+  if (!hits(view0)) return view0;
+  // the sheet view leaves big empty areas on the race page: re-fit to THIS race's route (padded), page aspect, then grow / slide the frame only as far as the top-left corner needs
+  const mx = ([lo, la]) => [R * lo * Math.PI / 180, R * Math.log(Math.tan(Math.PI / 4 + la * Math.PI / 360))];
+  const P: number[][] = []; const walk = (g) => typeof g[0] === 'number' ? P.push(mx(g)) : g.forEach(walk); walk(c.courseGeo[k].features[0].geometry.coordinates);
+  const bx0 = Math.min(...P.map((p) => p[0])), bx1 = Math.max(...P.map((p) => p[0])), by0 = Math.min(...P.map((p) => p[1])), by1 = Math.max(...P.map((p) => p[1]));
+  const pad = 0.12, rw = (bx1 - bx0) * (1 + 2 * pad), rh = (by1 - by0) * (1 + 2 * pad), cx = (bx0 + bx1) / 2, cy = (by0 + by1) / 2, A = W / H;
+  const fw0 = Math.max(rw, rh * A);
+  for (let f = 1; f <= 1.8; f += 0.02) { const fw = fw0 * f, fh = fw / A, sx = fw - rw, sy = fh - rh;
+    for (let t = 0; t <= 0.5001; t += 0.05) for (const [tx, ty] of [[t, t], [t, 0], [0, t]]) { // shift the route right / down from centered, least first
+      const x0 = cx - fw / 2 - sx * tx * 0.999, y1 = cy + fh / 2 + sy * ty * 0.999, v = { ...view0, x: [x0, x0 + fw], y: [y1 - fh, y1] };
+      if (Math.min(bx0 - v.x[0], v.x[1] - bx1) < (bx1 - bx0) * pad * 0.5 || Math.min(by0 - v.y[0], v.y[1] - by1) < (by1 - by0) * pad * 0.5) continue;
+      if (!hits(v)) { RACE_VIEWS[k] = { x: v.x, y: v.y }; if (!quiet) console.log(`  racemap ${k}: re-fit to its route x${f.toFixed(2)}, shift ${tx.toFixed(2)},${ty.toFixed(2)}`); return v; } } }
   throw new Error(`[racemap ${k}] cannot clear the top-left corner for north arrow + logo`);
 }
 // relief: the race's own hillshade, or for an extended view the matching full-frame relief from tools/racehill.ts (same generator as the cards)
