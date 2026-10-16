@@ -132,7 +132,7 @@ if (hdEl && prof) {
     leadRing[k] = el('circle', { fill: 'none', stroke: HD.courses[k].color, style: 'display:none;pointer-events:none' }, dotLayer) as SVGCircleElement;
     let bi = -1; dots2.forEach((d, i) => { if (d.k === k && d.stop < 0 && (bi < 0 || d.T < dots2[bi].T)) bi = i; }); leadIdx[k] = bi;
     if (bi >= 0 && C.rec.year === 2026 && Math.abs(dots2[bi].T - C.rec.T) < 0.2) { dupLead.add(bi); leadIdx[k] = -1; } // same performance: course-record dot only
-    const g = el('g', { style: 'display:none;pointer-events:none;opacity:.22' /* course-record marker: strongly faded, no emphasis */ }, dotLayer) as SVGGElement; el('circle', { fill: 'none', stroke: '#111' }, g); el('circle', { fill: 'none', stroke: HD.courses[k].color }, g); el('circle', { fill: HD.courses[k].color, stroke: '#fff' }, g); recDot[k] = g;
+    const g = el('g', { style: 'display:none;pointer-events:none' + (dupLead.has(bi) ? '' : ';opacity:.22') /* course-record marker faded, unless the leader IS the course record (same runner) */ }, dotLayer) as SVGGElement; el('circle', { fill: 'none', stroke: '#111' }, g); el('circle', { fill: 'none', stroke: HD.courses[k].color }, g); el('circle', { fill: HD.courses[k].color, stroke: '#fff' }, g); recDot[k] = g;
   }
   let tShown = -1, hovY = -1; // hovY: pointer y in the timeline (−1 = auto-play: time only)
   const pc = (mpm: number) => { const v = Math.round(mpm * 60); return `${Math.floor(v / 60)}:${String(v % 60).padStart(2, '0')}`; };
@@ -201,9 +201,9 @@ if (hdEl && prof) {
       txt.setAttribute('text-anchor', 'start'); txt.setAttribute('font-size', '15');
       rich(txt as SVGTextElement, [{ b: fmt(t), l: Number.isFinite(tc) ? `· ${tc}°F median (${Math.round(tempAtJS(t, 1))}–${Math.round(tempAtJS(t, 3))}°, ${TD.y[0]}–${TD.y[1]})` : '' }, ...paceRows(t)], 20, 0, 17);
       const bb = (txt as SVGTextElement).getBBox(); bx.setAttribute('x', String(bb.x - 5)); bx.setAttribute('y', String(bb.y - 3)); bx.setAttribute('width', String(bb.width + 10)); bx.setAttribute('height', String(bb.height + 6));
-      if (hovY >= 0) placeTip(tl, tg, x, hovY); else placeTip(tl, tg, x, 0);
-      // sunrise / sunset markers step aside wherever the time tooltip covers them (screen rectangles, so any transform / scale is included)
-      { const tb = tg.getBoundingClientRect(); tl.querySelectorAll<SVGGElement>('g.sun').forEach((g) => { g.style.opacity = ''; const sb = g.getBoundingClientRect(); const hit = sb.left < tb.right + 4 && tb.left - 4 < sb.right && sb.top < tb.bottom + 4 && tb.top - 4 < sb.bottom; g.style.opacity = hit ? '0' : ''; }); }
+      if (hovY >= 0) placeTip(tl, tg, x, hovY); else placeTip(tl, tg, x, +tl.dataset.stop!); // below the sunrise/sunset row
+
+      
     }
   };
   const clearTime = () => { tShown = -1; hovY = -1; badge.style.display = 'none'; tint?.setAttribute('fill-opacity', '0'); Object.values(recDot).forEach((g) => (g.style.display = 'none')); Object.values(leadRing).forEach((g) => (g.style.display = 'none')); dots2.forEach((d) => (d.c.style.display = 'none')); glide.clear(); tl?.querySelectorAll<SVGGElement>('g.sun').forEach((g) => (g.style.opacity = '')); const cur = tl?.querySelector<SVGGElement>('g.tlcursor'); if (cur) cur.style.display = 'none'; };
@@ -295,6 +295,13 @@ document.querySelectorAll<HTMLElement>('.fp-zoom').forEach((box) => {
   addEventListener('beforeprint', () => { k = 1; x = y = 0; clamp(); });
 });
 
+// embed: a modal dialog's viewport is the whole auto-height iframe, so pin open lightboxes to the HOST viewport (embed.js sends the iframe top and
+// the host window height); embed.js keeps the host scroll position while a lightbox is open and restores it on close
+let hostTop = 0;
+const inEmbed = document.documentElement.classList.contains('embed') && parent !== window;
+function fitModal(d: HTMLDialogElement) { if (!inEmbed) return; const hv = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--host-vh')) * 100 || innerHeight;
+  const y = Math.max(0, Math.min(-hostTop, document.documentElement.scrollHeight - hv)); Object.assign(d.style, { position: 'fixed', inset: 'auto 0 auto 0', top: y + 'px', height: hv + 'px', margin: '0' }); }
+function embedModal(d: HTMLDialogElement, open: boolean) { if (!inEmbed) return; if (open) fitModal(d); parent.postMessage({ type: 'bbu-modal', open }, '*'); }
 // ---- ?view=embed inside an iframe (dist/embed.js): report the content height to the parent so it can size the iframe ----
 if (document.documentElement.classList.contains('embed') && parent !== window) {
   let last = 0; const post = () => { const h = document.documentElement.scrollHeight; if (Math.abs(h - last) > 1) { last = h; parent.postMessage({ type: 'bbu-embed-height', height: h }, '*'); } };
@@ -305,7 +312,7 @@ if (document.documentElement.classList.contains('embed') && parent !== window) {
   // pinned navbar inside the auto-height iframe: embed.js sends the iframe's top edge in the host window; shift the navbar down by what scrolled out
   addEventListener('message', (e) => { const d = e.data; if (e.source !== parent || !d || d.type !== 'bbu-host-scroll' || !Number.isFinite(d.top)) return;
     const nav = document.querySelector<HTMLElement>('.topnav'); if (!nav) return; const y = Math.max(0, Math.min(-d.top, document.documentElement.scrollHeight - nav.offsetHeight - nav.offsetTop));
-    nav.style.transform = y ? `translateY(${y}px)` : ''; nav.classList.toggle('pinned', y > 0); });
+    nav.style.transform = y ? `translateY(${y}px)` : ''; nav.classList.toggle('pinned', y > 0); hostTop = d.top; document.querySelectorAll<HTMLDialogElement>('dialog.lightbox[open]').forEach(fitModal); });
   new ResizeObserver(post).observe(document.body); addEventListener('load', post); post();
 }
 
@@ -325,7 +332,7 @@ if (document.documentElement.classList.contains('embed') && parent !== window) {
     const all = [...document.querySelectorAll<HTMLInputElement>('input[data-race]')].map((i) => i.dataset.race!), on = force ?? picked(all);
     for (const k of all) { const key = 'off' + k.replace(/\W/g, ''); if (on.includes(k)) delete root.dataset[key]; else root.dataset[key] = '1'; }
     // main map + page 1 charts + race cards
-    document.querySelectorAll<SVGElement | HTMLElement>('.mainmap [data-course], .tlcut [data-course], .racecard[data-course]').forEach((e) => (e.style.display = on.includes(e.dataset.course!) ? '' : 'none'));
+    document.querySelectorAll<SVGElement | HTMLElement>('.mainmap [data-course], .tlcut [data-course]').forEach((e) => (e.style.display = on.includes(e.dataset.course!) ? '' : 'none'));
     // page-1 elevation chart: body for exactly the visible races, scaled to the longest visible route
     { const pb = document.querySelector<SVGGElement>('svg.profile g.pbody'), prof2 = pb?.ownerSVGElement; if (pb && prof2) { const key = on.join(',');
       origProf ??= { s: pb.innerHTML, x: HD0.profile.x, y: HD0.profile.y };
@@ -369,8 +376,8 @@ if (document.documentElement.classList.contains('embed') && parent !== window) {
   let moved: { el: HTMLElement; parent: Node; next: Node | null } | null = null;
   const restore = () => { if (moved) { moved.parent.insertBefore(moved.el, moved.next); moved = null; } };
   const openRace = (k: string) => { if (!rbox) return; const pg = document.getElementById(`course-${k}`); if (!pg) return; restore();
-    moved = { el: pg, parent: pg.parentNode!, next: pg.nextSibling }; rbox.querySelector('.lb-body')!.appendChild(pg); if (!rbox.open) rbox.showModal(); rbox.scrollTop = 0; };
-  rbox?.addEventListener('close', () => { restore(); if (/^#course-/.test(location.hash)) history.replaceState(null, '', location.pathname + location.search); });
+    moved = { el: pg, parent: pg.parentNode!, next: pg.nextSibling }; rbox.querySelector('.lb-body')!.appendChild(pg); if (!rbox.open) { embedModal(rbox, true); rbox.showModal(); } rbox.scrollTop = 0; };
+  rbox?.addEventListener('close', () => { embedModal(rbox, false); restore(); if (/^#course-/.test(location.hash)) history.replaceState(null, '', location.pathname + location.search); });
   document.querySelectorAll<HTMLButtonElement>('.rc-open').forEach((b) => b.addEventListener('click', () => { openRace(b.dataset.course!); history.replaceState(null, '', `#course-${b.dataset.course}`); }));
   // print from inside a lightbox: put the page back first so print order is unchanged
   addEventListener('beforeprint', () => { if (rbox?.open) { const k = moved?.el.dataset.course; restore(); rbox.close(); /* put the race page back synchronously (the dialog close event is async) */ if (k && document.body.classList.contains('printone')) document.querySelectorAll('.coursepage').forEach((p) => p.classList.toggle('on', (p as HTMLElement).dataset.course === k)); } if (sbox?.open) sbox.close(); });
@@ -381,8 +388,8 @@ if (document.documentElement.classList.contains('embed') && parent !== window) {
     if (main && host && mk) { const m = /translate\(([-\d.]+)[ ,]+([-\d.]+)\)/.exec(mk.getAttribute('transform') || ''); if (m) { const x = +m[1], y = +m[2], R = main.viewBox.baseVal.width / 4.5;
       const cl = main.cloneNode(true) as SVGSVGElement; cl.removeAttribute('id'); cl.classList.remove('mainmap'); cl.classList.add('stzoom'); cl.querySelectorAll('g.hov,.daynight,g.layer[data-layer="dots"] circle').forEach((e) => e.remove()); cl.querySelectorAll<SVGGElement>('g.zv').forEach((g) => g.removeAttribute('transform'));
       cl.setAttribute('viewBox', `${x - R} ${y - R * 0.7} ${2 * R} ${1.4 * R}`); cl.removeAttribute('width'); cl.removeAttribute('height'); cl.style.cssText = 'width:100%;height:auto;aspect-ratio:2/1.4'; host.appendChild(cl); } }
-    if (!sbox.open) sbox.showModal(); };
-  sbox?.addEventListener('close', () => { if (/^#station-/.test(location.hash)) history.replaceState(null, '', location.pathname + location.search); });
+    if (!sbox.open) { embedModal(sbox, true); sbox.showModal(); } };
+  sbox?.addEventListener('close', () => { embedModal(sbox, false); if (/^#station-/.test(location.hash)) history.replaceState(null, '', location.pathname + location.search); });
   // clicks: station markers on the main map (instead of jumping to Google Maps; the lightbox links there), heat-map icons, race-table names
   document.addEventListener('click', (e) => { const t = e.target as Element; if (!(t instanceof Element)) return;
     const a = t.closest<Element>('g.stpick, a.stlink'); if (!a || a.closest('.lightbox.stbox')) return; const k = (a as HTMLElement).dataset?.station ?? a.getAttribute('data-station'); if (!k) return;

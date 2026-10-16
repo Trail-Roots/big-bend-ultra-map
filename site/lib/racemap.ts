@@ -6,6 +6,7 @@ import { turnaround } from './panels';
 // the build fails if a label cannot be placed clear of the route, roads, markers, arrows, bib and the other labels.
 import { hillImage, chevron } from './mainmap';
 import { bib, BIB } from './panels';
+import { accessPatterns } from './mainmap';
 import { viewProjection, SHEET, f1, esc, station, gmapLink, leaderLine } from './util';
 import { STATION_TPL } from './labels';
 
@@ -26,7 +27,12 @@ export function renderRaceMap(c, k: string, card?: boolean) {
   const O: string[] = c.courses.order, nk = O[O.indexOf(k) - 1];
   if (nk) { const nf = c.courseGeo[nk].features[0]; sample(V.lines(nf)); s += `<path d="${V.path(nf)}" class="ln under" data-course="${nk}" stroke="${c.courses.colors[nk]}" stroke-width="7" stroke-opacity=".28"/>`; }
   const rf = c.courseGeo[k].features[0], d = V.path(rf); sample(V.lines(rf));
-  s += `<path d="${d}" class="ln" stroke="#fff" stroke-width="11"/><path d="${d}" class="ln" stroke="${cc}" stroke-width="7"/>`;
+  // race route = race-colour band (as the main map's race halo) under the trail-type patterns of the on-course network it follows (no white casing)
+  { const G = new Map<string, 1>(), cell = 4, key = (x: number, y: number) => `${Math.round(x / cell)},${Math.round(y / cell)}`;
+    for (const l of V.lines(rf)) for (let i = 1; i < l.length; i++) { const [a, b] = [l[i - 1], l[i]], n = Math.max(1, Math.ceil(Math.hypot(b[0] - a[0], b[1] - a[1]) / 2)); for (let j = 0; j <= n; j++) G.set(key(a[0] + (b[0] - a[0]) * j / n, a[1] + (b[1] - a[1]) * j / n), 1); }
+    const near = (x: number, y: number) => { for (let dx = -1; dx <= 1; dx++) for (let dy = -1; dy <= 1; dy++) if (G.has(`${Math.round(x / cell) + dx},${Math.round(y / cell) + dy}`)) return true; return false; };
+    const on = c.network.features.filter((f) => f.properties.on_course && (() => { const P = V.lines(f).flat(); return P.length && P.filter(([x, y]) => near(x, y)).length / P.length >= 0.7; })());
+    s += `<path d="${d}" class="ln" stroke="${cc}" stroke-width="15" stroke-linejoin="round" stroke-opacity=".55"/>` + accessPatterns(on, V, col); }
   // arrows: this race's arrows, at the main map's arrow size
   const arrows = c.arrows.features.filter((f) => f.properties.map === k).map((f) => ({ ...f, properties: { ...f.properties, size_pt: 12.4 } }));
   const ob: Bx[] = [];
@@ -40,7 +46,7 @@ export function renderRaceMap(c, k: string, card?: boolean) {
   for (const st of sts) { const S = c.stations.stations[st], [x, y] = V.p(S.lonlat), r = R(st); const rb = r * 1.45; ob.push({ x0: x - rb, x1: x + rb, y0: y - rb, y1: y + rb }); // includes the aid badge
     s += gmapLink(S.place ?? S.link_lonlat ?? S.lonlat, st === 'S/F' ? S.name : `Aid station ${st} · ${S.name}`, station(x, y, st, S.spectator, st === 'S/F' ? { s: 2900, fs: 34, colors: col } : { colors: col })); }
   // full bib (START band), top-right, scaled up to race-page size
-  const BS = 2.2, bx = W - 18 - BIB.w * BS, by = 18; ob.push({ x0: bx - 4, x1: W, y0: 0, y1: by + BIB.h * BS + 4 });
+  const BS = card ? (0.2 * W) / BIB.w /* card: bib ~20% of the frame width, readable at card size */ : 2.2, bx = W - 18 - BIB.w * BS, by = 18; ob.push({ x0: bx - 4, x1: W, y0: 0, y1: by + BIB.h * BS + 4 });
   const bibSvg = `<g transform="translate(${f1(bx)} ${f1(by)}) scale(${BS})">${bib(k, c.courses.courses[k].start, cc, BIB.w, BIB.h, col, 'band', [0, 0])}</g>`;
   // north arrow (SSOT site/lib/north.ts): first clear corner (top-left, bottom-left, bottom-right) by the shared size rule
   let northSvg = ''; { const ins = W * NORTH_INSET, nb0 = northBox(W, 0, 0);

@@ -9,7 +9,14 @@
   f.src = base.href + '?view=embed&h=auto'; f.title = 'Big Bend Ultra course map'; f.loading = 'lazy'; f.className = 'bbu-embed';
   f.setAttribute('allow', 'fullscreen'); f.style.cssText = 'display:block;width:100%;border:0;height:' + (s.dataset.height || '900') + 'px';
   s.parentNode.insertBefore(f, s.nextSibling);
+  // lightbox open inside the iframe: hold the host scroll position (no jump when the dialog takes focus), restore it on close
+  var held = null;
+  function hold() { if (held) window.scrollTo(held[0], held[1]); }
   addEventListener('message', function (e) {
+    if (e.origin === origin && e.source === f.contentWindow && e.data && e.data.type === 'bbu-modal') {
+      if (e.data.open) { held = [scrollX, scrollY]; requestAnimationFrame(hold); setTimeout(hold, 60); } else { var h0 = held; held = null; if (h0) { window.scrollTo(h0[0], h0[1]); requestAnimationFrame(function () { window.scrollTo(h0[0], h0[1]); }); } }
+      return;
+    }
     if (e.origin !== origin || e.source !== f.contentWindow || !e.data || e.data.type !== 'bbu-embed-height') return;
     var h = Math.ceil(+e.data.height); if (h > 0) f.style.height = h + 'px';
     send(); pos();

@@ -56,7 +56,7 @@ for (const k of ORDER) {
   const fin: number[] = s.finish_s, dnf = s.status.DNF ?? 0, q = (p: number) => fin[Math.min(fin.length - 1, Math.floor(p * fin.length))];
   // expected 2027 starters: registrant counts are not public (RunSignup participants API: Permission Denied) ->
   // historical starters for this exact event (2026 = the only year on the current courses, except 10K/20K which also ran 2019-2025 on similar courses)
-  dist[k] = { source_event: `${e26.year} ${s.name}`, finish_s: fin, finishers: fin.length, dnf, starters: fin.length + dnf, expected_starters: EXP[k] ?? fin.length + dnf, expected_basis: EXP[k] != null ? 'sources/curated/site.json expectedRunners' : '2026 starters (finishers + DNF); 2027 registrant counts not publicly accessible', scale: (EXP[k] ?? fin.length + dnf) / (fin.length + dnf), q10: q(0.1), q50: q(0.5), q90: q(0.9) };
+  dist[k] = { source_event: `${e26.year} ${s.name}`, finish_s: fin, finishers: fin.length, dnf, starters: fin.length + dnf, expected_starters: EXP[k] ?? fin.length + dnf, expected_basis: EXP[k] != null ? 'sources/curated/site.json expectedRunners' : '2026 starters (finishers + DNF); 2027 registrant counts not publicly accessible', scale: (EXP[k] ?? fin.length + dnf) / fin.length, q10: q(0.1), q50: q(0.5), q90: q(0.9) };
 }
 
 // ---------- pace model along each course ----------
@@ -152,7 +152,7 @@ function curvesFor(k: string) {
   return { fitOf: dist[k].finish_s.map((s0: number) => (Math.round(fit(s0 / 60 / D, PAR) * 10) / 10).toFixed(1)), byFit: out };
 }
 // ---------- simulate: one runner per 2026 finisher (scaled to expected starters) ----------
-// DNF runners (assumption): they follow the median finisher's pace and stop at the course's middle aid-station visit.
+// No DNF runners are simulated (2026 finishers only).
 const T0 = Math.floor(Math.min(...ORDER.map(start), d17.dawn) / 60) * 60 - 60, T1 = 26 * 60; // window: 1 h before first start .. 2:00 next day
 const nb = Math.ceil((T1 - T0) / BIN), bins = (n: number) => new Array(n).fill(0);
 const out: any = { source: RS.source, fetched: RS.fetched, generated: new Date().toISOString(), date: '2027-01-17', window: [T0, T1], bin_min: BIN, sun, caps, history, courses: {}, stations: {} };
@@ -163,6 +163,8 @@ const stByCourse: Record<string, Record<string, number[]>> = {};
 // arrive 15-75 min before their start (triangular, mode 45 min before), finishers stay 60-120 min (uniform) after finishing.
 const PRE = 0, LINGER = 0, PASS_LINGER = 0, crowd = bins(nb), crowdBy: Record<string, number[]> = {}, idle = bins(nb), idleBy: Record<string, number[]> = {};
 const ARR = { lo: 15, mode: 45, hi: 75 }, STAY = { lo: 60, hi: 120 };
+// post-finish stay 60-120 min, capped at 60 min for finishes after 7p and 30 min after 9p
+const stayFor = (fin: number, v: number) => { const m = ((fin % 1440) + 1440) % 1440, cap = m >= 21 * 60 || fin >= 1440 ? 30 : m >= 19 * 60 ? 60 : 120; return Math.min(cap, STAY.lo + v * (STAY.hi - STAY.lo)); };
 const triQ = (u: number) => { const { lo, mode, hi } = ARR, F = (mode - lo) / (hi - lo); return u < F ? lo + Math.sqrt(u * (hi - lo) * (mode - lo)) : hi - Math.sqrt((1 - u) * (hi - lo) * (hi - mode)); };
 const idleSpan = (k: string, a: number, b: number) => { for (let bb = 0; bb < nb; bb++) { const t = T0 + (bb + 0.5) * BIN; if (t >= a && t < b) { idle[bb] += W8[k]; (idleBy[k] ??= bins(nb))[bb] += W8[k]; } } };
 const W8: Record<string, number> = Object.fromEntries(ORDER.map((k) => [k, dist[k].scale]));
@@ -176,7 +178,7 @@ for (const k of ORDER) {
   const D = dist[k], SG = start(k), cuts = cutoffs[k], total = courses.courses[k].distance_mi;
   const midStop = cuts[Math.floor(cuts.length / 2)].mile;
   const R: { T: number; stop?: number }[] = D.finish_s.map((s: number) => ({ T: s / 60 }));
-  for (let i = 0; i < D.dnf; i++) R.push({ T: D.q50 / 60, stop: midStop });
+  void midStop; // no DNF simulation: only historical finishers, each at their actual finish time (no cutoff truncation)
   runners[k] = R;
   if (R.some((_, i) => startDelay(i, R.length) < 0 || startDelay(i, R.length) > 2)) throw new Error(`[timeline] ${k}: a start before the gun`);
   const onCourse = bins(nb); stByCourse[k] = {};
@@ -191,7 +193,7 @@ for (const k of ORDER) {
     for (const c of cuts) { if (c.station === 'S/F' && c.mile > 0 && c.mile < total - 0.01 && (r.stop == null || c.mile <= r.stop)) presence(k, S0 + r.T * fracAt(k, c.mile, r.T)); }
     // inactive runners at the finish area (deterministic quantiles per runner)
     const u = (ri + 0.5) / R.length, v = ((ri * 0.618034) % 1);
-    idleSpan(k, SG - triQ(u), SG); if (r.stop == null) idleSpan(k, S0 + r.T, S0 + r.T + STAY.lo + v * (STAY.hi - STAY.lo));
+    idleSpan(k, SG - triQ(u), SG); if (r.stop == null) idleSpan(k, S0 + r.T, S0 + r.T + stayFor(S0 + r.T, v));
     for (const c of cuts) { if (c.mile === 0 || (r.stop != null && c.mile > r.stop)) continue; const t = S0 + r.T * fracAt(k, c.mile, r.T), b = Math.floor((t - T0) / BIN); if (b >= 0 && b < nb) { stBins[c.station][b] += W8[k]; (stByCourse[k][c.station] ??= bins(nb))[b] += W8[k]; } }
   });
   const S0 = SG;
@@ -222,7 +224,7 @@ out.assumptions = [
   'Expected 2027 starters = 2026 starters (finishers + DNF): 2027 registrant counts are not public (RunSignup participants endpoint returns Permission Denied). 2027 caps from RunSignup are shown for reference only.',
   'Pre-2026 years ran 50M / 50K / 30K (plus 10K, 20K) on different courses: used for volume history only, not for times.',
   `Pace along the course: grade-adjusted curve on the 0.25 mi-smoothed profile (see pace_model.params), deviation from flat scaled by fitness (avg pace / 20 min/mi)^beta; fatigue on 100K/55K; climb fatigue ${PAR.climbFat} per 10,000 ft gained; aid-station dwell ${PAR.dwell} min base, scaled 0.5× (start) to 1.5× (finish) by race position and halved when the previous visit was < 3 mi earlier; each runner normalised to their real 2026 finish time. Parameters tuned by grid search against 2026 Waterhole timing-mat splits (pace_model.validation).`,
-  'DNF runners follow the 2026 median finisher pace and stop at the middle aid-station visit of their course.',
+  'No DNF simulation: the runners are the 2026 finishers only (RunSignup results), each at their actual finish time with elevation-adjusted pacing between stations, not truncated by 2027 cutoffs; counts scale by expected runners / 2026 finishers.',
   'Start times and station hours/cutoffs from the race sheet (content/); Start times match RunSignup 2027 (race 163892): 100K 5:30a, 55K 7a, 35K 8a, 20K 8:30a, 10K 9a.',
 ];
 fs.writeFileSync(path.join(ROOT, 'content/timeline.json'), JSON.stringify(out) + '\n');

@@ -38,20 +38,8 @@ export function renderMain(c) {
   // on-course access runs: casing first, then patterns (draw order as in make.py)
   const on = net.filter(f => f.properties.on_course);
   let cas = '', pat = '';
-  // Dash patterns restart per path and get garbled on GPS jitter: per access class, merge contiguous pieces into
-  // single continuous chains (shared sections drawn once), simplify (DP 1.5 pt) and Chaikin-smooth in page space.
-  const smoothD = (cls: string) => mergeChains(on.filter(f => f.properties.cls === cls).flatMap(f => V.lines(f)))
-    .map(l => 'M' + chaikin(simplifyPts(l, 1.5), 2).map(q => `${f1(q[0])},${f1(q[1])}`).join('L')).join('');
-  const D: Record<string, string> = Object.fromEntries(['foot_bike', 'unpaved', '4x4', 'foot'].map(k => [k, smoothD(k)]));
-  const T4 = mergeChains(on.filter(f => f.properties.cls === '4x4').flatMap(f => V.lines(f))).map(l => chaikin(simplifyPts(l, 1.5), 2));
-  for (const cls of ['foot_bike', 'unpaved', '4x4']) if (D[cls]) cas += `<path d="${D[cls]}" class="ln" stroke="#fff" stroke-width="12"/>`;
-  const d0 = (k: string) => D[k];
-  for (const cls of ['foot_bike', 'unpaved', '4x4', 'foot']) if (D[cls]) {
-    if (cls === 'unpaved') { pat += `<path d="${d0(cls)}" class="ln" stroke="${col.ink}" stroke-width="6" stroke-dasharray="${dash([7.3, 0.7], 6)}" stroke-linecap="butt"/><path d="${d0(cls)}" class="ln" stroke="#fff" stroke-width="1.4" stroke-linecap="butt"/>`; continue; } // unpaved: long dash of double track + small gap (the pre-Oct-16 4x4 style)
-    if (cls === '4x4') { pat += tireTrack(T4, col.ink, 8.5, 4.6); continue; } // 4x4: tire tread (Erik's reference image)
-    const s = STYLE.on[cls], d = D[cls];
-    pat += `<path d="${d}" class="ln" stroke="${col.ink}" stroke-width="${s.lw}" stroke-dasharray="${dash(s.pat, s.lw)}" stroke-linecap="butt"/>` + (s.rail ? `<path d="${d}" class="ln" stroke="#fff" stroke-width="${s.rail}" stroke-linecap="butt"/>` : '');
-  }
+  // trail-type patterns only, no white casing (so a race-colour band beneath shows through)
+  pat = accessPatterns(on, V, col); void cas;
   add('access', cas + pat);
   // race subset (race filter): a colour HALO beneath each visible race's route, under the roads / trail-type patterns so the trail type always shows
   // on top; one composited group (opacity on the group) drawn longest race first, so on shared sections the shortest race's colour wins.
@@ -142,4 +130,23 @@ function legend(c, W, H) {
     s += `<text x="${f1(x0 + 0.25 * w)}" y="${f1(y)}" font-size="21" dominant-baseline="central" fill="${col.ink}">${esc(txt)}</text>`;
   });
   return s + '</g>';
+}
+
+/** on-course trail-type patterns (SSOT for the main map and the race / card maps): merged, smoothed chains per access class, no casing */
+export function accessPatterns(on: any[], V: any, col: any) {
+  let cas = '', pat = '';
+  // Dash patterns restart per path and get garbled on GPS jitter: per access class, merge contiguous pieces into
+  // single continuous chains (shared sections drawn once), simplify (DP 1.5 pt) and Chaikin-smooth in page space.
+  const smoothD = (cls: string) => mergeChains(on.filter(f => f.properties.cls === cls).flatMap(f => V.lines(f)))
+    .map(l => 'M' + chaikin(simplifyPts(l, 1.5), 2).map(q => `${f1(q[0])},${f1(q[1])}`).join('L')).join('');
+  const D: Record<string, string> = Object.fromEntries(['foot_bike', 'unpaved', '4x4', 'foot'].map(k => [k, smoothD(k)]));
+  const T4 = mergeChains(on.filter(f => f.properties.cls === '4x4').flatMap(f => V.lines(f))).map(l => chaikin(simplifyPts(l, 1.5), 2));
+  const d0 = (k: string) => D[k];
+  for (const cls of ['foot_bike', 'unpaved', '4x4', 'foot']) if (D[cls]) {
+    if (cls === 'unpaved') { pat += `<path d="${d0(cls)}" class="ln" stroke="${col.ink}" stroke-width="6" stroke-dasharray="${dash([7.3, 0.7], 6)}" stroke-linecap="butt"/><path d="${d0(cls)}" class="ln" stroke="#fff" stroke-width="1.4" stroke-linecap="butt"/>`; continue; } // unpaved: long dash of double track + small gap (the pre-Oct-16 4x4 style)
+    if (cls === '4x4') { pat += tireTrack(T4, col.ink, 8.5, 4.6); continue; } // 4x4: tire tread (Erik's reference image)
+    const s = STYLE.on[cls], d = D[cls];
+    pat += `<path d="${d}" class="ln" stroke="${col.ink}" stroke-width="${s.lw}" stroke-dasharray="${dash(s.pat, s.lw)}" stroke-linecap="butt"/>` + (s.rail ? `<path d="${d}" class="ln" stroke="#fff" stroke-width="${s.rail}" stroke-linecap="butt"/>` : '');
+  }
+  void cas; return pat;
 }
