@@ -19,7 +19,7 @@ type Course = (typeof ORDER)[number];
 const C: Record<Course, string> = { '100K': '#d6336c', '55K': '#e8891c', '35K': '#3d8b3d', '20K': '#1f6fb2', '10K': '#7b3fa0' };
 const NAME: Record<string, string> = { 'S/F': 'Start / Finish', '1': 'Waterhole', '2': 'Contrabando', '3': 'Whit Roy', '4': 'Shutup', '5': 'Solitario' };
 // long (full) names: official race-sheet names; Start/Finish from the race calendar location
-const LONG: Record<string, string> = { 'S/F': 'Barton Warnock Visitor Center', '1': 'On Access Rd', '2': 'West Contrabando', '3': 'Whit Roy Mine', '4': 'Righthand Shutup', '5': 'Paso al Solitario' };
+const LONG: Record<string, string> = { 'S/F': 'Barton Warnock Visitor Center', '1': 'At Buena Suerte Rd', '2': 'West Contrabando', '3': 'Whit Roy Mine', '4': 'Righthand Shutup', '5': 'Paso al Solitario' };
 const KN: Record<string, string> = { 'S/F': 'Start / Finish Line', '1': 'Waterhole Aid', '2': 'Contrabando Aid', '3': 'Whit Roy Aid', '4': 'Right Hand Shutup Aid', '5': 'Solitario Aid' };
 const SPEC = new Set(['S/F', '2']);
 const RINCON: XY = [-103.8572918, 29.4076521];
