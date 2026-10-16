@@ -100,7 +100,7 @@ export function heatRows(c: Ctx, o: HO) {
     const sf = k === 'S/F', v15 = series(k) ?? [], maxP = Math.max(1, ...v15), y0 = sTop + r * SR, name = sf ? 'Start / Finish' : T.stations[k]?.name ?? c.stations.stations[k].name;
     const ms = Math.min(950, (SR - 6) ** 2 / 1.8), mr = Math.sqrt(ms * 1.8) / 2;
     let g = sf ? `<title>Start / Finish shaded on its own scale (peak ${Math.round(maxP)} people); aid stations share one scale</title>` : '';
-    v15.forEach((v: number, i: number) => { if (!v) return; const x = X(t0 + i * B); if (x > RX) return; g += `<rect class="hc" data-i="${i}" x="${f1(x)}" y="${f1(y0 + 4)}" width="${f1(X(t0 + B) - X(t0) + 0.3)}" height="${f1(SR - 8)}" fill="${heat(Math.sqrt(Math.min(1, v / (sf ? maxP : GMAX))))}"/>`; });
+    v15.forEach((v: number, i: number) => { if (!v) return; const x = X(t0 + i * B); if (x > RX) return; g += `<rect class="hc" data-i="${i}" x="${f1(x)}" y="${f1(y0 + 4)}" width="${f1(X(t0 + B) - X(t0) + 0.3)}" height="${f1(SR - 8)}" fill="#b3261e" fill-opacity="${(0.06 + 0.9 * Math.sqrt(Math.min(1, v / maxP))).toFixed(2)}"/>`; });
     // cutoffs: a thick bar in the race colour with white diagonal "barrier" slashes, white edge, confined to this row; races sharing a station + time split the row
     const cm = new Map<number, string[]>();
     for (const kk of order) { const C = T.courses[kk]; for (const q of C.passes) { if (q.station !== k || q.mile === 0) continue; const tm = cutMin(q.cutoff); if (tm == null) continue; const t = tm < C.start ? tm + 1440 : tm; if (t >= t0 && t <= t1) (cm.get(t) ?? cm.set(t, []).get(t)!).push(kk); } }

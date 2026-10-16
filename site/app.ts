@@ -307,8 +307,8 @@ if (document.documentElement.classList.contains('embed') && parent !== window) {
     // heat map: per-race counts summed over the visible races (same scales: S/F own, aid stations shared)
     if (heatSrc && tlsvg) { const sum = (st: string) => { const by = heatSrc[st] as Record<string, number[]>; const n = Math.max(...Object.values(by).map((a) => a.length)); return Array.from({ length: n }, (_, i) => on.reduce((s, k) => s + (by[k]?.[i] ?? 0), 0)); };
       const sums: Record<string, number[]> = Object.fromEntries(Object.keys(heatSrc).map((st) => [st, sum(st)])), G = Math.max(1, ...Object.entries(sums).filter(([st]) => st !== 'S/F').flatMap(([, a]) => a));
-      tlsvg.querySelectorAll<SVGGElement>('g.tlst').forEach((g) => { const st = g.dataset.station!, a = sums[st]; if (!a) return; const m = st === 'S/F' ? Math.max(1, ...a) : G;
-        g.querySelectorAll<SVGRectElement>('rect.hc').forEach((rc) => { const v = a[+rc.dataset.i!] || 0; rc.style.display = v ? '' : 'none'; rc.setAttribute('fill', heatRamp(Math.sqrt(Math.min(1, v / m)))); }); }); }
+      tlsvg.querySelectorAll<SVGGElement>('g.tlst').forEach((g) => { const st = g.dataset.station!, a = sums[st]; if (!a) return; const m = Math.max(1, ...a); void G;
+        g.querySelectorAll<SVGRectElement>('rect.hc').forEach((rc) => { const v = a[+rc.dataset.i!] || 0; rc.style.display = v ? '' : 'none'; rc.setAttribute('fill-opacity', (0.06 + 0.9 * Math.sqrt(Math.min(1, v / m))).toFixed(2)); }); }); }
     void NSf; void HDt;
   };
   document.querySelectorAll<HTMLInputElement>('input[data-race]').forEach((cb) => cb.addEventListener('change', apply));

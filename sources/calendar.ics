@@ -7,24 +7,8 @@ X-WR-CALNAME:Race: Big Bend Ultra
 X-WR-TIMEZONE:America/Chicago
 X-WR-CALDESC:https://trailroots.com/big-bend-ultra
 BEGIN:VEVENT
-DTSTART:20270116T210000Z
-DTSTAMP:20261016T165959Z
-UID:3f0ob36u3bprflvvohvfbs1db6@google.com
-CREATED:20260602T203546Z
-DESCRIPTION:Drop bags must be labeled with:<br><ol><li>Your bib number</li>
- <li>The destination</li></ol>55K bags can go to Bravo / The Mines and Delta
-  / West Contrabando
-LAST-MODIFIED:20260602T203546Z
-LOCATION:Barton Warnock Visitor Center\, 21800 FM170\, Terlingua\, TX 79852
- \, USA
-SEQUENCE:0
-STATUS:CONFIRMED
-SUMMARY:🎒 Last call for 55K drop bags
-TRANSP:OPAQUE
-END:VEVENT
-BEGIN:VEVENT
 DTSTART:20260118T130000Z
-DTSTAMP:20261016T165959Z
+DTSTAMP:20261016T170741Z
 UID:6iofle6vvfk40bjvajf6kluu7b@google.com
 CREATED:20250905T011653Z
 DESCRIPTION:<a href="https://www.strava.com/routes/3372327015569488194" tar
@@ -42,44 +26,14 @@ SUMMARY:🟢 55K Race Start
 TRANSP:OPAQUE
 END:VEVENT
 BEGIN:VEVENT
-DTSTART:20260117T143000Z
-DTEND:20260117T153000Z
-DTSTAMP:20261016T165959Z
-UID:59drsbg53nd721fck05e5uhg73@google.com
-CREATED:20250905T011653Z
-DESCRIPTION:https://www.strava.com/routes/3178910612007281564
-LAST-MODIFIED:20260117T125318Z
-LOCATION:Lajitas Trail\, 22403 Lone Star Ranch Rd\, Terlingua\, TX 79852\, 
- USA
-SEQUENCE:0
-STATUS:CONFIRMED
-SUMMARY:🏃 Pre-race Shakeout
-TRANSP:OPAQUE
-END:VEVENT
-BEGIN:VEVENT
-DTSTART:20270117T154500Z
-DTSTAMP:20261016T165959Z
-UID:5fvg489r1bcgc9q9lg8mgm460e@google.com
-CREATED:20260602T203902Z
-DESCRIPTION:Due to the extreme remoteness\, runners who miss a cutoff will 
- be DNF and directed towards the finish. DNF runners may be pulled for safet
- y of the runner or volunteers.
-LAST-MODIFIED:20260602T205519Z
-LOCATION:Righthand Shutup\, Texas 79846\, USA
-SEQUENCE:1
-STATUS:CONFIRMED
-SUMMARY:⏱️ 100K Cutoff@Righthand Shutup Outbound
-TRANSP:OPAQUE
-END:VEVENT
-BEGIN:VEVENT
-DTSTART:20260117T170000Z
-DTSTAMP:20261016T165959Z
-UID:23hm7lj320qtmqsijrrie8p98p@google.com
-CREATED:20250905T011653Z
+DTSTART:20270116T170000Z
+DTSTAMP:20261016T170741Z
+UID:2n2kd8tkccmog5pa32uajn6e5i@google.com
+CREATED:20260602T203532Z
 DESCRIPTION:Drop bags must be labeled with:<br><ol><li>Your bib number</li>
  <li>The destination</li></ol>100K bags can go to Righthand Shutup and Paso 
  Al Sollitario stations.
-LAST-MODIFIED:20250905T011919Z
+LAST-MODIFIED:20260602T203532Z
 LOCATION:Barton Warnock Visitor Center\, 21800 FM170\, Terlingua\, TX 79852
  \, USA
 SEQUENCE:0
@@ -88,22 +42,25 @@ SUMMARY:🎒 Last call for 100K drop bags
 TRANSP:OPAQUE
 END:VEVENT
 BEGIN:VEVENT
-DTSTART:20270116T160000Z
-DTEND:20270116T220000Z
-DTSTAMP:20261016T165959Z
-UID:3r6ah1blofs0nor3ngatcg7l4m@google.com
-CREATED:20260602T203516Z
-LAST-MODIFIED:20260602T203517Z
+DTSTART:20270117T223000Z
+DTSTAMP:20261016T170741Z
+UID:6a7eue92ttmhk8othv4gbqek2o@google.com
+CREATED:20260602T204002Z
+DESCRIPTION:<a href="https://www.google.com/url?q=https://www.strava.com/ro
+ utes/3096511228948922814&amp\;sa=D&amp\;source=calendar&amp\;usd=2&amp\;usg
+ =AOvVaw2VBF25KLHkb5SienGm4zBW" target="_blank"><u>https://www.strava.com/ro
+ utes/3096511228948922814</u></a>
+LAST-MODIFIED:20260602T204002Z
 LOCATION:Barton Warnock Visitor Center\, 21800 FM170\, Terlingua\, TX 79852
  \, USA
 SEQUENCE:0
 STATUS:CONFIRMED
-SUMMARY:🎫 Packet Pickup
+SUMMARY:🛑 20K Finish
 TRANSP:OPAQUE
 END:VEVENT
 BEGIN:VEVENT
 DTSTART:20270117T170000Z
-DTSTAMP:20261016T165959Z
+DTSTAMP:20261016T170741Z
 UID:0a3omg00pa1jvpdc48de84krnj@google.com
 CREATED:20260602T203839Z
 DESCRIPTION:Due to the extreme remoteness\, runners who miss a cutoff will 
@@ -120,7 +77,7 @@ TRANSP:OPAQUE
 END:VEVENT
 BEGIN:VEVENT
 DTSTART:20270117T130000Z
-DTSTAMP:20261016T165959Z
+DTSTAMP:20261016T170741Z
 UID:596jckprpkggtj8c2cggnns1v3@google.com
 CREATED:20260602T203741Z
 DESCRIPTION:<a href="https://www.strava.com/routes/3450532671815509296" tar
@@ -138,447 +95,8 @@ SUMMARY:🟢 55K Race Start
 TRANSP:OPAQUE
 END:VEVENT
 BEGIN:VEVENT
-DTSTART:20270118T050000Z
-DTSTAMP:20261016T165959Z
-UID:2oef95o8c1q1gfh0ksb90hdtpa@google.com
-CREATED:20260602T204204Z
-DESCRIPTION:Due to the extreme remoteness\, runners who miss a cutoff will 
- be DNF and directed towards the finish. DNF runners may be pulled for safet
- y of the runner or volunteers.\n\nCourse is cleared up to this point and th
- is aid station is torn down.
-LAST-MODIFIED:20260602T222259Z
-LOCATION:29.31797692590845\, -103.79533238192568
-SEQUENCE:0
-STATUS:CONFIRMED
-SUMMARY:⏱️ 100K Cutoff@Waterhole
-TRANSP:OPAQUE
-END:VEVENT
-BEGIN:VEVENT
-DTSTART:20260118T223000Z
-DTSTAMP:20261016T165959Z
-UID:1en1d1hm1aq7ipnmf0hm2epk5b@google.com
-CREATED:20250905T011653Z
-DESCRIPTION:<a href="https://www.strava.com/routes/3096511228948922814" tar
- get="_blank"><u>https://www.strava.com/routes/3096511228948922814</u></a>
-LAST-MODIFIED:20250905T030239Z
-LOCATION:Barton Warnock Visitor Center\, 21800 FM170\, Terlingua\, TX 79852
- \, USA
-SEQUENCE:0
-STATUS:CONFIRMED
-SUMMARY:🛑 20K Finish
-TRANSP:OPAQUE
-END:VEVENT
-BEGIN:VEVENT
-DTSTART:20260118T143000Z
-DTSTAMP:20261016T165959Z
-UID:1vm41vnh7tusdmbsou2u94ts7q@google.com
-CREATED:20250905T011653Z
-DESCRIPTION:<a href="https://www.strava.com/routes/3096511228948922814" tar
- get="_blank"><u><u><u>Map</u></u></u></a> | <a href="https://docs.google.co
- m/spreadsheets/d/1FaLpRZymHeb9ZQaHVfkYU75aYyYEX9ilyPkpox_p_Yo/edit?gid=0#gi
- d=0" target="_blank" class="pastedDriveLink-0"><u><u><u>Cutoff Times</u></u
- ></u></a><br><br>Arrive 1 hour early to ensure you have time to park\, unlo
- ad\, walk to start line\, and warm up.
-LAST-MODIFIED:20250905T012717Z
-LOCATION:Barton Warnock Visitor Center\, 21800 FM170\, Terlingua\, TX 79852
- \, USA
-SEQUENCE:0
-STATUS:CONFIRMED
-SUMMARY:🟢 20K Race Start
-TRANSP:OPAQUE
-END:VEVENT
-BEGIN:VEVENT
-DTSTART:20261115T054500Z
-DTSTAMP:20261016T165959Z
-UID:3sbv49ualtgp5eluooma9rg68u@google.com
-CREATED:20260602T203328Z
-DESCRIPTION:<a href="https://www.google.com/url?q=https://trailroots.com/bi
- g-bend-ultra&amp\;sa=D&amp\;source=calendar&amp\;usd=2&amp\;usg=AOvVaw25940
- H7ew4JX2DJLRB0Eav" target="_blank">Register</a> before this time to avoid a
-  price increase
-LAST-MODIFIED:20260602T203328Z
-SEQUENCE:0
-STATUS:CONFIRMED
-SUMMARY:⏰ Registration: Price increase
-TRANSP:OPAQUE
-END:VEVENT
-BEGIN:VEVENT
-DTSTART:20260119T002000Z
-DTSTAMP:20261016T165959Z
-UID:1ig9s5opckumubq15kdvt2skk2@google.com
-CREATED:20250908T001737Z
-LAST-MODIFIED:20250908T001737Z
-SEQUENCE:0
-STATUS:CONFIRMED
-SUMMARY:🌙 Sunset
-TRANSP:OPAQUE
-END:VEVENT
-BEGIN:VEVENT
-DTSTART:20270117T214500Z
-DTSTAMP:20261016T165959Z
-UID:2o2oqv00rrlcofvm6fl1n7etfm@google.com
-CREATED:20260602T205557Z
-DESCRIPTION:Due to the extreme remoteness\, runners who miss a cutoff will 
- be DNF and directed towards the finish. DNF runners may be pulled for safet
- y of the runner or volunteers. \n\n Course is cleared up to this point and 
- this aid station is torn down.
-LAST-MODIFIED:20260602T205709Z
-LOCATION:Righthand Shutup\, Texas 79846\, USA
-SEQUENCE:0
-STATUS:CONFIRMED
-SUMMARY:⏱️ 100K Cutoff@Righthand Shutup Return
-TRANSP:OPAQUE
-END:VEVENT
-BEGIN:VEVENT
-DTSTART:20270117T150000Z
-DTSTAMP:20261016T165959Z
-UID:2a1ukansk4g5gcukd10jmf0nrk@google.com
-CREATED:20260602T203827Z
-DESCRIPTION:<a href="https://www.strava.com/routes/3476252579046666448" tar
- get="_blank"><u><u><u>Map</u></u></u></a> | <a href="https://docs.google.co
- m/spreadsheets/d/1FZw9u3cEPj2rPkT9pba0crKXQ9RnULilq0reSMw1LvU/edit?usp=shar
- ing" target="_blank" class="pastedDriveLink-0"><u><u><u>Cutoff Times</u></u
- ></u></a><br><br>Arrive 1 hour early to ensure you have time to park\, unlo
- ad\, walk to start line\, and warm up.
-LAST-MODIFIED:20260602T222223Z
-LOCATION:Barton Warnock Visitor Center\, 21800 FM170\, Terlingua\, TX 79852
- \, USA
-SEQUENCE:0
-STATUS:CONFIRMED
-SUMMARY:🟢 10K Race Start
-TRANSP:OPAQUE
-END:VEVENT
-BEGIN:VEVENT
-DTSTART:20270116T143000Z
-DTEND:20270116T153000Z
-DTSTAMP:20261016T165959Z
-UID:16m9t51g0c6m6afsbok61puusj@google.com
-CREATED:20260602T203502Z
-DESCRIPTION:<a href="https://www.google.com/url?q=https://www.strava.com/ro
- utes/3178910612007281564&amp\;sa=D&amp\;source=calendar&amp\;usd=2&amp\;usg
- =AOvVaw2uzF0LWSjn3oAf2iaEMg_Q" target="_blank">https://www.strava.com/route
- s/3178910612007281564</a>
-LAST-MODIFIED:20260602T203502Z
-LOCATION:Lajitas Trail\, 22403 Lone Star Ranch Rd\, Terlingua\, TX 79852\, 
- USA
-SEQUENCE:0
-STATUS:CONFIRMED
-SUMMARY:🏃 Pre-race Shakeout
-TRANSP:OPAQUE
-END:VEVENT
-BEGIN:VEVENT
-DTSTART:20260117T210000Z
-DTSTAMP:20261016T165959Z
-UID:6itbvfvv5teu4vg97kmpiobh95@google.com
-CREATED:20250905T011653Z
-DESCRIPTION:Drop bags must be labeled with:<br><ol><li>Your bib number</li>
- <li>The destination</li></ol>55K bags can go to Bravo / The Mines and Delta
-  / West Contrabando
-LAST-MODIFIED:20250905T011926Z
-LOCATION:Barton Warnock Visitor Center\, 21800 FM170\, Terlingua\, TX 79852
- \, USA
-SEQUENCE:0
-STATUS:CONFIRMED
-SUMMARY:🎒 Last call for 55K drop bags
-TRANSP:OPAQUE
-END:VEVENT
-BEGIN:VEVENT
-DTSTART:20260118T170000Z
-DTSTAMP:20261016T165959Z
-UID:03uqk2fbjkppckh5gcve16vbf6@google.com
-CREATED:20250905T011653Z
-DESCRIPTION:Due to the extreme remoteness\, runners who miss a cutoff will 
- be DNF and directed towards the finish. DNF runners may be pulled for safet
- y of the runner or volunteers.\n\nCourse is cleared up to this point and th
- is aid station is torn down.
-LAST-MODIFIED:20260111T173226Z
-LOCATION:West Contrabondo Trailhead\, W Main Trail\, Redford\, TX 79846\, U
- SA
-SEQUENCE:1
-STATUS:CONFIRMED
-SUMMARY:⏱️ 35K Cutoff@Delta
-TRANSP:OPAQUE
-END:VEVENT
-BEGIN:VEVENT
-DTSTART:20270117T135000Z
-DTSTAMP:20261016T165959Z
-UID:6i02eo0atlqbd6v6oqbe1v03gv@google.com
-CREATED:20260602T203752Z
-LAST-MODIFIED:20260602T203752Z
-SEQUENCE:0
-STATUS:CONFIRMED
-SUMMARY:☀️ Sunrise
-TRANSP:OPAQUE
-END:VEVENT
-BEGIN:VEVENT
-DTSTART;VALUE=DATE:20270117
-DTEND;VALUE=DATE:20270118
-DTSTAMP:20261016T165959Z
-UID:31igb487i5drdg6ju2v9e8tcsq@google.com
-CREATED:20260602T203641Z
-DESCRIPTION:Please read <a href="https://trailroots.com/regulations" target
- ="_blank"><u><u>https://trailroots.com/regulations</u></u></a>.<br><br>100K
-  must purchase <a href="https://www.t-mobile.com/coverage/satellite-phone-s
- ervice">https://www.t-mobile.com/coverage/satellite-phone-service</a>
-LAST-MODIFIED:20260902T003834Z
-SEQUENCE:0
-STATUS:CONFIRMED
-SUMMARY:ℹ️ Event FAQ
-TRANSP:OPAQUE
-END:VEVENT
-BEGIN:VEVENT
-DTSTART:20251117T054500Z
-DTSTAMP:20261016T165959Z
-UID:0k44b1ds86bj17sfhumarlgfe6@google.com
-CREATED:20250905T011653Z
-DESCRIPTION:<a href="https://www.google.com/url?q=https://trailroots.com/bi
- g-bend-ultra&amp\;sa=D&amp\;source=calendar&amp\;usd=2&amp\;usg=AOvVaw0rLAb
- bX7Ge4-QMza35VW_i" target="_blank">Register</a> before this time to avoid a
-  price increase
-LAST-MODIFIED:20250905T011840Z
-SEQUENCE:1
-STATUS:CONFIRMED
-SUMMARY:⏰ Registration: Price increase
-TRANSP:OPAQUE
-END:VEVENT
-BEGIN:VEVENT
-DTSTART:20260118T223000Z
-DTSTAMP:20261016T165959Z
-UID:0u62pujntkm5jtp7275jeeq0a2@google.com
-CREATED:20250905T011653Z
-DESCRIPTION:<a href="https://www.strava.com/routes/3372351312211083382" tar
- get="_blank"><u>https://www.strava.com/routes/3372351312211083382</u></a>
-LAST-MODIFIED:20250905T030247Z
-LOCATION:Barton Warnock Visitor Center\, 21800 FM170\, Terlingua\, TX 79852
- \, USA
-SEQUENCE:0
-STATUS:CONFIRMED
-SUMMARY:🛑 35K Finish
-TRANSP:OPAQUE
-END:VEVENT
-BEGIN:VEVENT
-DTSTART:20260118T135000Z
-DTSTAMP:20261016T165959Z
-UID:2jcneiakr78e9opkibv82bo4jr@google.com
-CREATED:20250908T001653Z
-LAST-MODIFIED:20250908T001701Z
-SEQUENCE:0
-STATUS:CONFIRMED
-SUMMARY:☀️ Sunrise
-TRANSP:OPAQUE
-END:VEVENT
-BEGIN:VEVENT
-DTSTART:20270116T213000Z
-DTEND:20270116T220000Z
-DTSTAMP:20261016T165959Z
-UID:0ar0e9j1e1ehd5bq9get8gojvg@google.com
-CREATED:20260602T203600Z
-LAST-MODIFIED:20260902T003542Z
-LOCATION:Barton Warnock Visitor Center\, 21800 FM170\, Terlingua\, TX 79852
- \, USA
-SEQUENCE:0
-STATUS:CONFIRMED
-SUMMARY:📆 Race Briefing
-TRANSP:OPAQUE
-END:VEVENT
-BEGIN:VEVENT
-DTSTART:20270117T223000Z
-DTSTAMP:20261016T165959Z
-UID:70gl3qmvh8hf3ulmnspae1jldj@google.com
-CREATED:20260602T204015Z
-DESCRIPTION:<a href="https://www.google.com/url?q=https://www.strava.com/ro
- utes/3372351312211083382&amp\;sa=D&amp\;source=calendar&amp\;usd=2&amp\;usg
- =AOvVaw2wKiabTYYYebU15bCN1443" target="_blank"><u>https://www.strava.com/ro
- utes/3372351312211083382</u></a>
-LAST-MODIFIED:20260602T204015Z
-LOCATION:Barton Warnock Visitor Center\, 21800 FM170\, Terlingua\, TX 79852
- \, USA
-SEQUENCE:0
-STATUS:CONFIRMED
-SUMMARY:🛑 35K Finish
-TRANSP:OPAQUE
-END:VEVENT
-BEGIN:VEVENT
-DTSTART:20251226T054500Z
-DTSTAMP:20261016T165959Z
-UID:27k1ldmhakvltim5vb3k69u2nu@google.com
-CREATED:20250905T011653Z
-DESCRIPTION:<a href="https://trailroots.com/big-bend-ultra">Register</a> be
- fore this time to ensure you receive finisher swag!
-LAST-MODIFIED:20250908T003304Z
-SEQUENCE:1
-STATUS:CONFIRMED
-SUMMARY:⏰ Registration: Last day for swag guarantee
-TRANSP:OPAQUE
-END:VEVENT
-BEGIN:VEVENT
-DTSTART:20270117T103000Z
-DTEND:20270117T143000Z
-DTSTAMP:20261016T165959Z
-UID:5rv7r9qockd5k7uqa4ieteu7pg@google.com
-CREATED:20260602T203714Z
-LAST-MODIFIED:20260602T203714Z
-LOCATION:Barton Warnock Visitor Center\, 21800 FM170\, Terlingua\, TX 79852
- \, USA
-SEQUENCE:0
-STATUS:CONFIRMED
-SUMMARY:🎫 Packet Pickup
-TRANSP:OPAQUE
-END:VEVENT
-BEGIN:VEVENT
-DTSTART:20260119T003000Z
-DTSTAMP:20261016T165959Z
-UID:0vi3imeo31773mek2rfdq4e8l1@google.com
-CREATED:20250905T011653Z
-DESCRIPTION:<a href="https://www.google.com/url?q=https://www.strava.com/ro
- utes/3372327015569488194&amp\;sa=D&amp\;source=calendar&amp\;usd=2&amp\;usg
- =AOvVaw1OpbHuRi4Zy7TJ2KjeLDNm" target="_blank">https://www.strava.com/route
- s/3372327015569488194</a>
-LAST-MODIFIED:20250905T012101Z
-LOCATION:Barton Warnock Visitor Center\, 21800 FM170\, Terlingua\, TX 79852
- \, USA
-SEQUENCE:0
-STATUS:CONFIRMED
-SUMMARY:🛑 55K Finish
-TRANSP:OPAQUE
-END:VEVENT
-BEGIN:VEVENT
-DTSTART;VALUE=DATE:20260118
-DTEND;VALUE=DATE:20260119
-DTSTAMP:20261016T165959Z
-UID:3os3c1qneqps37mblb7b72umfn@google.com
-CREATED:20250905T011653Z
-DESCRIPTION:Read our <a href="https://trailroots.com/race-prep" target="_bl
- ank">race prep guide</a> to make sure you have the gear you need.
-LAST-MODIFIED:20260118T003210Z
-SEQUENCE:1
-STATUS:CONFIRMED
-SUMMARY:ℹ️ Event FAQ
-TRANSP:OPAQUE
-END:VEVENT
-BEGIN:VEVENT
-DTSTART:20270117T143000Z
-DTSTAMP:20261016T165959Z
-UID:0khn7se24avk3me3phocuic846@google.com
-CREATED:20260602T203814Z
-DESCRIPTION:<a href="https://www.strava.com/routes/3476258112199931088" tar
- get="_blank"><u><u>Map</u></u></a> | <a href="https://docs.google.com/sprea
- dsheets/d/1FZw9u3cEPj2rPkT9pba0crKXQ9RnULilq0reSMw1LvU/edit?usp=sharing" ta
- rget="_blank" class="pastedDriveLink-0"><u><u>Cutoff Times</u></u></a><br><
- br>Arrive 1 hour early to ensure you have time to park\, unload\, walk to s
- tart line\, and warm up.
-LAST-MODIFIED:20260602T222153Z
-LOCATION:Barton Warnock Visitor Center\, 21800 FM170\, Terlingua\, TX 79852
- \, USA
-SEQUENCE:0
-STATUS:CONFIRMED
-SUMMARY:🟢 20K Race Start
-TRANSP:OPAQUE
-END:VEVENT
-BEGIN:VEVENT
-DTSTART:20260118T211500Z
-DTSTAMP:20261016T165959Z
-UID:03vqd38pnaub1k2acj30alce7v@google.com
-CREATED:20250905T011653Z
-DESCRIPTION:Due to the extreme remoteness\, runners who miss a cutoff will 
- be DNF and directed towards the finish. DNF runners may be pulled for safet
- y of the runner or volunteers.\n\nCourse is cleared up to this point and th
- is aid station is torn down.
-LAST-MODIFIED:20260111T173246Z
-LOCATION:Paso al Solitario\, Solitario Road\, Redford\, TX 79846\, USA
-SEQUENCE:1
-STATUS:CONFIRMED
-SUMMARY:⏱️ 100K Cutoff@Paso al Solitario
-TRANSP:OPAQUE
-END:VEVENT
-BEGIN:VEVENT
-DTSTART:20270118T003000Z
-DTSTAMP:20261016T165959Z
-UID:432d19008ejscng5i52sc1ckhb@google.com
-CREATED:20260602T204037Z
-DESCRIPTION:<a href="https://www.google.com/url?q=https://www.strava.com/ro
- utes/3372327015569488194&amp\;sa=D&amp\;source=calendar&amp\;usd=2&amp\;usg
- =AOvVaw3rNB8v4uUjG-xA3qyj3Y1i" target="_blank">https://www.strava.com/route
- s/3372327015569488194</a>
-LAST-MODIFIED:20260602T204037Z
-LOCATION:Barton Warnock Visitor Center\, 21800 FM170\, Terlingua\, TX 79852
- \, USA
-SEQUENCE:0
-STATUS:CONFIRMED
-SUMMARY:🛑 55K Finish
-TRANSP:OPAQUE
-END:VEVENT
-BEGIN:VEVENT
-DTSTART:20270117T113000Z
-DTSTAMP:20261016T165959Z
-UID:0soop8m3bub01u3784dvjnn4go@google.com
-CREATED:20260602T203727Z
-DESCRIPTION:<a href="https://www.strava.com/routes/3450526029363380036" tar
- get="_blank">Map</a> | <a href="https://docs.google.com/spreadsheets/d/1FZw
- 9u3cEPj2rPkT9pba0crKXQ9RnULilq0reSMw1LvU/edit?usp=sharing" target="_blank">
- Cutoff Times</a><br><br>Arrive 1 hour early to ensure you have time to park
- \, unload\, walk to start line\, and warm up.
-LAST-MODIFIED:20261014T182645Z
-LOCATION:Barton Warnock Visitor Center\, 21800 FM170\, Terlingua\, TX 79852
- \, USA
-SEQUENCE:1
-STATUS:CONFIRMED
-SUMMARY:🟢 100K Race Start
-TRANSP:OPAQUE
-END:VEVENT
-BEGIN:VEVENT
-DTSTART:20260118T010000Z
-DTEND:20260118T053000Z
-DTSTAMP:20261016T165959Z
-UID:1b3ks8a6vstmk33joj2j0fps38@google.com
-CREATED:20250905T011653Z
-DESCRIPTION:<a href="https://bigbendsentinel.com/2022/02/23/terlingua-time-
- cell-phone-tower-in-terlingua-stuck-an-hour-behind/" target="_blank">An iss
- ue</a> with the cellular towers in Big Bend area may cause them intermitten
- tly change your phone to the wrong time zone. To avoid being late to your r
- ace\, it is best to manually set your time zone. Instructions for: <a href=
- "https://support.apple.com/guide/iphone/change-the-date-and-time-iph65f82af
- 3e/ios" target="_blank"><u>iPhone</u></a> | <a href="https://support.google
- .com/android/answer/2841106?hl=en" target="_blank"><u>Android</u></a>. You 
- can also <a href="https://www.time.gov/" target="_blank">cross-check your t
- ime</a>.<br><br>The race is <b>Central Time</b> (Chicago).<br><b><br></b>
-LAST-MODIFIED:20260111T135513Z
-SEQUENCE:0
-STATUS:CONFIRMED
-SUMMARY:⏰ Reminder: Lock your phone time zone
-TRANSP:OPAQUE
-END:VEVENT
-BEGIN:VEVENT
-DTSTART:20260119T070000Z
-DTSTAMP:20261016T165959Z
-UID:68o3gu5v1ltj60qnt9jt386t21@google.com
-CREATED:20250905T011653Z
-DESCRIPTION:https://www.strava.com/routes/3372350029883714678\nRace over
-LAST-MODIFIED:20250905T012137Z
-LOCATION:Barton Warnock Visitor Center\, 21800 FM170\, Terlingua\, TX 79852
- \, USA
-SEQUENCE:1
-STATUS:CONFIRMED
-SUMMARY:🛑 100K Finish
-TRANSP:OPAQUE
-END:VEVENT
-BEGIN:VEVENT
-DTSTART:20260118T184500Z
-DTSTAMP:20261016T165959Z
-UID:1rdi7o62tjou3jcqts1bcoderb@google.com
-CREATED:20250905T011653Z
-DESCRIPTION:Due to the extreme remoteness\, runners who miss a cutoff will 
- be pulled from the course.
-LAST-MODIFIED:20250905T012043Z
-LOCATION:Righthand Shutup\, Texas 79846\, USA
-SEQUENCE:0
-STATUS:CONFIRMED
-SUMMARY:⏱️ 100K Cutoff@Righthand Shutup
-TRANSP:OPAQUE
-END:VEVENT
-BEGIN:VEVENT
 DTSTART:20260118T150000Z
-DTSTAMP:20261016T165959Z
+DTSTAMP:20261016T170741Z
 UID:34ml86654s6dqh47dmej4ambkh@google.com
 CREATED:20250905T011653Z
 DESCRIPTION:<a href="https://www.strava.com/routes/3373755190992143280" tar
@@ -596,104 +114,41 @@ SUMMARY:🟢 10K Race Start
 TRANSP:OPAQUE
 END:VEVENT
 BEGIN:VEVENT
-DTSTART:20250929T044500Z
-DTSTAMP:20261016T165959Z
-UID:116oc8hnem50956512flvkdfqo@google.com
-CREATED:20250905T011653Z
-DESCRIPTION:<a href="https://trailroots.com/big-bend-ultra" target="_blank"
- >Register</a> before this time to avoid a price increase
-LAST-MODIFIED:20250905T011827Z
-SEQUENCE:0
-STATUS:CONFIRMED
-SUMMARY:⏰ Registration: Price increase
-TRANSP:OPAQUE
-END:VEVENT
-BEGIN:VEVENT
-DTSTART:20260118T180000Z
-DTSTAMP:20261016T165959Z
-UID:1sgcr62dr5mh7l6e11lrnjc6pl@google.com
-CREATED:20250905T011653Z
-DESCRIPTION:Due to the extreme remoteness\, runners who miss a cutoff will 
- be pulled from the course.
-LAST-MODIFIED:20250905T012036Z
-LOCATION:Whit-Roy Cinnabar Mine\, 1900 Sauceda Ranch Road\, Redford\, TX 79
- 846\, USA
-SEQUENCE:0
-STATUS:CONFIRMED
-SUMMARY:⏱️ 55K Cutoff@Bravo
-TRANSP:OPAQUE
-END:VEVENT
-BEGIN:VEVENT
-DTSTART:20270118T033000Z
-DTSTAMP:20261016T165959Z
-UID:6gcms5r8fl6uju4pe13ihac3pt@google.com
-CREATED:20260602T210104Z
+DTSTART:20270117T214500Z
+DTSTAMP:20261016T170741Z
+UID:2o2oqv00rrlcofvm6fl1n7etfm@google.com
+CREATED:20260602T205557Z
 DESCRIPTION:Due to the extreme remoteness\, runners who miss a cutoff will 
  be DNF and directed towards the finish. DNF runners may be pulled for safet
- y of the runner or volunteers.\n\nCourse is cleared up to this point and th
- is aid station is torn down.
-LAST-MODIFIED:20260602T210123Z
-LOCATION:West Contrabondo Trailhead\, W Main Trail\, Redford\, TX 79846\, U
- SA
-SEQUENCE:1
+ y of the runner or volunteers. \n\n Course is cleared up to this point and 
+ this aid station is torn down.
+LAST-MODIFIED:20260602T205709Z
+LOCATION:Righthand Shutup\, Texas 79846\, USA
+SEQUENCE:0
 STATUS:CONFIRMED
-SUMMARY:⏱️ 100K Cutoff@Contrabando
+SUMMARY:⏱️ 100K Cutoff@Righthand Shutup Return
 TRANSP:OPAQUE
 END:VEVENT
 BEGIN:VEVENT
-DTSTART:20260118T140000Z
-DTSTAMP:20261016T165959Z
-UID:1p3ps6ukb3ajfmhr6jva1q43qg@google.com
-CREATED:20250905T011653Z
-DESCRIPTION:<a href="https://www.strava.com/routes/3372351312211083382" tar
- get="_blank"><u><u>Map</u></u></a> | <a href="https://docs.google.com/sprea
- dsheets/d/1FaLpRZymHeb9ZQaHVfkYU75aYyYEX9ilyPkpox_p_Yo/edit?gid=0#gid=0" ta
- rget="_blank" class="pastedDriveLink-0"><u><u>Cutoff Times</u></u></a><br><
- br>Arrive 1 hour early to ensure you have time to park\, unload\, walk to s
- tart line\, and warm up.
-LAST-MODIFIED:20250905T012659Z
+DTSTART:20270117T223000Z
+DTSTAMP:20261016T170741Z
+UID:70gl3qmvh8hf3ulmnspae1jldj@google.com
+CREATED:20260602T204015Z
+DESCRIPTION:<a href="https://www.google.com/url?q=https://www.strava.com/ro
+ utes/3372351312211083382&amp\;sa=D&amp\;source=calendar&amp\;usd=2&amp\;usg
+ =AOvVaw2wKiabTYYYebU15bCN1443" target="_blank"><u>https://www.strava.com/ro
+ utes/3372351312211083382</u></a>
+LAST-MODIFIED:20260602T204015Z
 LOCATION:Barton Warnock Visitor Center\, 21800 FM170\, Terlingua\, TX 79852
  \, USA
 SEQUENCE:0
 STATUS:CONFIRMED
-SUMMARY:🟢 35K Race Start
-TRANSP:OPAQUE
-END:VEVENT
-BEGIN:VEVENT
-DTSTART:20270118T004500Z
-DTSTAMP:20261016T165959Z
-UID:622b8pbpscpb9koup0fvr4kbl6@google.com
-CREATED:20260602T204149Z
-DESCRIPTION:Due to the extreme remoteness\, runners who miss a cutoff will 
- be DNF and directed towards the finish. DNF runners may be pulled for safet
- y of the runner or volunteers.\n\nCourse is cleared up to this point and th
- is aid station is torn down.
-LAST-MODIFIED:20260602T205924Z
-LOCATION:Whit-Roy Cinnabar Mine\, 1900 Sauceda Ranch Road\, Redford\, TX 79
- 846\, USA
-SEQUENCE:1
-STATUS:CONFIRMED
-SUMMARY:⏱️ 100K Cutoff@WhitRoy
-TRANSP:OPAQUE
-END:VEVENT
-BEGIN:VEVENT
-DTSTART:20260927T044500Z
-DTSTAMP:20261016T165959Z
-UID:7kijrt2596uqu1v9pu27p16d9e@google.com
-CREATED:20260602T203307Z
-DESCRIPTION:<a href="https://www.google.com/url?q=https://trailroots.com/bi
- g-bend-ultra&amp\;sa=D&amp\;source=calendar&amp\;usd=2&amp\;usg=AOvVaw25940
- H7ew4JX2DJLRB0Eav" target="_blank">Register</a> before this time to avoid a
-  price increase
-LAST-MODIFIED:20260602T203307Z
-SEQUENCE:0
-STATUS:CONFIRMED
-SUMMARY:⏰ Registration: Price increase
+SUMMARY:🛑 35K Finish
 TRANSP:OPAQUE
 END:VEVENT
 BEGIN:VEVENT
 DTSTART:20260118T110000Z
-DTSTAMP:20261016T165959Z
+DTSTAMP:20261016T170741Z
 UID:5567igpiq814lrhr10383qr0sk@google.com
 CREATED:20250905T011653Z
 DESCRIPTION:<a href="https://www.strava.com/routes/3372350029883714678">Map
@@ -710,164 +165,8 @@ SUMMARY:🟢 100K Race Start
 TRANSP:OPAQUE
 END:VEVENT
 BEGIN:VEVENT
-DTSTART:20260119T160000Z
-DTEND:20260119T180000Z
-DTSTAMP:20261016T165959Z
-UID:1kbb0m8h8o5umu476j2nd7uc34@google.com
-CREATED:20250905T011653Z
-DESCRIPTION:Drop bags can only be returned to you during this time. We will
-  not ship gear left behind.
-LAST-MODIFIED:20250905T011654Z
-LOCATION:Barton Warnock Visitor Center\, 21800 FM170\, Terlingua\, TX 79852
- \, USA
-SEQUENCE:0
-STATUS:CONFIRMED
-SUMMARY:🎒 Drop bag return pickup
-TRANSP:OPAQUE
-END:VEVENT
-BEGIN:VEVENT
-DTSTART:20261226T054500Z
-DTSTAMP:20261016T165959Z
-UID:7k3uheqq5fk03ao7hb8k8vp4om@google.com
-CREATED:20260602T203357Z
-DESCRIPTION:<a href="https://www.google.com/url?q=https://trailroots.com/bi
- g-bend-ultra&amp\;sa=D&amp\;source=calendar&amp\;usd=2&amp\;usg=AOvVaw25940
- H7ew4JX2DJLRB0Eav" target="_blank">Register</a> before this time to ensure 
- you receive finisher swag!
-LAST-MODIFIED:20260602T203357Z
-SEQUENCE:0
-STATUS:CONFIRMED
-SUMMARY:⏰ Registration: Last day for swag guarantee
-TRANSP:OPAQUE
-END:VEVENT
-BEGIN:VEVENT
-DTSTART:20270117T180000Z
-DTSTAMP:20261016T165959Z
-UID:7g7hdh78qmhvtfbivdhlars1rg@google.com
-CREATED:20260602T203850Z
-DESCRIPTION:Due to the extreme remoteness\, runners who miss a cutoff will 
- be pulled from the course.
-LAST-MODIFIED:20260602T210217Z
-LOCATION:Whit-Roy Cinnabar Mine\, 1900 Sauceda Ranch Road\, Redford\, TX 79
- 846\, USA
-SEQUENCE:0
-STATUS:CONFIRMED
-SUMMARY:⏱️ 55K Cutoff@WhitRoy
-TRANSP:OPAQUE
-END:VEVENT
-BEGIN:VEVENT
-DTSTART;VALUE=DATE:20260704
-DTEND;VALUE=DATE:20260705
-DTSTAMP:20261016T165959Z
-UID:474dbe8kdal0vrbhgemlvae9ns@google.com
-CREATED:20260602T230757Z
-DESCRIPTION:<a href="https://trailroots.com/big-bend-ultra" target="_blank"
- >Register here</a>
-LAST-MODIFIED:20260602T230757Z
-SEQUENCE:0
-STATUS:CONFIRMED
-SUMMARY:⏰ Registration Opens
-TRANSP:OPAQUE
-END:VEVENT
-BEGIN:VEVENT
-DTSTART:20260119T004500Z
-DTSTAMP:20261016T165959Z
-UID:41alnfa99nqvd4vs4k6lh6a1v3@google.com
-CREATED:20250905T011653Z
-DESCRIPTION:Due to the extreme remoteness\, runners who miss a cutoff will 
- be DNF and directed towards the finish. DNF runners may be pulled for safet
- y of the runner or volunteers.\n\nCourse is cleared up to this point and th
- is aid station is torn down.
-LAST-MODIFIED:20260111T173256Z
-LOCATION:Righthand Shutup\, Texas 79846\, USA
-SEQUENCE:0
-STATUS:CONFIRMED
-SUMMARY:⏱️ 100K Cutoff@Righthand shutup
-TRANSP:OPAQUE
-END:VEVENT
-BEGIN:VEVENT
-DTSTART:20270117T140000Z
-DTSTAMP:20261016T165959Z
-UID:187cpsrnftmpr00pc8pkbv0e1n@google.com
-CREATED:20260602T203804Z
-DESCRIPTION:<a href="https://www.strava.com/routes/3450543498764908848" tar
- get="_blank"><u>Map</u></a> | <a href="https://docs.google.com/spreadsheets
- /d/1FZw9u3cEPj2rPkT9pba0crKXQ9RnULilq0reSMw1LvU/edit?usp=sharing" target="_
- blank" class="pastedDriveLink-0"><u>Cutoff Times</u></a><br><br>Arrive 1 ho
- ur early to ensure you have time to park\, unload\, walk to start line\, an
- d warm up.
-LAST-MODIFIED:20260602T222127Z
-LOCATION:Barton Warnock Visitor Center\, 21800 FM170\, Terlingua\, TX 79852
- \, USA
-SEQUENCE:0
-STATUS:CONFIRMED
-SUMMARY:🟢 35K Race Start
-TRANSP:OPAQUE
-END:VEVENT
-BEGIN:VEVENT
-DTSTART:20260119T050000Z
-DTSTAMP:20261016T165959Z
-UID:2g5fp2tuo5hsdass49v45e18bk@google.com
-CREATED:20250905T011653Z
-DESCRIPTION:Due to the extreme remoteness\, runners who miss a cutoff will 
- be DNF and directed towards the finish. DNF runners may be pulled for safet
- y of the runner or volunteers.\n\nCourse is cleared up to this point and th
- is aid station is torn down.
-LAST-MODIFIED:20260111T173320Z
-LOCATION:29.31797692590845\, -103.79533238192568
-SEQUENCE:0
-STATUS:CONFIRMED
-SUMMARY:⏱️ 100K Cutoff@Alpha
-TRANSP:OPAQUE
-END:VEVENT
-BEGIN:VEVENT
-DTSTART:20270118T002000Z
-DTSTAMP:20261016T165959Z
-UID:3c50pvbkob3pu929n150ut1hoh@google.com
-CREATED:20260602T204026Z
-LAST-MODIFIED:20260602T204027Z
-SEQUENCE:0
-STATUS:CONFIRMED
-SUMMARY:🌙 Sunset
-TRANSP:OPAQUE
-END:VEVENT
-BEGIN:VEVENT
-DTSTART:20270118T070000Z
-DTSTAMP:20261016T165959Z
-UID:0jvqs69frjeb3prep3c3a2aso7@google.com
-CREATED:20260602T204218Z
-DESCRIPTION:<a href="https://www.google.com/url?q=https://www.strava.com/ro
- utes/3372350029883714678&amp\;sa=D&amp\;source=calendar&amp\;usd=2&amp\;usg
- =AOvVaw12Mz3klR3rXRJayvDMkjp7" target="_blank">https://www.strava.com/route
- s/3372350029883714678</a>\nRace over
-LAST-MODIFIED:20260602T204219Z
-LOCATION:Barton Warnock Visitor Center\, 21800 FM170\, Terlingua\, TX 79852
- \, USA
-SEQUENCE:0
-STATUS:CONFIRMED
-SUMMARY:🛑 100K Finish
-TRANSP:OPAQUE
-END:VEVENT
-BEGIN:VEVENT
-DTSTART:20260119T033000Z
-DTSTAMP:20261016T165959Z
-UID:3u8dci0lkapl7blvb32ikq2ghu@google.com
-CREATED:20250905T011653Z
-DESCRIPTION:Due to the extreme remoteness\, runners who miss a cutoff will 
- be DNF and directed towards the finish. DNF runners may be pulled for safet
- y of the runner or volunteers.\n\nCourse is cleared up to this point and th
- is aid station is torn down.
-LAST-MODIFIED:20260111T173310Z
-LOCATION:Whit-Roy Cinnabar Mine\, 1900 Sauceda Ranch Road\, Redford\, TX 79
- 846\, USA
-SEQUENCE:0
-STATUS:CONFIRMED
-SUMMARY:⏱️ 100K Cutoff@Bravo
-TRANSP:OPAQUE
-END:VEVENT
-BEGIN:VEVENT
 DTSTART:20260118T223000Z
-DTSTAMP:20261016T165959Z
+DTSTAMP:20261016T170741Z
 UID:24qgirih6doh93jhhaie1jo45t@google.com
 CREATED:20250905T011653Z
 DESCRIPTION:<a href="https://www.strava.com/routes/3373755190992143280" tar
@@ -881,14 +180,46 @@ SUMMARY:🛑 10K Finish
 TRANSP:OPAQUE
 END:VEVENT
 BEGIN:VEVENT
-DTSTART:20270116T170000Z
-DTSTAMP:20261016T165959Z
-UID:2n2kd8tkccmog5pa32uajn6e5i@google.com
-CREATED:20260602T203532Z
+DTSTART:20260119T003000Z
+DTSTAMP:20261016T170741Z
+UID:0vi3imeo31773mek2rfdq4e8l1@google.com
+CREATED:20250905T011653Z
+DESCRIPTION:<a href="https://www.google.com/url?q=https://www.strava.com/ro
+ utes/3372327015569488194&amp\;sa=D&amp\;source=calendar&amp\;usd=2&amp\;usg
+ =AOvVaw1OpbHuRi4Zy7TJ2KjeLDNm" target="_blank">https://www.strava.com/route
+ s/3372327015569488194</a>
+LAST-MODIFIED:20250905T012101Z
+LOCATION:Barton Warnock Visitor Center\, 21800 FM170\, Terlingua\, TX 79852
+ \, USA
+SEQUENCE:0
+STATUS:CONFIRMED
+SUMMARY:🛑 55K Finish
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART:20270117T154500Z
+DTSTAMP:20261016T170741Z
+UID:5fvg489r1bcgc9q9lg8mgm460e@google.com
+CREATED:20260602T203902Z
+DESCRIPTION:Due to the extreme remoteness\, runners who miss a cutoff will 
+ be DNF and directed towards the finish. DNF runners may be pulled for safet
+ y of the runner or volunteers.
+LAST-MODIFIED:20260602T205519Z
+LOCATION:Righthand Shutup\, Texas 79846\, USA
+SEQUENCE:1
+STATUS:CONFIRMED
+SUMMARY:⏱️ 100K Cutoff@Righthand Shutup Outbound
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART:20260117T170000Z
+DTSTAMP:20261016T170741Z
+UID:23hm7lj320qtmqsijrrie8p98p@google.com
+CREATED:20250905T011653Z
 DESCRIPTION:Drop bags must be labeled with:<br><ol><li>Your bib number</li>
  <li>The destination</li></ol>100K bags can go to Righthand Shutup and Paso 
  Al Sollitario stations.
-LAST-MODIFIED:20260602T203532Z
+LAST-MODIFIED:20250905T011919Z
 LOCATION:Barton Warnock Visitor Center\, 21800 FM170\, Terlingua\, TX 79852
  \, USA
 SEQUENCE:0
@@ -897,21 +228,42 @@ SUMMARY:🎒 Last call for 100K drop bags
 TRANSP:OPAQUE
 END:VEVENT
 BEGIN:VEVENT
-DTSTART:20260119T070100Z
-DTSTAMP:20261016T165959Z
-UID:0kn8uhekerq8m2famcshrv65q1@google.com
-CREATED:20250905T011653Z
-DESCRIPTION:Thank you for a another great race!
-LAST-MODIFIED:20250905T012146Z
-SEQUENCE:2
+DTSTART:20270118T050000Z
+DTSTAMP:20261016T170741Z
+UID:2oef95o8c1q1gfh0ksb90hdtpa@google.com
+CREATED:20260602T204204Z
+DESCRIPTION:Due to the extreme remoteness\, runners who miss a cutoff will 
+ be DNF and directed towards the finish. DNF runners may be pulled for safet
+ y of the runner or volunteers.\n\nCourse is cleared up to this point and th
+ is aid station is torn down.
+LAST-MODIFIED:20260602T222259Z
+LOCATION:29.31797692590845\, -103.79533238192568
+SEQUENCE:0
 STATUS:CONFIRMED
-SUMMARY:🏁 Race Over
+SUMMARY:⏱️ 100K Cutoff@Waterhole
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART:20270118T004500Z
+DTSTAMP:20261016T170741Z
+UID:622b8pbpscpb9koup0fvr4kbl6@google.com
+CREATED:20260602T204149Z
+DESCRIPTION:Due to the extreme remoteness\, runners who miss a cutoff will 
+ be DNF and directed towards the finish. DNF runners may be pulled for safet
+ y of the runner or volunteers.\n\nCourse is cleared up to this point and th
+ is aid station is torn down.
+LAST-MODIFIED:20260602T205924Z
+LOCATION:Whit-Roy Cinnabar Mine\, 1900 Sauceda Ranch Road\, Redford\, TX 79
+ 846\, USA
+SEQUENCE:1
+STATUS:CONFIRMED
+SUMMARY:⏱️ 100K Cutoff@WhitRoy
 TRANSP:OPAQUE
 END:VEVENT
 BEGIN:VEVENT
 DTSTART:20270117T010000Z
 DTEND:20270117T053000Z
-DTSTAMP:20261016T165959Z
+DTSTAMP:20261016T170741Z
 UID:541u2bq2rlgme4s014pg5te8eu@google.com
 CREATED:20260602T203617Z
 DESCRIPTION:<a href="https://www.google.com/url?q=https://bigbendsentinel.c
@@ -937,8 +289,129 @@ SUMMARY:⏰ Reminder: Lock your phone time zone
 TRANSP:OPAQUE
 END:VEVENT
 BEGIN:VEVENT
+DTSTART:20260118T103000Z
+DTEND:20260118T143000Z
+DTSTAMP:20261016T170741Z
+UID:0vl4a5ui6grr81pjt324r59tir@google.com
+CREATED:20250905T011653Z
+LAST-MODIFIED:20260109T154808Z
+LOCATION:Barton Warnock Visitor Center\, 21800 FM170\, Terlingua\, TX 79852
+ \, USA
+SEQUENCE:1
+STATUS:CONFIRMED
+SUMMARY:🎫 Packet Pickup
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART:20270116T160000Z
+DTEND:20270116T220000Z
+DTSTAMP:20261016T170741Z
+UID:3r6ah1blofs0nor3ngatcg7l4m@google.com
+CREATED:20260602T203516Z
+LAST-MODIFIED:20260602T203517Z
+LOCATION:Barton Warnock Visitor Center\, 21800 FM170\, Terlingua\, TX 79852
+ \, USA
+SEQUENCE:0
+STATUS:CONFIRMED
+SUMMARY:🎫 Packet Pickup
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART:20270117T180000Z
+DTSTAMP:20261016T170741Z
+UID:7g7hdh78qmhvtfbivdhlars1rg@google.com
+CREATED:20260602T203850Z
+DESCRIPTION:Due to the extreme remoteness\, runners who miss a cutoff will 
+ be pulled from the course.
+LAST-MODIFIED:20260602T210217Z
+LOCATION:Whit-Roy Cinnabar Mine\, 1900 Sauceda Ranch Road\, Redford\, TX 79
+ 846\, USA
+SEQUENCE:0
+STATUS:CONFIRMED
+SUMMARY:⏱️ 55K Cutoff@WhitRoy
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART:20260118T143000Z
+DTSTAMP:20261016T170741Z
+UID:1vm41vnh7tusdmbsou2u94ts7q@google.com
+CREATED:20250905T011653Z
+DESCRIPTION:<a href="https://www.strava.com/routes/3096511228948922814" tar
+ get="_blank"><u><u><u>Map</u></u></u></a> | <a href="https://docs.google.co
+ m/spreadsheets/d/1FaLpRZymHeb9ZQaHVfkYU75aYyYEX9ilyPkpox_p_Yo/edit?gid=0#gi
+ d=0" target="_blank" class="pastedDriveLink-0"><u><u><u>Cutoff Times</u></u
+ ></u></a><br><br>Arrive 1 hour early to ensure you have time to park\, unlo
+ ad\, walk to start line\, and warm up.
+LAST-MODIFIED:20250905T012717Z
+LOCATION:Barton Warnock Visitor Center\, 21800 FM170\, Terlingua\, TX 79852
+ \, USA
+SEQUENCE:0
+STATUS:CONFIRMED
+SUMMARY:🟢 20K Race Start
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART:20270117T103000Z
+DTEND:20270117T143000Z
+DTSTAMP:20261016T170741Z
+UID:5rv7r9qockd5k7uqa4ieteu7pg@google.com
+CREATED:20260602T203714Z
+LAST-MODIFIED:20260602T203714Z
+LOCATION:Barton Warnock Visitor Center\, 21800 FM170\, Terlingua\, TX 79852
+ \, USA
+SEQUENCE:0
+STATUS:CONFIRMED
+SUMMARY:🎫 Packet Pickup
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART:20251117T054500Z
+DTSTAMP:20261016T170741Z
+UID:0k44b1ds86bj17sfhumarlgfe6@google.com
+CREATED:20250905T011653Z
+DESCRIPTION:<a href="https://www.google.com/url?q=https://trailroots.com/bi
+ g-bend-ultra&amp\;sa=D&amp\;source=calendar&amp\;usd=2&amp\;usg=AOvVaw0rLAb
+ bX7Ge4-QMza35VW_i" target="_blank">Register</a> before this time to avoid a
+  price increase
+LAST-MODIFIED:20250905T011840Z
+SEQUENCE:1
+STATUS:CONFIRMED
+SUMMARY:⏰ Registration: Price increase
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART:20260118T223000Z
+DTSTAMP:20261016T170741Z
+UID:0u62pujntkm5jtp7275jeeq0a2@google.com
+CREATED:20250905T011653Z
+DESCRIPTION:<a href="https://www.strava.com/routes/3372351312211083382" tar
+ get="_blank"><u>https://www.strava.com/routes/3372351312211083382</u></a>
+LAST-MODIFIED:20250905T030247Z
+LOCATION:Barton Warnock Visitor Center\, 21800 FM170\, Terlingua\, TX 79852
+ \, USA
+SEQUENCE:0
+STATUS:CONFIRMED
+SUMMARY:🛑 35K Finish
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART:20261115T054500Z
+DTSTAMP:20261016T170741Z
+UID:3sbv49ualtgp5eluooma9rg68u@google.com
+CREATED:20260602T203328Z
+DESCRIPTION:<a href="https://www.google.com/url?q=https://trailroots.com/bi
+ g-bend-ultra&amp\;sa=D&amp\;source=calendar&amp\;usd=2&amp\;usg=AOvVaw25940
+ H7ew4JX2DJLRB0Eav" target="_blank">Register</a> before this time to avoid a
+  price increase
+LAST-MODIFIED:20260602T203328Z
+SEQUENCE:0
+STATUS:CONFIRMED
+SUMMARY:⏰ Registration: Price increase
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
 DTSTART:20270118T070100Z
-DTSTAMP:20261016T165959Z
+DTSTAMP:20261016T170741Z
 UID:318n2jo17qeb4c600ti2505mj3@google.com
 CREATED:20260602T204237Z
 DESCRIPTION:Thank you for a another great race!
@@ -949,8 +422,82 @@ SUMMARY:🏁 Race Over
 TRANSP:OPAQUE
 END:VEVENT
 BEGIN:VEVENT
+DTSTART;VALUE=DATE:20270117
+DTEND;VALUE=DATE:20270118
+DTSTAMP:20261016T170741Z
+UID:31igb487i5drdg6ju2v9e8tcsq@google.com
+CREATED:20260602T203641Z
+DESCRIPTION:Please read <a href="https://trailroots.com/regulations" target
+ ="_blank"><u><u>https://trailroots.com/regulations</u></u></a>.<br><br>100K
+  must purchase <a href="https://www.t-mobile.com/coverage/satellite-phone-s
+ ervice">https://www.t-mobile.com/coverage/satellite-phone-service</a>
+LAST-MODIFIED:20260902T003834Z
+SEQUENCE:0
+STATUS:CONFIRMED
+SUMMARY:ℹ️ Event FAQ
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART:20270116T210000Z
+DTSTAMP:20261016T170741Z
+UID:3f0ob36u3bprflvvohvfbs1db6@google.com
+CREATED:20260602T203546Z
+DESCRIPTION:Drop bags must be labeled with:<br><ol><li>Your bib number</li>
+ <li>The destination</li></ol>55K bags can go to Bravo / The Mines and Delta
+  / West Contrabando
+LAST-MODIFIED:20260602T203546Z
+LOCATION:Barton Warnock Visitor Center\, 21800 FM170\, Terlingua\, TX 79852
+ \, USA
+SEQUENCE:0
+STATUS:CONFIRMED
+SUMMARY:🎒 Last call for 55K drop bags
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;VALUE=DATE:20260118
+DTEND;VALUE=DATE:20260119
+DTSTAMP:20261016T170741Z
+UID:3os3c1qneqps37mblb7b72umfn@google.com
+CREATED:20250905T011653Z
+DESCRIPTION:Read our <a href="https://trailroots.com/race-prep" target="_bl
+ ank">race prep guide</a> to make sure you have the gear you need.
+LAST-MODIFIED:20260118T003210Z
+SEQUENCE:1
+STATUS:CONFIRMED
+SUMMARY:ℹ️ Event FAQ
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;VALUE=DATE:20260704
+DTEND;VALUE=DATE:20260705
+DTSTAMP:20261016T170741Z
+UID:474dbe8kdal0vrbhgemlvae9ns@google.com
+CREATED:20260602T230757Z
+DESCRIPTION:<a href="https://trailroots.com/big-bend-ultra" target="_blank"
+ >Register here</a>
+LAST-MODIFIED:20260602T230757Z
+SEQUENCE:0
+STATUS:CONFIRMED
+SUMMARY:⏰ Registration Opens
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART:20270116T213000Z
+DTEND:20270116T220000Z
+DTSTAMP:20261016T170741Z
+UID:0ar0e9j1e1ehd5bq9get8gojvg@google.com
+CREATED:20260602T203600Z
+LAST-MODIFIED:20260902T003542Z
+LOCATION:Barton Warnock Visitor Center\, 21800 FM170\, Terlingua\, TX 79852
+ \, USA
+SEQUENCE:0
+STATUS:CONFIRMED
+SUMMARY:📆 Race Briefing
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
 DTSTART:20270117T223000Z
-DTSTAMP:20261016T165959Z
+DTSTAMP:20261016T170741Z
 UID:4oj6364bub9fftt2aea5rl442m@google.com
 CREATED:20260602T203951Z
 DESCRIPTION:<a href="https://www.google.com/url?q=https://www.strava.com/ro
@@ -966,74 +513,166 @@ SUMMARY:🛑 10K Finish
 TRANSP:OPAQUE
 END:VEVENT
 BEGIN:VEVENT
-DTSTART:20260118T170000Z
-DTEND:20260118T223000Z
-DTSTAMP:20261016T165959Z
-UID:02ol3m421msrlgd6ula6q0tjkn@google.com
-CREATED:20260111T134452Z
-DESCRIPTION:Barton Warnock to Lajitas Resort Fitness Center\n11:00a - 4:30p
-  continuous shuttle\n\nShuttles may also assist people to/from the parking 
- area depending on availability.\n\nClick map coordinates for precise pickup
-  location
-LAST-MODIFIED:20260111T171212Z
-LOCATION:29.270614161532876\, -103.75801301842294
-SEQUENCE:0
-STATUS:CONFIRMED
-SUMMARY:🚐 Return Shuttle Pick Up Begins
-TRANSP:OPAQUE
-END:VEVENT
-BEGIN:VEVENT
-DTSTART:20260117T160000Z
-DTEND:20260117T220000Z
-DTSTAMP:20261016T165959Z
-UID:3vjnee3p6v6j2acd8jrp6etnro@google.com
+DTSTART:20250929T044500Z
+DTSTAMP:20261016T170741Z
+UID:116oc8hnem50956512flvkdfqo@google.com
 CREATED:20250905T011653Z
-LAST-MODIFIED:20250905T011654Z
+DESCRIPTION:<a href="https://trailroots.com/big-bend-ultra" target="_blank"
+ >Register</a> before this time to avoid a price increase
+LAST-MODIFIED:20250905T011827Z
+SEQUENCE:0
+STATUS:CONFIRMED
+SUMMARY:⏰ Registration: Price increase
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART:20260118T010000Z
+DTEND:20260118T053000Z
+DTSTAMP:20261016T170741Z
+UID:1b3ks8a6vstmk33joj2j0fps38@google.com
+CREATED:20250905T011653Z
+DESCRIPTION:<a href="https://bigbendsentinel.com/2022/02/23/terlingua-time-
+ cell-phone-tower-in-terlingua-stuck-an-hour-behind/" target="_blank">An iss
+ ue</a> with the cellular towers in Big Bend area may cause them intermitten
+ tly change your phone to the wrong time zone. To avoid being late to your r
+ ace\, it is best to manually set your time zone. Instructions for: <a href=
+ "https://support.apple.com/guide/iphone/change-the-date-and-time-iph65f82af
+ 3e/ios" target="_blank"><u>iPhone</u></a> | <a href="https://support.google
+ .com/android/answer/2841106?hl=en" target="_blank"><u>Android</u></a>. You 
+ can also <a href="https://www.time.gov/" target="_blank">cross-check your t
+ ime</a>.<br><br>The race is <b>Central Time</b> (Chicago).<br><b><br></b>
+LAST-MODIFIED:20260111T135513Z
+SEQUENCE:0
+STATUS:CONFIRMED
+SUMMARY:⏰ Reminder: Lock your phone time zone
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART:20270117T150000Z
+DTSTAMP:20261016T170741Z
+UID:2a1ukansk4g5gcukd10jmf0nrk@google.com
+CREATED:20260602T203827Z
+DESCRIPTION:<a href="https://www.strava.com/routes/3476252579046666448" tar
+ get="_blank"><u><u><u>Map</u></u></u></a> | <a href="https://docs.google.co
+ m/spreadsheets/d/1FZw9u3cEPj2rPkT9pba0crKXQ9RnULilq0reSMw1LvU/edit?usp=shar
+ ing" target="_blank" class="pastedDriveLink-0"><u><u><u>Cutoff Times</u></u
+ ></u></a><br><br>Arrive 1 hour early to ensure you have time to park\, unlo
+ ad\, walk to start line\, and warm up.
+LAST-MODIFIED:20260602T222223Z
 LOCATION:Barton Warnock Visitor Center\, 21800 FM170\, Terlingua\, TX 79852
  \, USA
 SEQUENCE:0
 STATUS:CONFIRMED
-SUMMARY:🎫 Packet Pickup
+SUMMARY:🟢 10K Race Start
 TRANSP:OPAQUE
 END:VEVENT
 BEGIN:VEVENT
-DTSTART:20260118T122000Z
-DTEND:20260118T144000Z
-DTSTAMP:20261016T165959Z
-UID:71i3ri0uokvln2srpk69ntu7an@google.com
-CREATED:20260109T164414Z
-DESCRIPTION:Lajitas Resort Fitness Center to Barton Warnock\nPickup 6:20a -
-  8:40a every 20 mins\n\nShuttles may also assist people to/from the parking
-  area depending on availability.\n\nClick map coordinates for precise picku
- p location.
-LAST-MODIFIED:20260111T171243Z
-LOCATION:29.26159395176039\, -103.77607642662403
+DTSTART:20260117T210000Z
+DTSTAMP:20261016T170741Z
+UID:6itbvfvv5teu4vg97kmpiobh95@google.com
+CREATED:20250905T011653Z
+DESCRIPTION:Drop bags must be labeled with:<br><ol><li>Your bib number</li>
+ <li>The destination</li></ol>55K bags can go to Bravo / The Mines and Delta
+  / West Contrabando
+LAST-MODIFIED:20250905T011926Z
+LOCATION:Barton Warnock Visitor Center\, 21800 FM170\, Terlingua\, TX 79852
+ \, USA
 SEQUENCE:0
 STATUS:CONFIRMED
-SUMMARY:🚐 Lajitas Resort Shuttle Pick Up Begins
+SUMMARY:🎒 Last call for 55K drop bags
 TRANSP:OPAQUE
 END:VEVENT
 BEGIN:VEVENT
-DTSTART:20270117T223000Z
-DTSTAMP:20261016T165959Z
-UID:6a7eue92ttmhk8othv4gbqek2o@google.com
-CREATED:20260602T204002Z
+DTSTART:20270118T002000Z
+DTSTAMP:20261016T170741Z
+UID:3c50pvbkob3pu929n150ut1hoh@google.com
+CREATED:20260602T204026Z
+LAST-MODIFIED:20260602T204027Z
+SEQUENCE:0
+STATUS:CONFIRMED
+SUMMARY:🌙 Sunset
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART:20260118T135000Z
+DTSTAMP:20261016T170741Z
+UID:2jcneiakr78e9opkibv82bo4jr@google.com
+CREATED:20250908T001653Z
+LAST-MODIFIED:20250908T001701Z
+SEQUENCE:0
+STATUS:CONFIRMED
+SUMMARY:☀️ Sunrise
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART:20260119T070100Z
+DTSTAMP:20261016T170741Z
+UID:0kn8uhekerq8m2famcshrv65q1@google.com
+CREATED:20250905T011653Z
+DESCRIPTION:Thank you for a another great race!
+LAST-MODIFIED:20250905T012146Z
+SEQUENCE:2
+STATUS:CONFIRMED
+SUMMARY:🏁 Race Over
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART:20260118T140000Z
+DTSTAMP:20261016T170741Z
+UID:1p3ps6ukb3ajfmhr6jva1q43qg@google.com
+CREATED:20250905T011653Z
+DESCRIPTION:<a href="https://www.strava.com/routes/3372351312211083382" tar
+ get="_blank"><u><u>Map</u></u></a> | <a href="https://docs.google.com/sprea
+ dsheets/d/1FaLpRZymHeb9ZQaHVfkYU75aYyYEX9ilyPkpox_p_Yo/edit?gid=0#gid=0" ta
+ rget="_blank" class="pastedDriveLink-0"><u><u>Cutoff Times</u></u></a><br><
+ br>Arrive 1 hour early to ensure you have time to park\, unload\, walk to s
+ tart line\, and warm up.
+LAST-MODIFIED:20250905T012659Z
+LOCATION:Barton Warnock Visitor Center\, 21800 FM170\, Terlingua\, TX 79852
+ \, USA
+SEQUENCE:0
+STATUS:CONFIRMED
+SUMMARY:🟢 35K Race Start
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART:20270118T003000Z
+DTSTAMP:20261016T170741Z
+UID:432d19008ejscng5i52sc1ckhb@google.com
+CREATED:20260602T204037Z
 DESCRIPTION:<a href="https://www.google.com/url?q=https://www.strava.com/ro
- utes/3096511228948922814&amp\;sa=D&amp\;source=calendar&amp\;usd=2&amp\;usg
- =AOvVaw2VBF25KLHkb5SienGm4zBW" target="_blank"><u>https://www.strava.com/ro
- utes/3096511228948922814</u></a>
-LAST-MODIFIED:20260602T204002Z
+ utes/3372327015569488194&amp\;sa=D&amp\;source=calendar&amp\;usd=2&amp\;usg
+ =AOvVaw3rNB8v4uUjG-xA3qyj3Y1i" target="_blank">https://www.strava.com/route
+ s/3372327015569488194</a>
+LAST-MODIFIED:20260602T204037Z
 LOCATION:Barton Warnock Visitor Center\, 21800 FM170\, Terlingua\, TX 79852
  \, USA
 SEQUENCE:0
 STATUS:CONFIRMED
-SUMMARY:🛑 20K Finish
+SUMMARY:🛑 55K Finish
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART:20270118T033000Z
+DTSTAMP:20261016T170741Z
+UID:6gcms5r8fl6uju4pe13ihac3pt@google.com
+CREATED:20260602T210104Z
+DESCRIPTION:Due to the extreme remoteness\, runners who miss a cutoff will 
+ be DNF and directed towards the finish. DNF runners may be pulled for safet
+ y of the runner or volunteers.\n\nCourse is cleared up to this point and th
+ is aid station is torn down.
+LAST-MODIFIED:20260602T210123Z
+LOCATION:West Contrabondo Trailhead\, W Main Trail\, Redford\, TX 79846\, U
+ SA
+SEQUENCE:1
+STATUS:CONFIRMED
+SUMMARY:⏱️ 100K Cutoff@Contrabando
 TRANSP:OPAQUE
 END:VEVENT
 BEGIN:VEVENT
 DTSTART;VALUE=DATE:20260118
 DTEND;VALUE=DATE:20260119
-DTSTAMP:20261016T165959Z
+DTSTAMP:20261016T170741Z
 UID:5dsq0netgakca0r3v9ia2hpia6@google.com
 CREATED:20260118T003156Z
 DESCRIPTION:See <a href="https://docs.google.com/spreadsheets/d/e/2PACX-1vQ
@@ -1049,39 +688,9 @@ SUMMARY:🏃Runner Progress Tracking
 TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
-DTSTART:20270117T191500Z
-DTSTAMP:20261016T165959Z
-UID:4tmtkqd7bko6dktg4lp7tun89f@google.com
-CREATED:20260602T203919Z
-DESCRIPTION:Due to the extreme remoteness\, runners who miss a cutoff will 
- be DNF and directed towards the finish. DNF runners may be pulled for safet
- y of the runner or volunteers.\n\nCourse is cleared up to this point and th
- is aid station is torn down.
-LAST-MODIFIED:20260602T205511Z
-LOCATION:Paso al Solitario\, Solitario Road\, Redford\, TX 79846\, USA
-SEQUENCE:1
-STATUS:CONFIRMED
-SUMMARY:⏱️ 100K Cutoff@Paso al Solitario
-TRANSP:OPAQUE
-END:VEVENT
-BEGIN:VEVENT
-DTSTART:20260118T103000Z
-DTEND:20260118T143000Z
-DTSTAMP:20261016T165959Z
-UID:0vl4a5ui6grr81pjt324r59tir@google.com
-CREATED:20250905T011653Z
-LAST-MODIFIED:20260109T154808Z
-LOCATION:Barton Warnock Visitor Center\, 21800 FM170\, Terlingua\, TX 79852
- \, USA
-SEQUENCE:1
-STATUS:CONFIRMED
-SUMMARY:🎫 Packet Pickup
-TRANSP:OPAQUE
-END:VEVENT
-BEGIN:VEVENT
 DTSTART:20270118T160000Z
 DTEND:20270118T180000Z
-DTSTAMP:20261016T165959Z
+DTSTAMP:20261016T170741Z
 UID:1ne0k1q81qe9j0paqu6m6f9614@google.com
 CREATED:20260602T204248Z
 DESCRIPTION:Drop bags can only be returned to you during this time. We will
@@ -1095,9 +704,26 @@ SUMMARY:🎒 Drop bag return pickup
 TRANSP:OPAQUE
 END:VEVENT
 BEGIN:VEVENT
+DTSTART:20260118T122000Z
+DTEND:20260118T144000Z
+DTSTAMP:20261016T170741Z
+UID:71i3ri0uokvln2srpk69ntu7an@google.com
+CREATED:20260109T164414Z
+DESCRIPTION:Lajitas Resort Fitness Center to Barton Warnock\nPickup 6:20a -
+  8:40a every 20 mins\n\nShuttles may also assist people to/from the parking
+  area depending on availability.\n\nClick map coordinates for precise picku
+ p location.
+LAST-MODIFIED:20260111T171243Z
+LOCATION:29.26159395176039\, -103.77607642662403
+SEQUENCE:0
+STATUS:CONFIRMED
+SUMMARY:🚐 Lajitas Resort Shuttle Pick Up Begins
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
 DTSTART:20260117T213000Z
 DTEND:20260117T220000Z
-DTSTAMP:20261016T165959Z
+DTSTAMP:20261016T170741Z
 UID:131mnrfjqdab2868d7bhnffig0@google.com
 CREATED:20260109T155016Z
 LAST-MODIFIED:20260117T193910Z
@@ -1116,5 +742,379 @@ X-APPLE-STRUCTURED-LOCATION;VALUE=URI;X-APPLE-MAPKIT-HANDLE=CAESpgII2TIaEgn
  Teqh+QAwE=;X-APPLE-RADIUS=70.58728624154031;X-APPLE-REFERENCEFRAME=1;X-TITL
  E="Barton Warnock Visitor Center, 21800 FM170, Terlingua, TX 79852, USA":ge
  o:29.269732,-103.757414
+END:VEVENT
+BEGIN:VEVENT
+DTSTART:20270117T113000Z
+DTSTAMP:20261016T170741Z
+UID:0soop8m3bub01u3784dvjnn4go@google.com
+CREATED:20260602T203727Z
+DESCRIPTION:<a href="https://www.strava.com/routes/3450526029363380036" tar
+ get="_blank">Map</a> | <a href="https://docs.google.com/spreadsheets/d/1FZw
+ 9u3cEPj2rPkT9pba0crKXQ9RnULilq0reSMw1LvU/edit?usp=sharing" target="_blank">
+ Cutoff Times</a><br><br>Arrive 1 hour early to ensure you have time to park
+ \, unload\, walk to start line\, and warm up.
+LAST-MODIFIED:20261014T182645Z
+LOCATION:Barton Warnock Visitor Center\, 21800 FM170\, Terlingua\, TX 79852
+ \, USA
+SEQUENCE:1
+STATUS:CONFIRMED
+SUMMARY:🟢 100K Race Start
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART:20260119T033000Z
+DTSTAMP:20261016T170741Z
+UID:3u8dci0lkapl7blvb32ikq2ghu@google.com
+CREATED:20250905T011653Z
+DESCRIPTION:Due to the extreme remoteness\, runners who miss a cutoff will 
+ be DNF and directed towards the finish. DNF runners may be pulled for safet
+ y of the runner or volunteers.\n\nCourse is cleared up to this point and th
+ is aid station is torn down.
+LAST-MODIFIED:20260111T173310Z
+LOCATION:Whit-Roy Cinnabar Mine\, 1900 Sauceda Ranch Road\, Redford\, TX 79
+ 846\, USA
+SEQUENCE:0
+STATUS:CONFIRMED
+SUMMARY:⏱️ 100K Cutoff@Bravo
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART:20260117T143000Z
+DTEND:20260117T153000Z
+DTSTAMP:20261016T170741Z
+UID:59drsbg53nd721fck05e5uhg73@google.com
+CREATED:20250905T011653Z
+DESCRIPTION:https://www.strava.com/routes/3178910612007281564
+LAST-MODIFIED:20260117T125318Z
+LOCATION:Lajitas Trail\, 22403 Lone Star Ranch Rd\, Terlingua\, TX 79852\, 
+ USA
+SEQUENCE:0
+STATUS:CONFIRMED
+SUMMARY:🏃 Pre-race Shakeout
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART:20260119T002000Z
+DTSTAMP:20261016T170741Z
+UID:1ig9s5opckumubq15kdvt2skk2@google.com
+CREATED:20250908T001737Z
+LAST-MODIFIED:20250908T001737Z
+SEQUENCE:0
+STATUS:CONFIRMED
+SUMMARY:🌙 Sunset
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART:20270117T143000Z
+DTSTAMP:20261016T170741Z
+UID:0khn7se24avk3me3phocuic846@google.com
+CREATED:20260602T203814Z
+DESCRIPTION:<a href="https://www.strava.com/routes/3476258112199931088" tar
+ get="_blank"><u><u>Map</u></u></a> | <a href="https://docs.google.com/sprea
+ dsheets/d/1FZw9u3cEPj2rPkT9pba0crKXQ9RnULilq0reSMw1LvU/edit?usp=sharing" ta
+ rget="_blank" class="pastedDriveLink-0"><u><u>Cutoff Times</u></u></a><br><
+ br>Arrive 1 hour early to ensure you have time to park\, unload\, walk to s
+ tart line\, and warm up.
+LAST-MODIFIED:20260602T222153Z
+LOCATION:Barton Warnock Visitor Center\, 21800 FM170\, Terlingua\, TX 79852
+ \, USA
+SEQUENCE:0
+STATUS:CONFIRMED
+SUMMARY:🟢 20K Race Start
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART:20260119T050000Z
+DTSTAMP:20261016T170741Z
+UID:2g5fp2tuo5hsdass49v45e18bk@google.com
+CREATED:20250905T011653Z
+DESCRIPTION:Due to the extreme remoteness\, runners who miss a cutoff will 
+ be DNF and directed towards the finish. DNF runners may be pulled for safet
+ y of the runner or volunteers.\n\nCourse is cleared up to this point and th
+ is aid station is torn down.
+LAST-MODIFIED:20260111T173320Z
+LOCATION:29.31797692590845\, -103.79533238192568
+SEQUENCE:0
+STATUS:CONFIRMED
+SUMMARY:⏱️ 100K Cutoff@Alpha
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART:20260118T180000Z
+DTSTAMP:20261016T170741Z
+UID:1sgcr62dr5mh7l6e11lrnjc6pl@google.com
+CREATED:20250905T011653Z
+DESCRIPTION:Due to the extreme remoteness\, runners who miss a cutoff will 
+ be pulled from the course.
+LAST-MODIFIED:20250905T012036Z
+LOCATION:Whit-Roy Cinnabar Mine\, 1900 Sauceda Ranch Road\, Redford\, TX 79
+ 846\, USA
+SEQUENCE:0
+STATUS:CONFIRMED
+SUMMARY:⏱️ 55K Cutoff@Bravo
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART:20261226T054500Z
+DTSTAMP:20261016T170741Z
+UID:7k3uheqq5fk03ao7hb8k8vp4om@google.com
+CREATED:20260602T203357Z
+DESCRIPTION:<a href="https://www.google.com/url?q=https://trailroots.com/bi
+ g-bend-ultra&amp\;sa=D&amp\;source=calendar&amp\;usd=2&amp\;usg=AOvVaw25940
+ H7ew4JX2DJLRB0Eav" target="_blank">Register</a> before this time to ensure 
+ you receive finisher swag!
+LAST-MODIFIED:20260602T203357Z
+SEQUENCE:0
+STATUS:CONFIRMED
+SUMMARY:⏰ Registration: Last day for swag guarantee
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART:20270117T191500Z
+DTSTAMP:20261016T170741Z
+UID:4tmtkqd7bko6dktg4lp7tun89f@google.com
+CREATED:20260602T203919Z
+DESCRIPTION:Due to the extreme remoteness\, runners who miss a cutoff will 
+ be DNF and directed towards the finish. DNF runners may be pulled for safet
+ y of the runner or volunteers.\n\nCourse is cleared up to this point and th
+ is aid station is torn down.
+LAST-MODIFIED:20260602T205511Z
+LOCATION:Paso al Solitario\, Solitario Road\, Redford\, TX 79846\, USA
+SEQUENCE:1
+STATUS:CONFIRMED
+SUMMARY:⏱️ 100K Cutoff@Paso al Solitario
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART:20270118T070000Z
+DTSTAMP:20261016T170741Z
+UID:0jvqs69frjeb3prep3c3a2aso7@google.com
+CREATED:20260602T204218Z
+DESCRIPTION:<a href="https://www.google.com/url?q=https://www.strava.com/ro
+ utes/3372350029883714678&amp\;sa=D&amp\;source=calendar&amp\;usd=2&amp\;usg
+ =AOvVaw12Mz3klR3rXRJayvDMkjp7" target="_blank">https://www.strava.com/route
+ s/3372350029883714678</a>\nRace over
+LAST-MODIFIED:20260602T204219Z
+LOCATION:Barton Warnock Visitor Center\, 21800 FM170\, Terlingua\, TX 79852
+ \, USA
+SEQUENCE:0
+STATUS:CONFIRMED
+SUMMARY:🛑 100K Finish
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART:20270117T140000Z
+DTSTAMP:20261016T170741Z
+UID:187cpsrnftmpr00pc8pkbv0e1n@google.com
+CREATED:20260602T203804Z
+DESCRIPTION:<a href="https://www.strava.com/routes/3450543498764908848" tar
+ get="_blank"><u>Map</u></a> | <a href="https://docs.google.com/spreadsheets
+ /d/1FZw9u3cEPj2rPkT9pba0crKXQ9RnULilq0reSMw1LvU/edit?usp=sharing" target="_
+ blank" class="pastedDriveLink-0"><u>Cutoff Times</u></a><br><br>Arrive 1 ho
+ ur early to ensure you have time to park\, unload\, walk to start line\, an
+ d warm up.
+LAST-MODIFIED:20260602T222127Z
+LOCATION:Barton Warnock Visitor Center\, 21800 FM170\, Terlingua\, TX 79852
+ \, USA
+SEQUENCE:0
+STATUS:CONFIRMED
+SUMMARY:🟢 35K Race Start
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART:20260118T184500Z
+DTSTAMP:20261016T170741Z
+UID:1rdi7o62tjou3jcqts1bcoderb@google.com
+CREATED:20250905T011653Z
+DESCRIPTION:Due to the extreme remoteness\, runners who miss a cutoff will 
+ be pulled from the course.
+LAST-MODIFIED:20250905T012043Z
+LOCATION:Righthand Shutup\, Texas 79846\, USA
+SEQUENCE:0
+STATUS:CONFIRMED
+SUMMARY:⏱️ 100K Cutoff@Righthand Shutup
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART:20260118T170000Z
+DTSTAMP:20261016T170741Z
+UID:03uqk2fbjkppckh5gcve16vbf6@google.com
+CREATED:20250905T011653Z
+DESCRIPTION:Due to the extreme remoteness\, runners who miss a cutoff will 
+ be DNF and directed towards the finish. DNF runners may be pulled for safet
+ y of the runner or volunteers.\n\nCourse is cleared up to this point and th
+ is aid station is torn down.
+LAST-MODIFIED:20260111T173226Z
+LOCATION:West Contrabondo Trailhead\, W Main Trail\, Redford\, TX 79846\, U
+ SA
+SEQUENCE:1
+STATUS:CONFIRMED
+SUMMARY:⏱️ 35K Cutoff@Delta
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART:20260119T070000Z
+DTSTAMP:20261016T170741Z
+UID:68o3gu5v1ltj60qnt9jt386t21@google.com
+CREATED:20250905T011653Z
+DESCRIPTION:https://www.strava.com/routes/3372350029883714678\nRace over
+LAST-MODIFIED:20250905T012137Z
+LOCATION:Barton Warnock Visitor Center\, 21800 FM170\, Terlingua\, TX 79852
+ \, USA
+SEQUENCE:1
+STATUS:CONFIRMED
+SUMMARY:🛑 100K Finish
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART:20270116T143000Z
+DTEND:20270116T153000Z
+DTSTAMP:20261016T170741Z
+UID:16m9t51g0c6m6afsbok61puusj@google.com
+CREATED:20260602T203502Z
+DESCRIPTION:<a href="https://www.google.com/url?q=https://www.strava.com/ro
+ utes/3178910612007281564&amp\;sa=D&amp\;source=calendar&amp\;usd=2&amp\;usg
+ =AOvVaw2uzF0LWSjn3oAf2iaEMg_Q" target="_blank">https://www.strava.com/route
+ s/3178910612007281564</a>
+LAST-MODIFIED:20260602T203502Z
+LOCATION:Lajitas Trail\, 22403 Lone Star Ranch Rd\, Terlingua\, TX 79852\, 
+ USA
+SEQUENCE:0
+STATUS:CONFIRMED
+SUMMARY:🏃 Pre-race Shakeout
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART:20260119T160000Z
+DTEND:20260119T180000Z
+DTSTAMP:20261016T170741Z
+UID:1kbb0m8h8o5umu476j2nd7uc34@google.com
+CREATED:20250905T011653Z
+DESCRIPTION:Drop bags can only be returned to you during this time. We will
+  not ship gear left behind.
+LAST-MODIFIED:20250905T011654Z
+LOCATION:Barton Warnock Visitor Center\, 21800 FM170\, Terlingua\, TX 79852
+ \, USA
+SEQUENCE:0
+STATUS:CONFIRMED
+SUMMARY:🎒 Drop bag return pickup
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART:20260118T211500Z
+DTSTAMP:20261016T170741Z
+UID:03vqd38pnaub1k2acj30alce7v@google.com
+CREATED:20250905T011653Z
+DESCRIPTION:Due to the extreme remoteness\, runners who miss a cutoff will 
+ be DNF and directed towards the finish. DNF runners may be pulled for safet
+ y of the runner or volunteers.\n\nCourse is cleared up to this point and th
+ is aid station is torn down.
+LAST-MODIFIED:20260111T173246Z
+LOCATION:Paso al Solitario\, Solitario Road\, Redford\, TX 79846\, USA
+SEQUENCE:1
+STATUS:CONFIRMED
+SUMMARY:⏱️ 100K Cutoff@Paso al Solitario
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART:20260117T160000Z
+DTEND:20260117T220000Z
+DTSTAMP:20261016T170741Z
+UID:3vjnee3p6v6j2acd8jrp6etnro@google.com
+CREATED:20250905T011653Z
+LAST-MODIFIED:20250905T011654Z
+LOCATION:Barton Warnock Visitor Center\, 21800 FM170\, Terlingua\, TX 79852
+ \, USA
+SEQUENCE:0
+STATUS:CONFIRMED
+SUMMARY:🎫 Packet Pickup
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART:20270117T135000Z
+DTSTAMP:20261016T170741Z
+UID:6i02eo0atlqbd6v6oqbe1v03gv@google.com
+CREATED:20260602T203752Z
+LAST-MODIFIED:20260602T203752Z
+SEQUENCE:0
+STATUS:CONFIRMED
+SUMMARY:☀️ Sunrise
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART:20260118T223000Z
+DTSTAMP:20261016T170741Z
+UID:1en1d1hm1aq7ipnmf0hm2epk5b@google.com
+CREATED:20250905T011653Z
+DESCRIPTION:<a href="https://www.strava.com/routes/3096511228948922814" tar
+ get="_blank"><u>https://www.strava.com/routes/3096511228948922814</u></a>
+LAST-MODIFIED:20250905T030239Z
+LOCATION:Barton Warnock Visitor Center\, 21800 FM170\, Terlingua\, TX 79852
+ \, USA
+SEQUENCE:0
+STATUS:CONFIRMED
+SUMMARY:🛑 20K Finish
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART:20260118T170000Z
+DTEND:20260118T223000Z
+DTSTAMP:20261016T170741Z
+UID:02ol3m421msrlgd6ula6q0tjkn@google.com
+CREATED:20260111T134452Z
+DESCRIPTION:Barton Warnock to Lajitas Resort Fitness Center\n11:00a - 4:30p
+  continuous shuttle\n\nShuttles may also assist people to/from the parking 
+ area depending on availability.\n\nClick map coordinates for precise pickup
+  location
+LAST-MODIFIED:20260111T171212Z
+LOCATION:29.270614161532876\, -103.75801301842294
+SEQUENCE:0
+STATUS:CONFIRMED
+SUMMARY:🚐 Return Shuttle Pick Up Begins
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART:20260119T004500Z
+DTSTAMP:20261016T170741Z
+UID:41alnfa99nqvd4vs4k6lh6a1v3@google.com
+CREATED:20250905T011653Z
+DESCRIPTION:Due to the extreme remoteness\, runners who miss a cutoff will 
+ be DNF and directed towards the finish. DNF runners may be pulled for safet
+ y of the runner or volunteers.\n\nCourse is cleared up to this point and th
+ is aid station is torn down.
+LAST-MODIFIED:20260111T173256Z
+LOCATION:Righthand Shutup\, Texas 79846\, USA
+SEQUENCE:0
+STATUS:CONFIRMED
+SUMMARY:⏱️ 100K Cutoff@Righthand shutup
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART:20260927T044500Z
+DTSTAMP:20261016T170741Z
+UID:7kijrt2596uqu1v9pu27p16d9e@google.com
+CREATED:20260602T203307Z
+DESCRIPTION:<a href="https://www.google.com/url?q=https://trailroots.com/bi
+ g-bend-ultra&amp\;sa=D&amp\;source=calendar&amp\;usd=2&amp\;usg=AOvVaw25940
+ H7ew4JX2DJLRB0Eav" target="_blank">Register</a> before this time to avoid a
+  price increase
+LAST-MODIFIED:20260602T203307Z
+SEQUENCE:0
+STATUS:CONFIRMED
+SUMMARY:⏰ Registration: Price increase
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART:20251226T054500Z
+DTSTAMP:20261016T170741Z
+UID:27k1ldmhakvltim5vb3k69u2nu@google.com
+CREATED:20250905T011653Z
+DESCRIPTION:<a href="https://trailroots.com/big-bend-ultra">Register</a> be
+ fore this time to ensure you receive finisher swag!
+LAST-MODIFIED:20250908T003304Z
+SEQUENCE:1
+STATUS:CONFIRMED
+SUMMARY:⏰ Registration: Last day for swag guarantee
+TRANSP:OPAQUE
 END:VEVENT
 END:VCALENDAR
