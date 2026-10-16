@@ -1,6 +1,6 @@
 import { northG, NORTH_INSET } from './north';
 import { stationLabel, poiLabel, areaLabel } from './labels';
-import { chaikin, mergeChains, simplifyPts, leaderLine, poiDot, SHEET, viewProjection, esc, f1, lineD, dash, STYLE, station, textBlock, gmapLink, tireTrack } from './util';
+import { chaikin, mergeChains, simplifyPts, leaderLine, poiDot, SHEET, viewProjection, esc, f1, lineD, dash, STYLE, station, textBlock, gmapLink, tireTrack, doubleTrack, BAND_OP } from './util';
 // user-toggleable layers (off-course roads, access styles, arrows, aid stations, distances and all labels are always shown)
 const LAYERS: [string, string, boolean][] = [
   ['topo', 'Topo shading', true], ['park', 'Park boundary', true],
@@ -31,7 +31,7 @@ export function renderMain(c) {
   for (const f of net.filter(f => f.properties.cls === 'connector')) { const d = V.path(f); add('roads', `<path d="${d}" class="ln" stroke="${col.cream}" stroke-width="12" stroke-linecap="butt"/><path d="${d}" class="ln" stroke="#000" stroke-width="7"/>`); }
   for (const f of net.filter(f => !f.properties.on_course && STYLE.off[f.properties.cls])) {
     const s = STYLE.off[f.properties.cls], d = V.path(f);
-    if (f.properties.cls === 'unpaved') { add('roads', `<path d="${d}" class="ln" stroke="${s.color}" stroke-width="${s.lw}" stroke-dasharray="${dash([8, 0.8], s.lw)}" stroke-linecap="butt"/><path d="${d}" class="ln" stroke="#fff" stroke-width="0.7" stroke-linecap="butt"/>`); continue; } // unpaved: dashed double track (the pre-Oct-16 4x4 style)
+    if (f.properties.cls === 'unpaved') { add('roads', doubleTrack(V.lines(f), s.color, s.lw, 0.7, [8, 0.8])); continue; } // unpaved: dashed double track (the pre-Oct-16 4x4 style)
     if (f.properties.cls === '4x4') { add('roads', tireTrack(V.lines(f), s.color, 4, 3)); continue; } // 4x4: tire tread
     add('roads', `<path d="${d}" class="ln" data-name="${esc(f.properties.name || '')}" stroke="${s.color}" stroke-width="${s.lw}" stroke-dasharray="${dash(s.pat, s.lw)}" stroke-linecap="butt"/>` + (s.rail ? `<path d="${d}" class="ln" stroke="#fff" stroke-width="${s.rail}" stroke-linecap="butt"/>` : ''));
   }
@@ -46,7 +46,7 @@ export function renderMain(c) {
   // data-bb = route bounds for zoom-to-fit. Hidden unless the filter shows fewer than all races (app.ts).
   { let h = ''; for (const k of c.courses.order) { const f = c.courseGeo[k].features[0], L = V.lines(f).flat(), xs = L.map((q) => q[0]), ys = L.map((q) => q[1]);
       h += `<g class="raceroute" data-rc="${k}" data-bb="${[Math.min(...xs), Math.min(...ys), Math.max(...xs), Math.max(...ys)].map(f1).join(',')}" style="display:none"><path d="${V.path(f)}" class="ln" stroke="${c.courses.colors[k]}" stroke-width="15" stroke-linejoin="round"/></g>`; }
-    g['roads'] = `<g class="racehalos" opacity=".55">${h}</g>` + (g['roads'] || ''); }
+    g['roads'] = `<g class="racehalos" opacity="${BAND_OP}">${h}</g>` + (g['roads'] || ''); }
   // zoom boxes
   for (const f of c.zoom.features) add('zoom', `<path data-course="${f.properties.course}" d="${V.path(f)}" fill="none" stroke="${f.properties.color}" stroke-width="2.4" stroke-dasharray="${dash([5, 3], 2.4)}"/>`);
   // arrows
@@ -80,12 +80,13 @@ export function renderMain(c) {
   fur += `<text x="${f1(sx)}" y="${f1(sy + H * .008)}" font-size="26" text-anchor="middle" dominant-baseline="hanging" fill="${col.ink}">0</text><text x="${f1(sx + m5)}" y="${f1(sy + H * .008)}" font-size="26" text-anchor="middle" dominant-baseline="hanging" fill="${col.ink}">5 mi</text></g>`;
   // north arrow (SSOT site/lib/north.ts), top-left corner
   fur += northG(W, W * NORTH_INSET, W * NORTH_INSET);
-  fur += `<a href="https://trailroots.com/big-bend-ultra" target="_blank" rel="noopener"><image class="maplogo" href="logo_ink_crop.png" x="${f1(W * 0.08)}" y="${f1(H * (1 - 0.985))}" width="${f1(LOGO_PT)}" height="${f1(LOGO_PT * 776 / 730)}" preserveAspectRatio="xMidYMid meet"/></a>`;
+  // logo: drawn LAST (above every layer, labels, markers and runner dots) with a white halo
+  const logo = `<a href="https://trailroots.com/big-bend-ultra" target="_blank" rel="noopener"><image class="maplogo" filter="url(#logohalo)" href="logo_ink_crop.png" x="${f1(W * 0.08)}" y="${f1(H * (1 - 0.985))}" width="${f1(LOGO_PT)}" height="${f1(LOGO_PT * 776 / 730)}" preserveAspectRatio="xMidYMid meet"/></a>`;
   fur += legend(c, W, H);
   const order = ['topo', 'park', 'roads', 'access', 'courses', 'zoom', 'arrows', 'stations', 'pois', 'stationLabels', 'labels', 'dots'];
   const vis = Object.fromEntries(LAYERS.map(l => [l[0], l[2]]));
   const grp = order.map(k => `<g class="layer" data-layer="${k}"${(vis[k] === false) ? ' style="display:none"' : ''}>${g[k] || ''}</g>`).join('\n');
-  return `<svg class="mainmap" viewBox="0 0 ${f1(W)} ${f1(H)}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Big Bend Ultra main course map"><defs><clipPath id="mclip"><rect width="${f1(W)}" height="${f1(H)}"/></clipPath></defs><rect width="${f1(W)}" height="${f1(H)}" fill="#fff"/><g clip-path="url(#mclip)"><g class="zv">${grp}</g></g>${fur}<rect width="${f1(W)}" height="${f1(H)}" fill="none" stroke="#000" stroke-width="1.6"/></svg>`;
+  return `<svg class="mainmap" viewBox="0 0 ${f1(W)} ${f1(H)}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Big Bend Ultra main course map"><defs><filter id="logohalo" x="-10%" y="-10%" width="120%" height="120%"><feMorphology in="SourceAlpha" operator="dilate" radius="5" result="d"/><feFlood flood-color="#fff"/><feComposite in2="d" operator="in"/><feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge></filter><clipPath id="mclip"><rect width="${f1(W)}" height="${f1(H)}"/></clipPath></defs><rect width="${f1(W)}" height="${f1(H)}" fill="#fff"/><g clip-path="url(#mclip)"><g class="zv">${grp}</g></g>${fur}<rect width="${f1(W)}" height="${f1(H)}" fill="none" stroke="#000" stroke-width="1.6"/>${logo}</svg>`;
 }
 /** notched arrowhead (dart), centred on the route point and pointing along the route.
  *  Normalised shape pointing +x: tip (0.6,0), top-back (-0.5,-0.5), notch (-0.28,0), bottom-back (-0.5,0.5) — length:height 1.1:1. */
@@ -120,7 +121,7 @@ function legend(c, W, H) {
     if (kk === 'pk') s += `<path d="${L}" stroke="${col.boundary}" stroke-width="2.6" stroke-dasharray="${dash([0.6, 2.6], 2.6)}" stroke-linecap="round"/>`;
     else if (kk === 'fm') s += `<path d="${L}" stroke="#333" stroke-width="10"/><path d="${L}" stroke="#fff" stroke-width="2.2" stroke-dasharray="${dash([6, 5], 2.2)}"/>`;
     else if (kk === 'za') s += `<path d="${L}" stroke="${col.ink}" stroke-width="6" stroke-dasharray="${whole(6, [4, .6, 1.6, .6])}"/>`;
-    else if (kk === 'zt') s += `<path d="${L}" stroke="${col.ink}" stroke-width="6" stroke-dasharray="${whole(6, [7.3, .7])}"/><path d="${L}" stroke="#fff" stroke-width="1.9"/>`;
+    else if (kk === 'zt') s += doubleTrack([[[x, y], [x + sw, y]]], col.ink, 6, 1.9, [7.3, .7]);
     else if (kk === 'z4') s += tireTrack([[[x, y], [x + sw, y]]], col.ink, 8.5, 4.6);
     else if (kk === 'zn') s += `<path d="${L}" stroke="${col.ink}" stroke-width="6" stroke-dasharray="${whole(6, [0.58, 0.25])}"/>`;
     else if (kk === 'rin') s += poiDot(x + sw / 2, y, 0.85);
@@ -143,7 +144,7 @@ export function accessPatterns(on: any[], V: any, col: any) {
   const T4 = mergeChains(on.filter(f => f.properties.cls === '4x4').flatMap(f => V.lines(f))).map(l => chaikin(simplifyPts(l, 1.5), 2));
   const d0 = (k: string) => D[k];
   for (const cls of ['foot_bike', 'unpaved', '4x4', 'foot']) if (D[cls]) {
-    if (cls === 'unpaved') { pat += `<path d="${d0(cls)}" class="ln" stroke="${col.ink}" stroke-width="6" stroke-dasharray="${dash([7.3, 0.7], 6)}" stroke-linecap="butt"/><path d="${d0(cls)}" class="ln" stroke="#fff" stroke-width="1.4" stroke-linecap="butt"/>`; continue; } // unpaved: long dash of double track + small gap (the pre-Oct-16 4x4 style)
+    if (cls === 'unpaved') { pat += doubleTrack(mergeChains(on.filter(f => f.properties.cls === cls).flatMap(f => V.lines(f))).map(l => chaikin(simplifyPts(l, 1.5), 2)), col.ink, 6, 1.4, [7.3, 0.7]); continue; } // unpaved: long dash of double track + small gap (the pre-Oct-16 4x4 style)
     if (cls === '4x4') { pat += tireTrack(T4, col.ink, 8.5, 4.6); continue; } // 4x4: tire tread (Erik's reference image)
     const s = STYLE.on[cls], d = D[cls];
     pat += `<path d="${d}" class="ln" stroke="${col.ink}" stroke-width="${s.lw}" stroke-dasharray="${dash(s.pat, s.lw)}" stroke-linecap="butt"/>` + (s.rail ? `<path d="${d}" class="ln" stroke="#fff" stroke-width="${s.rail}" stroke-linecap="butt"/>` : '');

@@ -169,3 +169,17 @@ export function tireTrack(lines: number[][][], color: string, w = 7, gap = 4.2, 
   if (casing) cas = `<path d="${lines.filter((l) => l.length > 1).map((l) => 'M' + l.map((q) => `${f1(q[0])},${f1(q[1])}`).join('L')).join('')}" class="ln" stroke="${casing}" stroke-width="${f1(w + 4)}"/>`;
   return chev ? cas + `<path d="${chev}" fill="none" stroke="${color}" stroke-width="${f1(sw)}" stroke-linecap="butt"/>` : '';
 }
+
+/** offset a polyline sideways by o (page units; miter-averaged normals) */
+export function offsetLine(l: number[][], o: number): number[][] {
+  const n = l.length, N = (i: number) => { const a = l[Math.max(0, i - 1)], b = l[Math.min(n - 1, i + 1)], L = Math.hypot(b[0] - a[0], b[1] - a[1]) || 1; return [-(b[1] - a[1]) / L, (b[0] - a[0]) / L]; };
+  return l.map((p, i) => { const [nx, ny] = N(i); return [p[0] + nx * o, p[1] + ny * o]; });
+}
+/** unpaved double track: two thin dashed lines with an EMPTY (transparent) gap between them, so the background / race band shows through */
+export function doubleTrack(lines: number[][][], color: string, w: number, rail: number, pat: number[]) {
+  const t = (w - rail) / 2, o = rail / 2 + t / 2; let d = '';
+  for (const l of lines) if (l.length > 1) for (const s of [o, -o]) d += 'M' + offsetLine(l, s).map((q) => `${f1(q[0])},${f1(q[1])}`).join('L');
+  return d ? `<path d="${d}" class="ln" fill="none" stroke="${color}" stroke-width="${f1(t)}" stroke-dasharray="${dash(pat, w)}" stroke-linecap="butt"/>` : '';
+}
+/** race-colour band opacity: SSOT for the fill under each race's elevation profile and the route bands on the maps (they match) */
+export const BAND_OP = 0.15;

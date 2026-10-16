@@ -1,6 +1,6 @@
 // One landscape letter page per race (100K -> 10K): left half its own race map (only that route), right half its header, elevation
 // profile and GPX distance / cutoff matrix. In the main PDF after page 1; each also prints alone as course-<k>.pdf.
-import { esc, f1, station } from '../lib/util';
+import { esc, f1, station, BAND_OP } from '../lib/util';
 import { miniBibSvg } from '../lib/panels';
 import { courseTable, totalGain } from '../lib/coursetable';
 import { renderRaceMap } from '../lib/racemap';
@@ -28,7 +28,7 @@ function profile(c, k: string) {
   const step = D > 30 ? 10 : D > 15 ? 5 : 1;
   for (let v = 0; v <= D + 1e-6; v += step) s += `<path d="M${f1(X(v))},${H - PB}v8" stroke="${col.ink}"/><text x="${f1(X(v))}" y="${H - 8}" font-size="17" text-anchor="middle" fill="${col.ink}">${v} mi</text>`;
   const pts = p.mi.map((m: number, i: number) => `${f1(X(m))},${f1(Y(p.ft[i]))}`);
-  s += `<path d="M${f1(X(0))},${H - PB}L${pts.join('L')}L${f1(X(p.mi[p.mi.length - 1]))},${H - PB}z" fill="${cc}" fill-opacity=".15"/><path d="M${pts.join('L')}" class="ln" stroke="${cc}" stroke-width="3.5"/>`;
+  s += `<path d="M${f1(X(0))},${H - PB}L${pts.join('L')}L${f1(X(p.mi[p.mi.length - 1]))},${H - PB}z" fill="${cc}" fill-opacity="${BAND_OP}"/><path d="M${pts.join('L')}" class="ln" stroke="${cc}" stroke-width="3.5"/>`;
   const ftAt = (m: number) => { let i = p.mi.findIndex((x: number) => x >= m); if (i < 0) i = p.mi.length - 1; return p.ft[i]; };
   for (const q of c.cutoffs[k]) { const x = X(q.mile), y = Y(ftAt(q.mile)) - 26; s += `<path d="M${f1(x)},${f1(y + 12)}V${f1(Y(ftAt(q.mile)))}" stroke="${col.ink}" stroke-width="1.5"/>` + station(x, y, q.station, c.stations.stations[q.station].spectator, { s: 600, fs: 19, badge: false, colors: col }); }
   // cutoff labels: a small time pill centered over each aid-station icon with a cutoff on this race, joined to the icon by a thin

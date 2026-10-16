@@ -14,11 +14,11 @@ export function renderTimeline(c: Ctx) {
   const T = c.timeline, st = c.layout.strips, W = st.w * SHEET.w, H = 5 * st.rh * SHEET.h, col = c.colors, ink = col.ink;
   const [t0, t1] = T.window, LX = 2, RX = W - 8, X = (t: number) => LX + ((t - t0) / (t1 - t0)) * (RX - LX);
   const AX = 34, CR = 50, SH = 24, TR = 24, order: string[] = c.courses.order, sts: string[] = c.stations.order, PADL = 14; void PADL;
-  const SUNR = 22; // sunrise/sunset row, just below the hour-axis + temperature rows 
+  const SUNR = 22; // sunrise/sunset row, at the bottom, under the temperature row 
   const VOL = order.length * CR + SH; // volume chart block (incl. room for the date at its top-left)
   const SR = Math.min(36, (H - 50 - (AX + 4 + TR + SUNR + VOL + 8)) / sts.length); // station rows shrink to keep the footer inside the fixed strip height
   // order top -> bottom: hour axis, temperatures, aid-station heat map rows, runners-on-course volume chart
-  const sTop = AX + 4 + TR + SUNR, vTop = sTop + sts.length * SR + 8, bottom = vTop + VOL - 6;
+  const sTop = AX + 4, vTop = sTop + sts.length * SR + 8, bottom = vTop + VOL - 6;
   let s = `<rect width="${f1(W)}" height="${f1(H)}" fill="#fff"/>`;
   // sky: night / civil twilight / daylight
   const sun = T.sun, d17 = sun.jan17, d18 = sun.jan18;
@@ -35,7 +35,7 @@ export function renderTimeline(c: Ctx) {
   }
   if (t1 > 1440) s += `<text x="${f1(X(1440) + 4)}" y="${AX - 10}" font-size="15" fill="${col.mute}" dx="22">Mon</text>`;
   // sunrise / sunset markers
-  const sunMark = (t: number, lab: string) => { const x = X(t), y = AX + 4 + TR + 17, up = lab === 'Sunrise'; let rays = ''; for (let i = 0; i < 5; i++) { const a = Math.PI * (i / 4); rays += `M${f1(x + Math.cos(a) * 9)},${f1(y - Math.sin(a) * 9)}L${f1(x + Math.cos(a) * 13)},${f1(y - Math.sin(a) * 13)}`; } return `<path d="M${f1(x)},${AX}V${f1(bottom)}" stroke="#d08a1e" stroke-width="2" stroke-dasharray="6 4"/><g class="sun"><title>${lab} ${clock(t, false)}</title><path d="M${f1(x - 7)},${f1(y)}a7,7 0 0 1 14,0z" fill="#f2a93b"/><path d="${rays}" stroke="#f2a93b" stroke-width="2" stroke-linecap="round"/><path d="M${f1(x - 14)},${f1(y)}h28" stroke="#a86a10" stroke-width="1.5"/><text x="${f1(x + 17 + 74 > RX ? x - 17 : x + 17)}" text-anchor="${x + 17 + 74 > RX ? 'end' : 'start'}" y="${f1(y)}" font-size="17" font-weight="700" fill="#a86a10" stroke="#fff" stroke-width="4" paint-order="stroke">${up ? '↑' : '↓'}${clock(t, false)}</text></g>`; };
+  const sunMark = (t: number, lab: string) => { const x = X(t), y = bottom + 6 + TR + 17, up = lab === 'Sunrise'; let rays = ''; for (let i = 0; i < 5; i++) { const a = Math.PI * (i / 4); rays += `M${f1(x + Math.cos(a) * 9)},${f1(y - Math.sin(a) * 9)}L${f1(x + Math.cos(a) * 13)},${f1(y - Math.sin(a) * 13)}`; } return `<path d="M${f1(x)},${AX}V${f1(bottom)}" stroke="#d08a1e" stroke-width="2" stroke-dasharray="6 4"/><g class="sun"><title>${lab} ${clock(t, false)}</title><path d="M${f1(x - 7)},${f1(y)}a7,7 0 0 1 14,0z" fill="#f2a93b"/><path d="${rays}" stroke="#f2a93b" stroke-width="2" stroke-linecap="round"/><path d="M${f1(x - 14)},${f1(y)}h28" stroke="#a86a10" stroke-width="1.5"/><text x="${f1(x + 17 + 74 > RX ? x - 17 : x + 17)}" text-anchor="${x + 17 + 74 > RX ? 'end' : 'start'}" y="${f1(y)}" font-size="17" font-weight="700" fill="#a86a10" stroke="#fff" stroke-width="4" paint-order="stroke">${up ? '↑' : '↓'}${clock(t, false)}</text></g>`; };
   s += sunMark(d17.sunrise, 'Sunrise') + sunMark(d17.sunset, 'Sunset');
   // build overlap check: sunrise / sunset labels (icon + ~74 px of text) must not collide with each other
   { const box = (tt: number) => { const x = X(tt), e = x + 17 + 74 > RX; return e ? [x - 17 - 74, x + 14] : [x - 14, x + 17 + 74]; }, A = box(d17.sunrise), B = box(d17.sunset);
@@ -76,7 +76,7 @@ export function renderTimeline(c: Ctx) {
     s += `<script type="application/json" class="tldata">${JSON.stringify({ xs: xs.map((x) => +x.toFixed(1)), v: Object.fromEntries(order.map((k) => [k, ts.map((tt) => +valAt(k, tt).toFixed(2))])), base, hgt })}</script>`;
   }
   // temperatures: median of every past race day (sources/curated/race-temps.json) under each 2-hour tick; range in the tooltip
-  s += tempRow(X, t0, t1, AX + 4 + TR - 7, col.mute);
+  s += tempRow(X, t0, t1, bottom + 6 + TR - 7, col.mute); // temperatures + sunrise/sunset rows at the bottom, below the chart
   s += heatRows(c, { X, LX, RX, sTop, SR, sts, races: order, t0, t1 });
   s += `<g class="tlcursor" style="display:none;pointer-events:none"><path d="M0,${AX}V${f1(bottom)}" stroke="#111" stroke-width="1.5" stroke-dasharray="4 3"/><g class="tip"><rect class="tlbox" fill="#fff" fill-opacity=".94" stroke="#bbb" rx="4"/><text class="tlread" font-size="17" font-weight="700"></text></g></g>`;
   return `<svg class="strips timeline" data-t0="${t0}" data-t1="${t1}" data-lx="${LX}" data-stop="${f1(sTop)}" data-sr="${f1(SR)}" data-sbot="${f1(sTop + sts.length * SR)}" data-stations="${sts.join(',')}" data-rx="${f1(RX)}" viewBox="0 0 ${f1(W)} ${f1(H)}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Race-day timeline: runners on course and at aid stations by time of day">${s}</svg>`;

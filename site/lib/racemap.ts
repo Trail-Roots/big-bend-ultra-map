@@ -7,7 +7,7 @@ import { turnaround } from './panels';
 import { hillImage, chevron } from './mainmap';
 import { bib, BIB } from './panels';
 import { accessPatterns } from './mainmap';
-import { viewProjection, SHEET, f1, esc, station, gmapLink, leaderLine } from './util';
+import { BAND_OP, viewProjection, SHEET, f1, esc, station, gmapLink, leaderLine } from './util';
 import { STATION_TPL } from './labels';
 
 /** sheet-unit scale vs the mini-map view, so symbols and text use the main map's sizes at race-page print size */
@@ -25,14 +25,18 @@ export function renderRaceMap(c, k: string, card?: boolean) {
   for (const f of c.network.features.filter((f) => f.properties.cls === 'connector')) { const d = V.path(f); sample(V.lines(f)); s += `<path d="${d}" class="ln" stroke="${col.cream}" stroke-width="12" stroke-linecap="butt"/><path d="${d}" class="ln" stroke="#000" stroke-width="7"/>`; }
   // next longer race's route underneath at low opacity (as on the old mini maps); the 100K has none
   const O: string[] = c.courses.order, nk = O[O.indexOf(k) - 1];
-  if (nk) { const nf = c.courseGeo[nk].features[0]; sample(V.lines(nf)); s += `<path d="${V.path(nf)}" class="ln under" data-course="${nk}" stroke="${c.courses.colors[nk]}" stroke-width="7" stroke-opacity=".28"/>`; }
+  if (nk) { const nf = c.courseGeo[nk].features[0]; sample(V.lines(nf)); s += `<path d="${V.path(nf)}" class="ln under" data-course="${nk}" stroke="${c.courses.colors[nk]}" stroke-width="9" stroke-opacity="${f1(BAND_OP * 0.45)}"/>`; }
   const rf = c.courseGeo[k].features[0], d = V.path(rf); sample(V.lines(rf));
   // race route = race-colour band (as the main map's race halo) under the trail-type patterns of the on-course network it follows (no white casing)
-  { const G = new Map<string, 1>(), cell = 4, key = (x: number, y: number) => `${Math.round(x / cell)},${Math.round(y / cell)}`;
-    for (const l of V.lines(rf)) for (let i = 1; i < l.length; i++) { const [a, b] = [l[i - 1], l[i]], n = Math.max(1, Math.ceil(Math.hypot(b[0] - a[0], b[1] - a[1]) / 2)); for (let j = 0; j <= n; j++) G.set(key(a[0] + (b[0] - a[0]) * j / n, a[1] + (b[1] - a[1]) * j / n), 1); }
-    const near = (x: number, y: number) => { for (let dx = -1; dx <= 1; dx++) for (let dy = -1; dy <= 1; dy++) if (G.has(`${Math.round(x / cell) + dx},${Math.round(y / cell) + dy}`)) return true; return false; };
-    const on = c.network.features.filter((f) => f.properties.on_course && (() => { const P = V.lines(f).flat(); return P.length && P.filter(([x, y]) => near(x, y)).length / P.length >= 0.7; })());
-    s += `<path d="${d}" class="ln" stroke="${cc}" stroke-width="15" stroke-linejoin="round" stroke-opacity=".55"/>` + accessPatterns(on, V, col); }
+  { const TOL = 2.5, cell = 4, G = new Map<string, number[][]>(), key = (a: number, b: number) => a + ',' + b; // route points every 1 unit, bucketed
+    for (const l of V.lines(rf)) for (let i = 1; i < l.length; i++) { const [a, b] = [l[i - 1], l[i]], n = Math.max(1, Math.ceil(Math.hypot(b[0] - a[0], b[1] - a[1]))); for (let j = 0; j <= n; j++) { const q = [a[0] + (b[0] - a[0]) * j / n, a[1] + (b[1] - a[1]) * j / n], kk = key(Math.floor(q[0] / cell), Math.floor(q[1] / cell)); (G.get(kk) ?? G.set(kk, []).get(kk)!).push(q); } }
+    const near = (x: number, y: number) => { const cx = Math.floor(x / cell), cy = Math.floor(y / cell); for (let dx = -1; dx <= 1; dx++) for (let dy = -1; dy <= 1; dy++) for (const q of G.get(key(cx + dx, cy + dy)) ?? []) if (Math.hypot(q[0] - x, q[1] - y) <= TOL) return true; return false; };
+    // clip every on-course network line to the runs that lie ON this race's GPX (densified, so partial overlaps keep exactly their shared part
+    // and nearby lines of other races are dropped); each clipped run keeps its trail-type class
+    const dens = (l: number[][]) => { const o: number[][] = []; for (let i = 1; i < l.length; i++) { const [a, b] = [l[i - 1], l[i]], n = Math.max(1, Math.ceil(Math.hypot(b[0] - a[0], b[1] - a[1]) / 2)); for (let j = i === 1 ? 0 : 1; j <= n; j++) o.push([a[0] + (b[0] - a[0]) * j / n, a[1] + (b[1] - a[1]) * j / n]); } return o; };
+    const on: any[] = []; for (const f of c.network.features) { if (!f.properties.on_course) continue; for (const l of V.lines(f)) { let run: number[][] = []; const flush = () => { if (run.length > 8) on.push({ properties: f.properties, _l: run }); run = []; }; for (const q of dens(l)) { if (near(q[0], q[1])) run.push(q); else flush(); } flush(); } }
+    const Vc = { ...V, lines: (f: any) => (f._l ? [f._l] : V.lines(f)) };
+    s += `<path d="${d}" class="ln" stroke="${cc}" stroke-width="15" stroke-linejoin="round" stroke-opacity="${BAND_OP}"/>` + accessPatterns(on, Vc, col); }
   // arrows: this race's arrows, at the main map's arrow size
   const arrows = c.arrows.features.filter((f) => f.properties.map === k).map((f) => ({ ...f, properties: { ...f.properties, size_pt: 12.4 } }));
   const ob: Bx[] = [];

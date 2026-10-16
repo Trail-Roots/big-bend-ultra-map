@@ -201,7 +201,7 @@ if (hdEl && prof) {
       txt.setAttribute('text-anchor', 'start'); txt.setAttribute('font-size', '15');
       rich(txt as SVGTextElement, [{ b: fmt(t), l: Number.isFinite(tc) ? `· ${tc}°F median (${Math.round(tempAtJS(t, 1))}–${Math.round(tempAtJS(t, 3))}°, ${TD.y[0]}–${TD.y[1]})` : '' }, ...paceRows(t)], 20, 0, 17);
       const bb = (txt as SVGTextElement).getBBox(); bx.setAttribute('x', String(bb.x - 5)); bx.setAttribute('y', String(bb.y - 3)); bx.setAttribute('width', String(bb.width + 10)); bx.setAttribute('height', String(bb.height + 6));
-      if (hovY >= 0) placeTip(tl, tg, x, hovY); else placeTip(tl, tg, x, +tl.dataset.stop!); // below the sunrise/sunset row
+      if (hovY >= 0) placeTip(tl, tg, x, hovY); else placeTip(tl, tg, x, 0);
 
       
     }
@@ -266,6 +266,8 @@ const syncLogo = () => {
   if (k > 0 && w > 0) { mapLogo.setAttribute('width', w.toFixed(1)); mapLogo.setAttribute('height', (w * 776 / 730).toFixed(1)); }
 };
 addEventListener('resize', syncLogo); hdrLogo?.addEventListener('load', syncLogo); syncLogo();
+// logo stays the topmost map element even if anything is appended to the map later
+const logoTop = () => { const a = mapLogo?.parentElement; if (a && mapSvg && mapSvg.lastElementChild !== a) mapSvg.appendChild(a); }; addEventListener('load', logoTop); new MutationObserver(logoTop).observe(mapSvg ?? document.createElement('svg'), { childList: true });
 addEventListener('beforeprint', () => { if (mapLogo) { mapLogo.setAttribute('width', String(1.45 * 72)); mapLogo.setAttribute('height', String(1.45 * 72 * 776 / 730)); } });
 addEventListener('afterprint', syncLogo);
 
