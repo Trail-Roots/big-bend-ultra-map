@@ -54,7 +54,7 @@ export function raceSegments(c: Ctx, k: string): Seg[] {
 type Box = { x0: number; x1: number; y: number };
 /** one race strip; here = current station (lightbox / print page) gets a "You are here" marker */
 export function milestoneStrip(c: Ctx, k: string, opt: { compact?: boolean; print?: boolean; here?: string; label?: boolean } = {}) {
-  const W = opt.compact ? 420 : opt.print ? 1150 : 900, FS = opt.compact ? 15 : 14, LX = opt.compact ? 18 : 20, RX = W - (opt.compact ? 18 : 20), cw = FS * 0.62; /* generous glyph width so labels never run past the frame */
+  const W = opt.compact ? 420 : opt.print ? 1250 : 900, FS = opt.compact ? 15 : 14, LX = opt.compact ? 18 : 20, RX = W - (opt.compact ? 18 : 20), cw = FS * 0.62; /* generous glyph width so labels never run past the frame */
   const segs = raceSegments(c, k), D = segs[segs.length - 1].b, X = (m: number) => LX + (m / D) * (RX - LX), col = c.colors, cc = c.courses.colors[k];
   const NR = 3, rowsUp: Box[][] = [[], [], []], rowsDn: Box[][] = [[], [], []], placed: { t: string; x: number; row: number; up: boolean }[] = [];
   const fits = (r: Box[], b: Box) => r.every((o) => b.x1 + 6 < o.x0 || b.x0 - 6 > o.x1);
@@ -71,7 +71,7 @@ export function milestoneStrip(c: Ctx, k: string, opt: { compact?: boolean; prin
     ok[0].push(b); placed.push({ t, x: (b.x0 + b.x1) / 2, row: ok[2], up: ok[1] });
   }
   const nUp = Math.max(1, rowsUp.filter((q) => q.length).length), nDn = rowsDn.filter((q) => q.length).length, LH = FS + 5;
-  const top = 6 + (opt.here ? 20 : 0) + nUp * LH, Y = top + 16, H = Y + 22 + nDn * LH + 4;
+  const top = 6 + (opt.here ? 20 : 0) + nUp * LH, Y = top + 16, H = Y + 22 + nDn * LH + 8; /* room for the mi 0 / mi N descenders */
   let s = `<rect width="${W}" height="${f1(H)}" fill="#fff"/>`;
   // one plain solid black line start -> finish; short black ticks mark where the trail / road name changes
   s += `<path d="M${f1(LX)},${Y}H${f1(RX)}" stroke="#111" stroke-width="4" stroke-linecap="butt"/>`;
@@ -84,7 +84,7 @@ export function milestoneStrip(c: Ctx, k: string, opt: { compact?: boolean; prin
     if (me) s += `<circle cx="${f1(x)}" cy="${Y}" r="${r + 6}" fill="none" stroke="${cc}" stroke-width="3"/><text x="${f1(Math.max(4 + (FS - 1) * 0.62 * 6, Math.min(W - 4 - (FS - 1) * 0.62 * 6, x)))}" y="${f1(top - nUp * LH - 2)}" font-size="${FS - 1}" font-weight="700" text-anchor="middle" fill="${cc}">You are here</text>`;
     s += (me ? "<g class=\"ms-me\">" : "") + station(x, Y, q.station, false, { s: ms * (q.station === "S/F" ? 1.2 : 1), fs: q.station === "S/F" ? r * 0.95 : r * 1.25, badge: false, colors: col, link: !me }) + (me ? "</g>" : "");
   }
-  s += `<text x="${LX}" y="${f1(H - 2)}" font-size="${FS - 3}" fill="${col.mute}">mi 0</text><text x="${RX}" y="${f1(H - 2)}" font-size="${FS - 3}" text-anchor="end" fill="${col.mute}">mi ${D.toFixed(1)}</text>`;
+  s += `<text x="${LX}" y="${f1(H - 5)}" font-size="${FS - 3}" fill="${col.mute}">mi 0</text><text x="${RX}" y="${f1(H - 5)}" font-size="${FS - 3}" text-anchor="end" fill="${col.mute}">mi ${D.toFixed(1)}</text>`;
   return `<svg class="msline${opt.compact ? ' msl-c' : opt.print ? ' msl-p' : ' msl-w'}" data-course="${k}" viewBox="0 0 ${W} ${f1(H)}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${k} route milestones">${s}</svg>`;
 }
 /** both variants (CSS shows the wide one on desktop / print, compact on phones) */
