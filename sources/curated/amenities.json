@@ -5,5 +5,5 @@
   "2": { "aid": true, "water": null, "snacks": null, "toilet": null, "medic": null, "dropBags": false, "spectators": true, "parking": null, "photo": "photos/contrabando.jpg" },
   "3": { "aid": true, "water": null, "snacks": null, "toilet": null, "medic": null, "dropBags": true, "spectators": false, "parking": null, "photo": "photos/whit-roy.jpg" },
   "4": { "aid": true, "water": null, "snacks": null, "toilet": null, "medic": null, "dropBags": true, "spectators": false, "parking": null, "photo": "photos/shutup.jpg" },
-  "5": { "aid": true, "water": null, "snacks": null, "toilet": null, "medic": null, "dropBags": false, "spectators": false, "parking": null, "photo": null }
+  "5": { "aid": true, "water": null, "snacks": null, "toilet": null, "medic": null, "dropBags": false, "spectators": false, "parking": null, "photo": "photos/solitario.jpg" }
 }
