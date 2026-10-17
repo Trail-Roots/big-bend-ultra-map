@@ -81,7 +81,7 @@ export function milestoneStrip(c: Ctx, k: string, opt: { compact?: boolean; prin
   const r = opt.compact ? 11 : 10, ms = (r * 2) ** 2 / 1.8 * 1.0;
   for (const q of c.cutoffs[k]) {
     const x = X(q.mile), me = opt.here === q.station;
-    if (me) s += `<circle cx="${f1(x)}" cy="${Y}" r="${r + 6}" fill="none" stroke="${cc}" stroke-width="3"/><text x="${f1(Math.max(4 + (FS - 1) * 0.62 * 6, Math.min(W - 4 - (FS - 1) * 0.62 * 6, x)))}" y="${f1(top - nUp * LH - 2)}" font-size="${FS - 1}" font-weight="700" text-anchor="middle" fill="${cc}">You are here</text>`;
+    if (me) s += `<circle cx="${f1(x)}" cy="${Y}" r="${r + 6}" fill="none" stroke="${cc}" stroke-width="3"/><text x="${f1(Math.max(4 + (FS - 1) * 0.62 * 7.5, Math.min(W - 4 - (FS - 1) * 0.62 * 7.5, x)))}" y="${f1(top - nUp * LH - 2)}" font-size="${FS - 1}" font-weight="700" text-anchor="middle" fill="${cc}">You are here</text>`;
     s += (me ? "<g class=\"ms-me\">" : "") + station(x, Y, q.station, false, { s: ms * (q.station === "S/F" ? 1.2 : 1), fs: q.station === "S/F" ? r * 0.95 : r * 1.25, badge: false, colors: col, link: !me }) + (me ? "</g>" : "");
   }
   s += `<text x="${LX}" y="${f1(H - 5)}" font-size="${FS - 3}" fill="${col.mute}">mi 0</text><text x="${RX}" y="${f1(H - 5)}" font-size="${FS - 3}" text-anchor="end" fill="${col.mute}">mi ${D.toFixed(1)}</text>`;
