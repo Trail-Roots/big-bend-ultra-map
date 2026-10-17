@@ -3,7 +3,7 @@
   "S/F": { "aid": true, "water": true, "snacks": null, "toilet": true, "medic": true, "dropBags": null, "spectators": true, "parking": true, "photo": "photos/barton-warnock.jpg" },
   "1": { "aid": true, "water": null, "snacks": null, "toilet": null, "medic": null, "dropBags": false, "spectators": false, "parking": null, "photo": null },
   "2": { "aid": true, "water": null, "snacks": null, "toilet": null, "medic": null, "dropBags": false, "spectators": true, "parking": null, "photo": null },
-  "3": { "aid": true, "water": null, "snacks": null, "toilet": null, "medic": null, "dropBags": true, "spectators": false, "parking": null, "photo": null },
+  "3": { "aid": true, "water": null, "snacks": null, "toilet": null, "medic": null, "dropBags": true, "spectators": false, "parking": null, "photo": "photos/whit-roy.jpg" },
   "4": { "aid": true, "water": null, "snacks": null, "toilet": null, "medic": null, "dropBags": true, "spectators": false, "parking": null, "photo": null },
   "5": { "aid": true, "water": null, "snacks": null, "toilet": null, "medic": null, "dropBags": false, "spectators": false, "parking": null, "photo": null }
 }
