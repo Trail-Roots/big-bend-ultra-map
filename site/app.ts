@@ -40,7 +40,7 @@ if (hdEl && prof) {
   const all = () => [...Object.values(mains), ...Object.values(minis)];
   const glide = makeGlide(HD.courses, mains, minis, zoomOf); void all;
   const hide = () => { pg.style.display = 'none'; glide.clear(); };
-  const move = (ev: PointerEvent) => {
+  const move = (ev: PointerEvent) => { { const L = [...prof.querySelectorAll('.plegend')].map((g) => g.getBoundingClientRect()).filter((r) => r.width); if (L.length && ev.clientX >= Math.min(...L.map((r) => r.left)) - 6 && ev.clientX <= Math.max(...L.map((r) => r.right)) + 6 && ev.clientY >= Math.min(...L.map((r) => r.top)) - 6 && ev.clientY <= Math.max(...L.map((r) => r.bottom)) + 6) { hide(); return; } } /* over the race toggles (incl. the gaps between them): no hover readout */
     const ctm = prof.getScreenCTM(); if (!ctm) return;
     const p = new DOMPoint(ev.clientX, ev.clientY).matrixTransform(ctm.inverse());
     // over a station marker: that station's cutoff time(s) and the overall pace they require, per visible race

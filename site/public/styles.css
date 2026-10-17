@@ -350,3 +350,5 @@ a.st-coord{white-space:nowrap}
 .cuttab a.stlink{white-space:nowrap}
 .cuttab svg.ctno{display:inline-block;width:1.6em;height:1.6em;vertical-align:-.45em}
 @media print{.sec-stpages ul.st-cuts{font-size:7.6pt;line-height:1.15}.sec-stpages ul.st-cuts .cutv{margin:0 0 1pt}}
+@media screen{.racecard .rc-media{position:relative}.racecard .rc-media .rc-full{position:absolute;right:8px;bottom:8px;display:inline-flex;align-items:center;gap:.35em;font:600 .78rem/1 system-ui,sans-serif;padding:.4rem .6rem;border-radius:4px;border:1px solid #c9c9cf;background:#fffffff0;color:#242428;cursor:pointer;white-space:nowrap;box-shadow:0 1px 3px #0002}.racecard .rc-media .rc-full:hover{border-color:#242428}.racecard .rc-media .rc-full svg.ic{width:13px;height:13px}
+.rc-btns{flex-wrap:nowrap!important;gap:6px}.rc-btns .splitbtn{min-width:0}.rc-btns a{padding:.45rem .55rem}}
