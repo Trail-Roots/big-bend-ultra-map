@@ -32,9 +32,10 @@ export function renderTimeline(c: Ctx) {
   for (let t = Math.ceil(t0 / 60) * 60; t <= t1; t += 60) {
     const x = X(t), major = t % 120 === 0;
     s += `<path d="M${f1(x)},${AX}V${f1(bottom)}" stroke="${major ? '#d4d4d4' : '#ececec'}" stroke-width="1"/>`;
-    if (major && t % 1440 !== 120 /* no "2a" tick label */) s += `<text x="${f1(x)}" y="${AX - 10}" font-size="16.5" text-anchor="${x < 24 ? "start" : "middle"}" fill="${ink}">${t % 1440 === 0 ? '12a' : clock(t)}</text>`;
+    if (major && t % 1440 !== 120 && t % 1440 !== 240 /* no "2a" / "4a" tick labels */) s += `<text x="${f1(x)}" y="${AX - 10}" font-size="16.5" text-anchor="${x < 24 ? "start" : "middle"}" fill="${ink}">${t % 1440 === 0 ? '12a' : clock(t)}</text>`;
   }
   if (t1 > 1440) s += `<text x="${f1(X(1440) + 4)}" y="${AX - 10}" font-size="15" fill="${col.mute}" dx="22">Mon</text>`;
+  s += `<text x="${f1(LX + 4)}" y="${AX - 10}" font-size="15" fill="${col.mute}">Sun</text>`; // day label at the start end, same style as "Mon"
   // sunrise / sunset markers
   const sunMark = (t: number, lab: string) => { const x = X(t), y = bottom + 6 + TR + 17, up = lab === 'Sunrise'; let rays = ''; for (let i = 0; i < 5; i++) { const a = Math.PI * (i / 4); rays += `M${f1(x + Math.cos(a) * 9)},${f1(y - Math.sin(a) * 9)}L${f1(x + Math.cos(a) * 13)},${f1(y - Math.sin(a) * 13)}`; } return `<path d="M${f1(x)},${AX}V${f1(bottom)}" stroke="#d08a1e" stroke-width="2" stroke-dasharray="6 4"/><g class="sun"><title>${lab} ${clock(t, false)}</title><path d="M${f1(x - 7)},${f1(y)}a7,7 0 0 1 14,0z" fill="#f2a93b"/><path d="${rays}" stroke="#f2a93b" stroke-width="2" stroke-linecap="round"/><path d="M${f1(x - 14)},${f1(y)}h28" stroke="#a86a10" stroke-width="1.5"/><text x="${f1(x + 17 + 74 > RX ? x - 17 : x + 17)}" text-anchor="${x + 17 + 74 > RX ? 'end' : 'start'}" y="${f1(y)}" font-size="17" font-weight="700" fill="#a86a10" stroke="#fff" stroke-width="4" paint-order="stroke">${up ? '↑' : '↓'}${clock(t, false)}</text></g>`; };
   s += sunMark(d17.sunrise, 'Sunrise') + sunMark(d17.sunset, 'Sunset');
@@ -154,7 +155,7 @@ export function renderRaceHeat(c: Ctx, k: string) {
   const AX = 30, SR = 30, LX = 2, RX = W - 8, X = (t: number) => LX + ((t - t0) / (t1 - t0)) * (RX - LX), sTop = AX + 6, H = sTop + sts.length * SR + 4;
   let s = `<rect width="${W}" height="${H}" fill="#fff"/>`;
   const step = t1 - t0 > 720 ? 120 : 60;
-  for (let t = Math.ceil(t0 / 60) * 60; t <= t1; t += 60) { const x = X(t), major = t % step === 0; s += `<path d="M${f1(x)},${AX}V${f1(H - 4)}" stroke="${major ? '#d4d4d4' : '#ececec'}"/>`; if (major && t % 1440 !== 120 && x > 20 && x < W - 20) s += `<text x="${f1(x)}" y="${AX - 9}" font-size="17" text-anchor="middle" fill="${ink}">${t % 1440 === 0 ? '12a' : clock(t)}</text>`; }
+  for (let t = Math.ceil(t0 / 60) * 60; t <= t1; t += 60) { const x = X(t), major = t % step === 0; s += `<path d="M${f1(x)},${AX}V${f1(H - 4)}" stroke="${major ? '#d4d4d4' : '#ececec'}"/>`; if (major && t % 1440 !== 120 && t % 1440 !== 240 && x > 20 && x < W - 20) s += `<text x="${f1(x)}" y="${AX - 9}" font-size="17" text-anchor="middle" fill="${ink}">${t % 1440 === 0 ? '12a' : clock(t)}</text>`; }
   s += heatRows(c, { X, LX, RX, sTop, SR, sts, races: [k], t0, t1, only: k });
   return `<svg class="raceheat" data-course="${k}" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${k} aid-station heat map">${s}</svg>`;
 }
@@ -164,7 +165,7 @@ export function renderStationHeat(c: Ctx, k: string) {
   const [t0, t1] = T.window; // same race-day time axis as page 1 (SSOT)
   const AX = 30, SR = 40, LX = 2, RX = W - 8, X = (t: number) => LX + ((t - t0) / (t1 - t0)) * (RX - LX), sTop = AX + 6, H = sTop + SR + 4, step = t1 - t0 > 720 ? 120 : 60;
   let s = `<rect width="${W}" height="${H}" fill="#fff"/>`;
-  for (let t = Math.ceil(t0 / 60) * 60; t <= t1; t += 60) { const x = X(t), major = t % step === 0; s += `<path d="M${f1(x)},${AX}V${f1(H - 4)}" stroke="${major ? '#d4d4d4' : '#ececec'}"/>`; if (major && t % 1440 !== 120 && x > 20 && x < W - 20) s += `<text x="${f1(x)}" y="${AX - 9}" font-size="17" text-anchor="middle" fill="${ink}">${t % 1440 === 0 ? '12a' : clock(t)}</text>`; }
+  for (let t = Math.ceil(t0 / 60) * 60; t <= t1; t += 60) { const x = X(t), major = t % step === 0; s += `<path d="M${f1(x)},${AX}V${f1(H - 4)}" stroke="${major ? '#d4d4d4' : '#ececec'}"/>`; if (major && t % 1440 !== 120 && t % 1440 !== 240 && x > 20 && x < W - 20) s += `<text x="${f1(x)}" y="${AX - 9}" font-size="17" text-anchor="middle" fill="${ink}">${t % 1440 === 0 ? '12a' : clock(t)}</text>`; }
   // shading scale shared with page 1 (aid stations share one scale; S/F its own)
   s += heatRows(c, { X, LX, RX, sTop, SR, sts: [k], races, t0, t1, gmaxFrom: c.stations.order });
   return `<svg class="stheat" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${esc(c.stations.stations[k].name)} busiest times">${s}</svg>`;
@@ -174,7 +175,7 @@ export function renderStationHeat(c: Ctx, k: string) {
 export function renderIdleHeat(c: Ctx) {
   const T = c.timeline, col = c.colors, ink = col.ink, W = 900, [t0, t1] = T.window, AX = 30, SR = 40, LX = 2, RX = W - 8, X = (t: number) => LX + ((t - t0) / (t1 - t0)) * (RX - LX), sTop = AX + 6, H = sTop + SR + 4;
   let s = `<rect width="${W}" height="${H}" fill="#fff"/>`;
-  for (let t = Math.ceil(t0 / 60) * 60; t <= t1; t += 60) { const x = X(t), major = t % 120 === 0; s += `<path d="M${f1(x)},${AX}V${f1(H - 4)}" stroke="${major ? '#d4d4d4' : '#ececec'}"/>`; if (major && t % 1440 !== 120 && x > 20 && x < W - 20) s += `<text x="${f1(x)}" y="${AX - 9}" font-size="17" text-anchor="middle" fill="${ink}">${t % 1440 === 0 ? '12a' : clock(t)}</text>`; }
+  for (let t = Math.ceil(t0 / 60) * 60; t <= t1; t += 60) { const x = X(t), major = t % 120 === 0; s += `<path d="M${f1(x)},${AX}V${f1(H - 4)}" stroke="${major ? '#d4d4d4' : '#ececec'}"/>`; if (major && t % 1440 !== 120 && t % 1440 !== 240 && x > 20 && x < W - 20) s += `<text x="${f1(x)}" y="${AX - 9}" font-size="17" text-anchor="middle" fill="${ink}">${t % 1440 === 0 ? '12a' : clock(t)}</text>`; }
   s += heatRows(c, { X, LX, RX, sTop, SR, sts: ['S/F'], races: [], t0, t1, series: T.finish_crowd.inactive15, title: 'Runners off course at the Start / Finish (modelled)' });
   return `<svg class="idleheat" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Runners off course at the Start / Finish by time of day">${s}</svg>`;
 }

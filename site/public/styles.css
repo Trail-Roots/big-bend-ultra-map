@@ -361,3 +361,14 @@ dialog.lightbox .lb-nav:hover{background:#e6e6e6;border-color:#8a8a8a}dialog.lig
 html.embed dialog.lightbox .lb-navs{position:sticky;top:auto;bottom:14px;left:auto;right:auto;transform:none;justify-content:center;gap:14px;margin:-54px 0 14px;pointer-events:none}html.embed dialog.lightbox .lb-nav{pointer-events:auto}
 @media print{dialog.lightbox .lb-navs{display:none!important}}
 @media (max-width:699px){dialog.lightbox .lb-nav[data-tip]:hover::after{top:auto;bottom:calc(100% + 6px);right:auto;left:50%;transform:translateX(-50%)}}html.embed dialog.lightbox .lb-nav[data-tip]:hover::after{top:auto;bottom:calc(100% + 6px);right:auto;left:50%;transform:translateX(-50%)}
+table.st-timing{border-collapse:collapse;font-size:.9rem;font-variant-numeric:tabular-nums;width:auto}
+table.st-timing th,table.st-timing td{padding:1px 0 2px;white-space:nowrap;vertical-align:baseline;font-weight:400}
+table.st-timing th.cutr{font-weight:700;text-align:left;padding-right:.7em}
+table.st-timing td.cutm{text-align:right;padding-right:.6em}
+table.st-timing td.cutl{color:var(--mute);padding-right:.45em}
+table.st-timing td.cutt{text-align:right}table.st-timing td.cutt b{font-weight:700}
+table.st-timing tr.cut1:not(:first-child) th,table.st-timing tr.cut1:not(:first-child) td{padding-top:5px}
+@media print{.sec-stpages table.st-timing{font-size:7.6pt;line-height:1.15}.sec-stpages table.st-timing th,.sec-stpages table.st-timing td{padding:0 0 1pt}.sec-stpages table.st-timing tr.cut1:not(:first-child) th,.sec-stpages table.st-timing tr.cut1:not(:first-child) td{padding-top:2pt}.sec-stpages table.st-timing th.cutr{padding-right:.6em}}
+table.st-timing tr.cutv{display:table-row;margin:0}table.st-timing th,table.st-timing td{display:table-cell}
+@media print{.sec-stpages table.st-timing{line-height:1.08}.sec-stpages table.st-timing th,.sec-stpages table.st-timing td{padding:0 .45em .4pt 0}.sec-stpages table.st-timing th.cutr{padding-right:.6em}.sec-stpages table.st-timing td.cutm{padding-right:.5em}.sec-stpages table.st-timing td.cutt{padding-right:0}.sec-stpages table.st-timing tr.cut1:not(:first-child) th,.sec-stpages table.st-timing tr.cut1:not(:first-child) td{padding-top:1.2pt}}
+@media screen{.stripsbox .callinks{justify-content:flex-end}}@media screen and (min-width:1100px){html .sec-map .pg1 .stripsbox .callinks{left:auto;right:0}}
