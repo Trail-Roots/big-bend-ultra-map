@@ -349,3 +349,4 @@ ul.st-cuts{list-style:none;padding:0;margin:0;font-size:.9rem}ul.st-cuts .cutv{d
 a.st-coord{white-space:nowrap}
 .cuttab a.stlink{white-space:nowrap}
 .cuttab svg.ctno{display:inline-block;width:1.6em;height:1.6em;vertical-align:-.45em}
+@media print{.sec-stpages ul.st-cuts{font-size:7.6pt;line-height:1.15}.sec-stpages ul.st-cuts .cutv{margin:0 0 1pt}}
