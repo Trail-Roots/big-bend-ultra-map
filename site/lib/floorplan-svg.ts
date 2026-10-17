@@ -11,8 +11,8 @@ const NORTH = (corner: 'tl' | 'tr') => northIcon(`fp-north fp-${corner}`); // SS
 const ZOOM = `<div class="fp-zoomctl"><button type="button" data-z="in" aria-label="Zoom in">${icon('plus')}</button><button type="button" data-z="out" aria-label="Zoom out">${icon('minus')}</button><button type="button" data-z="reset" aria-label="Reset zoom">${icon('reset')}</button></div>`;
 const img = (v: View, alt: string, corner: 'tl' | 'tr', over = '', zoom = true) =>
   `<div class="fp-zoom${zoom ? '' : ' fp-static'}" style="--ar:${(v.w / v.h).toFixed(4)}" ><div class="fp-stage"><img class="floorplan-img" src="plans/floorplan.svg#svgView(viewBox(${v.x},${v.y},${v.w},${v.h}))" width="${v.w}" height="${v.h}" alt="${alt}" style="display:block;width:100%;height:auto;aspect-ratio:${v.w}/${v.h};background:#fff" draggable="false">${over}</div>${NORTH(corner)}${zoom ? ZOOM : ''}</div>`;
-export const renderFinishPlan = () => img(FINISH_VIEW, 'Finish area floor plan', 'tl') // north arrow top-left on every map (SSOT);
-export const renderParkingPlan = () => img(PARKING_VIEW, 'Parking plan', 'tl', '', false /* static: no zoom / pan, no controls */) // top-left is open ground (property line runs down the right);
+export const renderFinishPlan = () => img(FINISH_VIEW, 'Finish area floor plan', 'tl', '', false /* Visitor Center plan: static, no zoom / pan, no controls */) // north arrow top-left on every map (SSOT);
+export const renderParkingPlan = () => img(PARKING_VIEW, 'Parking plan', 'tl') // top-left is open ground (property line runs down the right);
 
 // legend swatches drawn with the drawing's own fills/strokes (taken from sources/floorplan.svg)
 const box = (fill: string, stroke: string, sw = 1.6, extra = '') => `<svg viewBox="0 0 30 20" width="30" height="20" aria-hidden="true"><rect x="2" y="2" width="26" height="16" rx="2" style="fill:${fill};stroke:${stroke};stroke-width:${sw}px"/>${extra}</svg>`;

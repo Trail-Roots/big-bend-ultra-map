@@ -56,7 +56,7 @@ type Box = { x0: number; x1: number; y: number };
 export function milestoneStrip(c: Ctx, k: string, opt: { compact?: boolean; print?: boolean; here?: string; label?: boolean } = {}) {
   const W = opt.compact ? 420 : opt.print ? 1250 : 900, FS = opt.compact ? 15 : 14, LX = opt.compact ? 18 : 20, RX = W - (opt.compact ? 18 : 20), cw = FS * 0.62; /* generous glyph width so labels never run past the frame */
   const segs = raceSegments(c, k), D = segs[segs.length - 1].b, X = (m: number) => LX + (m / D) * (RX - LX), col = c.colors, cc = c.courses.colors[k];
-  const NR = 3, rowsUp: Box[][] = [[], [], []], rowsDn: Box[][] = [[], [], []], placed: { t: string; x: number; row: number; up: boolean }[] = [];
+  const NR = opt.compact ? 4 : 3, rowsUp: Box[][] = [[], [], [], []], rowsDn: Box[][] = [[], [], [], []], placed: { t: string; x: number; row: number; up: boolean }[] = [];
   const fits = (r: Box[], b: Box) => r.every((o) => b.x1 + 6 < o.x0 || b.x0 - 6 > o.x1);
   for (const s of segs) {
     if (!s.name) continue;
@@ -73,9 +73,8 @@ export function milestoneStrip(c: Ctx, k: string, opt: { compact?: boolean; prin
   const nUp = Math.max(1, rowsUp.filter((q) => q.length).length), nDn = rowsDn.filter((q) => q.length).length, LH = FS + 5;
   const top = 6 + (opt.here ? 20 : 0) + nUp * LH, Y = top + 16, H = Y + 22 + nDn * LH + 8; /* room for the mi 0 / mi N descenders */
   let s = `<rect width="${W}" height="${f1(H)}" fill="#fff"/>`;
-  // one plain solid black line start -> finish; short black ticks mark where the trail / road name changes
+  // one plain solid black line start -> finish
   s += `<path d="M${f1(LX)},${Y}H${f1(RX)}" stroke="#111" stroke-width="4" stroke-linecap="butt"/>`;
-  segs.forEach((g, i) => { if (i) s += `<path d="M${f1(X(g.a))},${Y - 8}V${Y + 8}" stroke="#111" stroke-width="1.5"/>`; });
   for (const p of placed) { const y = p.up ? Y - 14 - p.row * LH : Y + 26 + FS * 0.75 + p.row * LH; s += `<text x="${f1(p.x)}" y="${f1(y)}" font-size="${FS}" text-anchor="middle" fill="${col.ink}">${esc(p.t)}</text>`; }
   // stations at their GPX miles (cutoffs.json, from the GPX); the start / finish ends use the S/F marker
   const r = opt.compact ? 11 : 10, ms = (r * 2) ** 2 / 1.8 * 1.0;

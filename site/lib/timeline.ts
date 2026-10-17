@@ -13,10 +13,10 @@ export const cutMin = (t: string) => { const m = t.match(/^(\d+):(\d\d) (AM|PM)$
 export function renderTimeline(c: Ctx) {
   const T = c.timeline, st = c.layout.strips, W = st.w * SHEET.w, H = 5 * st.rh * SHEET.h, col = c.colors, ink = col.ink;
   const [t0, t1] = T.window, LX = 2, RX = W - 8, X = (t: number) => LX + ((t - t0) / (t1 - t0)) * (RX - LX);
-  const AX = 34, CR = 34, SH = 24, TR = 24, order: string[] = c.courses.order, sts: string[] = c.stations.order, PADL = 14; void PADL;
+  const AX = 34, CR = 22, SH = 24, TR = 24, order: string[] = c.courses.order, sts: string[] = c.stations.order, PADL = 14; void PADL;
   const SUNR = 22; // sunrise/sunset row, at the bottom, under the temperature row 
   const VOL = order.length * CR + SH; // stacked runners-on-course chart block
-  const CAPH = 30, GAPV = 44; // caption + breathing space above the heat map, and between heat map and stacked chart
+  const CAPH = 44, GAPV = 70; // caption + breathing space above the heat map, and between heat map and stacked chart
   const SR = Math.min(36, (H - 50 - (AX + 4 + CAPH + TR + SUNR + VOL + GAPV)) / sts.length); // station rows shrink to keep the footer inside the fixed strip height
   // order top -> bottom: hour axis, temperatures, aid-station heat map rows, runners-on-course volume chart
   const sTop = AX + 4 + CAPH, vTop = sTop + sts.length * SR + GAPV, bottom = vTop + VOL - 6;
@@ -32,7 +32,7 @@ export function renderTimeline(c: Ctx) {
   for (let t = Math.ceil(t0 / 60) * 60; t <= t1; t += 60) {
     const x = X(t), major = t % 120 === 0;
     s += `<path d="M${f1(x)},${AX}V${f1(bottom)}" stroke="${major ? '#d4d4d4' : '#ececec'}" stroke-width="1"/>`;
-    if (major && t % 1440 !== 120 /* no "2a" tick label */) s += `<text x="${f1(x)}" y="${AX - 10}" font-size="21" text-anchor="${x < 24 ? "start" : "middle"}" fill="${ink}">${t % 1440 === 0 ? '12a' : clock(t)}</text>`;
+    if (major && t % 1440 !== 120 /* no "2a" tick label */) s += `<text x="${f1(x)}" y="${AX - 10}" font-size="16.5" text-anchor="${x < 24 ? "start" : "middle"}" fill="${ink}">${t % 1440 === 0 ? '12a' : clock(t)}</text>`;
   }
   if (t1 > 1440) s += `<text x="${f1(X(1440) + 4)}" y="${AX - 10}" font-size="15" fill="${col.mute}" dx="22">Mon</text>`;
   // sunrise / sunset markers

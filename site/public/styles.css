@@ -343,5 +343,9 @@ html.embed dialog.lightbox .lb-close{position:sticky;top:10px;float:right;margin
 .st-msl .msfig{margin:.2rem 0 .4rem}
 @media screen{.msfig .ms-me g.marker{cursor:default!important;pointer-events:none!important}}
 .zctl button.zplay svg.ic{width:13px;height:13px}
-ul.st-cuts{list-style:none;padding:0;margin:0;font-size:.9rem}ul.st-cuts .cutv{display:block;margin:0 0 2px;white-space:nowrap}.cutr{display:inline-block;min-width:2.9em;font-weight:700}@media print{.sec-stpages .st-msl .msfig{margin:0 0 1pt}.sec-stpages .st-msl h3{margin:2pt 0}}
+ul.st-cuts{list-style:none;padding:0;margin:0;font-size:.9rem}ul.st-cuts .cutv{display:block;margin:0 0 2px}.cutx{white-space:nowrap}.cutr{display:inline-block;min-width:2.9em;font-weight:700}@media print{.sec-stpages .st-msl .msfig{margin:0 0 1pt}.sec-stpages .st-msl h3{margin:2pt 0}}
 .msfig svg.msl-p{display:none}@media print{.msfig svg.msl-w{display:none!important}.msfig svg.msl-p{display:block!important}}
+.cuttab svg.ctno{width:1.25em;height:1.25em;vertical-align:-.3em;margin-right:.35em;overflow:visible}
+a.st-coord{white-space:nowrap}
+.cuttab a.stlink{white-space:nowrap}
+.cuttab svg.ctno{display:inline-block;width:1.6em;height:1.6em;vertical-align:-.45em}
