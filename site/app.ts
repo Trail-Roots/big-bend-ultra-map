@@ -383,7 +383,8 @@ if (document.documentElement.classList.contains('embed') && parent !== window) {
   document.querySelectorAll<HTMLButtonElement>('.rc-open').forEach((b) => b.addEventListener('click', () => { openRace(b.dataset.course!); history.replaceState(null, '', `#course-${b.dataset.course}`); }));
   // print from inside a lightbox: put the page back first so print order is unchanged
   addEventListener('beforeprint', () => { if (rbox?.open) { const k = moved?.el.dataset.course; restore(); rbox.close(); /* put the race page back synchronously (the dialog close event is async) */ if (k && document.body.classList.contains('printone')) document.querySelectorAll('.coursepage').forEach((p) => p.classList.toggle('on', (p as HTMLElement).dataset.course === k)); } if (sbox?.open) sbox.close(); });
-  const openStation = (k: string) => { if (!sbox) return; const t = document.getElementById(`st-${k === 'S/F' ? 'SF' : k}`) as HTMLTemplateElement | null; if (!t) return;
+  let curSt = '';
+  const openStation = (k: string) => { if (!sbox) return; curSt = k; const t = document.getElementById(`st-${k === 'S/F' ? 'SF' : k}`) as HTMLTemplateElement | null; if (!t) return;
     const body = sbox.querySelector('.lb-body')!; body.innerHTML = ''; body.appendChild(t.content.cloneNode(true));
     stMap(body.querySelector<HTMLElement>('.st-map'), k, 0.75);
     if (!sbox.open) { embedModal(sbox, true); sbox.showModal(); } };
@@ -405,6 +406,13 @@ if (document.documentElement.classList.contains('embed') && parent !== window) {
     const a = t.closest<Element>('g.stpick, a.stlink, g.marker[data-station], g.pcall[data-st]'); if (!a) return; const k = a.getAttribute('data-station') ?? a.getAttribute('data-st');
     const ms = a.closest<HTMLElement>('.msfig-here'); if (ms ? k === ms.dataset.here : a.closest('.lightbox.stbox, .sec-stpages, .st-badge')) return; /* never a station's own details; milestone strips there link to the OTHER stations */ if (!k) return;
     if (document.querySelector('svg.mainmap.panning')) return; e.preventDefault(); openStation(k); history.replaceState(null, '', `#station-${encodeURIComponent(k)}`); });
+  // prev / next through the aid stations (S/F, 1..5) or the race pages (100K..10K), wrapping: buttons + Left / Right arrow keys
+  { const ST = ['S/F', '1', '2', '3', '4', '5'], RC = [...document.querySelectorAll<HTMLElement>('.racecard')].map((c) => c.dataset.course!);
+    const go = (box: HTMLDialogElement, d: number) => { if (box === sbox) { const i = ST.indexOf(curSt); if (i < 0) return; const k = ST[(i + d + ST.length) % ST.length]; openStation(k); sbox.scrollTop = 0; history.replaceState(null, '', '#station-' + encodeURIComponent(k)); }
+      else { const i = RC.indexOf(moved?.el.dataset.course ?? ''); if (i < 0) return; const k = RC[(i + d + RC.length) % RC.length]; openRace(k); history.replaceState(null, '', '#course-' + k); } };
+    for (const box of [rbox, sbox]) if (box) { const what = box === sbox ? 'aid station' : 'race', nav = document.createElement('div'); nav.className = 'lb-navs'; box.appendChild(nav);
+      for (const [d, ic, lab] of [[-1, 'chevl', 'Previous ' + what], [1, 'chevr', 'Next ' + what]] as [number, string, string][]) { const b = document.createElement('button'); b.type = 'button'; b.className = 'lb-nav ' + (d < 0 ? 'lb-prev' : 'lb-next'); b.setAttribute('aria-label', lab); b.dataset.tip = lab + (d < 0 ? ' (←)' : ' (→)'); b.innerHTML = icon(ic); b.addEventListener('click', (e) => { e.stopPropagation(); go(box, d); }); nav.appendChild(b); }
+      box.addEventListener('keydown', (e) => { if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return; const t = e.target as HTMLElement; if (t.closest('input,textarea,select,[contenteditable]')) return; e.preventDefault(); go(box, e.key === 'ArrowLeft' ? -1 : 1); }); } }
   for (const box of [rbox, sbox]) if (box) { box.querySelector('.lb-close')!.addEventListener('click', () => box.close()); box.addEventListener('click', (e) => { const t = e.target as Element; if (t === box || t.classList?.contains('lb-body')) box.close(); }); /* backdrop + the empty padding around the content close it; Esc closes natively */ }
   const fromHash = () => { const h = decodeURIComponent(location.hash); let m; if ((m = /^#course-(.+)$/.exec(h))) openRace(m[1]); else if ((m = /^#station-(.+)$/.exec(h))) openStation(m[1]); };
   addEventListener('hashchange', fromHash); fromHash();

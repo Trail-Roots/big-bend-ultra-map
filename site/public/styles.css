@@ -353,3 +353,11 @@ a.st-coord{white-space:nowrap}
 @media screen{.racecard .rc-media{position:relative}.racecard .rc-media .rc-full{position:absolute;right:8px;bottom:8px;display:inline-flex;align-items:center;gap:.35em;font:600 .78rem/1 system-ui,sans-serif;padding:.4rem .6rem;border-radius:4px;border:1px solid #c9c9cf;background:#fffffff0;color:#242428;cursor:pointer;white-space:nowrap;box-shadow:0 1px 3px #0002}.racecard .rc-media .rc-full:hover{border-color:#242428}.racecard .rc-media .rc-full svg.ic{width:13px;height:13px}
 .rc-btns{flex-wrap:nowrap!important;gap:6px}.rc-btns .splitbtn{min-width:0}.rc-btns a{padding:.45rem .55rem}}
 .infobox{background:var(--shade);padding:.5rem .7rem;margin:.6rem 0 0;line-height:1.4;display:block;color:var(--ink,#2a2a2a);-webkit-print-color-adjust:exact;print-color-adjust:exact}
+dialog.lightbox .lb-navs{position:fixed;top:10px;right:62px;z-index:5;display:flex;gap:8px}
+dialog.lightbox .lb-nav{position:relative;width:40px;height:40px;border-radius:50%;border:1px solid #d4d4d4;background:#f4f4f4;color:#2a2a2a;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;box-shadow:0 1px 4px #0004;padding:0}
+dialog.lightbox .lb-nav:hover{background:#e6e6e6;border-color:#8a8a8a}dialog.lightbox .lb-nav svg.ic{width:20px;height:20px}
+@media (hover:hover){dialog.lightbox .lb-nav[data-tip]:hover::after{content:attr(data-tip);position:absolute;top:calc(100% + 6px);right:0;white-space:nowrap;background:#fff;color:#2a2a2a;border:1px solid #d4d4d4;border-radius:4px;padding:3px 7px;font:600 12px/1.3 system-ui,sans-serif;box-shadow:0 1px 3px #0003;pointer-events:none}}
+@media (max-width:699px){dialog.lightbox .lb-navs{top:auto;bottom:14px;right:auto;left:50%;transform:translateX(-50%);gap:14px}}
+html.embed dialog.lightbox .lb-navs{position:sticky;top:auto;bottom:14px;left:auto;right:auto;transform:none;justify-content:center;gap:14px;margin:-54px 0 14px;pointer-events:none}html.embed dialog.lightbox .lb-nav{pointer-events:auto}
+@media print{dialog.lightbox .lb-navs{display:none!important}}
+@media (max-width:699px){dialog.lightbox .lb-nav[data-tip]:hover::after{top:auto;bottom:calc(100% + 6px);right:auto;left:50%;transform:translateX(-50%)}}html.embed dialog.lightbox .lb-nav[data-tip]:hover::after{top:auto;bottom:calc(100% + 6px);right:auto;left:50%;transform:translateX(-50%)}
