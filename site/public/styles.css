@@ -372,3 +372,54 @@ table.st-timing tr.cut1:not(:first-child) th,table.st-timing tr.cut1:not(:first-
 table.st-timing tr.cutv{display:table-row;margin:0}table.st-timing th,table.st-timing td{display:table-cell}
 @media print{.sec-stpages table.st-timing{line-height:1.08}.sec-stpages table.st-timing th,.sec-stpages table.st-timing td{padding:0 .45em .4pt 0}.sec-stpages table.st-timing th.cutr{padding-right:.6em}.sec-stpages table.st-timing td.cutm{padding-right:.5em}.sec-stpages table.st-timing td.cutt{padding-right:0}.sec-stpages table.st-timing tr.cut1:not(:first-child) th,.sec-stpages table.st-timing tr.cut1:not(:first-child) td{padding-top:1.2pt}}
 @media screen{.stripsbox .callinks{justify-content:flex-end}}@media screen and (min-width:1100px){html .sec-map .pg1 .stripsbox .callinks{left:auto;right:0}}
+/* ---------- race-day calendar (lib/calview.ts): day grid + agenda, neutral grays; race events carry a race-colour bar ---------- */
+.calbox{position:relative;min-width:0}
+.cv{--hh:48px;display:flex;flex-direction:column;background:#fff;border:1px solid #d4d4d4;border-radius:6px;overflow:hidden;font:400 12px/1.3 system-ui,sans-serif;color:#2a2a2a;height:520px}
+.cv-head{display:flex;align-items:center;justify-content:space-between;padding:6px 10px;border-bottom:1px solid #e2e2e2;background:#f4f4f4}
+.cv-title{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 10px}.cv-title b{font-size:13px;font-weight:650}.cv-date{color:#555;font-size:11.5px}
+.cv-scroll{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;position:relative;scroll-behavior:auto}
+.cv-day{position:sticky;top:0;z-index:4;background:#fff;border-bottom:1px solid #e2e2e2;padding:5px 10px;font-weight:650;font-size:11.5px;color:#3a3a3a}
+.cv-agenda ol{list-style:none;margin:0;padding:2px 0 6px}
+.cv-item{display:grid;grid-template-columns:8.6em minmax(0,1fr);column-gap:8px;padding:3px 10px 3px 7px;margin:1px 6px;border-left:3px solid var(--rc,#9a9a9a);border-radius:3px;cursor:default}
+.cv-item:hover,.cv-item:focus{background:#f1f1f1;outline:none}
+.cv-item .cv-t{color:#555;font-variant-numeric:tabular-nums;white-space:nowrap}.cv-item .cv-s{font-weight:600;overflow-wrap:anywhere}.cv-item .cv-l{grid-column:2;color:#666;font-size:11px;overflow-wrap:anywhere}
+.cv-allday{display:flex;gap:8px;align-items:baseline;margin:4px 6px 4px 52px;padding:3px 8px;background:#ececec;border-radius:3px;cursor:default}.cv-allday .cv-t{color:#555;font-size:11px}.cv-allday .cv-s{font-weight:600}
+.cv-grid{position:relative;margin:8px 0 10px}
+.cv-hr{position:absolute;left:0;right:0;height:0;border-top:1px solid #e6e6e6}.cv-hr span{position:absolute;left:0;width:44px;top:-.65em;padding-right:6px;text-align:right;font-size:10.5px;color:#666;background:#fff;font-variant-numeric:tabular-nums;white-space:nowrap}
+.cv-col{position:absolute;left:50px;right:6px;top:0;bottom:0}
+.cv-blk{position:absolute;box-sizing:border-box;overflow:hidden;background:#ececec;border:1px solid #fff;border-left:3px solid var(--rc,#8e8e8e);border-radius:4px;padding:2px 5px;cursor:default;display:flex;flex-direction:column;z-index:1}
+.cv-blk:hover,.cv-blk:focus{background:#e0e0e0;outline:none;z-index:3}
+.cv-blk .cv-s{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.cv-blk .cv-t{color:#555;font-size:11px;white-space:nowrap;font-variant-numeric:tabular-nums;overflow:hidden;text-overflow:ellipsis}
+.cv-blk.cv-short{flex-direction:row;gap:6px;align-items:baseline}.cv-blk.cv-short .cv-s{flex:0 1 auto;min-width:0}.cv-blk.cv-short .cv-t{flex:0 0 auto}
+.cv-now{position:absolute;left:-6px;right:0;height:0;border-top:2px solid #111;z-index:5;pointer-events:none}.cv-now::before{content:"";position:absolute;left:-4px;top:-5px;width:8px;height:8px;border-radius:50%;background:#111}
+.cv-tip{position:fixed;z-index:10000;max-width:min(320px,calc(100vw - 12px));white-space:pre-line;background:#fff;color:#2a2a2a;border:1px solid #d4d4d4;border-radius:4px;padding:5px 8px;font:500 12px/1.4 system-ui,sans-serif;box-shadow:0 1px 3px #0003;pointer-events:none}
+.cv-tip::first-line{font-weight:700}
+.calbox .callinks{margin-top:6px;justify-content:flex-end}.calbox .callinks svg.dlico{width:.8em;height:.8em;flex:none;box-shadow:none;display:inline-block}
+/* screen paper view: the calendar takes the old timeline slot on the landscape sheet; subscribe row below it */
+@media screen and (min-width:1100px){html .sec-map .pg1 .calbox{position:absolute;margin:0}html .sec-map .pg1 .calbox .cv{height:100%}html .sec-map .pg1 .calbox .callinks{position:absolute;top:100%;right:0;margin:.4cqw 0 0;font-size:.75cqw;flex-wrap:nowrap;white-space:nowrap}html .sec-map .pg1 .cv{--hh:44px}}
+@media screen and (min-width:1001px) and (max-width:1099px){.sheet .calbox{grid-column:2;grid-row:4}}
+@media screen and (max-width:1000px){.calbox{order:2}}
+@media screen and (max-width:560px){.cv{--hh:56px;height:470px;font-size:11.5px}.cv-item{grid-template-columns:minmax(0,1fr)}.cv-item .cv-l{grid-column:1}.cv-blk .cv-s{white-space:normal;overflow-wrap:anywhere;line-height:1.15;font-size:10.5px}.cv-blk.cv-short{flex-direction:column;gap:0}.cv-blk.cv-short .cv-t{display:none}.cv-col{left:46px}.cv-hr span{width:40px}.cv-allday{margin-left:46px}}
+/* print: the calendar is its own portrait page showing the whole race day (no scrolling) */
+@page pcal{size:letter portrait;margin:.28in}
+@media print{
+  html body .sec-map .calbox{page:pcal;break-before:page;position:relative;width:7.94in;height:10.44in;margin:0;overflow:hidden}
+  .calbox .cv{--hh:.325in;height:auto;border:none;border-radius:0;font-size:8.6pt}
+  .calbox .cv-head{background:#fff;border-bottom:1.2pt solid #2a2a2a;padding:0 0 .06in}.calbox .cv-title b{font-size:15pt}.calbox .cv-date{font-size:10pt}
+  .calbox .cv-scroll{overflow:visible}.calbox .cv-day{position:static;padding:.05in 0 .03in;font-size:9.5pt}
+  .calbox .cv-agenda ol{columns:2;column-gap:.25in;padding:.02in 0 .04in}.calbox .cv-item{break-inside:avoid;margin:1pt 0;padding:1pt 4pt}
+  .calbox .cv-allday{margin:.03in 0 .03in .5in}.calbox .cv-grid{margin:.08in 0 .1in}.calbox .cv-hr span{font-size:8pt;width:.42in}.calbox .cv-col{left:.48in;right:0}
+  .calbox .cv-blk{padding:0 4pt;-webkit-print-color-adjust:exact;print-color-adjust:exact}.calbox .cv-blk .cv-t{font-size:8pt}
+  .calbox .cv-now{display:none}.calbox .callinks{display:none}.cv-tip{display:none}}
+/* ---------- timeline section (sections/20-timeline.ts): own sheet; collapsible on the web, always expanded in print ---------- */
+.tl-head{display:flex;align-items:center;justify-content:space-between;gap:12px}.tl-head h2{margin:0}
+.tl-toggle{display:inline-flex;align-items:center;gap:6px;background:#f4f4f4;color:#2a2a2a;border:1px solid #d4d4d4;border-radius:6px;padding:4px 10px;font:600 13px system-ui,sans-serif;cursor:pointer}.tl-toggle:hover{background:#e9e9e9}
+.tl-chev{width:7px;height:7px;border-right:2px solid #555;border-bottom:2px solid #555;transform:rotate(-135deg) translate(-1px,-1px)}.tlpage.collapsed .tl-chev{transform:rotate(45deg) translate(-1px,-1px)}
+.tl-note{margin:.4em 0 .6em}
+.tlbox svg.timeline{display:block;width:100%;height:auto;max-width:100%;min-width:0}
+@media screen{.tlpage.collapsed .tlbox,.tlpage.collapsed .tl-note{display:none}}
+@media screen and (min-width:1100px){html body .sec-timeline > .doc.tlpage{width:11in!important;min-height:0!important;max-width:calc(calc(var(--host-vw, 1vw) * 100) - 48px)!important}}
+@page ptl{size:letter landscape;margin:.28in}
+@media print{html body .sec-timeline .tlpage{page:ptl;width:10.44in;height:7.94in;overflow:hidden}.tl-toggle{display:none!important}.tlbox svg.timeline{width:100%;height:auto;max-height:7.1in}}
+/* print: page 1 = map only, page 2 = header + elevation (.charts), page 3 = calendar; boxes sized / zoomed by sections/10-map.ts */
+@media print{html body .sec-map .pg1{display:block;position:static;width:auto;height:auto;zoom:1;margin:0!important}html body .sec-map .pg1 .main{position:relative;overflow:visible;break-after:page}html body .sec-map .pg1 .charts{display:block;position:relative;break-before:page}}

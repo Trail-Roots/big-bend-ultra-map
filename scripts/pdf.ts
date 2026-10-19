@@ -24,6 +24,8 @@ console.log('pdf', path.relative(process.cwd(), OUT), (fs.statSync(OUT).size / 1
   const files = fs.readdirSync(P).filter((f) => f.endsWith('.jpg')).sort();
   if (files.length !== pages.length) throw new Error(`print images ${files.length} != pages ${pages.length}`);
   fs.writeFileSync(path.join(P, 'pages.json'), JSON.stringify(files.map((f, i) => ({ src: 'print/' + f, o: pages[i] }))));
+  // expected page sequence (README): map | access + elevation | calendar | timeline | 5 race pages | 2 plans | 6 station pages
+  const EXPECT = 'PLPL' + 'LLLLL' + 'PP' + 'PPPPPP'; if (pages.join('') !== EXPECT) throw new Error(`[pdf] page sequence ${pages.join('')} != expected ${EXPECT}`);
   console.log('print images', files.length, pages.join('')); }
 // PDF check: every aid-station print page carries its visible primary coordinates link text ("Map: lat, lng")
 { const st = JSON.parse(fs.readFileSync(path.join(import.meta.dir, '../content/stations.json'), 'utf8')), txt = new TextDecoder().decode(Bun.spawnSync(['pdftotext', '-layout', OUT, '-']).stdout);

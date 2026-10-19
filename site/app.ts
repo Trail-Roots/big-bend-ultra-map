@@ -421,3 +421,31 @@ if (document.documentElement.classList.contains('embed') && parent !== window) {
 
 // fixed navbar: reserve its height at the top of the page
 { const nav = document.querySelector<HTMLElement>('.topnav'); if (nav && !document.documentElement.classList.contains('embed')) { const set = () => document.documentElement.style.setProperty('--navh', nav.offsetHeight + 'px'); new ResizeObserver(set).observe(nav); set(); } }
+// ---- race-day calendar (sections/10-map.ts, lib/calview.ts): custom tips, now line, auto-scroll to the next upcoming events ----
+{ const cv = document.querySelector<HTMLElement>('.cv'), sc = cv?.querySelector<HTMLElement>('.cv-scroll');
+  if (cv && sc) {
+    const T0 = Date.UTC(2027, 0, 17, 6, 0), now = (Date.now() - T0) / 60000; // minutes after midnight Jan 17 2027 CT (race day)
+    const evs = [...cv.querySelectorAll<HTMLElement>('.cv-ev:not(.cv-allday)')].sort((a, b) => +a.dataset.a! - +b.dataset.a!);
+    const g0 = +cv.dataset.grid0!, g1 = +cv.dataset.grid1!, line = cv.querySelector<HTMLElement>('.cv-now')!;
+    if (now >= g0 && now <= g1) { line.hidden = false; line.style.top = `calc(${((now - g0) / 60).toFixed(4)} * var(--hh))`; }
+    const top = (e: HTMLElement) => e.getBoundingClientRect().top - sc.getBoundingClientRect().top + sc.scrollTop;
+    const jump = () => { // before the race weekend: first event; after it: the end; otherwise the first event not yet over (time order)
+      const next = evs.find((e) => +e.dataset.b! >= now);
+      sc.scrollTop = !next ? sc.scrollHeight : next === evs[0] ? 0 : Math.max(0, Math.min(top(next), line.hidden ? 1e9 : top(line)) - 28); };
+    jump(); addEventListener('load', jump, { once: true });
+    const tip = document.createElement('div'); tip.className = 'cv-tip'; tip.hidden = true; document.body.appendChild(tip);
+    let pinned: HTMLElement | null = null;
+    const show = (e: HTMLElement) => { tip.textContent = e.dataset.tip!; tip.hidden = false; const r = e.getBoundingClientRect(), tw = tip.offsetWidth, th = tip.offsetHeight;
+      let x = Math.min(Math.max(6, r.left + r.width / 2 - tw / 2), innerWidth - tw - 6), y = r.top - th - 6; if (y < 6) y = r.bottom + 6; tip.style.left = x + 'px'; tip.style.top = y + 'px'; };
+    const hide = () => { tip.hidden = true; pinned = null; };
+    for (const e of evs.concat([...cv.querySelectorAll<HTMLElement>('.cv-allday')])) {
+      e.addEventListener('mouseenter', () => { if (!pinned) show(e); }); e.addEventListener('mouseleave', () => { if (!pinned) tip.hidden = true; });
+      e.addEventListener('focus', () => show(e)); e.addEventListener('blur', () => { if (!pinned) tip.hidden = true; });
+      e.addEventListener('click', (ev) => { ev.stopPropagation(); if (pinned === e) hide(); else { pinned = e; show(e); } }); }
+    sc.addEventListener('scroll', hide, { passive: true }); addEventListener('scroll', hide, { passive: true }); document.addEventListener('click', hide);
+    addEventListener('keydown', (k: KeyboardEvent) => { if (k.key === 'Escape') hide(); });
+  } }
+// ---- timeline section: neutral disclosure (web only; print always shows the charts) ----
+document.querySelectorAll<HTMLButtonElement>('.tl-toggle').forEach((b) => b.addEventListener('click', () => {
+  const pg = b.closest('.tlpage')!, open = b.getAttribute('aria-expanded') !== 'true'; pg.classList.toggle('collapsed', !open);
+  b.setAttribute('aria-expanded', String(open)); b.querySelector('.tl-lab')!.textContent = open ? 'Hide' : 'Show'; }));
