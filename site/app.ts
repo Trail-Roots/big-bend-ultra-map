@@ -448,7 +448,7 @@ if (document.documentElement.classList.contains('embed') && parent !== window) {
 // ---- timeline section: neutral disclosure (web only; print always shows the charts) ----
 document.querySelectorAll<HTMLButtonElement>('.tl-toggle').forEach((b) => b.addEventListener('click', () => {
   const pg = b.closest('.tlpage')!, open = b.getAttribute('aria-expanded') !== 'true'; pg.classList.toggle('collapsed', !open);
-  b.setAttribute('aria-expanded', String(open)); b.querySelector('.tl-lab')!.textContent = open ? 'Hide' : 'Show'; }));
+  b.setAttribute('aria-expanded', String(open)); b.querySelector('.tl-lab')!.textContent = open ? 'Hide' : 'Show'; if (open) dispatchEvent(new Event('resize')); /* charts were display:none: let size-dependent code re-measure */ }));
 // calendar: fit each event block's text without clipping (screen only; print is sized in CSS)
 { const blks = [...document.querySelectorAll<HTMLElement>('.cv-blk')];
   const over = (e: HTMLElement) => e.scrollHeight > e.clientHeight + 1 || [...e.children].some((x) => (x as HTMLElement).scrollWidth > (x as HTMLElement).clientWidth + 1 || (x as HTMLElement).scrollHeight > (x as HTMLElement).clientHeight + 1 || (x as HTMLElement).getBoundingClientRect().bottom > e.getBoundingClientRect().bottom + .5);
