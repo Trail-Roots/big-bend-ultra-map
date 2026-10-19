@@ -28,7 +28,7 @@ export function renderCalendar(c: Ctx) {
   const hours = []; for (let m = GRID0; m <= GRID1; m += 60) hours.push(m);
   const H = (GRID1 - GRID0) / 60;
   const blocks = grid.map((e) => { const p = pos.get(e)!, d = end(e) - e.a, short = d <= 45;
-    return `<div class="cv-ev cv-blk${short ? ' cv-short' : ''}${race(e.s) ? ' cv-race' : ''}"${attrs(e, false)} style="${race(e.s) ? `--rc:${c.courses.colors[race(e.s)!]};` : ''}top:calc(${((e.a - GRID0) / 60).toFixed(4)} * var(--hh));height:calc(${(d / 60).toFixed(4)} * var(--hh) - 2px);left:calc(${(p.col / p.n * 100).toFixed(3)}% + 1px);width:calc(${(100 / p.n).toFixed(3)}% - 3px)"><span class="cv-s">${esc(e.s)}</span><span class="cv-t">${when(e)}</span></div>`; }).join('');
+    return `<div class="cv-ev cv-blk${short ? ' cv-short' : ''}${race(e.s) ? ' cv-race' : ''}"${attrs(e, false)} style="${race(e.s) ? `--rc:${c.courses.colors[race(e.s)!]};` : ''}top:calc(${((e.a - GRID0) / 60).toFixed(4)} * var(--hh));height:calc(${(d / 60).toFixed(4)} * var(--hh) - 2px);left:calc(${(p.col / p.n * 100).toFixed(3)}% + 1px);width:calc(${(100 / p.n).toFixed(3)}% - 3px)"><span class="cv-s">${esc(e.s).replace(/@/g, "@<wbr>")}</span><span class="cv-t">${when(e)}</span></div>`; }).join('');
   return `<div class="cv" data-grid0="${GRID0}" data-grid1="${GRID1}">
   <div class="cv-head"><div class="cv-title"><b>Race-day calendar</b><span class="cv-date">${DAY[1]}, 2027 · times CT</span></div></div>
   <div class="cv-scroll" tabindex="0" aria-label="Race-day calendar events">

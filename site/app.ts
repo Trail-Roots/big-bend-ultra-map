@@ -449,3 +449,10 @@ if (document.documentElement.classList.contains('embed') && parent !== window) {
 document.querySelectorAll<HTMLButtonElement>('.tl-toggle').forEach((b) => b.addEventListener('click', () => {
   const pg = b.closest('.tlpage')!, open = b.getAttribute('aria-expanded') !== 'true'; pg.classList.toggle('collapsed', !open);
   b.setAttribute('aria-expanded', String(open)); b.querySelector('.tl-lab')!.textContent = open ? 'Hide' : 'Show'; }));
+// calendar: fit each event block's text without clipping (screen only; print is sized in CSS)
+{ const blks = [...document.querySelectorAll<HTMLElement>('.cv-blk')];
+  const over = (e: HTMLElement) => e.scrollHeight > e.clientHeight + 1 || [...e.children].some((x) => (x as HTMLElement).scrollWidth > (x as HTMLElement).clientWidth + 1 || (x as HTMLElement).scrollHeight > (x as HTMLElement).clientHeight + 1 || (x as HTMLElement).getBoundingClientRect().bottom > e.getBoundingClientRect().bottom + .5);
+  const fit = () => { for (const e of blks) { e.classList.remove('fit-nt', 'fit-sm', 'fit-xs', 'fit-grow'); e.style.minHeight = '';
+    for (const c of ['fit-nt', 'fit-sm', 'fit-xs']) { if (!over(e)) break; e.classList.add(c); }
+    if (over(e)) { e.classList.add('fit-grow'); const s = e.querySelector<HTMLElement>('.cv-s'); e.style.minHeight = e.scrollHeight + Math.max(0, s ? s.scrollHeight - s.clientHeight : 0) + 4 + 'px'; } } };
+  if (blks.length) { fit(); addEventListener('load', fit, { once: true }); let t = 0; addEventListener('resize', () => { clearTimeout(t); t = setTimeout(fit, 120) as unknown as number; }); document.fonts?.ready.then(fit); } }

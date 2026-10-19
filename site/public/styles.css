@@ -399,7 +399,7 @@ table.st-timing tr.cutv{display:table-row;margin:0}table.st-timing th,table.st-t
 @media screen and (min-width:1100px){html .sec-map .pg1 .calbox{position:absolute;margin:0}html .sec-map .pg1 .calbox .cv{height:100%}html .sec-map .pg1 .calbox .callinks{position:absolute;top:100%;right:0;margin:.4cqw 0 0;font-size:.75cqw;flex-wrap:nowrap;white-space:nowrap}html .sec-map .pg1 .cv{--hh:44px}}
 @media screen and (min-width:1001px) and (max-width:1099px){.sheet .calbox{grid-column:2;grid-row:4}}
 @media screen and (max-width:1000px){.calbox{order:2}}
-@media screen and (max-width:560px){.cv{--hh:56px;height:470px;font-size:11.5px}.cv-item{grid-template-columns:minmax(0,1fr)}.cv-item .cv-l{grid-column:1}.cv-blk .cv-s{white-space:normal;overflow-wrap:anywhere;line-height:1.15;font-size:10.5px}.cv-blk.cv-short{flex-direction:column;gap:0}.cv-blk.cv-short .cv-t{display:none}.cv-col{left:46px}.cv-hr span{width:40px}.cv-allday{margin-left:46px}}
+@media screen and (max-width:560px){.cv{--hh:66px;height:470px;font-size:11.5px}.cv-item{grid-template-columns:minmax(0,1fr)}.cv-item .cv-l{grid-column:1}.cv-blk .cv-s{white-space:normal;overflow-wrap:anywhere;line-height:1.15;font-size:10.5px}.cv-blk.cv-short{flex-direction:column;gap:0}.cv-blk.cv-short .cv-t{display:none}.cv-col{left:46px}.cv-hr span{width:40px}.cv-allday{margin-left:46px}}
 /* print: the calendar is its own portrait page showing the whole race day (no scrolling) */
 @page pcal{size:letter portrait;margin:.28in}
 @media print{
@@ -423,3 +423,11 @@ table.st-timing tr.cutv{display:table-row;margin:0}table.st-timing th,table.st-t
 @media print{html body .sec-timeline .tlpage{page:ptl;width:10.44in;height:7.94in;overflow:hidden}.tl-toggle{display:none!important}.tlbox svg.timeline{width:100%;height:auto;max-height:7.1in}}
 /* print: page 1 = map only, page 2 = header + elevation (.charts), page 3 = calendar; boxes sized / zoomed by sections/10-map.ts */
 @media print{html body .sec-map .pg1{display:block;position:static;width:auto;height:auto;zoom:1;margin:0!important}html body .sec-map .pg1 .main{position:relative;overflow:visible;break-after:page}html body .sec-map .pg1 .charts{display:block;position:relative;break-before:page}}
+/* calendar: no clipped event text (blocks wrap; app.ts steps narrow blocks down: time hidden → smaller type → taller block) */
+.cv-blk{padding:1px 5px;line-height:1.15}.cv-blk .cv-s{white-space:normal;overflow-wrap:anywhere;text-overflow:clip}.cv-blk.cv-short{flex-wrap:wrap;column-gap:6px;row-gap:0}
+.cv-item{grid-template-columns:10.6em minmax(0,1fr)}
+@media screen{.cv-blk.fit-nt .cv-t{display:none}.cv-blk.fit-sm{font-size:10px}.cv-blk.fit-sm .cv-t{font-size:9.5px}.cv-blk.fit-xs{font-size:9px;letter-spacing:-.01em}.cv-blk.fit-grow{z-index:2}}
+@media screen and (max-width:560px){.cv-item{grid-template-columns:minmax(0,1fr)}}
+@media print{.calbox .cv-blk{border-top:0;border-bottom:0;line-height:1.1;padding:0 4pt}.calbox .cv-item{grid-template-columns:9.6em minmax(0,1fr)}}
+.cv-blk .cv-s,.cv-blk .cv-t{flex-shrink:0}
+@media screen{.cv-blk.fit-sm .cv-s{font-size:10px}.cv-blk.fit-xs .cv-s{font-size:9px}}
