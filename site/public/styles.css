@@ -428,6 +428,6 @@ table.st-timing tr.cutv{display:table-row;margin:0}table.st-timing th,table.st-t
 .cv-item{grid-template-columns:10.6em minmax(0,1fr)}
 @media screen{.cv-blk.fit-nt .cv-t{display:none}.cv-blk.fit-sm{font-size:10px}.cv-blk.fit-sm .cv-t{font-size:9.5px}.cv-blk.fit-xs{font-size:9px;letter-spacing:-.01em}.cv-blk.fit-grow{z-index:2}}
 @media screen and (max-width:560px){.cv-item{grid-template-columns:minmax(0,1fr)}}
-@media print{.calbox .cv-blk{border-top:0;border-bottom:0;line-height:1.1;padding:0 4pt}.calbox .cv-item{grid-template-columns:9.6em minmax(0,1fr)}}
+@media print{.calbox .cv-blk{border-top:0;border-bottom:0;line-height:1.1;padding:0 4pt}.calbox .cv-item{grid-template-columns:11.2em minmax(0,1fr);column-gap:4pt}.calbox .cv-agenda .cv-l{font-size:7.6pt}.calbox .cv{--hh:.315in}}
 .cv-blk .cv-s,.cv-blk .cv-t{flex-shrink:0}
 @media screen{.cv-blk.fit-sm .cv-s{font-size:10px}.cv-blk.fit-xs .cv-s{font-size:9px}}
