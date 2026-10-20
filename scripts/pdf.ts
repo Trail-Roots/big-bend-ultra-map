@@ -15,6 +15,10 @@ try {
     await p.pdf({ path: path.join(D, `course-${k}.pdf`), preferCSSPageSize: true, printBackground: true });
   }
   await p.evaluate(() => document.body.classList.remove('printone'));
+  // thumbnails for the limited cards embed (cards-embed.html): each race card map as a small JPEG (Playwright only, no ffmpeg on CI)
+  { const C = path.join(D, 'cards'); fs.mkdirSync(C, { recursive: true }); await p.emulateMedia({ media: 'screen' }); const q = await b.newPage({ viewport: { width: 1200, height: 900 }, deviceScaleFactor: 1 }); await q.goto(`http://localhost:${srv.port}/`, { waitUntil: 'networkidle' }); await q.addStyleTag({ content: '.rc-full{display:none!important}' });
+    for (const k of await q.$$eval('.racecard', (e) => e.map((x) => (x as HTMLElement).dataset.course!))) { const el = q.locator(`.racecard[data-course="${k}"] .rc-map`); await el.scrollIntoViewIfNeeded(); await el.screenshot({ path: path.join(C, k + '.jpg'), type: 'jpeg', quality: 72 }); }
+    await q.close(); console.log('cards embed thumbnails', fs.readdirSync(C).length); }
 } finally { await b.close(); srv.stop(true); }
 console.log('pdf', path.relative(process.cwd(), OUT), (fs.statSync(OUT).size / 1024 / 1024).toFixed(2) + ' MB');
 // print images for embed.js: a host page can't print the cross-origin iframe (it comes out blank), so embed.js prints these page images instead

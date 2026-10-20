@@ -83,6 +83,9 @@ const noTitles = (h: string) => h.replace(/<title>[\s\S]*?<\/title>/g, '').repla
 html = html.replace('<!--regprint-->', regPrint(draft));
 if ((html.match(/class="ui navreg"/g) || []).length !== 1 || html.includes('class="regprint"') !== draft) throw new Error('[register] navbar link missing or print link not matching draft=' + draft);
 fs.writeFileSync(path.join(D, 'index.html'), html);
+// limited embed (race cards only, all links to the Trail Roots race page): dist/cards-embed.html + cards-embed.js; thumbnails from scripts/pdf.ts
+{ const { cardsEmbedHtml, CARDS_TARGET } = await import('./lib/cardsembed'); const ch = cardsEmbedHtml(ctx); const hrefs = [...ch.matchAll(/href="([^"]*)"/g)].map((m) => m[1]);
+  if (!hrefs.length || hrefs.some((h) => h !== CARDS_TARGET) || /draft/i.test(ch)) throw new Error('[cards-embed] every link must go to ' + CARDS_TARGET + ' and no draft marks'); fs.writeFileSync(path.join(D, 'cards-embed.html'), ch); }
 // race filter: page-1 elevation chart for every visible-race subset (fetched by app.ts on the first filter change)
 { const { profileBody } = await import('./lib/panels'); const O: string[] = ctx.courses.order, V: Record<string, unknown> = {};
   for (let m = 0; m < (1 << O.length) - 1; m++) { const vis = O.filter((_, i) => m & (1 << i)), p = profileBody(ctx, vis); V[vis.join(',')] = { s: noTitles(p.s), x: p.x, y: p.y }; }

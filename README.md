@@ -25,6 +25,14 @@ Plain iframe (no script, fixed height):
 <iframe src="https://trail-roots.github.io/big-bend-ultra-map/?view=embed" title="Big Bend Ultra course map" style="width:100%;height:900px;border:0" loading="lazy"></iframe>
 ```
 
+## Embed the race cards only (limited embed, e.g. RunSignup)
+A lightweight preview of the five race cards (map thumbnail, race name, distance, elevation gain, start time). No GPX, Strava, lightbox, navbar, calendar or DRAFT marks. Every click (each card and the "Full race details" link) opens <https://trailroots.com/big-bend-ultra> in a new tab. Paste:
+```html
+<div id="bbu-cards"></div>
+<script src="https://trail-roots.github.io/big-bend-ultra-map/cards-embed.js" async></script>
+```
+`cards-embed.js` puts an iframe of `cards-embed.html` into `#bbu-cards` (or right after the script tag if there is no such element) and keeps the iframe height equal to its content on load and on every resize (postMessage), so there is never an inner scrollbar. Responsive 320–1000 px and wider. Optional: `data-target="other-id"` (container id), `data-height="520"` (height before the first message). Thumbnails (`dist/cards/<race>.jpg`) are captured from the race-card maps by `scripts/pdf.ts`; `site/build.ts` fails if any link in the page points anywhere other than the Trail Roots race page.
+
 ## Build
 ```
 bun install
