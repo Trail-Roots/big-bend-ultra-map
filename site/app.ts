@@ -166,7 +166,7 @@ if (hdEl && prof) {
   const DS = matchMedia('(max-width:699px)').matches ? 1.9 : 1.25;
   const setTime = (t: number) => {
     tShown = t; const z = 1 / zoomOf(main); document.dispatchEvent(new CustomEvent('racetime', { detail: t }));
-    if (!Object.keys(TM.courses).some(raceOn)) { badge.style.display = 'none'; tint?.setAttribute('fill-opacity', '0'); } else { const ph = phase(t); badge.style.display = ''; badge.dataset.phase = ph; badge.textContent = `${ph === 'day' ? '☀' : ph === 'twilight' ? '◐' : '☾'} ${fmt(t)} · ${ph === 'day' ? 'daylight' : ph === 'twilight' ? ((((t % 1440) + 1440) % 1440) < 720 ? 'dawn' : 'dusk') : 'dark'}`; if (tint) tint.setAttribute('fill-opacity', dark(t).toFixed(3)); }
+    if (!Object.keys(TM.courses).some(raceOn)) { badge.style.display = 'none'; tint?.setAttribute('fill-opacity', '0'); } else { const ph = phase(t); badge.style.display = ''; badge.dataset.phase = ph; badge.textContent = `${ph === 'day' ? '☀' : ph === 'twilight' ? '◐' : '☾'} ${fmt(t)} · ${ph === 'day' ? 'daylight' : ph === 'twilight' ? ((((t % 1440) + 1440) % 1440) < 720 ? 'dawn' : 'dusk') : 'dark'}${Number.isFinite(tempAtJS(t)) ? ` · ${Math.round(tempAtJS(t))}°F` : ''}`; /* 5y avg hourly temperature at the animation time (same data as the timeline) */ if (tint) tint.setAttribute('fill-opacity', dark(t).toFixed(3)); }
     const ends: Record<string, { lead?: [number, any]; last?: [number, any] }> = {};
     for (const d of dots2) {
       const C = TM.courses[d.k], f = (t - C.start - d.o) / d.T; const mile = effAt(d.cv, f);
@@ -433,24 +433,20 @@ if (document.documentElement.classList.contains('embed') && parent !== window) {
 
 // fixed navbar: reserve its height at the top of the page
 { const nav = document.querySelector<HTMLElement>('.topnav'); if (nav && !document.documentElement.classList.contains('embed')) { const set = () => document.documentElement.style.setProperty('--navh', nav.offsetHeight + 'px'); new ResizeObserver(set).observe(nav); set(); } }
-// ---- race-day calendar (sections/10-map.ts, lib/calview.ts): custom tips, now line, auto-scroll to the next upcoming events ----
+// ---- race calendar (sections/10-map.ts, lib/calview.ts): web agenda from the current moment forward (same structure every day), custom tips ----
 { const cv = document.querySelector<HTMLElement>('.cv'), sc = cv?.querySelector<HTMLElement>('.cv-scroll');
   if (cv && sc) {
-    const T0 = Date.UTC(2027, 0, 17, 6, 0), now = (Date.now() - T0) / 60000; // minutes after midnight Jan 17 2027 CT (race day)
-    const evs = [...cv.querySelectorAll<HTMLElement>('.cv-ev:not(.cv-allday)')].sort((a, b) => +a.dataset.a! - +b.dataset.a!);
-    const g0 = +cv.dataset.grid0!, g1 = +cv.dataset.grid1!, line = cv.querySelector<HTMLElement>('.cv-now')!;
-    if (now >= g0 && now <= g1) { line.hidden = false; line.style.top = `calc(${((now - g0) / 60).toFixed(4)} * var(--hh))`; }
-    const top = (e: HTMLElement) => e.getBoundingClientRect().top - sc.getBoundingClientRect().top + sc.scrollTop;
-    const jump = () => { // before the race weekend: first event; after it: the end; otherwise the first event not yet over (time order)
-      const next = evs.find((e) => +e.dataset.b! >= now);
-      sc.scrollTop = !next ? sc.scrollHeight : next === evs[0] ? 0 : Math.max(0, Math.min(top(next), line.hidden ? 1e9 : top(line)) - 28); };
-    jump(); addEventListener('load', jump, { once: true });
+    const T0 = Date.UTC(2027, 0, 17, 6, 0); // midnight Jan 17 2027 CT (race day) = minute 0 of the calendar data
+    const filter = () => { const now = (Date.now() - T0) / 60000; let n = 0;
+      sc.querySelectorAll<HTMLElement>('.cv-dgrp').forEach((g) => { let k = 0; g.querySelectorAll<HTMLElement>('.cv-item').forEach((e) => { const on = +e.dataset.b! >= now; e.hidden = !on; if (on) k++; }); g.hidden = !k; n += k; });
+      sc.querySelector<HTMLElement>('.cv-empty')!.hidden = n > 0; };
+    filter(); setInterval(filter, 60000);
     const tip = document.createElement('div'); tip.className = 'cv-tip'; tip.hidden = true; document.body.appendChild(tip);
     let pinned: HTMLElement | null = null;
     const show = (e: HTMLElement) => { tip.textContent = e.dataset.tip!; tip.hidden = false; const r = e.getBoundingClientRect(), tw = tip.offsetWidth, th = tip.offsetHeight;
-      let x = Math.min(Math.max(6, r.left + r.width / 2 - tw / 2), innerWidth - tw - 6), y = r.top - th - 6; if (y < 6) y = r.bottom + 6; tip.style.left = x + 'px'; tip.style.top = y + 'px'; };
+      const x = Math.min(Math.max(6, r.left + r.width / 2 - tw / 2), innerWidth - tw - 6); let y = r.top - th - 6; if (y < 6) y = r.bottom + 6; tip.style.left = x + 'px'; tip.style.top = y + 'px'; };
     const hide = () => { tip.hidden = true; pinned = null; };
-    for (const e of evs.concat([...cv.querySelectorAll<HTMLElement>('.cv-allday')])) {
+    for (const e of cv.querySelectorAll<HTMLElement>('.cv-scroll .cv-ev')) {
       e.addEventListener('mouseenter', () => { if (!pinned) show(e); }); e.addEventListener('mouseleave', () => { if (!pinned) tip.hidden = true; });
       e.addEventListener('focus', () => show(e)); e.addEventListener('blur', () => { if (!pinned) tip.hidden = true; });
       e.addEventListener('click', (ev) => { ev.stopPropagation(); if (pinned === e) hide(); else { pinned = e; show(e); } }); }

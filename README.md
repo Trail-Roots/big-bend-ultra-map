@@ -174,4 +174,5 @@ notice next to Download PDF on the web page. Set it to `false` and rebuild (`bun
 ### Other
 
 - Trail Roots · Big Bend Ultra race page (header, logo, footer): <https://trailroots.com/big-bend-ultra>
+- Register: <https://runsignup.com/Race/Register/?raceId=163892>
 <!-- links:end -->

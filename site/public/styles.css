@@ -438,3 +438,22 @@ table.st-timing tr.cutv{display:table-row;margin:0}table.st-timing th,table.st-t
 .fp-vbtn{position:relative;background:#f4f4f4;color:#2a2a2a;border:1px solid #bdbdbd;border-radius:6px;padding:4px 9px;font:600 12.5px system-ui,sans-serif;cursor:pointer;white-space:nowrap}.fp-vbtn:hover{background:#e9e9e9}.fp-vbtn[aria-pressed="true"]{background:#2a2a2a;color:#fff;border-color:#2a2a2a}
 @media (hover:hover){.fp-vbtn[data-tip]:hover::after{content:attr(data-tip);position:absolute;top:calc(100% + 6px);right:0;white-space:nowrap;background:#fff;color:#2a2a2a;border:1px solid #d4d4d4;border-radius:4px;padding:3px 7px;font:600 12px/1.3 system-ui,sans-serif;box-shadow:0 1px 3px #0003;pointer-events:none;z-index:5}}
 @media (max-width:420px){.fp-vbtn{padding:3px 7px;font-size:11.5px}}
+/* race calendar v2: web = agenda from now forward (day groups, same structure every day); print = hour-by-hour grid from race day forward */
+.cv-dgrp{margin:0}.cv-dgrp ol{list-style:none;margin:0;padding:2px 0 6px}h3.cv-day{margin:0}
+.cv-empty{margin:12px 10px;color:#555}
+.cv-print{display:none}.cv-pr{display:none}
+.cv-pday{font-weight:650;font-size:9.5pt;padding:.04in 0}
+.cv-hr.cv-mid{border-top:1.2pt solid #2a2a2a}.cv-hr.cv-mid span{font-weight:700;color:#2a2a2a}
+.cv-dline{position:absolute;right:0;height:0;z-index:4}.cv-dline b{position:absolute;right:0;top:1pt;white-space:nowrap;font-size:8pt;background:#fff;color:#2a2a2a;padding:0 3pt;border:1px solid #bdbdbd;border-radius:2pt}
+@media print{
+  .calbox .cv-scroll,.calbox .cv-web{display:none!important}.calbox .cv-pr{display:inline}.calbox .cv-print{display:block}
+  html body .calbox .cv{--hh:.268in}.calbox .cv-allday{margin:.02in 0 .03in .5in}.calbox .cv-grid{margin:.1in 0 .12in}.calbox .cv-print{flex:none}}
+.daynight{white-space:nowrap}
+/* Register (RunSignup): subtle neutral navbar button (web); print-only line in the access header while DRAFT (build.ts) */
+.topnav .navreg{display:inline-flex;align-items:center;position:relative;padding:.25rem .65rem;border:1px solid #bdbdbd;border-radius:6px;background:#f4f4f4;color:#2a2a2a;font:600 .85rem system-ui,sans-serif;text-decoration:none;white-space:nowrap}.topnav .navreg:hover{background:#e9e9e9}
+@media (hover:hover){.topnav .navreg[data-tip]:hover::after{content:attr(data-tip);position:absolute;top:calc(100% + 6px);left:50%;transform:translateX(-50%);white-space:nowrap;background:#fff;color:#2a2a2a;border:1px solid #d4d4d4;border-radius:4px;padding:3px 7px;font:600 12px/1.3 system-ui,sans-serif;box-shadow:0 1px 3px #0003;pointer-events:none;z-index:50}}
+@media (max-width:420px){.topnav .navreg{padding:.2rem .45rem;font-size:.75rem}}
+.regprint{display:none}
+@media print{.pg1 .hdr .regprint{display:block;margin:.1in 0 0;font:600 13pt system-ui,sans-serif;color:#2a2a2a}.pg1 .hdr .regprint a{color:#2a2a2a;text-decoration:underline}}
+.cv-item[hidden],.cv-dgrp[hidden],.cv-empty[hidden]{display:none!important}
+@media (max-width:440px){.topnav .draftnote .dn-long{display:none}}
