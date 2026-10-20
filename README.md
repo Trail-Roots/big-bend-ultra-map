@@ -33,6 +33,15 @@ A lightweight preview of the five race cards (map thumbnail, race name, distance
 ```
 `cards-embed.js` puts an iframe of `cards-embed.html` into `#bbu-cards` (or right after the script tag if there is no such element) and keeps the iframe height equal to its content on load and on every resize (postMessage), so there is never an inner scrollbar. Responsive 320–1000 px and wider. Optional: `data-target="other-id"` (container id), `data-height="520"` (height before the first message). Thumbnails (`dist/cards/<race>.jpg`) are captured from the race-card maps by `scripts/pdf.ts`; `site/build.ts` fails if any link in the page points anywhere other than the Trail Roots race page.
 
+Plain-iframe fallback (hosts that strip scripts): fixed height, so pick it for the container width. Measured content heights: about 560 px at 800–1000 px wide (4 cards per row), 920 px at 600 px, 1530–1790 px at 320–390 px (one card per row). With a too-short height the frame scrolls inside.
+```html
+<iframe src="https://trail-roots.github.io/big-bend-ultra-map/cards-embed.html" title="Big Bend Ultra races" style="display:block;width:100%;height:600px;border:0" loading="lazy"></iframe>
+```
+Desktop: `height:600px`. Mobile (one column, 320–390 px): `height:1800px`. If the host allows a style block, switch by width:
+```html
+<style>.bbu-cards-fixed{display:block;width:100%;height:600px;border:0}@media (max-width:700px){.bbu-cards-fixed{height:1000px}}@media (max-width:480px){.bbu-cards-fixed{height:1800px}}</style>
+<iframe class="bbu-cards-fixed" src="https://trail-roots.github.io/big-bend-ultra-map/cards-embed.html" title="Big Bend Ultra races" loading="lazy"></iframe>
+```
 ## Build
 ```
 bun install
