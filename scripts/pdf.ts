@@ -20,7 +20,7 @@ try {
     for (const k of await q.$$eval('.racecard', (e) => e.map((x) => (x as HTMLElement).dataset.course!))) { const el = q.locator(`.racecard[data-course="${k}"] .rc-map`); await el.scrollIntoViewIfNeeded(); await el.screenshot({ path: path.join(C, k + '.jpg'), type: 'jpeg', quality: 72 }); }
     await q.close(); console.log('cards embed thumbnails', fs.readdirSync(C).length); }
   // static image of the cards embed for hosts that strip scripts/iframes (RunSignup): dist/cards-embed.png + .jpg, 1200 px wide
-  { const q = await b.newPage({ viewport: { width: 1200, height: 800 }, deviceScaleFactor: 1 }); await q.goto(`http://localhost:${srv.port}/cards-embed.html`, { waitUntil: 'networkidle' }); await q.evaluate(() => document.fonts.ready);
+  { const q = await b.newPage({ viewport: { width: 1200, height: 800 }, deviceScaleFactor: 1 }); await q.goto(`http://localhost:${srv.port}/cards-embed.html`, { waitUntil: 'networkidle' }); await q.addStyleTag({ content: 'body,body *{font-family:"Liberation Sans","Noto Sans",Arial,sans-serif!important}' }); // CI has no system-ui font and falls back to wide DejaVu, which wraps card text await q.evaluate(() => document.fonts.ready);
     const h = await q.evaluate(() => Math.ceil(Math.max(...[...document.body.querySelectorAll('*')].map((e) => e.getBoundingClientRect().bottom + scrollY)) + 4));
     for (const [t, o] of [['png', {}], ['jpeg', { quality: 82 }]] as const) await q.screenshot({ path: path.join(D, 'cards-embed.' + (t === 'png' ? 'png' : 'jpg')), type: t, clip: { x: 0, y: 0, width: 1200, height: h }, ...o });
     const w = await q.evaluate(() => document.documentElement.scrollWidth); if (w > 1200) throw new Error('[cards-embed image] page wider than 1200 px: ' + w);
