@@ -2,7 +2,17 @@ import { northIcon } from './north';
 import { icon } from './icons';
 // Both floor plans show Erik's drawing (sources/floorplan.svg, copied byte-for-byte to dist/plans/floorplan.svg) as an
 // <img> of the untouched file; the only difference between the plans is the zoom, set with an SVG view fragment.
-// Nothing is drawn on top of the drawing.
+// Nothing is drawn on top of the drawing. Display colours: parking is GREEN (Erik, Oct 19 2026). sources/floorplan.svg stays byte-identical;
+// the build writes a recoloured copy (plans/floorplan-green.svg, greenParking below) and the plans show that copy.
+export const PARK_GREEN = { fill: 'rgb(34,160,80)', stroke: 'rgb(21,128,61)' };
+/** recolour ONLY the parking layer (zones + P badges) from blue to green; everything else (e.g. the blue lavatories) untouched */
+export function greenParking(svg: string) {
+  const a = svg.indexOf('<g id="layer-parking-zone"'), b = svg.indexOf('<g id="layer-dropoff-zone"');
+  if (a < 0 || b < a) throw new Error('[floorplan] parking layer not found');
+  const mid = svg.slice(a, b).replace(/rgb\(59,130,246\)/g, PARK_GREEN.fill).replace(/rgb\(29,78,216\)/g, PARK_GREEN.stroke);
+  if (/59,130,246|29,78,216/.test(mid)) throw new Error('[floorplan] blue left in parking layer');
+  return svg.slice(0, a) + mid + svg.slice(b);
+}
 type View = { x: number; y: number; w: number; h: number };
 export const FINISH_VIEW: View = { x: 1010, y: 1690, w: 830, h: 650 }; // lot, picnic area, S/F, building front, gate + drop-off at the Y
 export const PARKING_VIEW: View = { x: 40, y: 560, w: 3800, h: 2240 }; // cropped to the parking: parking zones span x 109-3762, y 643-2663 (no unused space on the right)
@@ -10,8 +20,11 @@ export const PARKING_VIEW: View = { x: 40, y: 560, w: 3800, h: 2240 }; // croppe
 const NORTH = (corner: 'tl' | 'tr') => northIcon(`fp-north fp-${corner}`); // SSOT site/lib/north.ts
 const ZOOM = `<div class="fp-zoomctl"><button type="button" data-z="in" aria-label="Zoom in">${icon('plus')}</button><button type="button" data-z="out" aria-label="Zoom out">${icon('minus')}</button><button type="button" data-z="reset" aria-label="Reset zoom">${icon('reset')}</button></div>`;
 const img = (v: View, alt: string, corner: 'tl' | 'tr', over = '', zoom = true) =>
-  `<div class="fp-zoom${zoom ? '' : ' fp-static'}" style="--ar:${(v.w / v.h).toFixed(4)}" ><div class="fp-stage"><img class="floorplan-img" src="plans/floorplan.svg#svgView(viewBox(${v.x},${v.y},${v.w},${v.h}))" width="${v.w}" height="${v.h}" alt="${alt}" style="display:block;width:100%;height:auto;aspect-ratio:${v.w}/${v.h};background:#fff" draggable="false">${over}</div>${NORTH(corner)}${zoom ? ZOOM : ''}</div>`;
+  `<div class="fp-zoom${zoom ? '' : ' fp-static'}" style="--ar:${(v.w / v.h).toFixed(4)}" ><div class="fp-stage"><img class="floorplan-img" src="plans/floorplan-green.svg#svgView(viewBox(${v.x},${v.y},${v.w},${v.h}))" width="${v.w}" height="${v.h}" alt="${alt}" style="display:block;width:100%;height:auto;aspect-ratio:${v.w}/${v.h};background:#fff" draggable="false">${over}</div>${NORTH(corner)}${zoom ? ZOOM : ''}</div>`;
 export const renderFinishPlan = () => img(FINISH_VIEW, 'Finish area floor plan', 'tl', '', false /* Visitor Center plan: static, no zoom / pan, no controls */) // north arrow top-left on every map (SSOT);
+/** web: ONE floor-plan viewer (full parking extent, pan / zoom) with jump buttons; default = Finish line (app.ts) */
+export const renderPlanViewer = () => { const v = PARKING_VIEW, f = FINISH_VIEW; const views = `<div class="fp-views" role="group" aria-label="Floor plan view"><button type="button" class="fp-vbtn" data-view="finish" data-tip="Jump to the Barton Warnock finish area" aria-label="Finish line view">Finish line</button><button type="button" class="fp-vbtn" data-view="full" data-tip="Zoom out to the whole site incl. parking" aria-label="Full view">Full view</button></div>`;
+  return img(v, 'Floor plan: finish area and parking', 'tl').replace('<div class="fp-zoom"', `<div class="fp-zoom fp-viewer" data-full="${v.x},${v.y},${v.w},${v.h}" data-finish="${f.x},${f.y},${f.w},${f.h}"`).replace(/<\/div>$/, views + '</div>'); };
 export const renderParkingPlan = () => img(PARKING_VIEW, 'Parking plan', 'tl') // top-left is open ground (property line runs down the right);
 
 // legend swatches drawn with the drawing's own fills/strokes (taken from sources/floorplan.svg)
@@ -34,8 +47,8 @@ export const SW = {
   dropoff: () => box('rgba(228,211,42,.26)', 'rgba(228,211,42,.26)', 0),
   noParkZone: () => line(`<rect x="2" y="6" width="26" height="8" fill="#fff"/>${[0, 1, 2, 3].map((i) => `<rect x="${2 + i * 7}" y="6" width="3.5" height="8" style="fill:rgb(239,68,68)"/>`).join('')}`),
   noParkSign: () => line(`<circle cx="15" cy="10" r="7.5" style="fill:white;stroke:rgb(220,38,38);stroke-width:2px"/><path d="M10,5L20,15" style="stroke:rgb(220,38,38);stroke-width:2px"/><text x="15" y="13.5" font-size="9" font-weight="700" text-anchor="middle" style="fill:rgb(30,41,59)">P</text>`),
-  parkZone: () => box('rgba(59,130,246,.26)', 'rgb(29,78,216)', 2),
-  parkSign: () => line(`<rect x="7" y="2" width="16" height="16" rx="2" style="fill:rgb(29,78,216);stroke:white;stroke-width:1px"/><text x="15" y="14.5" font-size="11" font-weight="700" text-anchor="middle" fill="white">P</text>`),
+  parkZone: () => box('rgba(34,160,80,.26)', PARK_GREEN.stroke, 2),
+  parkSign: () => line(`<rect x="7" y="2" width="16" height="16" rx="2" style="fill:${PARK_GREEN.stroke};stroke:white;stroke-width:1px"/><text x="15" y="14.5" font-size="11" font-weight="700" text-anchor="middle" fill="white">P</text>`),
   boundary: () => line(`<path d="M1,10H29" style="stroke:rgb(220,38,38);stroke-width:2.4px;stroke-dasharray:7,3,2,3"/>`),
   pillarFence: () => line(`<path d="M2,10H28" style="stroke:rgb(43,27,16);stroke-width:3px"/><path d="M2,10H28" style="stroke:rgb(184,155,122);stroke-width:1.2px;stroke-dasharray:4,3"/>${[4, 15, 26].map((x) => `<rect x="${x - 2.5}" y="7.5" width="5" height="5" style="fill:rgb(239,232,216);stroke:rgb(62,53,43);stroke-width:1.1px"/>`).join('')}`),
   wireFence: () => line(`<path d="M2,10H28" style="stroke:rgb(61,49,36);stroke-width:1.7px"/>${[5, 15, 25].map((x) => `<circle cx="${x}" cy="10" r="1.8" style="fill:rgb(74,63,49);stroke:rgb(244,239,225);stroke-width:.6px"/>`).join('')}`),

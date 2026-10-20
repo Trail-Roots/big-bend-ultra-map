@@ -295,6 +295,18 @@ document.querySelectorAll<HTMLElement>('.fp-zoom:not(.fp-static)').forEach((box)
   const up = (e: PointerEvent) => { pts.delete(e.pointerId); last = pts.size ? state() : null; if (!pts.size) st.classList.remove('drag'); };
   st.addEventListener('pointerup', up); st.addEventListener('pointercancel', up);
   addEventListener('beforeprint', () => { k = 1; x = y = 0; clamp(); });
+  // merged web viewer: Finish line / Full view jump buttons (instant); default view on load = Finish line; re-applied on resize until the user pans / zooms
+  if (box.classList.contains('fp-viewer')) {
+    const F = box.dataset.full!.split(',').map(Number), V = box.dataset.finish!.split(',').map(Number), bt = [...box.querySelectorAll<HTMLButtonElement>('.fp-vbtn')];
+    let mode: string | null = 'finish';
+    const go = (m: string) => { mode = m; const W = box.clientWidth, H = box.clientHeight; if (!W || !H) return;
+      if (m === 'full') { k = 1; x = y = 0; } else { const s = W / F[2], fx = (V[0] - F[0]) * s, fy = (V[1] - F[1]) * s, fw = V[2] * s, fh = V[3] * s; k = Math.min(W / fw, H / fh); x = (W - fw * k) / 2 - fx * k; y = (H - fh * k) / 2 - fy * k; }
+      clamp(); bt.forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.view === m))); };
+    bt.forEach((b) => { b.addEventListener('click', (e) => { e.stopPropagation(); go(b.dataset.view!); }); b.addEventListener('dblclick', (e) => e.stopPropagation()); b.addEventListener('pointerdown', (e) => e.stopPropagation()); });
+    const free = () => { mode = null; bt.forEach((b) => b.setAttribute('aria-pressed', 'false')); };
+    box.addEventListener('wheel', free, { passive: true }); st.addEventListener('pointermove', () => { if (pts.size) free(); }); box.querySelectorAll('.fp-zoomctl button').forEach((b) => b.addEventListener('click', free));
+    box.addEventListener('dblclick', () => go('full'));
+    go('finish'); addEventListener('load', () => mode && go(mode)); new ResizeObserver(() => mode && go(mode)).observe(box); }
 });
 
 // embed: a modal dialog's viewport is the whole auto-height iframe, so pin open lightboxes to the HOST viewport (embed.js sends the iframe top and

@@ -93,3 +93,4 @@ for (const f of ['logo_ink_crop.png', 'logo_white_crop.png']) fs.copyFileSync(pa
 fs.mkdirSync(path.join(D, 'plans'), { recursive: true });
 for (const f of ['finish_muted.jpg', 'parking_muted.jpg']) fs.copyFileSync(path.join(root, 'sources', 'curated', 'aerial', f), path.join(D, 'plans', f));
 fs.copyFileSync(path.join(root, 'sources', 'floorplan.svg'), path.join(D, 'plans', 'floorplan.svg')); // Erik's floor-plan drawing, served byte-for-byte
+{ const { greenParking } = await import('./lib/floorplan-svg'); fs.writeFileSync(path.join(D, 'plans', 'floorplan-green.svg'), greenParking(fs.readFileSync(path.join(root, 'sources', 'floorplan.svg'), 'utf8'))); } // display copy: parking recoloured green (source untouched)
