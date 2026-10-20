@@ -19,12 +19,15 @@ try {
   { const C = path.join(D, 'cards'); fs.mkdirSync(C, { recursive: true }); await p.emulateMedia({ media: 'screen' }); const q = await b.newPage({ viewport: { width: 1200, height: 900 }, deviceScaleFactor: 1 }); await q.goto(`http://localhost:${srv.port}/`, { waitUntil: 'networkidle' }); await q.addStyleTag({ content: '.rc-full{display:none!important}' });
     for (const k of await q.$$eval('.racecard', (e) => e.map((x) => (x as HTMLElement).dataset.course!))) { const el = q.locator(`.racecard[data-course="${k}"] .rc-map`); await el.scrollIntoViewIfNeeded(); await el.screenshot({ path: path.join(C, k + '.jpg'), type: 'jpeg', quality: 72 }); }
     await q.close(); console.log('cards embed thumbnails', fs.readdirSync(C).length); }
-  // static image of the cards embed for hosts that strip scripts/iframes (RunSignup): dist/cards-embed.png + .jpg, 1200 px wide
-  { const q = await b.newPage({ viewport: { width: 1200, height: 800 }, deviceScaleFactor: 1 }); await q.goto(`http://localhost:${srv.port}/cards-embed.html`, { waitUntil: 'networkidle' }); await q.addStyleTag({ content: 'body,body *{font-family:"Liberation Sans","Noto Sans",Arial,sans-serif!important}' }); // CI has no system-ui font and falls back to wide DejaVu, which wraps card text await q.evaluate(() => document.fonts.ready);
-    const h = await q.evaluate(() => Math.ceil(Math.max(...[...document.body.querySelectorAll('*')].map((e) => e.getBoundingClientRect().bottom + scrollY)) + 4));
-    for (const [t, o] of [['png', {}], ['jpeg', { quality: 82 }]] as const) await q.screenshot({ path: path.join(D, 'cards-embed.' + (t === 'png' ? 'png' : 'jpg')), type: t, clip: { x: 0, y: 0, width: 1200, height: h }, ...o });
-    const w = await q.evaluate(() => document.documentElement.scrollWidth); if (w > 1200) throw new Error('[cards-embed image] page wider than 1200 px: ' + w);
-    await q.close(); console.log('cards embed image', (fs.statSync(path.join(D, 'cards-embed.png')).size / 1024).toFixed(0) + ' KB png', (fs.statSync(path.join(D, 'cards-embed.jpg')).size / 1024).toFixed(0) + ' KB jpg'); }
+  // static image for hosts that strip scripts/iframes (RunSignup hotlinks dist/cards-embed.png/.jpg): the combined elevation profile (all races), 1200 CSS px wide at 2x
+  { const q = await b.newPage({ viewport: { width: 1600, height: 1000 }, deviceScaleFactor: 2 }); await q.goto(`http://localhost:${srv.port}/`, { waitUntil: 'networkidle' }); await q.evaluate(() => document.fonts.ready);
+    // the profile alone on a blank white page (the live layout would overlap it at this size); hover layer off
+    await q.evaluate(() => { const sv = document.querySelector('#pb-prof svg.profile')!.cloneNode(true) as SVGSVGElement, d = document.createElement('div'); d.id = 'solo';
+      document.body.querySelectorAll(':scope > *').forEach((e) => (e as HTMLElement).style.display = 'none'); d.appendChild(sv); document.body.appendChild(d); window.scrollTo(0, 0); });
+    await q.addStyleTag({ content: 'html,body{background:#fff!important;margin:0!important;padding:0!important}#solo{position:absolute;left:0;top:0;box-sizing:border-box;width:1200px;padding:12px;background:#fff}#solo svg.profile{display:block;width:1176px!important;height:auto!important;max-width:none!important;max-height:none!important;margin:0!important;box-shadow:none!important}#solo .hover,#solo .hov,#solo [class*="tip"]{display:none!important}' }); await q.mouse.move(1500, 990); await q.waitForTimeout(300);
+    const el = q.locator("#solo"), bb = (await el.boundingBox())!; if (Math.round(bb.width) !== 1200) throw new Error('[cards-embed image] profile width ' + bb.width);
+    await el.screenshot({ path: path.join(D, 'cards-embed.png'), type: 'png' }); await el.screenshot({ path: path.join(D, 'cards-embed.jpg'), type: 'jpeg', quality: 85 });
+    await q.close(); console.log('cards embed image (elevation profile)', (fs.statSync(path.join(D, 'cards-embed.png')).size / 1024).toFixed(0) + ' KB png', (fs.statSync(path.join(D, 'cards-embed.jpg')).size / 1024).toFixed(0) + ' KB jpg'); }
 } finally { await b.close(); srv.stop(true); }
 console.log('pdf', path.relative(process.cwd(), OUT), (fs.statSync(OUT).size / 1024 / 1024).toFixed(2) + ' MB');
 // print images for embed.js: a host page can't print the cross-origin iframe (it comes out blank), so embed.js prints these page images instead

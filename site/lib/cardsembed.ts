@@ -9,7 +9,7 @@ export const CARDS_TARGET = 'https://trailroots.com/big-bend-ultra';
 export function cardsEmbedHtml(c: Ctx) {
   const T = CARDS_TARGET, L = (inner: string, cls: string, label: string) => `<a class="${cls}" href="${T}" target="_blank" rel="noopener" aria-label="${esc(label)}">${inner}</a>`;
   const cards = c.courses.order.map((k) => { const C = c.courses.courses[k], cc = c.courses.colors[k];
-    return `<li style="--rc:${cc}">${L(`<img src="cards/${encodeURIComponent(k)}.jpg" alt="" width="400" height="250"><span class="b"><span class="h">${miniBibSvg(k, cc, 0.8)}<span class="n">Big Bend Ultra ${esc(k)}</span></span><span class="s"><span><i>Distance</i>${C.distance_mi.toFixed(1)} mi</span><span><i>Elev gain</i>${totalGain(c, k).toLocaleString('en-US')} ft</span><span><i>Start</i>${esc(C.start)}</span></span></span>`, 'card', `Big Bend Ultra ${k}: full race details on trailroots.com`)}</li>`; }).join('');
+    return `<li style="--rc:${cc}">${L(`<img src="cards/${encodeURIComponent(k)}.jpg" alt="" width="300" height="300"><span class="b"><span class="h">${miniBibSvg(k, cc, 0.8)}<span class="n">Big Bend Ultra ${esc(k)}</span></span><span class="s"><span><i>Distance</i>${C.distance_mi.toFixed(1)} mi</span><span><i>Elev gain</i>${totalGain(c, k).toLocaleString('en-US')} ft</span><span><i>Start</i>${esc(C.start)}</span></span></span>`, 'card', `Big Bend Ultra ${k}: full race details on trailroots.com`)}</li>`; }).join('');
   return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Big Bend Ultra races</title><base target="_blank">
 <style>
 :root{--ink:#2a2a2a;--mute:#666;--line:#d4d4d4;--bg:#f4f4f4}
