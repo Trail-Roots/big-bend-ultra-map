@@ -9,6 +9,7 @@ import { icon } from '../lib/icons';
 // view shows. The calendar view has a race filter (one race + universal events). Print: unchanged, this section prints only the race-day
 // timeline page (always expanded); the calendar prints from the map section (page 3) and the plans from 36-finish / 37-parking.
 export const meta = { id: 'timeline', title: 'Operations' };
+export const VW_AR_D = 1.634, VW_AR_N = 0.703;
 const VIEWS: [string, string][] = [['cal', 'Race calendar'], ['tl', 'Operations']];
 const NOTICES = `<p class="tow-notice" style="border-left:4px solid #c4161c;background:#fbeeee;padding:6px 10px;margin:8px 0;font-weight:600">Park fully off the pavement. If any part of your vehicle is over the pavement, it may be towed or ticketed.</p>
 <p class="infobox"><b>Only Bibbed Runners Allowed On Course</b></p>`;
@@ -17,8 +18,11 @@ const NOTICES = `<p class="tow-notice" style="border-left:4px solid #c4161c;back
  *  calendar itself (its print grid is page 3). The web timeline is a copy (gradient ids suffixed); the print timeline page is this section. */
 export function renderViews(c: Ctx) {
   const tabs = `<div class="ui vw-tabs" role="tablist" aria-label="Race day views">${VIEWS.map(([k, t], i) => `<button type="button" role="tab" class="vw-tab" id="vw-tab-${k}" data-view="${k}" aria-controls="vw-${k}" aria-selected="${i === 0}" tabindex="${i === 0 ? 0 : -1}">${t}</button>`).join('')}</div>`;
-  const t0 = renderTimeline(c), own = new Set([...t0.matchAll(/id="([^"]+)"/g)].map((m) => m[1])); // only ids defined INSIDE the copy get a suffix (shared symbols stay)
-  const tlw = t0.replace(/id="([^"]+)"/g, 'id="$1-w"').replace(/url\(#([^)]+)\)/g, (m, id) => own.has(id) ? `url(#${id}-w)` : m).replace(/href="#([^"]+)"/g, (m, id) => own.has(id) ? `href="#${id}-w"` : m);
+  // web copies sized to fill the views box exactly: 'd' (>560 px wide; box aspect 1.634, fixed by the sheet geometry) and 'n' (phones, portrait);
+  // an inline script keeps only the one for this screen BEFORE app.js runs / first paint (no layout shift); ids suffixed, shared symbols untouched
+  const copy = (sfx: string, opt: { w?: number; ar: number }) => { const t0 = renderTimeline(c, opt), own = new Set([...t0.matchAll(/id="([^"]+)"/g)].map((m) => m[1]));
+    return t0.replace(/id="([^"]+)"/g, `id="$1-${sfx}"`).replace(/url\(#([^)]+)\)/g, (m, id) => own.has(id) ? `url(#${id}-${sfx})` : m).replace(/href="#([^"]+)"/g, (m, id) => own.has(id) ? `href="#${id}-${sfx}"` : m); };
+  const tlw = `<div class="vw-tlv vw-tl-d">${copy('wd', { ar: VW_AR_D })}</div><div class="vw-tlv vw-tl-n">${copy('wn', { w: 560, ar: VW_AR_N })}</div><script>(function(){var n=matchMedia('(max-width:560px)').matches,r=document.querySelector(n?'.vw-tl-d':'.vw-tl-n');r&&r.remove()})()</script>`;
   const plans = `<div class="ui vw-plans"><button type="button" class="vw-plan" data-open-plan="park" aria-label="Open the parking plan full screen">${icon('expand')}Parking</button><button type="button" class="vw-plan" data-open-plan="fin" aria-label="Open the finish area plan full screen">${icon('expand')}Finish</button></div>`;
   return `<div class="vw" data-view="cal"><div class="ui vw-bar">${plans}${tabs}</div>
   <div class="vw-pane vw-cal on" id="vw-cal" role="tabpanel" aria-labelledby="vw-tab-cal">${renderCalendar(c)}${CAL_LINKS}</div>

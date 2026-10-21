@@ -10,14 +10,17 @@ export const clock = (m: number, short = true) => {
 };
 export const cutMin = (t: string) => { const m = t.match(/^(\d+):(\d\d) (AM|PM)$/); if (!m) return null; return (Number(m[1]) % 12 + (m[3] === 'PM' ? 12 : 0)) * 60 + Number(m[2]); };
 
-export function renderTimeline(c: Ctx) {
-  const T = c.timeline, st = c.layout.strips, W = st.w * SHEET.w, H = 5 * st.rh * SHEET.h, col = c.colors, ink = col.ink;
+/** opt (web views only): render at a given width (user units) and aspect so the chart fills its box exactly; print uses the sheet geometry */
+export function renderTimeline(c: Ctx, opt?: { w?: number; ar: number }) {
+  const T = c.timeline, st = c.layout.strips, W = opt?.w ?? st.w * SHEET.w, H = opt ? W / opt.ar : 5 * st.rh * SHEET.h, col = c.colors, ink = col.ink;
   const [t0, t1] = T.window, LX = 2, RX = W - 8, X = (t: number) => LX + ((t - t0) / (t1 - t0)) * (RX - LX);
-  const AX = 34, CR = 22, SH = 24, TR = 24, order: string[] = c.courses.order, sts: string[] = c.stations.order, PADL = 14; void PADL;
+  const AX = 34, SH = 24, TR = 24, order: string[] = c.courses.order, sts: string[] = c.stations.order, PADL = 14; void PADL;
   const SUNR = 22; // sunrise/sunset row, at the bottom, under the temperature row 
+  // web views (opt): the spare height is shared by the heat-map rows and the stacked chart (print keeps the fixed sizes)
+  const CR = opt ? Math.max(22, Math.min(60, (H - 50 - (AX + 4 + 44 + TR + SUNR + SH + 70) - c.stations.order.length * 36) * 0.45 / order.length + 22)) : 22;
   const VOL = order.length * CR + SH; // stacked runners-on-course chart block
   const CAPH = 44, GAPV = 70; // caption + breathing space above the heat map, and between heat map and stacked chart
-  const SR = Math.min(36, (H - 50 - (AX + 4 + CAPH + TR + SUNR + VOL + GAPV)) / sts.length); // station rows shrink to keep the footer inside the fixed strip height
+  const SR = Math.min(opt ? 64 : 36, (H - 50 - (AX + 4 + CAPH + TR + SUNR + VOL + GAPV)) / sts.length); // station rows shrink to keep the footer inside the fixed strip height
   // order top -> bottom: hour axis, temperatures, aid-station heat map rows, runners-on-course volume chart
   const sTop = AX + 4 + CAPH, vTop = sTop + sts.length * SR + GAPV, bottom = vTop + VOL - 6;
   let s = `<rect width="${f1(W)}" height="${f1(H)}" fill="#fff"/>`;

@@ -476,9 +476,24 @@ if (document.documentElement.classList.contains('embed') && parent !== window) {
       const tog = () => { const o = e.getAttribute('aria-expanded') !== 'true'; e.setAttribute('aria-expanded', String(o)); const d = e.querySelector<HTMLElement>('.cv-det'); if (d) d.hidden = !o; hide(); };
       e.addEventListener('click', (ev) => { if ((ev.target as Element).closest('a')) { ev.stopPropagation(); return; } ev.stopPropagation(); tog(); });
       e.addEventListener('keydown', (ev) => { if ((ev.key === 'Enter' || ev.key === ' ') && ev.target === e) { ev.preventDefault(); tog(); } }); }
-    // location links: custom tip (no native title)
-    for (const a of cv.querySelectorAll<HTMLElement>('a.cv-maplink')) { const t = (x: boolean) => { if (x) { tip.textContent = a.dataset.tip!; tip.hidden = false; const r = a.getBoundingClientRect(); tip.style.left = Math.min(Math.max(6, r.left), innerWidth - tip.offsetWidth - 6) + 'px'; tip.style.top = (r.top - tip.offsetHeight - 6 < 6 ? r.bottom + 6 : r.top - tip.offsetHeight - 6) + 'px'; } else tip.hidden = true; };
-      a.addEventListener('mouseenter', (ev) => { ev.stopPropagation(); t(true); }); a.addEventListener('focus', (ev) => { ev.stopPropagation(); t(true); }); a.addEventListener('mouseleave', () => t(false)); a.addEventListener('blur', () => t(false)); }
+    // location links: hover / focus card with a small map preview (iframe created only on hover / focus; no card on touch: a tap just opens the map)
+    { const card = document.createElement('div'); card.className = 'cv-mapcard'; card.hidden = true; document.body.appendChild(card); let cur: HTMLAnchorElement | null = null, t = 0, ft = 0;
+      const hov = matchMedia('(hover: hover) and (pointer: fine)');
+      const place = (a: HTMLElement) => { const r = a.getBoundingClientRect(), w = card.offsetWidth, h = card.offsetHeight; let y = r.bottom + 6; if (y + h > innerHeight - 6) y = r.top - h - 6; /* never over the link */
+        card.style.left = Math.min(Math.max(6, r.left), innerWidth - w - 6) + 'px'; card.style.top = Math.max(6, y) + 'px'; };
+      const show = (a: HTMLAnchorElement) => { if (cur === a && !card.hidden) return; cur = a; clearTimeout(ft); const loc = decodeURIComponent((/[?&]query=([^&]*)/.exec(a.href) || [])[1] || '').replace(/\+/g, ' ');
+        card.innerHTML = ''; const f = document.createElement('iframe'); f.width = '240'; f.height = '150'; f.loading = 'lazy'; f.referrerPolicy = 'no-referrer-when-downgrade'; f.setAttribute('aria-hidden', 'true'); f.tabIndex = -1;
+        f.src = `https://maps.google.com/maps?q=${encodeURIComponent(loc)}&z=14&output=embed`; let ok = false; f.addEventListener('load', () => { ok = true; });
+        const note = document.createElement('p'); note.className = 'cv-mc-note'; note.textContent = 'Click to view map'; card.append(f, note);
+        ft = setTimeout(() => { if (!ok && cur === a) { const u = document.createElement('p'); u.className = 'cv-mc-url'; u.textContent = a.href; f.replaceWith(u); place(a); } }, 6000) as unknown as number; /* embed failed: show the URL */
+        card.hidden = false; place(a); };
+      const hide = () => { clearTimeout(t); t = setTimeout(() => { card.hidden = true; card.innerHTML = ''; cur = null; }, 150) as unknown as number; };
+      card.addEventListener('mouseenter', () => clearTimeout(t)); card.addEventListener('mouseleave', hide);
+      for (const a of cv.querySelectorAll<HTMLAnchorElement>('a.cv-maplink')) {
+        a.addEventListener('mouseenter', (ev) => { ev.stopPropagation(); if (!hov.matches) return; clearTimeout(t); tip.hidden = true; show(a); }); a.addEventListener('mouseleave', hide);
+        a.addEventListener('focus', (ev) => { ev.stopPropagation(); if (!hov.matches) return; clearTimeout(t); show(a); }); a.addEventListener('blur', hide); }
+      addEventListener('scroll', () => { if (!card.hidden && cur) place(cur); }, { passive: true }); sc.addEventListener('scroll', () => { card.hidden = true; card.innerHTML = ''; cur = null; }, { passive: true });
+      addEventListener('keydown', (k: KeyboardEvent) => { if (k.key === 'Escape') { card.hidden = true; card.innerHTML = ''; cur = null; } }); }
     sc.addEventListener('scroll', hide, { passive: true }); addEventListener('scroll', hide, { passive: true }); document.addEventListener('click', hide);
     addEventListener('keydown', (k: KeyboardEvent) => { if (k.key === 'Escape') hide(); });
   } }
