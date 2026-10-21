@@ -2,32 +2,39 @@ import { renderTimeline, renderIdleHeat } from '../lib/timeline';
 import { renderCalendar } from '../lib/calview';
 import { renderParkingViewer, renderFinishViewer, SW } from '../lib/floorplan-svg';
 import { planLegend } from '../lib/siteplan';
-import { CAL_LINKS } from './10-map';
+
 import type { Ctx } from '../lib/types';
 import { icon } from '../lib/icons';
-// Web: ONE section with a right-aligned view toggle (Race calendar = default | Race timeline | Race parking | Race finish); only the active
+// (history) Web: ONE section with a right-aligned view toggle (Race calendar = default | Race timeline | Race parking | Race finish); only the active
 // view shows. The calendar view has a race filter (one race + universal events). Print: unchanged, this section prints only the race-day
 // timeline page (always expanded); the calendar prints from the map section (page 3) and the plans from 36-finish / 37-parking.
 export const meta = { id: 'timeline', title: 'Race-day timeline' };
-const VIEWS: [string, string][] = [['cal', 'Race calendar'], ['tl', 'Race timeline'], ['park', 'Race parking'], ['fin', 'Race finish']];
+const VIEWS: [string, string][] = [['cal', 'Race calendar'], ['tl', 'Race timeline']];
 const NOTICES = `<p class="tow-notice" style="border-left:4px solid #c4161c;background:#fbeeee;padding:6px 10px;margin:8px 0;font-weight:600">Park fully off the pavement. If any part of your vehicle is over the pavement, it may be towed or ticketed.</p>
 <p class="infobox"><b>Only Bibbed Runners Allowed On Course</b></p>`;
-const prev = (k: string, im: string) => `<button type="button" class="pl-prev" data-plan="${k}" aria-label="View the ${k === 'park' ? 'parking' : 'finish area'} plan full size (pan and zoom)">${im}<span class="pl-full">${icon('expand')}View full size</span></button>`;
-export function render(c: Ctx) {
+/** race-day views, rendered INSIDE the map sheet's calendar slot (#pb-cal, under the elevation chart): right-aligned tabs (Race calendar = default |
+ *  Race timeline | Race parking | Race finish), the calendar follows the shared race selection (elevation legend / Layers races); plan previews open the plan lightbox (#planbox). Web only except the
+ *  calendar itself (its print grid is page 3). The web timeline is a copy (gradient ids suffixed); the print timeline page is this section. */
+export function renderViews(c: Ctx) {
   const tabs = `<div class="ui vw-tabs" role="tablist" aria-label="Race day views">${VIEWS.map(([k, t], i) => `<button type="button" role="tab" class="vw-tab" id="vw-tab-${k}" data-view="${k}" aria-controls="vw-${k}" aria-selected="${i === 0}" tabindex="${i === 0 ? 0 : -1}">${t}</button>`).join('')}</div>`;
-  const races = `<div class="ui cv-rf" role="group" aria-label="Show events for race"><button type="button" class="cv-rbtn" data-race="" aria-pressed="true">All races</button>${c.courses.order.map((k) => `<button type="button" class="cv-rbtn" data-race="${k}" aria-pressed="false" style="--c:${c.courses.colors[k]}"><i aria-hidden="true"></i>${k}</button>`).join('')}</div>`;
-  return `<div class="doc tlpage" data-view="cal">
-  <div class="tl-head"><h2 class="vw-pr">Race-day timeline</h2><h2 class="ui vw-ttl">Race calendar</h2>${tabs}</div>
-  <div class="ui vw-pane vw-cal on" id="vw-cal" role="tabpanel" aria-labelledby="vw-tab-cal">${races}<div class="calbox vw-calbox">${renderCalendar(c)}${CAL_LINKS}</div></div>
-  <div class="vw-pane vw-tl" id="vw-tl" role="tabpanel" aria-labelledby="vw-tab-tl">
-  <p class="note tl-note">Busiest times at each aid station (modelled per 15 min) and runners on course through race day.</p>
-  <div class="tlbox" id="tl-body">${renderTimeline(c)}</div></div>
-  <div class="ui vw-pane vw-park plan" id="vw-park" role="tabpanel" aria-labelledby="vw-tab-park"><h3 class="vw-sub">Parking · Barton Warnock Visitor Center</h3>${prev('park', renderParkingViewer(false))}
-${planLegend([[SW.parkZone(), 'Parking zone'], [SW.parkSign(), 'Parking'], [SW.noParkZone(), 'No parking zone'], [SW.noParkSign(), 'No parking'], [SW.trail(), 'Trail'], [SW.sf(), 'Start / Finish line'], [SW.gate(), 'Restricted entry gate'], [SW.radio(), 'Radio Command'], [SW.restroom(), 'Lavatories']])}
-${NOTICES}</div>
-  <div class="ui vw-pane vw-fin plan" id="vw-fin" role="tabpanel" aria-labelledby="vw-tab-fin"><h3 class="vw-sub">Finish area · Barton Warnock Visitor Center</h3>${prev('fin', renderFinishViewer(false))}
-${planLegend([[SW.sf(), 'Start / Finish line'], [SW.trail(), 'Trail'], [SW.radio(), 'Radio Command'], [SW.restroom(), 'Lavatories'], [SW.gate(), 'Restricted entry gate'], [SW.noParkZone(), 'No parking zone']])}
-<figure class="idlebox"><figcaption>Runners off course at the start / finish (waiting to start or finished) · modelled: arrive 15–75 min before their start, stay 1–2 h after finishing</figcaption>${renderIdleHeat(c)}</figure></div>
+  const t0 = renderTimeline(c), own = new Set([...t0.matchAll(/id="([^"]+)"/g)].map((m) => m[1])); // only ids defined INSIDE the copy get a suffix (shared symbols stay)
+  const tlw = t0.replace(/id="([^"]+)"/g, 'id="$1-w"').replace(/url\(#([^)]+)\)/g, (m, id) => own.has(id) ? `url(#${id}-w)` : m).replace(/href="#([^"]+)"/g, (m, id) => own.has(id) ? `href="#${id}-w"` : m);
+  const plans = `<div class="ui vw-plans"><button type="button" class="vw-plan" data-open-plan="park" aria-label="Open the parking plan full screen">${icon('expand')}Parking</button><button type="button" class="vw-plan" data-open-plan="fin" aria-label="Open the finish area plan full screen">${icon('expand')}Finish</button></div>`;
+  return `<div class="vw" data-view="cal"><div class="ui vw-bar">${plans}${tabs}</div>
+  <div class="vw-pane vw-cal on" id="vw-cal" role="tabpanel" aria-labelledby="vw-tab-cal">${renderCalendar(c)}${CAL_LINKS}</div>
+  <div class="ui vw-pane vw-tl" id="vw-tl" role="tabpanel" aria-labelledby="vw-tab-tl"><div class="vw-tlbox">${tlw}</div></div>
 </div>
-<dialog class="lightbox planbox" id="planbox" aria-label="Site plan"><button type="button" class="lb-close" aria-label="Close">${icon('x')}</button><div class="lb-body"><div class="plan pl-one" data-plan="park"><h3>Parking · Barton Warnock Visitor Center</h3>${renderParkingViewer()}${planLegend([[SW.parkZone(), 'Parking zone'], [SW.parkSign(), 'Parking'], [SW.noParkZone(), 'No parking zone'], [SW.noParkSign(), 'No parking'], [SW.trail(), 'Trail'], [SW.sf(), 'Start / Finish line'], [SW.gate(), 'Restricted entry gate'], [SW.radio(), 'Radio Command'], [SW.restroom(), 'Lavatories']])}</div><div class="plan pl-one" data-plan="fin" hidden><h3>Finish area · Barton Warnock Visitor Center</h3>${renderFinishViewer()}${planLegend([[SW.sf(), 'Start / Finish line'], [SW.trail(), 'Trail'], [SW.radio(), 'Radio Command'], [SW.restroom(), 'Lavatories'], [SW.gate(), 'Restricted entry gate'], [SW.noParkZone(), 'No parking zone']])}</div></div></dialog>`;
+<dialog class="lightbox planbox" id="planbox" aria-label="Site plan"><button type="button" class="lb-close" aria-label="Close">${icon('x')}</button><div class="lb-body">
+<div class="plan pl-one" data-plan="park"><h3>Parking · Barton Warnock Visitor Center</h3>${renderParkingViewer()}${PARK_LEG()}${NOTICES}</div>
+<div class="plan pl-one" data-plan="fin" hidden><h3>Finish area · Barton Warnock Visitor Center</h3>${renderFinishViewer()}${FIN_LEG()}${NOTICES}
+<figure class="idlebox"><figcaption>Runners off course at the start / finish (waiting to start or finished) · modelled: arrive 15–75 min before their start, stay 1–2 h after finishing</figcaption>${renderIdleHeat(c)}</figure></div></div></dialog>`;
 }
+const PARK_LEG = () => planLegend([[SW.parkZone(), 'Parking zone'], [SW.parkSign(), 'Parking'], [SW.noParkZone(), 'No parking zone'], [SW.noParkSign(), 'No parking'], [SW.trail(), 'Trail'], [SW.sf(), 'Start / Finish line'], [SW.gate(), 'Restricted entry gate'], [SW.radio(), 'Radio Command'], [SW.restroom(), 'Lavatories']]);
+const FIN_LEG = () => planLegend([[SW.sf(), 'Start / Finish line'], [SW.trail(), 'Trail'], [SW.radio(), 'Radio Command'], [SW.restroom(), 'Lavatories'], [SW.gate(), 'Restricted entry gate'], [SW.noParkZone(), 'No parking zone']]);
+/** print-only race-day timeline page (always expanded); hidden on screen (the web shows the timeline in the map sheet's views) */
+export function render(c: Ctx) {
+  return `<div class="doc tlpage"><div class="tl-head"><h2>Race-day timeline</h2></div>
+  <p class="note tl-note">Busiest times at each aid station (modelled per 15 min) and runners on course through race day.</p>
+  <div class="tlbox" id="tl-body">${renderTimeline(c)}</div></div>`;
+}
+export const CAL_LINKS = `<div class="minilinks callinks"><span class="calnote">Save the race calendar to your phone (works offline):</span><a href="https://calendar.google.com/calendar/u/0?cid=Njc1ZWZhYmI1ZmY0MDE1OTZlNDk5Mzg5YWRiNzdiZTU4YTUxODhkMWFkOTc1MjE1MzgxZDUzNjI1OWVlMTU0NkBncm91cC5jYWxlbmRhci5nb29nbGUuY29t" target="_blank" rel="noopener" title="Subscribe to the Race: Big Bend Ultra Google Calendar">${icon('calendar')}Google Calendar</a><a href="webcal://calendar.google.com/calendar/ical/675efabb5ff401596e499389adb77be58a5188d1ad975215381d536259ee1546%40group.calendar.google.com/public/basic.ics" title="Subscribe in Apple / iCal (public calendar feed)">${icon('calendar')}Apple Calendar .ical</a></div>`;

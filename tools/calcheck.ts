@@ -13,7 +13,7 @@ try {
   for (const [w, q] of [[1440, ''], [390, ''], [360, ''], [800, '?view=embed']] as [number, string][]) for (const [tag, iso] of CLOCKS) {
     const p = await b.newPage({ viewport: { width: w, height: 900 } }); await p.clock.setFixedTime(new Date(iso)); const errs: string[] = []; p.on('pageerror', (e) => errs.push(String(e)));
     await p.goto(U + q, { waitUntil: 'networkidle', timeout: 90000 }); await p.waitForTimeout(400); const now = (Date.parse(iso) - T0) / 60000;
-    const r = await p.evaluate((now) => { const sc = document.querySelector<HTMLElement>('.vw-calbox .cv-scroll')!, vis = (e: Element) => !!(e as HTMLElement).offsetParent;
+    const r = await p.evaluate((now) => { const sc = document.querySelector<HTMLElement>('#pb-cal .cv-scroll')!, vis = (e: Element) => !!(e as HTMLElement).offsetParent;
       const items = [...sc.querySelectorAll<HTMLElement>('.cv-item')], shown = items.filter(vis);
       const clip = shown.filter((e) => [...e.children].some((x) => (x as HTMLElement).scrollWidth > (x as HTMLElement).clientWidth + 1)).map((e) => e.querySelector('.cv-s')!.textContent);
       const reg = document.querySelector<HTMLAnchorElement>('.topnav a.navreg'), rb = reg?.getBoundingClientRect();
@@ -26,15 +26,17 @@ try {
     if (r.stale || r.hiddenFuture || !r.order || r.clip.length || r.ov || errs.length) bad.push(`${w}${q} ${tag}: stale ${r.stale} hiddenFuture ${r.hiddenFuture} order ${r.order} clip ${r.clip} overflow ${r.ov} ${errs}`);
     if (tag === 'after' ? !(r.empty && r.n === 0) : r.n === 0) bad.push(`${w}${q} ${tag}: empty-state wrong (${r.n} shown)`);
     if (!r.reg || !String(r.reg[0]).includes('raceId=163892') || r.reg[1] !== '_blank' || !r.reg[2]) bad.push(`${w}${q}: Register link ${JSON.stringify(r.reg)}`);
-    // race filter: each race shows only its own events + universal ones (title names no race); All races restores the time-only list
-    { const f = await p.evaluate(async (now) => { const items = [...document.querySelectorAll<HTMLElement>('.vw-calbox .cv-item')], vis = (e: Element) => !!(e as HTMLElement).offsetParent, out: string[] = [];
-        for (const btn of document.querySelectorAll<HTMLButtonElement>('.cv-rbtn')) { btn.click(); const k = btn.dataset.race || '';
-          for (const e of items) { const want = +e.dataset.b! >= now && (!k || !e.dataset.race || e.dataset.race === k); if (vis(e) !== want) out.push(`${k || 'all'}: ${e.querySelector('.cv-s')!.textContent}`); }
-          if (btn.getAttribute('aria-pressed') !== 'true') out.push(k + ' not pressed'); }
-        document.querySelector<HTMLButtonElement>('.cv-rbtn[data-race=""]')!.click(); return out; }, now);
-      if (f.length) bad.push(`${w}${q} ${tag}: race filter ${f.join('; ')}`); }
+    // shared race selection drives the calendar: each race via the elevation legend AND via the navbar (Layers) checkbox shows only its own
+    // events + universal ones (title names no race); back to all races = every event. Embed / no toggles = all events (checked above).
+    { const f = await p.evaluate(async (now) => { const items = [...document.querySelectorAll<HTMLElement>('#pb-cal .cv-item')], vis = (e: Element) => !!(e as HTMLElement).offsetParent, out: string[] = [];
+        const cbs = [...document.querySelectorAll<HTMLInputElement>('input[data-race]')], chk = (k: string, how: string) => { for (const e of items) { const want = +e.dataset.b! >= now && (!k || !e.dataset.race || e.dataset.race === k); if (vis(e) !== want) out.push(`${how} ${k || 'all'}: ${e.querySelector('.cv-s')!.textContent}`); } };
+        for (const cb of cbs) { const k = cb.dataset.race!, lg = document.querySelector<SVGGElement>(`svg.profile g.plegend[data-legend="${k}"]`);
+          if (lg) { lg.dispatchEvent(new MouseEvent('click', { bubbles: true })); chk(k, 'legend'); lg.dispatchEvent(new MouseEvent('click', { bubbles: true })); chk('', 'legend-off'); } else out.push('no legend ' + k);
+          cb.click(); chk(k, 'navbar'); cb.click(); chk('', 'navbar-off'); }
+        return out; }, now);
+      if (f.length) bad.push(`${w}${q} ${tag}: race filter ${f.slice(0, 6).join('; ')}`); }
     console.log(w, q || 'site', tag, 'shown', r.n, 'first', r.first, r.empty ? '(empty state)' : '');
-    if (out) { const c = await p.$('.vw-calbox'); await c!.scrollIntoViewIfNeeded(); await c!.screenshot({ path: `${out}-cal-${w}${q ? '-embed' : ''}-${tag}.png` }); if (tag === 'during') await p.screenshot({ path: `${out}-nav-${w}${q ? '-embed' : ''}.png`, clip: { x: 0, y: 0, width: w, height: 60 } }); }
+    if (out) { const c = await p.$('#pb-cal'); await c!.scrollIntoViewIfNeeded(); await c!.screenshot({ path: `${out}-cal-${w}${q ? '-embed' : ''}-${tag}.png` }); if (tag === 'during') await p.screenshot({ path: `${out}-nav-${w}${q ? '-embed' : ''}.png`, clip: { x: 0, y: 0, width: w, height: 60 } }); }
     await p.close(); }
   // map badge: temperature (5y avg) on the daylight badge, no clipping at 360
   for (const w of [1440, 360]) { const p = await b.newPage({ viewport: { width: w, height: 900 } }); await p.goto(U, { waitUntil: 'networkidle', timeout: 90000 }); await p.waitForTimeout(2500);

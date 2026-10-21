@@ -377,7 +377,7 @@ if (document.documentElement.classList.contains('embed') && parent !== window) {
       const sums: Record<string, number[]> = Object.fromEntries(Object.keys(heatSrc).map((st) => [st, sum(st)])), G = Math.max(1, ...Object.entries(sums).filter(([st]) => st !== 'S/F').flatMap(([, a]) => a));
       tlsvg.querySelectorAll<SVGGElement>('g.tlst').forEach((g) => { const st = g.dataset.station!, a = sums[st]; if (!a) return; const m = Math.max(1, ...a); void G;
         g.querySelectorAll<SVGRectElement>('rect.hc').forEach((rc) => { const v = a[+rc.dataset.i!] || 0; rc.style.display = v ? '' : 'none'; rc.setAttribute('fill-opacity', (0.06 + 0.9 * Math.sqrt(Math.min(1, v / m))).toFixed(2)); }); }); }
-    void NSf; void HDt;
+    void NSf; void HDt; if (!force) document.dispatchEvent(new Event('racesel'));
   };
   document.querySelector<HTMLInputElement>('input[data-layer="zoom"]')?.addEventListener('change', (e) => { if (e.isTrusted) (e.target as HTMLInputElement).dataset.manual = '1'; });
   document.querySelectorAll<HTMLInputElement>('input[data-race]').forEach((cb) => cb.addEventListener('change', () => apply()));
@@ -442,7 +442,7 @@ if (document.documentElement.classList.contains('embed') && parent !== window) {
     const show = (k: string) => { cur = k; panes.forEach((x) => (x.hidden = x.dataset.plan !== k)); pb.setAttribute('aria-label', k === 'park' ? 'Parking plan' : 'Finish area plan');
       requestAnimationFrame(() => pb.querySelector<HTMLButtonElement>(`.pl-one[data-plan="${k}"] .fp-zoomctl button[data-z="reset"]`)?.click()); };
     const open = (k: string) => { show(k); if (!pb.open) { embedModal(pb, true); pb.showModal(); } pb.scrollTop = 0; };
-    document.querySelectorAll<HTMLButtonElement>('.pl-prev').forEach((b) => b.addEventListener('click', () => open(b.dataset.plan!)));
+    document.querySelectorAll<HTMLButtonElement>('[data-open-plan]').forEach((b) => b.addEventListener('click', () => open(b.dataset.openPlan!)));
     const nav = document.createElement('div'); nav.className = 'lb-navs'; pb.appendChild(nav);
     const go = (d: number) => show(P[(P.indexOf(cur) + d + P.length) % P.length]);
     for (const [d, ic, lab] of [[-1, 'chevl', 'Previous plan'], [1, 'chevr', 'Next plan']] as [number, string, string][]) { const b = document.createElement('button'); b.type = 'button'; b.className = 'lb-nav ' + (d < 0 ? 'lb-prev' : 'lb-next'); b.setAttribute('aria-label', lab); b.dataset.tip = lab + (d < 0 ? ' (←)' : ' (→)'); b.innerHTML = icon(ic); b.addEventListener('click', (e) => { e.stopPropagation(); go(d); }); nav.appendChild(b); }
@@ -453,16 +453,16 @@ if (document.documentElement.classList.contains('embed') && parent !== window) {
 // fixed navbar: reserve its height at the top of the page
 { const nav = document.querySelector<HTMLElement>('.topnav'); if (nav && !document.documentElement.classList.contains('embed')) { const set = () => document.documentElement.style.setProperty('--navh', nav.offsetHeight + 'px'); new ResizeObserver(set).observe(nav); set(); } }
 // ---- race calendar (sections/10-map.ts, lib/calview.ts): web agenda from the current moment forward (same structure every day), custom tips ----
-{ const cv = document.querySelector<HTMLElement>('.vw-calbox .cv'), sc = cv?.querySelector<HTMLElement>('.cv-scroll');
+{ const cv = document.querySelector<HTMLElement>('#pb-cal .cv'), sc = cv?.querySelector<HTMLElement>('.cv-scroll');
   if (cv && sc) {
     const T0 = Date.UTC(2027, 0, 17, 6, 0); // midnight Jan 17 2027 CT (race day) = minute 0 of the calendar data
     const filter = () => { const now = (Date.now() - T0) / 60000; let n = 0;
-      const rsel = document.querySelector<HTMLElement>('.cv-rbtn[aria-pressed="true"]')?.dataset.race || '';
-      sc.querySelectorAll<HTMLElement>('.cv-dgrp').forEach((g) => { let k = 0; g.querySelectorAll<HTMLElement>('.cv-item').forEach((e) => { const on = +e.dataset.b! >= now && (!rsel || !e.dataset.race || e.dataset.race === rsel); e.hidden = !on; if (on) k++; }); g.hidden = !k; n += k; });
+      const offR = (k: string) => document.documentElement.dataset['off' + k.replace(/\W/g, '')] === '1'; // shared race selection (set by the race filter's apply())
+      sc.querySelectorAll<HTMLElement>('.cv-dgrp').forEach((g) => { let k = 0; g.querySelectorAll<HTMLElement>('.cv-item').forEach((e) => { const on = +e.dataset.b! >= now && (!e.dataset.race || !offR(e.dataset.race)); e.hidden = !on; if (on) k++; }); g.hidden = !k; n += k; });
       sc.querySelector<HTMLElement>('.cv-empty')!.hidden = n > 0; };
     filter(); setInterval(filter, 60000);
-    // race filter: one race + universal events (events whose title names no race); All races = every event
-    document.querySelectorAll<HTMLButtonElement>('.cv-rbtn').forEach((b) => b.addEventListener('click', () => { document.querySelectorAll('.cv-rbtn').forEach((x) => x.setAttribute('aria-pressed', String(x === b))); filter(); }));
+    // calendar shows the selected races' events + universal ones (title names no race); all races selected = every event
+    document.addEventListener('racesel', filter); // one shared race selection: elevation legend, Layers race checkboxes -> map, elevation, timeline, calendar
     const tip = document.createElement('div'); tip.className = 'cv-tip'; tip.hidden = true; document.body.appendChild(tip);
     let pinned: HTMLElement | null = null;
     const show = (e: HTMLElement) => { tip.textContent = e.dataset.tip!; tip.hidden = false; const r = e.getBoundingClientRect(), tw = tip.offsetWidth, th = tip.offsetHeight;
@@ -482,9 +482,9 @@ if (document.documentElement.classList.contains('embed') && parent !== window) {
     addEventListener('keydown', (k: KeyboardEvent) => { if (k.key === 'Escape') hide(); });
   } }
 // ---- race-day views (sections/20-timeline.ts): tablist (web only); arrow keys / Home / End move between tabs; print shows its own pages ----
-{ const pg = document.querySelector<HTMLElement>('.tlpage'), tabs = [...document.querySelectorAll<HTMLButtonElement>('.vw-tab')];
+{ const pg = document.querySelector<HTMLElement>('.vw'), tabs = [...document.querySelectorAll<HTMLButtonElement>('.vw-tab')];
   const go = (t: HTMLButtonElement, focus = false) => { tabs.forEach((x) => { const on = x === t; x.setAttribute('aria-selected', String(on)); x.tabIndex = on ? 0 : -1; document.getElementById('vw-' + x.dataset.view)?.classList.toggle('on', on); });
-    pg!.dataset.view = t.dataset.view; const ttl = pg!.querySelector('.vw-ttl'); if (ttl) ttl.textContent = t.textContent; if (focus) t.focus(); dispatchEvent(new Event('resize')); /* panes were display:none: let size-dependent code re-measure */ };
+    pg!.dataset.view = t.dataset.view; if (focus) t.focus(); dispatchEvent(new Event('resize')); /* panes were display:none: let size-dependent code re-measure */ };
   tabs.forEach((t, i) => { t.addEventListener('click', () => go(t)); t.addEventListener('keydown', (e) => { const n = tabs.length, j = e.key === 'ArrowRight' ? (i + 1) % n : e.key === 'ArrowLeft' ? (i - 1 + n) % n : e.key === 'Home' ? 0 : e.key === 'End' ? n - 1 : -1; if (j >= 0) { e.preventDefault(); go(tabs[j], true); } }); }); }
 // calendar: fit each event block's text without clipping (screen only; print is sized in CSS)
 { const blks = [...document.querySelectorAll<HTMLElement>('.cv-blk')];

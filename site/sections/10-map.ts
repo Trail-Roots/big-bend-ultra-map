@@ -6,7 +6,7 @@ export const meta = { id: 'map', title: 'Course & Access Map' };
 import type { Ctx } from '../lib/types';
 import { hoverData } from '../lib/hover';
 import { TEMP_AVG } from '../lib/timeline';
-import { renderCalendar } from '../lib/calview';
+import { renderViews } from './20-timeline';
 // Print: page 1 = main map only; page 2 = header (course access notice) + elevation profile; page 3 = race-day calendar (portrait, full race day).
 // The timeline / heat map is its own section (20-timeline.ts). Screen paper view keeps map | header, elevation, calendar on one landscape sheet.
 // Panels keep their 36x24 in design-sheet geometry (inches) and each page is uniformly zoomed to fit the printable area.
@@ -70,10 +70,9 @@ export function render(c: Ctx) {
     </header>
     <div class="profilebox" id="pb-prof">${renderProfile(c)}</div>
   </div>
-    <div class="calbox" id="pb-cal">${renderCalendar(c)}${CAL_LINKS}</div>
+    <div class="calbox" id="pb-cal">${renderViews(c)}</div>
   </div>
   <script type="application/json" id="hoverdata">${JSON.stringify(hoverData(c))}</script><script type="application/json" id="heatdata">${JSON.stringify(Object.fromEntries(c.stations.order.map((k) => [k, k === 'S/F' ? c.timeline.finish_crowd.by_course15 : c.timeline.stations[k].by_course15])))}</script><script type="application/json" id="tempdata">${JSON.stringify({ s: TEMP_AVG })}</script>
 </div>`;
 }
 
-export const CAL_LINKS = `<div class="minilinks callinks"><span class="calnote">Save the race calendar to your phone (works offline):</span><a href="https://calendar.google.com/calendar/u/0?cid=Njc1ZWZhYmI1ZmY0MDE1OTZlNDk5Mzg5YWRiNzdiZTU4YTUxODhkMWFkOTc1MjE1MzgxZDUzNjI1OWVlMTU0NkBncm91cC5jYWxlbmRhci5nb29nbGUuY29t" target="_blank" rel="noopener" title="Subscribe to the Race: Big Bend Ultra Google Calendar">${icon('calendar')}Google Calendar</a><a href="webcal://calendar.google.com/calendar/ical/675efabb5ff401596e499389adb77be58a5188d1ad975215381d536259ee1546%40group.calendar.google.com/public/basic.ics" title="Subscribe in Apple / iCal (public calendar feed)">${icon('calendar')}Apple Calendar .ical</a></div>`;
