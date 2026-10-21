@@ -314,6 +314,19 @@ for (const f of ['network.geojson', 'labels.geojson', 'area_labels.geojson', 'st
       if (r.i > 0) line.unshift(nr[r.i - 1].q); if (r.j < pts.length - 1) line.push(nr[r.j + 1].q);
       if (line.length >= 2) out.push({ ...f, properties: { ...f.properties, clipped: true }, geometry: { type: 'LineString', coordinates: line.map(U) } }); }
     cut++; }
+      // named paved roads (FM 170, ...) render as ONE continuous path each: chain their ways end to end (reversing as needed, shared
+      // endpoints deduped) so casing, fill and dash run through every joint. The Contrabando connector stub is not drawn.
+      { const near = (a: number[], b: number[]) => Math.hypot((a[0] - b[0]) * kx, (a[1] - b[1]) * ky) < 3, by: Record<string, any[]> = {}, rest: any[] = [];
+        for (const f of out as any[]) { if (f.properties.cls === 'connector') continue; if (f.properties.cls === 'paved' && f.properties.name && f.geometry.type === 'LineString') (by[f.properties.name] ??= []).push(f); else rest.push(f); }
+        for (const [name, fs0] of Object.entries(by)) { const pool = fs0.map((f) => f.geometry.coordinates as number[][]), chains: number[][][] = [];
+          while (pool.length) { let c = pool.shift()!.slice(), grew = true;
+            while (grew) { grew = false; for (let i = 0; i < pool.length; i++) { const p = pool[i], a = c[0], z = c[c.length - 1];
+              if (near(z, p[0])) c = c.concat(p.slice(1)); else if (near(z, p[p.length - 1])) c = c.concat(p.slice().reverse().slice(1)); else if (near(a, p[p.length - 1])) c = p.slice(0, -1).concat(c); else if (near(a, p[0])) c = p.slice().reverse().slice(0, -1).concat(c); else continue;
+              pool.splice(i, 1); grew = true; break; } }
+            chains.push(c); }
+          for (const c of chains) rest.push({ ...fs0[0], properties: { ...fs0[0].properties }, geometry: { type: 'LineString', coordinates: c } });
+          console.log(`network: ${name} ${fs0.length} ways -> ${chains.length} path${chains.length > 1 ? 's' : ''}`); }
+        out.length = 0; out.push(...rest); }
   net.features = out; fs.writeFileSync(path.join(OUT, 'network.geojson'), JSON.stringify(net)); console.log(`network: ${cut} background lines clipped along the routes (${CLIP_M} m buffer)`); }
 fs.cpSync(path.join(SRC, 'hillshade'), path.join(OUT, 'hillshade'), { recursive: true });
 fs.cpSync(path.join(SRC, 'logos'), OUT, { recursive: true });
