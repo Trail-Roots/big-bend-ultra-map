@@ -283,6 +283,38 @@ w('park.geojson', park);
 
 // curated layers (hand-placed decisions frozen from the approved PDF): copied verbatim
 for (const f of ['network.geojson', 'labels.geojson', 'area_labels.geojson', 'station_labels.geojson', 'poi_labels.geojson', 'pois.geojson', 'zoomboxes.geojson', 'layout.json', 'site.json']) fs.copyFileSync(path.join(SRC, 'curated', f), path.join(OUT, f));
+// background roads / trails that run ALONG an official route (any race GPX; GPX = source of truth) are clipped out so the route is not double-marked
+// (e.g. La Posta Rd, the Piedmontoya tracks, the Solitario road toward Shutup). Buffer CLIP_M around every route, clipped only where a line stays inside it for ALONG_MIN or more (parallel duplicates; crossings stay); kept pieces that touch a clipped
+// stretch are extended to the nearest route point so branches / crossings still meet the route cleanly; slivers shorter than CLIP_MIN between two
+// clipped stretches are dropped. Paved highways and the connector are never clipped. The untouched curated lines stay in network_full.geojson
+// (the milestone strips name on-course segments from the overlapping named roads).
+{ const CLIP_M = 150, CLIP_MIN = 80, ALONG_MIN = 300, net = JSON.parse(fs.readFileSync(path.join(OUT, 'network.geojson'), 'utf8'));
+  fs.writeFileSync(path.join(OUT, 'network_full.geojson'), JSON.stringify(net));
+  const kx = 111320 * Math.cos((29.3 * Math.PI) / 180), ky = 110540, P = (c: number[]) => [c[0] * kx, c[1] * ky], U = (p: number[]) => [+(p[0] / kx).toFixed(6), +(p[1] / ky).toFixed(6)];
+  const segs: number[][][] = ORDER.flatMap((k: string) => { const l = JSON.parse(fs.readFileSync(path.join(OUT, 'courses', `${k}.geojson`), 'utf8')).features[0].geometry.coordinates as number[][]; return l.slice(1).map((q, i) => [P(l[i]), P(q)]); });
+  const near = (p: number[]) => { let m = Infinity, best = p; for (const [a, b] of segs) { if (Math.min(a[0], b[0]) - m > p[0] || Math.max(a[0], b[0]) + m < p[0] || Math.min(a[1], b[1]) - m > p[1] || Math.max(a[1], b[1]) + m < p[1]) continue;
+    const dx = b[0] - a[0], dy = b[1] - a[1], L = dx * dx + dy * dy, t = L ? Math.max(0, Math.min(1, ((p[0] - a[0]) * dx + (p[1] - a[1]) * dy) / L)) : 0, q = [a[0] + t * dx, a[1] + t * dy], d = Math.hypot(p[0] - q[0], p[1] - q[1]); if (d < m) { m = d; best = q; } } return { d: m, q: best }; };
+  const out: unknown[] = []; let cut = 0;
+  for (const f of net.features) { if (f.properties.on_course || f.properties.cls === 'paved' || f.properties.cls === 'connector' || f.geometry.type !== 'LineString') { out.push(f); continue; }
+    // densify to ~5 m so clip boundaries are precise
+    const src = (f.geometry.coordinates as number[][]).map(P), pts: number[][] = [src[0]];
+    for (let i = 1; i < src.length; i++) { const a = src[i - 1], b = src[i], n = Math.max(1, Math.ceil(Math.hypot(b[0] - a[0], b[1] - a[1]) / 5)); for (let j = 1; j <= n; j++) pts.push(j === n ? b : [a[0] + (b[0] - a[0]) * j / n, a[1] + (b[1] - a[1]) * j / n]); }
+    const nr = pts.map(near), keep = nr.map((r) => r.d >= CLIP_M);
+    if (!keep.some(Boolean)) { cut++; continue; } // the whole line lies on a route: drop it
+    // only stretches that run ALONG a route for at least ALONG_MIN are clipped; shorter near-route stretches are crossings / junction approaches: kept
+    for (let i = 0; i < pts.length;) { if (keep[i]) { i++; continue; } let j = i, L = 0; while (j + 1 < pts.length && !keep[j + 1]) { L += Math.hypot(pts[j + 1][0] - pts[j][0], pts[j + 1][1] - pts[j][1]); j++; }
+      if (L < ALONG_MIN) for (let k = i; k <= j; k++) keep[k] = true; i = j + 1; }
+    if (keep.every(Boolean)) { out.push(f); continue; }
+    const runs: { i: number; j: number }[] = []; for (let i = 0; i < pts.length;) { if (!keep[i]) { i++; continue; } let j = i; while (j + 1 < pts.length && keep[j + 1]) j++; runs.push({ i, j }); i = j + 1; }
+    const len = (r: { i: number; j: number }) => { let L = 0; for (let k = r.i + 1; k <= r.j; k++) L += Math.hypot(pts[k][0] - pts[k - 1][0], pts[k][1] - pts[k - 1][1]); return L; };
+    // simplify the kept original vertices back (only the original vertices + the cut points) to keep the file small
+    const orig = new Set<number[]>(src);
+    for (const r of runs) { const both = r.i > 0 && r.j < pts.length - 1; if (both && len(r) < CLIP_MIN) continue;
+      const line = pts.slice(r.i, r.j + 1).filter((q, k, a) => k === 0 || k === a.length - 1 || orig.has(q));
+      if (r.i > 0) line.unshift(nr[r.i - 1].q); if (r.j < pts.length - 1) line.push(nr[r.j + 1].q);
+      if (line.length >= 2) out.push({ ...f, properties: { ...f.properties, clipped: true }, geometry: { type: 'LineString', coordinates: line.map(U) } }); }
+    cut++; }
+  net.features = out; fs.writeFileSync(path.join(OUT, 'network.geojson'), JSON.stringify(net)); console.log(`network: ${cut} background lines clipped along the routes (${CLIP_M} m buffer)`); }
 fs.cpSync(path.join(SRC, 'hillshade'), path.join(OUT, 'hillshade'), { recursive: true });
 fs.cpSync(path.join(SRC, 'logos'), OUT, { recursive: true });
 
@@ -296,6 +328,9 @@ if (GH) for (const m of MI_WARN) console.warn('::warning title=Mileage check::' 
   w('logistics.json', { source: MYMAP_KML, fetched: MM.fetched, placemarks: keep, osm: rj('curated/finish_osm.geojson') });
   console.log('logistics:', keep.map((p) => p.name).join(', ')); }
 // race-weekend calendar events for the site calendar viewer (sections/10-map.ts): times straight from the authoritative race calendar
-w('calendar.json', { source: CAL_ICS, fetched: CALD.fetched, events: [...EV].sort((a, b) => +a.start! - +b.start! || a.summary.localeCompare(b.summary)).map((e) => ({ s: e.summary, a: raceMin(e.start!), b: e.end ? raceMin(e.end) : null, loc: e.location, d: e.description })) });
+// the web / embed calendar lists EVERY feed event that has not ended (registration, deadlines, race weekend, post-race...): no date window or type
+// filter here; only events that ended more than 60 days before this build are left out of the file (the viewer hides ended events at run time)
+const CAL_ALL = CALD.events.filter((e) => e.start && +(e.end ?? e.start) >= Date.now() - 60 * 864e5);
+w('calendar.json', { source: CAL_ICS, fetched: CALD.fetched, events: [...CAL_ALL].sort((a, b) => +a.start! - +b.start! || a.summary.localeCompare(b.summary)).map((e) => ({ s: e.summary, a: raceMin(e.start!), b: e.end ? raceMin(e.end) : null, loc: e.location, d: e.description })) });
 w('checks.json', { calendar: CAL_ICS, calendar_fetched: CALD.fetched, calendar_sun: CAL_SUN, soft: [...MI_WARN.map((m) => 'mileage (sheet vs GPX, GPX used): ' + m), ...soft], hard });
 if (hard.length) { console.error(`${hard.length} timing conflict(s) between the race sheet and the race calendar — fix before publishing.`); process.exit(1); }

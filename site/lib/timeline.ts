@@ -80,7 +80,7 @@ export function renderTimeline(c: Ctx) {
   s += tempRow(X, t0, t1, bottom + 6 + TR - 7, col.mute); // temperatures + sunrise/sunset rows at the bottom, below the chart
   s += heatRows(c, { X, LX, RX, sTop, SR, sts, races: order, t0, t1 });
   s += `<g class="tlcursor" style="display:none;pointer-events:none"><path d="M0,${AX}V${f1(bottom)}" stroke="#111" stroke-width="1.5" stroke-dasharray="4 3"/><g class="tip"><rect class="tlbox" fill="#fff" fill-opacity=".94" stroke="#bbb" rx="4"/><text class="tlread" font-size="17" font-weight="700"></text></g></g>`;
-  return `<svg class="strips timeline" data-t0="${t0}" data-t1="${t1}" data-lx="${LX}" data-stop="${f1(sTop)}" data-sr="${f1(SR)}" data-sbot="${f1(sTop + sts.length * SR)}" data-stations="${sts.join(',')}" data-rx="${f1(RX)}" viewBox="0 0 ${f1(W)} ${f1(H)}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Race-day timeline: runners on course and at aid stations by time of day">${s}</svg>`;
+  return `<svg class="strips timeline" data-t0="${t0}" data-t1="${t1}" data-lx="${LX}" data-stop="${f1(sTop)}" data-sr="${f1(SR)}" data-sbot="${f1(sTop + sts.length * SR)}" data-stations="${sts.join(',')}" data-rx="${f1(RX)}" viewBox="0 0 ${f1(W)} ${f1(H)}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Operations: runners on course and at aid stations by time of day">${s}</svg>`;
 }
 
 import RT from '../../sources/curated/race-temps.json';

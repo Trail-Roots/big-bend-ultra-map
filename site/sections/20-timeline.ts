@@ -8,12 +8,12 @@ import { icon } from '../lib/icons';
 // (history) Web: ONE section with a right-aligned view toggle (Race calendar = default | Race timeline | Race parking | Race finish); only the active
 // view shows. The calendar view has a race filter (one race + universal events). Print: unchanged, this section prints only the race-day
 // timeline page (always expanded); the calendar prints from the map section (page 3) and the plans from 36-finish / 37-parking.
-export const meta = { id: 'timeline', title: 'Race-day timeline' };
-const VIEWS: [string, string][] = [['cal', 'Race calendar'], ['tl', 'Race timeline']];
+export const meta = { id: 'timeline', title: 'Operations' };
+const VIEWS: [string, string][] = [['cal', 'Race calendar'], ['tl', 'Operations']];
 const NOTICES = `<p class="tow-notice" style="border-left:4px solid #c4161c;background:#fbeeee;padding:6px 10px;margin:8px 0;font-weight:600">Park fully off the pavement. If any part of your vehicle is over the pavement, it may be towed or ticketed.</p>
 <p class="infobox"><b>Only Bibbed Runners Allowed On Course</b></p>`;
 /** race-day views, rendered INSIDE the map sheet's calendar slot (#pb-cal, under the elevation chart): right-aligned tabs (Race calendar = default |
- *  Race timeline | Race parking | Race finish), the calendar follows the shared race selection (elevation legend / Layers races); plan previews open the plan lightbox (#planbox). Web only except the
+ *  Operations), Parking / Finish buttons; the calendar follows the shared race selection (elevation legend / Layers races); plan previews open the plan lightbox (#planbox). Web only except the
  *  calendar itself (its print grid is page 3). The web timeline is a copy (gradient ids suffixed); the print timeline page is this section. */
 export function renderViews(c: Ctx) {
   const tabs = `<div class="ui vw-tabs" role="tablist" aria-label="Race day views">${VIEWS.map(([k, t], i) => `<button type="button" role="tab" class="vw-tab" id="vw-tab-${k}" data-view="${k}" aria-controls="vw-${k}" aria-selected="${i === 0}" tabindex="${i === 0 ? 0 : -1}">${t}</button>`).join('')}</div>`;
@@ -33,7 +33,7 @@ const PARK_LEG = () => planLegend([[SW.parkZone(), 'Parking zone'], [SW.parkSign
 const FIN_LEG = () => planLegend([[SW.sf(), 'Start / Finish line'], [SW.trail(), 'Trail'], [SW.radio(), 'Radio Command'], [SW.restroom(), 'Lavatories'], [SW.gate(), 'Restricted entry gate'], [SW.noParkZone(), 'No parking zone']]);
 /** print-only race-day timeline page (always expanded); hidden on screen (the web shows the timeline in the map sheet's views) */
 export function render(c: Ctx) {
-  return `<div class="doc tlpage"><div class="tl-head"><h2>Race-day timeline</h2></div>
+  return `<div class="doc tlpage"><div class="tl-head"><h2>Operations</h2></div>
   <p class="note tl-note">Busiest times at each aid station (modelled per 15 min) and runners on course through race day.</p>
   <div class="tlbox" id="tl-body">${renderTimeline(c)}</div></div>`;
 }

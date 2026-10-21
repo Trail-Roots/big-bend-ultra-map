@@ -502,3 +502,5 @@ dialog.planbox .fp-zoom{width:min(100%,calc((100vh - 200px) * var(--ar)))!import
 .cv-dgrp .cv-det ol{list-style:decimal}.cv-dgrp .cv-det ul{list-style:disc}
 @media (min-width:700px){.printctl .navlayers .lpanel{left:auto;right:0}}
 @media (max-width:900px){.topnav .draftnote .dn-long{display:none}}
+dialog#racebox .lb-body{padding-top:60px} /* clear of the close / prev / next controls */
+@media (max-width:699px){html body dialog#racebox svg.racemap{max-height:calc(var(--host-vh, 1vh) * 100 - 140px)!important}}

@@ -6,6 +6,9 @@ import { chromium } from 'playwright';
 import fs from 'node:fs';
 import path from 'node:path';
 import { serveDist } from './serve';
+import { loadCalendar, raceMin } from '../scripts/lib/calendar';
+// expected: every event in the race calendar feed (recurrences expanded), keyed title@start-minute
+const ICS = (await loadCalendar(path.resolve(import.meta.dir, '..', 'sources'))).events.filter((e) => e.start).map((e) => ({ k: e.summary + '@' + Math.round(raceMin(e.start!)), b: raceMin(e.end ?? e.start!) }));
 const root = path.resolve(import.meta.dir, '..'), srv = serveDist(0), U = process.argv[2] || `http://localhost:${srv.port}/`, out = process.argv[3];
 const T0 = Date.UTC(2027, 0, 17, 6, 0), CLOCKS: [string, string][] = [['before', '2026-10-19T20:00:00Z'], ['during', '2027-01-17T19:10:00Z'], ['after', '2027-01-25T12:00:00Z']];
 const b = await chromium.launch(); const bad: string[] = []; let sig0 = '';
@@ -35,6 +38,10 @@ try {
           cb.click(); chk(k, 'navbar'); cb.click(); chk('', 'navbar-off'); }
         return out; }, now);
       if (f.length) bad.push(`${w}${q} ${tag}: race filter ${f.slice(0, 6).join('; ')}`); }
+    // feed coverage: every not-yet-ended feed event is listed, no ended one is
+    { const shown = await p.evaluate(() => [...document.querySelectorAll<HTMLElement>('#pb-cal .cv-item')].filter((e) => !!e.offsetParent).map((e) => e.querySelector('.cv-s')!.textContent + '@' + Math.round(+e.dataset.a!)));
+      const want = ICS.filter((e) => e.b >= now).map((e) => e.k), miss = want.filter((k) => !shown.includes(k)), extra = shown.filter((k) => !want.includes(k));
+      if (miss.length || extra.length) bad.push(`${w}${q} ${tag}: feed coverage missing [${miss.join(', ')}] extra [${extra.join(', ')}]`); }
     console.log(w, q || 'site', tag, 'shown', r.n, 'first', r.first, r.empty ? '(empty state)' : '');
     if (out) { const c = await p.$('#pb-cal'); await c!.scrollIntoViewIfNeeded(); await c!.screenshot({ path: `${out}-cal-${w}${q ? '-embed' : ''}-${tag}.png` }); if (tag === 'during') await p.screenshot({ path: `${out}-nav-${w}${q ? '-embed' : ''}.png`, clip: { x: 0, y: 0, width: w, height: 60 } }); }
     await p.close(); }

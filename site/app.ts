@@ -448,6 +448,7 @@ if (document.documentElement.classList.contains('embed') && parent !== window) {
     for (const [d, ic, lab] of [[-1, 'chevl', 'Previous plan'], [1, 'chevr', 'Next plan']] as [number, string, string][]) { const b = document.createElement('button'); b.type = 'button'; b.className = 'lb-nav ' + (d < 0 ? 'lb-prev' : 'lb-next'); b.setAttribute('aria-label', lab); b.dataset.tip = lab + (d < 0 ? ' (←)' : ' (→)'); b.innerHTML = icon(ic); b.addEventListener('click', (e) => { e.stopPropagation(); go(d); }); nav.appendChild(b); }
     pb.addEventListener('keydown', (e) => { if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') { e.preventDefault(); go(e.key === 'ArrowLeft' ? -1 : 1); } });
     pb.querySelector('.lb-close')!.addEventListener('click', () => pb.close()); pb.addEventListener('click', (e) => { const t = e.target as Element; if (t === pb || t.classList?.contains('lb-body')) pb.close(); });
+    addEventListener('resize', () => { if (pb.open) show(cur); }); // re-fit (whole plan in view) on resize / orientation change
     pb.addEventListener('close', () => embedModal(pb, false)); addEventListener('beforeprint', () => { if (pb.open) pb.close(); }); } }
 
 // fixed navbar: reserve its height at the top of the page

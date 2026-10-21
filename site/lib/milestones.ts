@@ -12,7 +12,7 @@ let NAMES: (string | null)[] | null = null;
 /** name for every on-course network line: the map label lying along it, else an overlapping named road */
 function netNames(c: Ctx) {
   if (NAMES) return NAMES;
-  const net = c.network.features, labs = c.labels.features.filter((f: any) => f.geometry.type === 'LineString');
+  const net = (c.networkFull ?? c.network).features, labs = c.labels.features.filter((f: any) => f.geometry.type === 'LineString');
   const named = net.filter((f: any) => f.properties.name);
   // map labels sit beside their line (offset for legibility): each curved label names the network line it runs closest to on average
   const dmin = (q: number[], L: number[][]) => { let d = Infinity; for (const r of L) d = Math.min(d, M(q, r)); return d; };
@@ -32,7 +32,7 @@ const CACHE: Record<string, Seg[]> = {};
 /** labelled segments along race k (GPX miles) */
 export function raceSegments(c: Ctx, k: string): Seg[] {
   if (CACHE[k]) return CACHE[k];
-  const f = c.courseGeo[k].features[0], co = f.geometry.coordinates as number[][], mi = f.properties.mi as number[], names = netNames(c), net = c.network.features;
+  const f = c.courseGeo[k].features[0], co = f.geometry.coordinates as number[][], mi = f.properties.mi as number[], names = netNames(c), net = (c.networkFull ?? c.network).features;
   const raw: Seg[] = [];
   for (let i = 0; i < co.length; i += 3) {
     let bn: string | null = null, bd = 45;
