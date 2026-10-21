@@ -22,9 +22,9 @@ const ZOOM = `<div class="fp-zoomctl"><button type="button" data-z="in" aria-lab
 const img = (v: View, alt: string, corner: 'tl' | 'tr', over = '', zoom = true) =>
   `<div class="fp-zoom${zoom ? '' : ' fp-static'}" style="--ar:${(v.w / v.h).toFixed(4)}" ><div class="fp-stage"><img class="floorplan-img" src="plans/floorplan-green.svg#svgView(viewBox(${v.x},${v.y},${v.w},${v.h}))" width="${v.w}" height="${v.h}" alt="${alt}" style="display:block;width:100%;height:auto;aspect-ratio:${v.w}/${v.h};background:#fff" draggable="false">${over}</div>${NORTH(corner)}${zoom ? ZOOM : ''}</div>`;
 export const renderFinishPlan = () => img(FINISH_VIEW, 'Finish area floor plan', 'tl', '', false /* Visitor Center plan: static, no zoom / pan, no controls */) // north arrow top-left on every map (SSOT);
-/** web: ONE floor-plan viewer (full parking extent, pan / zoom) with jump buttons; default = Finish line (app.ts) */
-export const renderPlanViewer = () => { const v = PARKING_VIEW, f = FINISH_VIEW; const views = `<div class="fp-views" role="group" aria-label="Floor plan view"><button type="button" class="fp-vbtn" data-view="finish" data-tip="Jump to the Barton Warnock finish area" aria-label="Finish line view">Finish line</button><button type="button" class="fp-vbtn" data-view="full" data-tip="Zoom out to the whole site incl. parking" aria-label="Full view">Full view</button></div>`;
-  return img(v, 'Floor plan: finish area and parking', 'tl').replace('<div class="fp-zoom"', `<div class="fp-zoom fp-viewer" data-full="${v.x},${v.y},${v.w},${v.h}" data-finish="${f.x},${f.y},${f.w},${f.h}"`).replace(/<\/div>$/, views + '</div>'); };
+/** web view toggle (sections/20-timeline.ts): static fitted previews in the Race parking / Race finish views; the pan / zoom viewers live in the plan lightbox */
+export const renderParkingViewer = (zoom = true) => img(PARKING_VIEW, 'Parking plan', 'tl', '', zoom);
+export const renderFinishViewer = (zoom = true) => img(FINISH_VIEW, 'Finish area floor plan', 'tl', '', zoom);
 export const renderParkingPlan = () => img(PARKING_VIEW, 'Parking plan', 'tl') // top-left is open ground (property line runs down the right);
 
 // legend swatches drawn with the drawing's own fills/strokes (taken from sources/floorplan.svg)

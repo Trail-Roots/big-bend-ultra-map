@@ -13,7 +13,22 @@ const dayName = (d: number) => { const t = new Date(Date.UTC(2027, 0, 17 + d)); 
 const dayOf = (m: number) => Math.floor(m / 1440);
 export const hm = (m: number) => { const x = ((Math.round(m) % 1440) + 1440) % 1440, h = Math.floor(x / 60), mi = x % 60; return `${h % 12 || 12}:${String(mi).padStart(2, '0')} ${h < 12 ? 'AM' : 'PM'}`; };
 const hr = (m: number) => { const h = Math.floor((((m % 1440) + 1440) % 1440) / 60); return `${h % 12 || 12} ${h < 12 ? 'AM' : 'PM'}`; };
-type E = { s: string; a: number; b: number | null; loc: string };
+type E = { s: string; a: number; b: number | null; loc: string; d?: string };
+/** Google Calendar description (HTML or plain text) -> safe HTML: only a[href http(s)/mailto] (new tab), br, p, b/strong/i/em/u, ul/ol/li; all other tags dropped (text kept), text escaped */
+export function safeDesc(raw: string) {
+  const ok = new Set(['br', 'p', 'b', 'strong', 'i', 'em', 'u', 'ul', 'ol', 'li']); let out = '', open: string[] = [];
+  const src = /<[a-z!\/]/i.test(raw) ? raw : raw.replace(/\n/g, '<br>');
+  for (const m of src.matchAll(/<(\/?)([a-z0-9]+)([^>]*)>|([^<]+|<)/gi)) {
+    if (m[4] != null) { out += esc(m[4].replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'")); continue; }
+    const cl = m[1] === '/', t = m[2].toLowerCase();
+    if (t === 'a') { if (cl) { if (open.includes('a')) { out += '</a>'; open.splice(open.lastIndexOf('a'), 1); } continue; }
+      const h = /href\s*=\s*"([^"]*)"|href\s*=\s*'([^']*)'/i.exec(m[3]), u = (h?.[1] ?? h?.[2] ?? '').replace(/&amp;/g, '&').trim();
+      if (/^(https?:|mailto:)/i.test(u)) { out += `<a href="${esc(u)}" target="_blank" rel="noopener">`; open.push('a'); } continue; }
+    if (!ok.has(t)) continue; if (t === 'br') { out += '<br>'; continue; }
+    if (cl) { const i = open.lastIndexOf(t); if (i >= 0) { out += open.splice(i).reverse().map((x) => `</${x}>`).join(''); } } else { out += `<${t}>`; open.push(t); } }
+  return out + open.reverse().map((x) => `</${x}>`).join('');
+}
+const mapsUrl = (l: string) => `https://www.google.com/maps/search/?api=1&amp;query=${encodeURIComponent(l)}`;
 const allDay = (e: E) => e.b != null && e.b - e.a >= 1440;
 const when = (e: E) => allDay(e) ? 'All day' : e.b != null && e.b > e.a ? `${hm(e.a)} – ${hm(e.b)}` : hm(e.a);
 /** location text: coordinates or the first part of a street address */
@@ -26,7 +41,7 @@ export function renderCalendar(c: Ctx) {
   // ---- web: agenda, one group per day ----
   const days = [...new Set(ev.map((e) => dayOf(e.a)))].sort((a, b) => a - b);
   const agenda = days.map((d) => `<section class="cv-dgrp" data-day="${d}"><h3 class="cv-day">${dayName(d)}${d === 0 ? ' · race day' : ''}</h3><ol>${ev.filter((e) => dayOf(e.a) === d).map((e) =>
-    `<li class="cv-ev cv-item${race(e.s) ? ' cv-race' : ''}"${attrs(e)}><span class="cv-t">${when(e)}</span><span class="cv-s">${esc(e.s)}</span>${e.loc ? `<span class="cv-l">${esc(place(e.loc))}</span>` : ''}</li>`).join('')}</ol></section>`).join('');
+    `<li class="cv-ev cv-item${race(e.s) ? ' cv-race' : ''}" data-race="${race(e.s) ?? ''}" role="button" aria-expanded="false"${attrs(e)}><span class="cv-t">${when(e)}</span><span class="cv-s">${esc(e.s)}</span>${e.loc ? `<span class="cv-l"><a class="cv-maplink" href="${mapsUrl(e.loc)}" target="_blank" rel="noopener" data-tip="Open in Google Maps (new tab)">${esc(place(e.loc))}</a></span>` : ''}<div class="cv-det" hidden>${e.d ? `<div class="cv-desc">${safeDesc(e.d)}</div>` : ''}${e.loc ? `<p class="cv-dloc"><b>Location</b> <a class="cv-maplink" href="${mapsUrl(e.loc)}" target="_blank" rel="noopener" data-tip="Open in Google Maps (new tab)">${esc(e.loc)}</a></p>` : ''}${!e.d && !e.loc ? '<p class="cv-dnone">No further details.</p>' : ''}</div></li>`).join('')}</ol></section>`).join('');
   // ---- print: hour-by-hour grid from race day forward ----
   const pe = ev.filter((e) => e.a >= 0), timed = pe.filter((e) => !allDay(e)), alld = pe.filter(allDay);
   const G0 = Math.floor(Math.min(...timed.map((e) => e.a)) / 60) * 60, G1 = Math.ceil(Math.max(...timed.map((e) => Math.max(e.b ?? e.a, e.a + MINDUR))) / 60) * 60;

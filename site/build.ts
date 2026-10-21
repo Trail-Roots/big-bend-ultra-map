@@ -69,7 +69,7 @@ const noTitles = (h: string) => h.replace(/<title>[\s\S]*?<\/title>/g, '').repla
 // build check: every map link (station lightboxes, print station pages, maps, plans) must point at coordinates, never a place name
 { const COORD = /^-?\d{1,2}\.\d+(?:,|%2C)-?\d{1,3}\.\d+$/i, bad: string[] = []; let n = 0;
   // the only exception: the subtle secondary "Nearby: <named place>" links (a.st-near) on aid-station details
-  const scan = html.replace(/<a class="st-near"[^>]*>/g, '');
+  const scan = html.replace(/<a class="st-near"[^>]*>/g, '').replace(/<a class="cv-maplink"[^>]*>/g, ''); // + race-calendar location links (Erik, Oct 21 2026: open the event location as given by the calendar)
   for (const m of scan.matchAll(/https?:\/\/(?:www\.)?(?:google\.[a-z.]+\/maps|maps\.google\.[a-z.]+|goo\.gl\/maps|maps\.app\.goo\.gl|maps\.apple\.com)[^"'\s<]*/g)) {
     const u = m[0].replace(/&amp;/g, '&'); if (/\/maps\/d\//.test(u)) continue; n++; // My Maps (KML) is a layer, not a place link
     const v = /[?&](?:query|q|destination)=([^&#]+)/.exec(u)?.[1]; if (!v || !COORD.test(v)) bad.push(u); }

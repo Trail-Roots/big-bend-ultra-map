@@ -149,6 +149,13 @@ notice next to Download PDF on the web page. Set it to `false` and rebuild (`bun
 - Whit Roy: <https://www.google.com/maps/search/?api=1&query=29.344005,-103.818072>
 - Shutup: <https://www.google.com/maps/search/?api=1&query=29.445718,-103.863270>
 - Solitario: <https://www.google.com/maps/search/?api=1&query=29.491795,-103.803597>
+- Lajitas Trail, 22403 Lone Star Ranch Rd, Terlingua, TX 79852, USA: <https://www.google.com/maps/search/?api=1&query=Lajitas%20Trail%2C%2022403%20Lone%20Star%20Ranch%20Rd%2C%20Terlingua%2C%20TX%2079852%2C%20USA>
+- Barton Warnock Visitor Center, 21800 FM170, Terlingua, TX 79852, USA: <https://www.google.com/maps/search/?api=1&query=Barton%20Warnock%20Visitor%20Center%2C%2021800%20FM170%2C%20Terlingua%2C%20TX%2079852%2C%20USA>
+- 29.445718309498755, -103.86327034213237: <https://www.google.com/maps/search/?api=1&query=29.445718309498755%2C%20-103.86327034213237>
+- 29.300372549553572,-103.84562511477459: <https://www.google.com/maps/search/?api=1&query=29.300372549553572%2C-103.84562511477459>
+- Whit-Roy Cinnabar Mine, 1900 Sauceda Ranch Road, Redford, TX 79846, USA: <https://www.google.com/maps/search/?api=1&query=Whit-Roy%20Cinnabar%20Mine%2C%201900%20Sauceda%20Ranch%20Road%2C%20Redford%2C%20TX%2079846%2C%20USA>
+- Paso al Solitario, Solitario Road, Redford, TX 79846, USA: <https://www.google.com/maps/search/?api=1&query=Paso%20al%20Solitario%2C%20Solitario%20Road%2C%20Redford%2C%20TX%2079846%2C%20USA>
+- 29.31797692590845, -103.79533238192568: <https://www.google.com/maps/search/?api=1&query=29.31797692590845%2C%20-103.79533238192568>
 - Map: 29.27054, -103.75719: <https://www.google.com/maps?q=29.270540,-103.757188>
 - Barton Warnock Visitor Center: <https://www.google.com/maps/search/?api=1&query=Barton%20Warnock%20Visitor%20Center%2C%20TX>
 - Map: 29.31798, -103.79533: <https://www.google.com/maps?q=29.317977,-103.795332>
@@ -162,12 +169,18 @@ notice next to Download PDF on the web page. Set it to `false` and rebuild (`bun
 
 ### Routes
 
+- https://www.strava.com/routes/3178910612007281564: <https://www.google.com/url?q=https://www.strava.com/routes/3178910612007281564&sa=D&source=calendar&usd=2&usg=AOvVaw2uzF0LWSjn3oAf2iaEMg_Q>
 - 100K route on Strava (opens the Strava app on a phone): <https://www.strava.com/routes/3450526029363380036>
-- Trail Roots club on Strava: <https://www.strava.com/clubs/trailroots>
 - 55K route on Strava (opens the Strava app on a phone): <https://www.strava.com/routes/3450532671815509296>
 - 35K route on Strava (opens the Strava app on a phone): <https://www.strava.com/routes/3450543498764908848>
 - 20K route on Strava (opens the Strava app on a phone): <https://www.strava.com/routes/3476258112199931088>
 - 10K route on Strava (opens the Strava app on a phone): <https://www.strava.com/routes/3476252579046666448>
+- https://www.strava.com/routes/3373755190992143280: <https://www.google.com/url?q=https://www.strava.com/routes/3373755190992143280&sa=D&source=calendar&usd=2&usg=AOvVaw3P7pIBshy_IO-cTiPtCHnl>
+- https://www.strava.com/routes/3096511228948922814: <https://www.google.com/url?q=https://www.strava.com/routes/3096511228948922814&sa=D&source=calendar&usd=2&usg=AOvVaw2VBF25KLHkb5SienGm4zBW>
+- https://www.strava.com/routes/3372351312211083382: <https://www.google.com/url?q=https://www.strava.com/routes/3372351312211083382&sa=D&source=calendar&usd=2&usg=AOvVaw2wKiabTYYYebU15bCN1443>
+- https://www.strava.com/routes/3372327015569488194: <https://www.google.com/url?q=https://www.strava.com/routes/3372327015569488194&sa=D&source=calendar&usd=2&usg=AOvVaw3rNB8v4uUjG-xA3qyj3Y1i>
+- https://www.strava.com/routes/3372350029883714678: <https://www.google.com/url?q=https://www.strava.com/routes/3372350029883714678&sa=D&source=calendar&usd=2&usg=AOvVaw12Mz3klR3rXRJayvDMkjp7>
+- Trail Roots club on Strava: <https://www.strava.com/clubs/trailroots>
 
 ### Downloads
 
@@ -185,6 +198,10 @@ notice next to Download PDF on the web page. Set it to `false` and rebuild (`bun
 
 ### Calendar
 
+- An issue: <https://www.google.com/url?q=https://bigbendsentinel.com/2022/02/23/terlingua-time-cell-phone-tower-in-terlingua-stuck-an-hour-behind/&sa=D&source=calendar&usd=2&usg=AOvVaw0xgduyQO3-s-1C3phHTWtr>
+- iPhone: <https://www.google.com/url?q=https://support.apple.com/guide/iphone/change-the-date-and-time-iph65f82af3e/ios&sa=D&source=calendar&usd=2&usg=AOvVaw0Q5Hh7HOv_-iFkdshpGImF>
+- Android: <https://www.google.com/url?q=https://support.google.com/android/answer/2841106?hl%3Den&sa=D&source=calendar&usd=2&usg=AOvVaw30_tMqD1dTudbGjqtTE_eh>
+- cross-check your time: <https://www.google.com/url?q=https://www.time.gov/&sa=D&source=calendar&usd=2&usg=AOvVaw3OITahYAH9QtqBUjv2L991>
 - Subscribe to the Race: Big Bend Ultra Google Calendar: <https://calendar.google.com/calendar/u/0?cid=Njc1ZWZhYmI1ZmY0MDE1OTZlNDk5Mzg5YWRiNzdiZTU4YTUxODhkMWFkOTc1MjE1MzgxZDUzNjI1OWVlMTU0NkBncm91cC5jYWxlbmRhci5nb29nbGUuY29t>
 - Subscribe in Apple / iCal (public calendar feed): <webcal://calendar.google.com/calendar/ical/675efabb5ff401596e499389adb77be58a5188d1ad975215381d536259ee1546%40group.calendar.google.com/public/basic.ics>
 
@@ -192,4 +209,7 @@ notice next to Download PDF on the web page. Set it to `false` and rebuild (`bun
 
 - Trail Roots · Big Bend Ultra race page (header, logo, footer): <https://trailroots.com/big-bend-ultra>
 - Register: <https://runsignup.com/Race/Register/?raceId=163892>
+- Trail Roots · Big Bend Ultra race page (header, logo, footer): <https://trailroots.com/regulations>
+- https://www.t-mobile.com/coverage/satellite-phone-service: <https://www.t-mobile.com/coverage/satellite-phone-service>
+- Cutoff Times: <https://docs.google.com/spreadsheets/d/1FZw9u3cEPj2rPkT9pba0crKXQ9RnULilq0reSMw1LvU/edit?usp=sharing>
 <!-- links:end -->

@@ -296,6 +296,6 @@ if (GH) for (const m of MI_WARN) console.warn('::warning title=Mileage check::' 
   w('logistics.json', { source: MYMAP_KML, fetched: MM.fetched, placemarks: keep, osm: rj('curated/finish_osm.geojson') });
   console.log('logistics:', keep.map((p) => p.name).join(', ')); }
 // race-weekend calendar events for the site calendar viewer (sections/10-map.ts): times straight from the authoritative race calendar
-w('calendar.json', { source: CAL_ICS, fetched: CALD.fetched, events: [...EV].sort((a, b) => +a.start! - +b.start! || a.summary.localeCompare(b.summary)).map((e) => ({ s: e.summary, a: raceMin(e.start!), b: e.end ? raceMin(e.end) : null, loc: e.location })) });
+w('calendar.json', { source: CAL_ICS, fetched: CALD.fetched, events: [...EV].sort((a, b) => +a.start! - +b.start! || a.summary.localeCompare(b.summary)).map((e) => ({ s: e.summary, a: raceMin(e.start!), b: e.end ? raceMin(e.end) : null, loc: e.location, d: e.description })) });
 w('checks.json', { calendar: CAL_ICS, calendar_fetched: CALD.fetched, calendar_sun: CAL_SUN, soft: [...MI_WARN.map((m) => 'mileage (sheet vs GPX, GPX used): ' + m), ...soft], hard });
 if (hard.length) { console.error(`${hard.length} timing conflict(s) between the race sheet and the race calendar — fix before publishing.`); process.exit(1); }

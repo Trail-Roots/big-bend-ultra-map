@@ -359,6 +359,9 @@ if (document.documentElement.classList.contains('embed') && parent !== window) {
     // heat-map cutoff marks shared by several races at one station + time: the row height is split evenly among the VISIBLE races (all heat maps)
     document.querySelectorAll<SVGGElement>('g.tlcut[data-r]').forEach((g) => { const [lo, hi] = g.dataset.r!.split(',').map(Number), vis = [...g.querySelectorAll<SVGElement>('[data-course]')].filter((r) => on.includes(r.dataset.course!)), n = vis.length, sh = (hi - lo) / Math.max(1, n);
       vis.forEach((r, j) => { const ya = lo + j * sh + (j ? 0.75 : 0), yb = lo + (j + 1) * sh - (j < n - 1 ? 0.75 : 0); r.setAttribute('y', ya.toFixed(1)); r.setAttribute('height', (yb - ya).toFixed(1)); }); });
+    // zoom boxes default (Erik, Oct 21 2026): shown with all races, hidden when a subset of races is picked; a manual Layers toggle of
+    // "Zoom boxes" overrides the default for the rest of the visit (race changes no longer touch it). Print (force = all races) shows them unless the user turned them off.
+    { const zb = document.querySelector<HTMLInputElement>('input[data-layer="zoom"]'); if (zb && zb.dataset.manual !== '1') { const want = force ? true : on.length === all.length; zb.checked = want; show('.mainmap g.layer[data-layer="zoom"]', want); } }
     // "All" checkbox mirrors the state: checked = all, indeterminate = some, unchecked = none
     { const ab = document.querySelector<HTMLInputElement>('input[data-race-all]'); if (ab && !force) ab.checked = !document.querySelector('input[data-race]:checked'); }
     // timeline: restack the visible races
@@ -376,6 +379,7 @@ if (document.documentElement.classList.contains('embed') && parent !== window) {
         g.querySelectorAll<SVGRectElement>('rect.hc').forEach((rc) => { const v = a[+rc.dataset.i!] || 0; rc.style.display = v ? '' : 'none'; rc.setAttribute('fill-opacity', (0.06 + 0.9 * Math.sqrt(Math.min(1, v / m))).toFixed(2)); }); }); }
     void NSf; void HDt;
   };
+  document.querySelector<HTMLInputElement>('input[data-layer="zoom"]')?.addEventListener('change', (e) => { if (e.isTrusted) (e.target as HTMLInputElement).dataset.manual = '1'; });
   document.querySelectorAll<HTMLInputElement>('input[data-race]').forEach((cb) => cb.addEventListener('change', () => apply()));
   document.querySelector<HTMLInputElement>('input[data-race-all]')?.addEventListener('change', () => { document.querySelectorAll<HTMLInputElement>('input[data-race]').forEach((i) => (i.checked = false)); apply(); });
   // elevation legend: click a race to toggle it (same as its checkbox)
@@ -431,16 +435,34 @@ if (document.documentElement.classList.contains('embed') && parent !== window) {
 }
 
 
+// ---- site-plan lightbox (sections/20-timeline.ts): Race parking / Race finish previews open full-screen pan / zoom viewers; prev / next (buttons, arrow
+// keys) switch Parking <-> Finish; Esc / close / backdrop close it (same pattern as the race and aid-station lightboxes) ----
+{ const pb = document.getElementById('planbox') as HTMLDialogElement | null;
+  if (pb) { const P = ['park', 'fin'], panes = [...pb.querySelectorAll<HTMLElement>('.pl-one')]; let cur = 'park';
+    const show = (k: string) => { cur = k; panes.forEach((x) => (x.hidden = x.dataset.plan !== k)); pb.setAttribute('aria-label', k === 'park' ? 'Parking plan' : 'Finish area plan');
+      requestAnimationFrame(() => pb.querySelector<HTMLButtonElement>(`.pl-one[data-plan="${k}"] .fp-zoomctl button[data-z="reset"]`)?.click()); };
+    const open = (k: string) => { show(k); if (!pb.open) { embedModal(pb, true); pb.showModal(); } pb.scrollTop = 0; };
+    document.querySelectorAll<HTMLButtonElement>('.pl-prev').forEach((b) => b.addEventListener('click', () => open(b.dataset.plan!)));
+    const nav = document.createElement('div'); nav.className = 'lb-navs'; pb.appendChild(nav);
+    const go = (d: number) => show(P[(P.indexOf(cur) + d + P.length) % P.length]);
+    for (const [d, ic, lab] of [[-1, 'chevl', 'Previous plan'], [1, 'chevr', 'Next plan']] as [number, string, string][]) { const b = document.createElement('button'); b.type = 'button'; b.className = 'lb-nav ' + (d < 0 ? 'lb-prev' : 'lb-next'); b.setAttribute('aria-label', lab); b.dataset.tip = lab + (d < 0 ? ' (←)' : ' (→)'); b.innerHTML = icon(ic); b.addEventListener('click', (e) => { e.stopPropagation(); go(d); }); nav.appendChild(b); }
+    pb.addEventListener('keydown', (e) => { if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') { e.preventDefault(); go(e.key === 'ArrowLeft' ? -1 : 1); } });
+    pb.querySelector('.lb-close')!.addEventListener('click', () => pb.close()); pb.addEventListener('click', (e) => { const t = e.target as Element; if (t === pb || t.classList?.contains('lb-body')) pb.close(); });
+    pb.addEventListener('close', () => embedModal(pb, false)); addEventListener('beforeprint', () => { if (pb.open) pb.close(); }); } }
+
 // fixed navbar: reserve its height at the top of the page
 { const nav = document.querySelector<HTMLElement>('.topnav'); if (nav && !document.documentElement.classList.contains('embed')) { const set = () => document.documentElement.style.setProperty('--navh', nav.offsetHeight + 'px'); new ResizeObserver(set).observe(nav); set(); } }
 // ---- race calendar (sections/10-map.ts, lib/calview.ts): web agenda from the current moment forward (same structure every day), custom tips ----
-{ const cv = document.querySelector<HTMLElement>('.cv'), sc = cv?.querySelector<HTMLElement>('.cv-scroll');
+{ const cv = document.querySelector<HTMLElement>('.vw-calbox .cv'), sc = cv?.querySelector<HTMLElement>('.cv-scroll');
   if (cv && sc) {
     const T0 = Date.UTC(2027, 0, 17, 6, 0); // midnight Jan 17 2027 CT (race day) = minute 0 of the calendar data
     const filter = () => { const now = (Date.now() - T0) / 60000; let n = 0;
-      sc.querySelectorAll<HTMLElement>('.cv-dgrp').forEach((g) => { let k = 0; g.querySelectorAll<HTMLElement>('.cv-item').forEach((e) => { const on = +e.dataset.b! >= now; e.hidden = !on; if (on) k++; }); g.hidden = !k; n += k; });
+      const rsel = document.querySelector<HTMLElement>('.cv-rbtn[aria-pressed="true"]')?.dataset.race || '';
+      sc.querySelectorAll<HTMLElement>('.cv-dgrp').forEach((g) => { let k = 0; g.querySelectorAll<HTMLElement>('.cv-item').forEach((e) => { const on = +e.dataset.b! >= now && (!rsel || !e.dataset.race || e.dataset.race === rsel); e.hidden = !on; if (on) k++; }); g.hidden = !k; n += k; });
       sc.querySelector<HTMLElement>('.cv-empty')!.hidden = n > 0; };
     filter(); setInterval(filter, 60000);
+    // race filter: one race + universal events (events whose title names no race); All races = every event
+    document.querySelectorAll<HTMLButtonElement>('.cv-rbtn').forEach((b) => b.addEventListener('click', () => { document.querySelectorAll('.cv-rbtn').forEach((x) => x.setAttribute('aria-pressed', String(x === b))); filter(); }));
     const tip = document.createElement('div'); tip.className = 'cv-tip'; tip.hidden = true; document.body.appendChild(tip);
     let pinned: HTMLElement | null = null;
     const show = (e: HTMLElement) => { tip.textContent = e.dataset.tip!; tip.hidden = false; const r = e.getBoundingClientRect(), tw = tip.offsetWidth, th = tip.offsetHeight;
@@ -449,14 +471,21 @@ if (document.documentElement.classList.contains('embed') && parent !== window) {
     for (const e of cv.querySelectorAll<HTMLElement>('.cv-scroll .cv-ev')) {
       e.addEventListener('mouseenter', () => { if (!pinned) show(e); }); e.addEventListener('mouseleave', () => { if (!pinned) tip.hidden = true; });
       e.addEventListener('focus', () => show(e)); e.addEventListener('blur', () => { if (!pinned) tip.hidden = true; });
-      e.addEventListener('click', (ev) => { ev.stopPropagation(); if (pinned === e) hide(); else { pinned = e; show(e); } }); }
+      // click / Enter / Space: expand the event in place (full Google Calendar description + location); links inside open on their own
+      const tog = () => { const o = e.getAttribute('aria-expanded') !== 'true'; e.setAttribute('aria-expanded', String(o)); const d = e.querySelector<HTMLElement>('.cv-det'); if (d) d.hidden = !o; hide(); };
+      e.addEventListener('click', (ev) => { if ((ev.target as Element).closest('a')) { ev.stopPropagation(); return; } ev.stopPropagation(); tog(); });
+      e.addEventListener('keydown', (ev) => { if ((ev.key === 'Enter' || ev.key === ' ') && ev.target === e) { ev.preventDefault(); tog(); } }); }
+    // location links: custom tip (no native title)
+    for (const a of cv.querySelectorAll<HTMLElement>('a.cv-maplink')) { const t = (x: boolean) => { if (x) { tip.textContent = a.dataset.tip!; tip.hidden = false; const r = a.getBoundingClientRect(); tip.style.left = Math.min(Math.max(6, r.left), innerWidth - tip.offsetWidth - 6) + 'px'; tip.style.top = (r.top - tip.offsetHeight - 6 < 6 ? r.bottom + 6 : r.top - tip.offsetHeight - 6) + 'px'; } else tip.hidden = true; };
+      a.addEventListener('mouseenter', (ev) => { ev.stopPropagation(); t(true); }); a.addEventListener('focus', (ev) => { ev.stopPropagation(); t(true); }); a.addEventListener('mouseleave', () => t(false)); a.addEventListener('blur', () => t(false)); }
     sc.addEventListener('scroll', hide, { passive: true }); addEventListener('scroll', hide, { passive: true }); document.addEventListener('click', hide);
     addEventListener('keydown', (k: KeyboardEvent) => { if (k.key === 'Escape') hide(); });
   } }
-// ---- timeline section: neutral disclosure (web only; print always shows the charts) ----
-document.querySelectorAll<HTMLButtonElement>('.tl-toggle').forEach((b) => b.addEventListener('click', () => {
-  const pg = b.closest('.tlpage')!, open = b.getAttribute('aria-expanded') !== 'true'; pg.classList.toggle('collapsed', !open);
-  b.setAttribute('aria-expanded', String(open)); b.querySelector('.tl-lab')!.textContent = open ? 'Hide' : 'Show'; if (open) dispatchEvent(new Event('resize')); /* charts were display:none: let size-dependent code re-measure */ }));
+// ---- race-day views (sections/20-timeline.ts): tablist (web only); arrow keys / Home / End move between tabs; print shows its own pages ----
+{ const pg = document.querySelector<HTMLElement>('.tlpage'), tabs = [...document.querySelectorAll<HTMLButtonElement>('.vw-tab')];
+  const go = (t: HTMLButtonElement, focus = false) => { tabs.forEach((x) => { const on = x === t; x.setAttribute('aria-selected', String(on)); x.tabIndex = on ? 0 : -1; document.getElementById('vw-' + x.dataset.view)?.classList.toggle('on', on); });
+    pg!.dataset.view = t.dataset.view; const ttl = pg!.querySelector('.vw-ttl'); if (ttl) ttl.textContent = t.textContent; if (focus) t.focus(); dispatchEvent(new Event('resize')); /* panes were display:none: let size-dependent code re-measure */ };
+  tabs.forEach((t, i) => { t.addEventListener('click', () => go(t)); t.addEventListener('keydown', (e) => { const n = tabs.length, j = e.key === 'ArrowRight' ? (i + 1) % n : e.key === 'ArrowLeft' ? (i - 1 + n) % n : e.key === 'Home' ? 0 : e.key === 'End' ? n - 1 : -1; if (j >= 0) { e.preventDefault(); go(tabs[j], true); } }); }); }
 // calendar: fit each event block's text without clipping (screen only; print is sized in CSS)
 { const blks = [...document.querySelectorAll<HTMLElement>('.cv-blk')];
   const over = (e: HTMLElement) => e.scrollHeight > e.clientHeight + 1 || [...e.children].some((x) => (x as HTMLElement).scrollWidth > (x as HTMLElement).clientWidth + 1 || (x as HTMLElement).scrollHeight > (x as HTMLElement).clientHeight + 1 || (x as HTMLElement).getBoundingClientRect().bottom > e.getBoundingClientRect().bottom + .5);
