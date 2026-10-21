@@ -9,24 +9,37 @@
   f.src = base.href + '?view=embed&h=auto'; f.title = 'Big Bend Ultra course map'; f.loading = 'lazy'; f.className = 'bbu-embed';
   f.setAttribute('allow', 'fullscreen'); f.style.cssText = 'display:block;width:100%;border:0;height:' + (s.dataset.height || '900') + 'px';
   s.parentNode.insertBefore(f, s.nextSibling);
-  // lightbox open inside the iframe: hold the host scroll position (no jump when the dialog takes focus), restore it on close
-  var held = null;
-  function hold() { if (held) window.scrollTo(held[0], held[1]); }
+  // lightbox open inside the iframe: the iframe takes over the WHOLE host window (fixed, top layer) while it is open. A placeholder of the
+  // same height keeps the host layout exactly where it was (no shift); host scrolling is locked and the scroll position restored on close.
+  var full = null, pendingH = 0;
+  function openFull() {
+    if (full) return; var r = f.getBoundingClientRect(), de = document.documentElement, bd = document.body;
+    full = { css: f.style.cssText, x: scrollX, y: scrollY, top: r.top, ph: document.createElement('div'), hO: de.style.overflow, bO: bd.style.overflow, hS: de.style.scrollbarGutter };
+    full.ph.style.cssText = 'display:block;width:100%;height:' + r.height + 'px'; full.ph.setAttribute('aria-hidden', 'true'); f.parentNode.insertBefore(full.ph, f);
+    var gutter = innerWidth - de.clientWidth; if (gutter > 0) de.style.scrollbarGutter = 'stable';
+    de.style.overflow = 'hidden'; bd.style.overflow = 'hidden';
+    f.style.cssText = 'display:block;position:fixed;inset:0;width:100vw;height:100vh;height:100dvh;max-width:none;max-height:none;margin:0;padding:0;border:0;z-index:2147483647;background:transparent';
+    window.scrollTo(full.x, full.y);
+    f.contentWindow.postMessage({ type: 'bbu-full', on: true, top: full.top, w: innerWidth, h: innerHeight }, origin);
+  }
+  function closeFull() {
+    if (!full) return; var F = full; full = null; f.style.cssText = F.css;
+    F.ph.parentNode && F.ph.parentNode.removeChild(F.ph); var de = document.documentElement; de.style.overflow = F.hO; document.body.style.overflow = F.bO; de.style.scrollbarGutter = F.hS;
+    window.scrollTo(F.x, F.y); requestAnimationFrame(function () { window.scrollTo(F.x, F.y); pos(); });
+    f.contentWindow && f.contentWindow.postMessage({ type: 'bbu-full', on: false }, origin);
+  }
   addEventListener('message', function (e) {
-    if (e.origin === origin && e.source === f.contentWindow && e.data && e.data.type === 'bbu-modal') {
-      if (e.data.open) { held = [scrollX, scrollY]; requestAnimationFrame(hold); setTimeout(hold, 60); } else { var h0 = held; held = null; if (h0) { window.scrollTo(h0[0], h0[1]); requestAnimationFrame(function () { window.scrollTo(h0[0], h0[1]); }); } }
-      return;
-    }
+    if (e.origin === origin && e.source === f.contentWindow && e.data && e.data.type === 'bbu-modal') { if (e.data.open) openFull(); else closeFull(); return; }
     if (e.origin !== origin || e.source !== f.contentWindow || !e.data || e.data.type !== 'bbu-embed-height') return;
-    var h = Math.ceil(+e.data.height); if (h > 0) f.style.height = h + 'px';
+    var h = Math.ceil(+e.data.height); if (h > 0) { pendingH = h; if (full) return; f.style.height = h + 'px'; }
     send(); pos();
   });
   // tell the page the HOST viewport size (its vh/vw limits use it); only on change, and the iframe's own height never alters it, so no feedback loop
   var sent = '';
-  function send(force) { var v = innerWidth + 'x' + innerHeight; if (!f.contentWindow || (v === sent && !force)) return; sent = v; f.contentWindow.postMessage({ type: 'bbu-host-viewport', w: innerWidth, h: innerHeight }, origin); }
+  function send(force) { if (full && f.contentWindow) { f.contentWindow.postMessage({ type: 'bbu-host-viewport', w: innerWidth, h: innerHeight }, origin); return; } var v = innerWidth + 'x' + innerHeight; if (!f.contentWindow || (v === sent && !force)) return; sent = v; f.contentWindow.postMessage({ type: 'bbu-host-viewport', w: innerWidth, h: innerHeight }, origin); }
   // pinned navbar: the iframe's top edge relative to the host viewport (negative once scrolled past)
   var raf = 0;
-  function pos() { if (raf) return; raf = requestAnimationFrame(function () { raf = 0; if (f.contentWindow) f.contentWindow.postMessage({ type: 'bbu-host-scroll', top: f.getBoundingClientRect().top }, origin); }); }
+  function pos() { if (raf || full) return; raf = requestAnimationFrame(function () { raf = 0; if (f.contentWindow) f.contentWindow.postMessage({ type: 'bbu-host-scroll', top: f.getBoundingClientRect().top }, origin); }); }
   addEventListener('scroll', pos, { passive: true });
   f.addEventListener('load', function () { send(true); pos(); });
   addEventListener('resize', function () { send(); pos(); }); addEventListener('orientationchange', function () { setTimeout(send, 100); });

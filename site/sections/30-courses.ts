@@ -31,15 +31,18 @@ function profile(c, k: string) {
   const pts = p.mi.map((m: number, i: number) => `${f1(X(m))},${f1(Y(p.ft[i]))}`);
   s += `<path d="M${f1(X(0))},${H - PB}L${pts.join('L')}L${f1(X(p.mi[p.mi.length - 1]))},${H - PB}z" fill="${cc}" fill-opacity="${BAND_OP}"/><path d="M${pts.join('L')}" class="ln" stroke="${cc}" stroke-width="3.5"/>`;
   const ftAt = (m: number) => { let i = p.mi.findIndex((x: number) => x >= m); if (i < 0) i = p.mi.length - 1; return p.ft[i]; };
-  for (const q of c.cutoffs[k]) { const x = X(q.mile), y = Y(ftAt(q.mile)) - 26; s += `<path d="M${f1(x)},${f1(y + 12)}V${f1(Y(ftAt(q.mile)))}" stroke="${col.ink}" stroke-width="1.5"/>` + station(x, y, q.station, c.stations.stations[q.station].spectator, { s: 600, fs: 19, badge: false, colors: col }); }
+  // station icons straight above their mileage on a vertical stub; an icon that would hit an earlier one steps up a tier (never sideways)
+  const IR = Math.sqrt(600 * 1.8) / 2, ipos: number[][] = [];
+  for (const q of c.cutoffs[k]) { const x = X(q.mile), ly = Y(ftAt(q.mile)); let y = ly - 26; while (ipos.some(([px, py]) => Math.abs(px - x) < 2 * IR + 2 && Math.abs(py - y) < 2 * IR + 2)) y -= 2 * IR + 4; ipos.push([x, y]);
+    s += `<path d="M${f1(x)},${f1(y + 12)}V${f1(ly)}" stroke="${col.ink}" stroke-width="1.5"/>` + station(x, y, q.station, c.stations.stations[q.station].spectator, { s: 600, fs: 19, badge: false, colors: col }); }
   // cutoff labels: a small time pill centered over each aid-station icon with a cutoff on this race, joined to the icon by a thin
   // dashed guide; staggered up a row at a time until pill + guide clear every other label/guide, every icon and the profile line (build fails otherwise)
   type Bx = { x0: number; x1: number; y0: number; y1: number }; const hit = (a: Bx, b: Bx, m = 2) => a.x0 < b.x1 + m && b.x0 < a.x1 + m && a.y0 < b.y1 + m && b.y0 < a.y1 + m;
-  const IR = Math.sqrt(600 * 1.8) / 2, icons: Bx[] = c.cutoffs[k].map((q) => { const x = X(q.mile), y = Y(ftAt(q.mile)) - 26; return { x0: x - IR, x1: x + IR, y0: y - IR, y1: y + IR }; });
+  const icons: Bx[] = ipos.map(([x, y]) => ({ x0: x - IR, x1: x + IR, y0: y - IR, y1: y + IR }));
   const linePts = p.mi.map((m: number, i: number) => [X(m), Y(p.ft[i])]), fl: Bx[] = [], guides: Bx[] = [], FS = 15;
   const shc = (t: string) => t.replace(/:00 ?([AP])M$/, (_, a) => a.toLowerCase()).replace(/ ?([AP])M$/, (_, a) => a.toLowerCase());
   for (const q of c.cutoffs[k]) { if (!(q.mile > 0) || !q.cutoff || q.cutoff === 'TBD') continue;
-    const t = shc(q.cutoff), w = 14 + t.length * FS * 0.6, h = 22, x = X(q.mile), gy = Y(ftAt(q.mile)) - 26 - IR - 1; let done = false;
+    const t = shc(q.cutoff), w = 14 + t.length * FS * 0.6, h = 22, x = X(q.mile), gy = ipos[c.cutoffs[k].indexOf(q)][1] - IR - 1; let done = false;
     for (let row = 0; row < 14 && !done; row++) { const x0 = Math.min(W - 10 - w, Math.max(PL + 2, x - w / 2)), y1 = gy - 12 - row * (h + 4), b = { x0, x1: x0 + w, y0: y1 - h, y1 }, g = { x0: x - 1, x1: x + 1, y0: y1, y1: gy };
       if (b.y0 < 3 || [...fl, ...guides].some((o) => hit(o, b)) || fl.some((o) => hit(o, g, 1)) || icons.some((o) => hit(o, b, 1)) || linePts.some(([px, py]: number[]) => px > b.x0 - 2 && px < b.x1 + 2 && py > b.y0 - 2 && py < b.y1 + 2)) continue;
       fl.push(b); guides.push(g); done = true;

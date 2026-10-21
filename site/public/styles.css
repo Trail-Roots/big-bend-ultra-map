@@ -269,7 +269,7 @@ svg.st-badge{width:56px;height:56px;flex:none;overflow:visible}
 .st-hours b{font-size:1.25rem}.st-gmap{display:inline-flex;align-items:center;gap:.35em;color:#1f6fb2;font-size:.9rem}
 .amen{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:1fr 1fr;gap:4px 10px;font-size:.88rem}
 .am{display:flex;align-items:center;gap:6px}.am .amv{width:18px;height:18px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:700;flex:none}
-.am-y .amv{background:#2f8f46;color:#fff}.am-n .amv{background:#e6e6e6;color:#777}.am-u .amv{background:var(--bg-hover);color:#555;border:1px solid var(--line)}.am em{color:#666;font-style:normal;font-size:.75rem}.am-n em{color:#888}
+.am-y .amv{background:#2f8f46;color:#fff}.am-n .amv{background:#c62828;color:#fff}.am-u .amv{background:var(--bg-hover);color:#555;border:1px solid var(--line)}.am em{color:#666;font-style:normal;font-size:.75rem}.am-n em{color:#888}
 .st-cuts{border-collapse:collapse;font-size:.9rem}.st-cuts th{text-align:left;padding:2px 10px 2px 0;font-weight:700}.st-cuts td{padding:2px 0}.cutv{margin-right:10px;white-space:nowrap}.cutv small{color:#777}
 @media (max-width:699px){.st-grid,.st-info{grid-template-columns:1fr}.stbox .lb-body > *{padding:10px 12px}}
 a.stlink{color:inherit;text-decoration:none}@media screen{a.stlink{border-bottom:1px dotted #999;cursor:pointer}g.stpick,g.marker[data-station],g.pcall[data-st]{cursor:pointer}.stbox g.marker[data-station]:not(.msfig g.marker),.stbox g.pcall,.stbox a.stlink,.sec-stpages g.marker,.sec-stpages a.stlink,.st-badge g.marker{cursor:default!important;pointer-events:none}.stbox a.stlink,.sec-stpages a.stlink{border-bottom:0}}
@@ -364,13 +364,13 @@ html.embed dialog.lightbox .lb-navs{position:sticky;top:auto;bottom:14px;left:au
 table.st-timing{border-collapse:collapse;font-size:.9rem;font-variant-numeric:tabular-nums;width:auto}
 table.st-timing th,table.st-timing td{padding:1px 0 2px;white-space:nowrap;vertical-align:baseline;font-weight:400}
 table.st-timing th.cutr{font-weight:700;text-align:left;padding-right:.7em}
-table.st-timing td.cutm{text-align:right;padding-right:.6em}
+table.st-timing td.cutm{text-align:right;padding-right:.25em}table.st-timing td.cutu{text-align:left;padding-right:.7em;color:var(--mute)}
 table.st-timing td.cutl{color:var(--mute);padding-right:.45em}
-table.st-timing td.cutt{text-align:right}table.st-timing td.cutt b{font-weight:700}
+table.st-timing td.cutt{text-align:right}table.st-timing td.cutt b{font-weight:600;font-variant-numeric:tabular-nums;white-space:pre}
 table.st-timing tr.cut1:not(:first-child) th,table.st-timing tr.cut1:not(:first-child) td{padding-top:5px}
 @media print{.sec-stpages table.st-timing{font-size:7.6pt;line-height:1.15}.sec-stpages table.st-timing th,.sec-stpages table.st-timing td{padding:0 0 1pt}.sec-stpages table.st-timing tr.cut1:not(:first-child) th,.sec-stpages table.st-timing tr.cut1:not(:first-child) td{padding-top:2pt}.sec-stpages table.st-timing th.cutr{padding-right:.6em}}
 table.st-timing tr.cutv{display:table-row;margin:0}table.st-timing th,table.st-timing td{display:table-cell}
-@media print{.sec-stpages table.st-timing{line-height:1.08}.sec-stpages table.st-timing th,.sec-stpages table.st-timing td{padding:0 .45em .4pt 0}.sec-stpages table.st-timing th.cutr{padding-right:.6em}.sec-stpages table.st-timing td.cutm{padding-right:.5em}.sec-stpages table.st-timing td.cutt{padding-right:0}.sec-stpages table.st-timing tr.cut1:not(:first-child) th,.sec-stpages table.st-timing tr.cut1:not(:first-child) td{padding-top:1.2pt}}
+@media print{.sec-stpages table.st-timing{line-height:1.08}.sec-stpages table.st-timing th,.sec-stpages table.st-timing td{padding:0 .45em .4pt 0}.sec-stpages table.st-timing th.cutr{padding-right:.6em}.sec-stpages table.st-timing td.cutm{padding-right:.2em}.sec-stpages table.st-timing td.cutu{padding-right:.5em}.sec-stpages table.st-timing td.cutt{padding-right:0}.sec-stpages table.st-timing tr.cut1:not(:first-child) th,.sec-stpages table.st-timing tr.cut1:not(:first-child) td{padding-top:1.2pt}}
 @media screen{.stripsbox .callinks{justify-content:flex-end}}@media screen and (min-width:1100px){html .sec-map .pg1 .stripsbox .callinks{left:auto;right:0}}
 /* ---------- race-day calendar (lib/calview.ts): day grid + agenda, neutral grays; race events carry a race-colour bar ---------- */
 .calbox{position:relative;min-width:0}
@@ -504,9 +504,9 @@ dialog.planbox .fp-zoom{width:min(100%,calc((100vh - 200px) * var(--ar)))!import
 @media (max-width:900px){.topnav .draftnote .dn-long{display:none}}
 dialog#racebox .lb-body{padding-top:60px} /* clear of the close / prev / next controls */
 @media (max-width:699px){html body dialog#racebox svg.racemap{max-height:calc(var(--host-vh, 1vh) * 100 - 140px)!important}}
-.cv-mapcard{position:fixed;z-index:60;background:#fff;border:1px solid #d4d4d4;border-radius:6px;box-shadow:0 2px 10px #0003;padding:6px;width:240px;box-sizing:content-box;font:600 12px/1.3 system-ui,sans-serif;color:#2a2a2a}
-.cv-mapcard[hidden]{display:none}.cv-mapcard iframe{display:block;width:240px;height:150px;border:0;border-radius:4px;background:#f4f4f4}
-.cv-mc-note{margin:5px 0 0;color:#555}.cv-mc-url{margin:0;width:240px;overflow-wrap:anywhere;font-weight:500;color:#2a2a2a}
+.cv-mapcard{position:fixed;z-index:60;background:#fff;border:1px solid #d4d4d4;border-radius:6px;box-shadow:0 2px 10px #0003;padding:6px 8px;max-width:min(300px,calc(100vw - 24px));font:600 12px/1.3 system-ui,sans-serif;color:#2a2a2a}
+.cv-mapcard[hidden]{display:none}
+.cv-mc-note{margin:3px 0 0;color:#555}.cv-mc-url{margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:500;color:#2a2a2a}
 @media print{.cv-mapcard{display:none!important}}
 /* views box: Race calendar and Operations occupy the identical box; the Operations chart is rendered at that box's aspect (no letterbox) */
 .vw-tlbox,.vw-tlv{width:100%;height:100%}.vw-tlv svg.timeline{display:block;width:100%!important;height:100%!important;max-width:none!important;max-height:none!important}

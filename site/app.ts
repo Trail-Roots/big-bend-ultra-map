@@ -313,9 +313,17 @@ document.querySelectorAll<HTMLElement>('.fp-zoom:not(.fp-static)').forEach((box)
 // the host window height); embed.js keeps the host scroll position while a lightbox is open and restores it on close
 let hostTop = 0;
 const inEmbed = document.documentElement.classList.contains('embed') && parent !== window;
-function fitModal(d: HTMLDialogElement) { if (!inEmbed) return; const hv = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--host-vh')) * 100 || innerHeight;
+let hostFull = false;
+function fitModal(d: HTMLDialogElement) { if (!inEmbed) return; if (hostFull) { for (const k of ['position', 'inset', 'top', 'height', 'margin']) d.style.removeProperty(k); return; } const hv = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--host-vh')) * 100 || innerHeight;
   const y = Math.max(0, Math.min(-hostTop, document.documentElement.scrollHeight - hv)); Object.assign(d.style, { position: 'fixed', inset: 'auto 0 auto 0', top: y + 'px', height: hv + 'px', margin: '0' }); }
 function embedModal(d: HTMLDialogElement, open: boolean) { if (!inEmbed) return; if (open) fitModal(d); parent.postMessage({ type: 'bbu-modal', open }, '*'); }
+// embed.js answers bbu-modal with bbu-full: the iframe now covers the whole host window, so the dialog is an ordinary full-viewport modal;
+// the page behind is scrolled to what the host showed, so the backdrop matches. On close the iframe returns to its slot, scrolled back to 0.
+if (inEmbed) addEventListener('message', (e) => { const m = e.data; if (e.source !== parent || !m || m.type !== 'bbu-full') return; hostFull = !!m.on;
+  const root = document.documentElement;
+  if (hostFull) { root.style.setProperty('--host-vw', m.w / 100 + 'px'); root.style.setProperty('--host-vh', m.h / 100 + 'px'); root.classList.add('hostfull'); scrollTo(0, Math.max(0, -m.top)); }
+  else { root.classList.remove('hostfull'); scrollTo(0, 0); }
+  document.querySelectorAll<HTMLDialogElement>('dialog.lightbox[open]').forEach(fitModal); dispatchEvent(new Event('resize')); });
 // ---- ?view=embed inside an iframe (dist/embed.js): report the content height to the parent so it can size the iframe ----
 if (document.documentElement.classList.contains('embed') && parent !== window) {
   let last = 0; const post = () => { const h = document.documentElement.scrollHeight; if (Math.abs(h - last) > 1) { last = h; parent.postMessage({ type: 'bbu-embed-height', height: h }, '*'); } };
@@ -476,16 +484,14 @@ if (document.documentElement.classList.contains('embed') && parent !== window) {
       const tog = () => { const o = e.getAttribute('aria-expanded') !== 'true'; e.setAttribute('aria-expanded', String(o)); const d = e.querySelector<HTMLElement>('.cv-det'); if (d) d.hidden = !o; hide(); };
       e.addEventListener('click', (ev) => { if ((ev.target as Element).closest('a')) { ev.stopPropagation(); return; } ev.stopPropagation(); tog(); });
       e.addEventListener('keydown', (ev) => { if ((ev.key === 'Enter' || ev.key === ' ') && ev.target === e) { ev.preventDefault(); tog(); } }); }
-    // location links: hover / focus card with a small map preview (iframe created only on hover / focus; no card on touch: a tap just opens the map)
-    { const card = document.createElement('div'); card.className = 'cv-mapcard'; card.hidden = true; document.body.appendChild(card); let cur: HTMLAnchorElement | null = null, t = 0, ft = 0;
+    // location links: hover / focus tip with the Google Maps URL (text only, nothing loads; no card on touch: a tap just opens the map)
+    { const card = document.createElement('div'); card.className = 'cv-mapcard'; card.hidden = true; document.body.appendChild(card); let cur: HTMLAnchorElement | null = null, t = 0;
       const hov = matchMedia('(hover: hover) and (pointer: fine)');
       const place = (a: HTMLElement) => { const r = a.getBoundingClientRect(), w = card.offsetWidth, h = card.offsetHeight; let y = r.bottom + 6; if (y + h > innerHeight - 6) y = r.top - h - 6; /* never over the link */
         card.style.left = Math.min(Math.max(6, r.left), innerWidth - w - 6) + 'px'; card.style.top = Math.max(6, y) + 'px'; };
-      const show = (a: HTMLAnchorElement) => { if (cur === a && !card.hidden) return; cur = a; clearTimeout(ft); const loc = decodeURIComponent((/[?&]query=([^&]*)/.exec(a.href) || [])[1] || '').replace(/\+/g, ' ');
-        card.innerHTML = ''; const f = document.createElement('iframe'); f.width = '240'; f.height = '150'; f.loading = 'lazy'; f.referrerPolicy = 'no-referrer-when-downgrade'; f.setAttribute('aria-hidden', 'true'); f.tabIndex = -1;
-        f.src = `https://maps.google.com/maps?q=${encodeURIComponent(loc)}&z=14&output=embed`; let ok = false; f.addEventListener('load', () => { ok = true; });
-        const note = document.createElement('p'); note.className = 'cv-mc-note'; note.textContent = 'Click to view map'; card.append(f, note);
-        ft = setTimeout(() => { if (!ok && cur === a) { const u = document.createElement('p'); u.className = 'cv-mc-url'; u.textContent = a.href; f.replaceWith(u); place(a); } }, 6000) as unknown as number; /* embed failed: show the URL */
+      const show = (a: HTMLAnchorElement) => { if (cur === a && !card.hidden) return; cur = a; /* text only: nothing loads on hover */
+        card.innerHTML = ''; const u = document.createElement('p'); u.className = 'cv-mc-url'; u.textContent = a.href;
+        const note = document.createElement('p'); note.className = 'cv-mc-note'; note.textContent = 'Click to view map'; card.append(u, note);
         card.hidden = false; place(a); };
       const hide = () => { clearTimeout(t); t = setTimeout(() => { card.hidden = true; card.innerHTML = ''; cur = null; }, 150) as unknown as number; };
       card.addEventListener('mouseenter', () => clearTimeout(t)); card.addEventListener('mouseleave', hide);

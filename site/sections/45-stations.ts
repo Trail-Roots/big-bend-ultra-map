@@ -1,5 +1,5 @@
 // Aid-station lightbox (web only): click a station on the map, in the heat map or in a race table. Zoomed map (cloned from the main
-// map in site/app.ts), photo slot, amenities (sources/curated/amenities.json; unknowns flagged "TBC"), busiest times, hours, cutoffs per race.
+// map in site/app.ts), photo slot, amenities (sources/curated/amenities.json; unknowns shown as "?"), busiest times, hours, cutoffs per race.
 import { esc, station } from '../lib/util';
 import { renderStationHeat } from '../lib/timeline';
 import { milestones } from '../lib/milestones';
@@ -10,19 +10,20 @@ export const meta = { id: 'stations', title: 'Aid stations', print: false };
 const AM: [string, string][] = [['aid', 'Aid station'], ['water', 'Water'], ['snacks', 'Snacks'], ['toilet', 'Toilet'], ['medic', 'Medic'], ['dropBags', 'Drop bags'], ['spectators', 'Spectator access'], ['parking', 'Parking']];
 // secondary, subtler named-place link (the primary link is always coordinates); none where no valid named place exists
 const NEAR: Record<string, string> = { 'S/F': 'Barton Warnock Visitor Center', '2': 'West Contrabando Trailhead', '3': 'Whit-Roy Cinnabar Mine', '5': 'Paso al Solitario' };
-const sh = (t: string) => t.replace(/:00 ?([AP])M$/, (_, a) => a.toLowerCase()).replace(/ ?([AP])M$/, (_, a) => a.toLowerCase());
+/** '5:30 AM' -> '\u20075:30a' (hour padded with a figure space so every time lines up digit for digit) */
+const sh = (t: string) => t.replace(/^(\d{1,2}):(\d\d) ?([AP])M$/i, (_, h, m, a) => (h.length < 2 ? '\u2007' : '') + h + ':' + m + a.toLowerCase());
 /** one station's detail block: the web lightbox template body, or (print) the same block (photo / placeholder and coordinates link included) */
 export function stCard(c: Ctx, k: string, print = false) {
     const s = c.stations.stations[k], a = (amen as any)[k] ?? {}, LL = s.link_lonlat ?? s.lonlat, ll = `${LL[1].toFixed(6)},${LL[0].toFixed(6)}`, llTxt = `${LL[1].toFixed(5)}, ${LL[0].toFixed(5)}`; /* primary map link: ALWAYS coordinates, always visible (web + print) */
-    const am = AM.map(([f, lab]) => { const v = a[f]; return `<li class="am am-${v === true ? 'y' : v === false ? 'n' : 'u'}"><span class="amv" aria-hidden="true">${v === true ? '✓' : v === false ? '✕' : '?'}</span>${lab}${v == null ? ' <em>TBC</em>' : v === false ? ' <em>no</em>' : ''}</li>`; }).join('');
+    const am = AM.map(([f, lab]) => { const v = a[f]; return `<li class="am am-${v === true ? 'y' : v === false ? 'n' : 'u'}"><span class="amv" aria-hidden="true">${v === true ? '✓' : v === false ? '✕' : '?'}</span>${lab}</li>`; }).join('');
     /* Timing: every race that passes here, one line per visit: mileage at the station (GPX), then its cutoff in bold when it has one (Google Calendar) */
     /* Timing: one row per event (every visit of every race here): race | mileage (GPX, right-aligned) | start / cutoff | time (bold; Google Calendar), tabular numerals */
     const cuts = c.courses.order.flatMap((r) => c.cutoffs[r].map((x, i) => ({ x, i })).filter(({ x }) => x.station === k).map(({ x, i }, j) => { const lab = i === 0 ? 'start' : x.cutoff !== 'TBD' ? 'cutoff' : '', t = lab ? sh(x.cutoff) : '';
-      return `<tr class="cutv${j ? '' : ' cut1'}"><th class="cutr" style="color:${c.courses.colors[r]}">${j ? '' : r}</th><td class="cutm">mi ${x.mile.toFixed(1)}</td><td class="cutl">${lab || '—'}</td><td class="cutt">${t ? `<b>${esc(t)}</b>` : ''}</td></tr>`; })).join('');
+      return `<tr class="cutv${j ? '' : ' cut1'}"><th class="cutr" style="color:${c.courses.colors[r]}">${j ? '' : r}</th><td class="cutm">${x.mile.toFixed(1)}</td><td class="cutu">mi</td><td class="cutl">${lab || '—'}</td><td class="cutt">${t ? `<b>${esc(t)}</b>` : ''}</td></tr>`; })).join('');
     const photo = a.photo ? `<img src="${esc(a.photo)}" alt="${esc(s.name)} aid station">` : `<div class="ph-empty">${icon('pin')}<span>Photo coming soon</span></div>`;
     return `<header class="st-head"><svg class="st-badge" viewBox="-42 -42 84 84" overflow="visible" aria-hidden="true">${station(0, 0, k, s.spectator, { s: k === 'S/F' ? 2900 : 2000, fs: k === 'S/F' ? 34 : 28, badge: false, colors: c.colors, link: false })}</svg><div><h2>${esc(k === 'S/F' ? s.name : `${k} · ${s.name}`)}</h2><p class="note">${esc(s.long ?? '')} · ${(s.elevation_ft ?? 0).toLocaleString('en-US')} ft</p></div></header>
 <div class="st-grid"><div class="st-map" data-station="${esc(k)}"></div><figure class="st-photo">${photo}</figure></div>
-<div class="st-info"><section><h3>Open</h3><p class="st-hours"><b>${esc(s.hours ?? 'TBC')}</b></p><p class="st-coordp"><a class="st-coord" href="https://www.google.com/maps?q=${ll}" target="_blank" rel="noopener">${icon('pin')}Map: ${llTxt}</a></p>${NEAR[k] ? `<p class="st-nearp">Nearby: <a class="st-near" href="https://www.google.com/maps/search/?api=1&amp;query=${encodeURIComponent(NEAR[k] + ', TX')}" target="_blank" rel="noopener">${esc(NEAR[k])}</a></p>` : ''}</section>
+<div class="st-info"><section><h3>Open</h3><p class="st-hours"><b>${esc(s.hours ?? '?')}</b></p><p class="st-coordp"><a class="st-coord" href="https://www.google.com/maps?q=${ll}" target="_blank" rel="noopener">${icon('pin')}Map: ${llTxt}</a></p>${NEAR[k] ? `<p class="st-nearp">Nearby: <a class="st-near" href="https://www.google.com/maps/search/?api=1&amp;query=${encodeURIComponent(NEAR[k] + ', TX')}" target="_blank" rel="noopener">${esc(NEAR[k])}</a></p>` : ''}</section>
 <section><h3>Available</h3><ul class="amen">${am}</ul></section>
 <section><h3>Timing</h3><table class="st-cuts st-timing"><tbody>${cuts}</tbody></table></section></div>
 <section class="st-msl"><h3>Route</h3>${c.courses.order.filter((r) => c.cutoffs[r].some((q) => q.station === k)).map((r) => milestones(c, r, k)).join('')}</section>

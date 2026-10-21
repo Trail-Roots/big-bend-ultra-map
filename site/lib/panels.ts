@@ -1,5 +1,5 @@
 import { clock, cutMin } from './timeline';
-import { finishFlag, leaderLine, SHEET, viewProjection, esc, f1, lineD, dash, station } from './util';
+import { finishFlag, SHEET, viewProjection, esc, f1, lineD, dash, station } from './util';
 import { hillImage, chevron, DART, ARROW_HALO } from './mainmap';
 /** '5:00 AM' -> '5a', '8:30 AM' -> '8:30a' (minutes only when non-zero) */
 /** '5:00 AM' -> '5:00a' (full time, as shown on the bibs) */
@@ -127,18 +127,39 @@ export function profileBody(c, vis?: string[]) {
   const lgx = W - 46 - MINIBIB.w, lgy = 16; s += `<rect x="${lgx - 10}" y="${lgy - 6}" width="${W - lgx + 10}" height="${O.length * 32 + 10}" fill="#fff" fill-opacity=".9"/>`;
   // legend keeps every race; hidden races at low opacity, clickable (app.ts toggles the race)
   O.forEach((k, i) => { s += `<g class="plegend" data-legend="${k}" opacity="${V.includes(k) ? 1 : 0.18}" style="cursor:pointer"><rect x="${lgx - 6}" y="${lgy + i * 32}" width="${W - lgx + 6}" height="30" fill="#fff" fill-opacity="0"/><path d="M${lgx},${lgy + 14 + i * 32}h36" stroke="${c.courses.colors[k]}" stroke-width="4"/>` + miniBib(k, c.courses.colors[k], lgx + 46, lgy + 14 + i * 32 - 13, col) + '</g>'; });
-  let callouts = pr.callouts.callouts;
-  if (!all) { // re-place station badges for the visible races only (thresholds scaled to this chart's ranges)
-    const sx = (x1 - x0) / 68.5, sy = (y1 - y0) / 3200, grp: [number[], number, string][] = [];
+  // station badges: one per station pass (same-station passes < 0.4 mi apart share one), each STRAIGHT ABOVE (or below) its exact
+  // mileage on a vertical leader; collisions resolved by stepping the badge to a higher tier, never by shifting it sideways
+  { const sx = (x1 - x0) / 68.5, R = Math.sqrt(PST) / 2 + 2, grp: [number[], number, string][] = [];
     for (const [x, y, lab] of (pr.callouts.evp as [number, number, string, string][]).filter((e) => V.includes(e[3])).sort((p, q) => p[0] - q[0])) { const G = grp[grp.length - 1]; if (G && G[2] === lab && Math.abs(G[0][G[0].length - 1] - x) < 0.4 * sx) G[0].push(x); else grp.push([[x], y, lab]); }
-    const placed: number[][] = []; callouts = [];
-    for (const [xs, y, lab] of grp) { const x = xs.reduce((p, v) => p + v, 0) / xs.length; let bx = x, by = y;
-      outer: for (const dy of [380, -380, 680, -680, 980]) for (const dx of [0, 0.9, -0.9, 1.6, -1.6]) { bx = x + dx * sx; by = y + dy * sy; if (by > y0 + 150 * sy && by < y1 - 250 * sy && placed.every(([px, py]) => Math.abs(bx - px) > 1.8 * sx || Math.abs(by - py) > 260 * sy)) break outer; }
-      placed.push([bx, by]); callouts.push({ xs, y, bx, by, lab }); } }
-  for (const q of callouts) {
-    for (const x of q.xs) s += leaderLine(X(q.bx), Y(q.by), X(x), Y(q.y), Math.sqrt(PST) / 2, 3) + `<circle cx="${f1(X(x))}" cy="${f1(Y(q.y))}" r="3" fill="${col.ink}"/>`;
-    s += `<g class="pcall" data-st="${q.lab}" data-mi="${(q.xs.reduce((a, b) => a + b, 0) / q.xs.length).toFixed(2)}">` + station(X(q.bx), Y(q.by), q.lab, c.stations.stations[q.lab].spectator, { s: PST, fs: 14, badge: false, colors: col }) + '</g>';
-  }
+    const line: number[][] = V.flatMap((k) => pts(k)), placed: { x: number; y: number; ax: number[]; ay: number }[] = [];
+    const lgBox = [lgx - 10, lgy - 6, W, lgy - 6 + O.length * 32 + 10];
+    // highest station point first (it takes the spot right above itself); a group with no clear spot is moved to the front and the
+    // placement retried. Every badge also stays clear of every station dot.
+    const ticks: number[] = []; for (let v = 0; v <= D + 0.01; v += step) ticks.push(X(v));
+    const dots = grp.flatMap(([xs, yf]) => xs.map((x) => [X(x), Y(yf)]));
+    type P = { x: number; y: number; ax: number[]; ay: number; g: [number[], number, string] };
+    const place = (order: [number[], number, string][]): P[] | number => { const placed: P[] = [];
+      for (let gi = 0; gi < order.length; gi++) { const g = order[gi], [xs, yf] = g, ax = xs.map(X), cx = ax.reduce((p, v) => p + v, 0) / ax.length, ay = Y(yf); let by = NaN;
+        const tiers: number[] = []; for (let ty = ay - R - 6; ty - R > 2; ty -= 2) tiers.push(ty); for (let ty = ay + R + 6; ty + R < H + 38; ty += 2) tiers.push(ty);
+        for (const ty of tiers) {
+          if (cx + R > lgBox[0] && ty - R < lgBox[3]) continue; // legend
+          if (ty + R > H - 1 && ticks.some((tx) => Math.abs(tx - cx) < R + 16)) continue; // below the axis only clear of the mileage labels
+          if (line.some(([px, py]) => Math.abs(px - cx) < R + 2 && Math.abs(py - ty) < R + 2)) continue; // badge on a profile line
+          if (placed.some((p) => Math.abs(p.x - cx) < 2 * R + 4 && Math.abs(p.y - ty) < 2 * R + 4)) continue; // badge on a badge
+          if (dots.some(([px, py]) => Math.abs(px - cx) < R + 3 && Math.abs(py - ty) < R + 3)) continue; // badge on a station dot
+          const lo = Math.min(ay, ty), hi = Math.max(ay, ty);
+          if (placed.some((p) => Math.abs(p.x - cx) < R + 2 && p.y > lo && p.y < hi)) continue; // my leader through a badge
+          if (placed.some((p) => p.ax.some((qx) => Math.abs(qx - cx) < R + 2 && ty > Math.min(p.ay, p.y) && ty < Math.max(p.ay, p.y)))) continue; // my badge on a leader
+          by = ty; break; }
+        if (isNaN(by)) return gi; placed.push({ x: cx, y: by, ax, ay, g }); }
+      return placed; };
+    let order = [...grp].sort((p, q) => q[1] - p[1] || p[0][0] - q[0][0]), res = place(order);
+    for (let n = 0; typeof res === "number" && n < 60; n++) {  const [g] = order.splice(res, 1); order.unshift(g); res = place(order); }
+    if (typeof res === 'number') throw new Error(`[elevation chart] no clear spot for station ${order[res][2]} at mi ${order[res][0][0].toFixed(1)} (${V.join(',')})`);
+    for (const { x: cx, y: by, ax, ay, g: [xs, , lab] } of res) {
+      const e = by + (by < ay ? R - 2 : -R + 2);
+      for (const qx of ax) s += `<path class="leader" d="M${f1(qx)},${f1(ay)}V${f1(e)}" fill="none" stroke="${col.ink}" stroke-width="1.5"/><circle cx="${f1(qx)}" cy="${f1(ay)}" r="3" fill="${col.ink}"/>`;
+      s += `<g class="pcall" data-st="${lab}" data-mi="${(xs.reduce((a, b) => a + b, 0) / xs.length).toFixed(2)}">` + station(cx, by, lab, c.stations.stations[lab].spectator, { s: PST, fs: 14, badge: false, colors: col }) + '</g>'; } }
   if (V.includes('100K')) for (const r of pr.callouts.rincon) s += `<circle cx="${f1(X(r.mi))}" cy="${f1(Y(r.ft))}" r="6.3" fill="#fff" stroke="${col.ink}" stroke-width="3"/>`;
   return { s, x: [x0, x1], y: [y0, y1], W, H };
 }

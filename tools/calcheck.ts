@@ -15,7 +15,7 @@ const b = await chromium.launch(); const bad: string[] = []; let sig0 = '';
 try {
   for (const [w, q] of [[1440, ''], [390, ''], [360, ''], [800, '?view=embed']] as [number, string][]) for (const [tag, iso] of CLOCKS) {
     const p = await b.newPage({ viewport: { width: w, height: 900 } }); await p.clock.setFixedTime(new Date(iso)); const errs: string[] = []; p.on('pageerror', (e) => errs.push(String(e)));
-    await p.goto(U + q, { waitUntil: 'networkidle', timeout: 90000 }); await p.waitForTimeout(400); const now = (Date.parse(iso) - T0) / 60000;
+    await p.goto(U + q, { waitUntil: 'networkidle', timeout: 90000 }); await p.waitForSelector('#pb-cal .cv-scroll', { state: 'attached', timeout: 30000 }); await p.waitForTimeout(400); const now = (Date.parse(iso) - T0) / 60000;
     const r = await p.evaluate((now) => { const sc = document.querySelector<HTMLElement>('#pb-cal .cv-scroll')!, vis = (e: Element) => !!(e as HTMLElement).offsetParent;
       const items = [...sc.querySelectorAll<HTMLElement>('.cv-item')], shown = items.filter(vis);
       const clip = shown.filter((e) => [...e.children].some((x) => (x as HTMLElement).scrollWidth > (x as HTMLElement).clientWidth + 1)).map((e) => e.querySelector('.cv-s')!.textContent);

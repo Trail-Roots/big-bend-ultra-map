@@ -14,7 +14,7 @@ export function greenParking(svg: string) {
   return svg.slice(0, a) + mid + svg.slice(b);
 }
 type View = { x: number; y: number; w: number; h: number };
-export const FINISH_VIEW: View = { x: 1010, y: 1690, w: 830, h: 650 }; // lot, picnic area, S/F, building front, gate + drop-off at the Y
+export const FINISH_VIEW: View = { x: 940, y: 1690, w: 970, h: 760 }; // lot, picnic area, S/F, building front, gate + drop-off at the Y
 export const PARKING_VIEW: View = { x: 40, y: 560, w: 3800, h: 2240 }; // cropped to the parking: parking zones span x 109-3762, y 643-2663 (no unused space on the right)
 // classic split-needle north arrow, an overlay layer fixed in a map corner (outside the zoom stage, so it never scales or pans)
 const NORTH = (corner: 'tl' | 'tr') => northIcon(`fp-north fp-${corner}`); // SSOT site/lib/north.ts
