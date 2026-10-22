@@ -92,7 +92,7 @@ svg.mainmap,svg.mini{touch-action:pan-x pan-y}svg.panning{cursor:grabbing}
 .runkey svg{width:12px!important;height:12px!important;flex:none}
 .runkey span{font-weight:400;color:#888}
 @media print{.runkey{display:none!important}}
-.bibh{display:flex;align-items:center;gap:.4rem}
+.bibh{display:flex;align-items:center;gap:.4rem;line-height:21px}
 @media screen{.stripsbox{position:relative}}.callinks{align-items:center;flex-wrap:wrap}.callinks .calnote{color:#555;font-weight:500;margin-right:4px}.stripsbox .callinks svg.dlico{width:.8em;height:.8em;flex:none;box-shadow:none;display:inline-block}
 @media print{.stripsbox{overflow:visible!important}.stripsbox .callinks{position:absolute;z-index:3;top:100%;left:0;right:auto;width:max-content;flex-wrap:nowrap;white-space:nowrap;margin-top:2pt;font-size:13pt;gap:4pt}.stripsbox .callinks a{padding:2pt 6pt;border-width:1.2pt;gap:3pt}}
 .doc .note{font-size:.85rem;color:#666}.doc td.n,.doc th.n{text-align:right;font-variant-numeric:tabular-nums}.cuttab th{font-size:.8rem}
@@ -239,7 +239,7 @@ html body svg.ic{width:1.15em!important;height:1.15em!important;max-width:none!i
   .racecard svg.rc-map{display:block;width:100%;height:auto}.racecard svg.rc-elev{display:block;width:100%;height:38px;background:var(--bg-subtle)}
   .rc-body{padding:10px 12px 12px;display:flex;flex-direction:column;gap:8px}
   .rc-body h3{margin:0;font-size:1rem;display:flex;align-items:center;gap:.45rem;color:#242428}
-  .rc-stats{display:flex;gap:16px;margin:0}.rc-stats div{display:flex;flex-direction:column}.rc-stats dt{font-size:.68rem;color:#6d6d78;text-transform:none}.rc-stats dd{margin:0;font-weight:700;font-size:.95rem;color:#242428}
+  .rc-stats{display:flex;gap:16px;margin:0}.rc-stats div{display:flex;flex-direction:column}.rc-stats dt{font-size:.68rem;line-height:13px;color:#6d6d78;text-transform:none}.rc-stats dd{margin:0;font-weight:700;font-size:.95rem;line-height:18px;color:#242428}
   .rc-btns{display:flex;flex-wrap:wrap;gap:6px}
   .rc-btns a,.rc-btns button{display:inline-flex;align-items:center;gap:.35em;font:600 .78rem/1 system-ui,sans-serif;padding:.45rem .65rem;border-radius:4px;border:1px solid #c9c9cf;background:#fff;color:#242428;text-decoration:none;cursor:pointer;white-space:nowrap}
   .rc-btns a:hover,.rc-btns button:hover{border-color:#242428}
