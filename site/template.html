@@ -6,7 +6,7 @@
 <title>{{title}} · Big Bend Ultra {{year}}</title>
 <base href="{{base}}">
 <link rel="stylesheet" href="styles.css">
-<script>/* ?view=embed: same layout as the site, transparent background (for embedding in the race site) */var q=new URLSearchParams(location.search);if(q.get("view")==="embed"){document.documentElement.classList.add("embed");if(q.get("h")==="auto")document.documentElement.classList.add("autoh")}</script>
+<script>/* ?view=embed: same layout as the site, transparent background (for embedding in the race site) */var q=new URLSearchParams(location.search);if(q.get("view")==="embed"){document.documentElement.classList.add("embed");if(q.get("h")==="auto")document.documentElement.classList.add("autoh");var hw=+q.get("hw"),hh=+q.get("hh");if(hw>0&&hh>0){document.documentElement.style.setProperty("--host-vw",hw/100+"px");document.documentElement.style.setProperty("--host-vh",hh/100+"px")}}</script>
 </head>
 <body class="{{bodyclass}}">{{draftbanner}}
 <nav class="ui topnav"><a class="brand" href="https://trailroots.com/big-bend-ultra" target="_blank" rel="noopener"><img src="logo_ink_crop.png" alt="">Big Bend Ultra {{year}}</a>

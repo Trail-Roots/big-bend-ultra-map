@@ -6,13 +6,16 @@
   var s = document.currentScript; if (!s) return;
   var base = new URL('./', s.src), origin = base.origin;
   var f = document.createElement('iframe');
-  f.src = base.href + '?view=embed&h=auto'; f.title = 'Big Bend Ultra course map'; f.loading = 'lazy'; f.className = 'bbu-embed';
+  f.src = base.href + '?view=embed&h=auto&hw=' + innerWidth + '&hh=' + innerHeight; /* host viewport up front: the first layout already uses the host's vw/vh */ f.title = 'Big Bend Ultra course map'; f.loading = 'lazy'; f.className = 'bbu-embed';
   // initial height = the page's measured height at this width (written in at build time), so the host doesn't shift when the iframe reports in
   var HT = /*HEIGHTS*/null;
-  function est(w) { if (!HT || !HT.length) return 900; if (w <= HT[0][0]) return HT[0][1]; for (var i = 0; i < HT.length - 1; i++) { var a = HT[i], b = HT[i + 1]; if (w < b[0]) return Math.abs(b[1] - a[1]) < 200 ? Math.round(a[1] + (b[1] - a[1]) * (w - a[0]) / (b[0] - a[0])) : a[1]; } return HT[HT.length - 1][1]; } // linear within a layout, no blending across breakpoints
+  // HT = { hh: [host viewport heights], w: [[width, height at each hh], ...] }: linear in host height, linear in width within a layout (no blending across breakpoints)
+  function atH(r, hh) { var H = HT.hh, i = 0; hh = Math.max(H[0], Math.min(H[H.length - 1], hh)); while (i < H.length - 2 && hh > H[i + 1]) i++; var a = r[i + 1], b = r[i + 2]; return Math.abs(b - a) < 100 ? a + (b - a) * (hh - H[i]) / (H[i + 1] - H[i]) : (hh - H[i] < H[i + 1] - hh ? a : b); }
+  function est0(w, hh) { var T = HT.w; if (w <= T[0][0]) return atH(T[0], hh); for (var i = 0; i < T.length - 1; i++) { var a = atH(T[i], hh), b = atH(T[i + 1], hh); if (w < T[i + 1][0]) return Math.abs(b - a) < 200 ? a + (b - a) * (w - T[i][0]) / (T[i + 1][0] - T[i][0]) : a; } return atH(T[T.length - 1], hh); }
+  function est(w, hw, hh) { if (!HT || !HT.w || !HT.w.length) return 900; var T = HT.w, k = 0; while (k < T.length - 1 && w >= T[k + 1][0]) k++; return Math.round(est0(w, hh) + (HT.s ? HT.s[k] * Math.max(0, Math.min(hw - w, 200)) : 0)); }
   f.setAttribute('allow', 'fullscreen'); f.style.cssText = 'display:block;width:100%;border:0;height:' + (s.dataset.height || '900') + 'px';
   s.parentNode.insertBefore(f, s.nextSibling);
-  if (!s.dataset.height) f.style.height = est(f.getBoundingClientRect().width || s.parentNode.clientWidth || innerWidth) + 'px';
+  if (!s.dataset.height) f.style.height = est(f.getBoundingClientRect().width || s.parentNode.clientWidth || innerWidth, innerWidth, innerHeight) + 'px';
   // lightbox open inside the iframe: the iframe takes over the WHOLE host window (fixed, top layer) while it is open. A placeholder of the
   // same height keeps the host layout exactly where it was (no shift); host scrolling is locked and the scroll position restored on close.
   var full = null, pendingH = 0;

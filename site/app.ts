@@ -335,7 +335,8 @@ if (document.documentElement.classList.contains('embed') && parent !== window) {
   addEventListener('message', (e) => { const d = e.data; if (e.source !== parent || !d || d.type !== 'bbu-host-scroll' || !Number.isFinite(d.top)) return;
     const nav = document.querySelector<HTMLElement>('.topnav'); if (!nav) return; const y = Math.max(0, Math.min(-d.top, document.documentElement.scrollHeight - nav.offsetHeight - nav.offsetTop));
     nav.style.transform = y ? `translateY(${y}px)` : ''; nav.classList.toggle('pinned', y > 0); hostTop = d.top; document.querySelectorAll<HTMLDialogElement>('dialog.lightbox[open]').forEach(fitModal); });
-  new ResizeObserver(post).observe(document.body); addEventListener('load', post); post();
+  // first report only after the web fonts are in (a fallback-font height would shrink, then grow, the reserved iframe)
+  const go = () => { new ResizeObserver(post).observe(document.body); post(); }; (document.fonts ? document.fonts.ready : Promise.resolve()).then(() => document.readyState === 'complete' ? go() : addEventListener('load', go, { once: true }));
 }
 
 // ---- race filter: checkboxes (all on initially) hide the unchecked races everywhere: map zoom boxes + labels + runner dots, elevation

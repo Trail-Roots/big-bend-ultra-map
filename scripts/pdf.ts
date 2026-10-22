@@ -29,17 +29,22 @@ try {
     await el.screenshot({ path: path.join(D, 'cards-embed.png'), type: 'png' }); await el.screenshot({ path: path.join(D, 'cards-embed.jpg'), type: 'jpeg', quality: 85 });
     await q.close(); console.log('cards embed image (elevation profile)', (fs.statSync(path.join(D, 'cards-embed.png')).size / 1024).toFixed(0) + ' KB png', (fs.statSync(path.join(D, 'cards-embed.jpg')).size / 1024).toFixed(0) + ' KB jpg'); }
   // embed.js reserves the iframe's real height before it loads (no layout shift on the host): ?view=embed&h=auto content height per width
-  { const HT: [number, number][] = [], q = await b.newPage({ viewport: { width: 1920, height: 900 } });
-    // measured the way a host sees it: a host page with the loader (its own reported iframe height), across container widths
-    await q.goto(`http://localhost:${srv.port}/?view=embed&h=auto`, { waitUntil: 'networkidle' });
-    await q.setContent(`<!doctype html><body style="margin:0"><div id="c" style="width:1920px"><script src="http://localhost:${srv.port}/embed.js"></script></div></body>`, { waitUntil: 'networkidle' });
-    const W: number[] = []; for (let w = 300; w <= 1300; w += 20) W.push(w); W.push(1440, 1600, 1920);
-    for (const w of W) { await q.setViewportSize({ width: Math.max(w, 400), height: 900 }); await q.evaluate((w) => { (document.getElementById('c') as HTMLElement).style.width = w + 'px'; (document.querySelector('iframe.bbu-embed') as HTMLElement).style.height = '100px'; }, w);
-      let h = 0, same = 0; for (let t = 0; t < 40 && same < 4; t++) { await q.waitForTimeout(100); const v = await q.evaluate(() => parseFloat((document.querySelector('iframe.bbu-embed') as HTMLElement).style.height)); same = v === h ? same + 1 : 0; h = v; }
-      HT.push([w, h === 100 && HT.length ? HT[HT.length - 1][1] : h]); } // unchanged height: the page does not re-report it
+  // per container width AND host viewport height (the layout uses the host's vh), so a phone or a short laptop gets its own exact height
+  { const HT: number[][] = [], HH = Array.from({ length: 16 }, (_, i) => 550 + i * 50), q = await b.newPage({ viewport: { width: 1920, height: 900 } });
+    // measured as the iframe document itself sees it: ?view=embed&h=auto with the host viewport set (as embed.js passes it), the frame's own
+    // viewport iterated to the fixed point the loader would settle on (frame height = reported content height)
+    await q.goto(`http://localhost:${srv.port}/?view=embed&h=auto&hw=1920&hh=900`, { waitUntil: 'networkidle' }); await q.evaluate(() => document.fonts.ready);
+    const W: number[] = []; for (let w = 300; w < 560; w += 5) W.push(w); for (let w = 560; w <= 1300; w += 20) W.push(w); // phones: 5 px steps (text wrapping makes height a step function of width) W.push(1440, 1600, 1920);
+    const measure = async (w: number, hw: number, hh: number) => { await q.evaluate(([hw, hh]) => { const r = document.documentElement.style; r.setProperty('--host-vw', hw / 100 + 'px'); r.setProperty('--host-vh', hh / 100 + 'px'); }, [hw, hh]);
+      let h = 0, fh = 100; for (let t = 0; t < 8; t++) { await q.setViewportSize({ width: w, height: fh }); await q.evaluate(() => dispatchEvent(new Event('resize'))); await q.waitForTimeout(150);
+        h = await q.evaluate(() => document.documentElement.scrollHeight); if (h === fh) break; fh = h; } return h; };
+    // S: height change per px of host width beyond the container (a host page with side margins: its vw is wider than the frame)
+    const S: number[] = [];
+    for (const w of W) { const row = [w]; for (const hh of HH) row.push(await measure(w, w, hh)); HT.push(row);
+      S.push(+(((await measure(w, w + 50, 900)) - row[1 + HH.indexOf(900)]) / 50).toFixed(3)); }
     await q.close();
     const E = path.join(D, 'embed.js'), src = fs.readFileSync(E, 'utf8'); if (!src.includes('/*HEIGHTS*/null')) throw new Error('[embed.js] heights placeholder missing');
-    fs.writeFileSync(E, src.replace('/*HEIGHTS*/null', JSON.stringify(HT))); console.log('embed heights', HT.map((x) => x.join(':')).join(' ')); }
+    fs.writeFileSync(E, src.replace('/*HEIGHTS*/null', JSON.stringify({ hh: HH, w: HT, s: S }))); console.log('embed heights', HT.map((x) => x.join(':')).join(' ')); }
 } finally { await b.close(); srv.stop(true); }
 console.log('pdf', path.relative(process.cwd(), OUT), (fs.statSync(OUT).size / 1024 / 1024).toFixed(2) + ' MB');
 // print images for embed.js: a host page can't print the cross-origin iframe (it comes out blank), so embed.js prints these page images instead
