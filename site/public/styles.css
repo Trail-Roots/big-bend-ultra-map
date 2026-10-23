@@ -620,4 +620,4 @@ a.vw-plan{text-decoration:none}
 @media print{.sec-courses .routeseq li.rs-after{padding-top:1pt;padding-bottom:1pt}.sec-courses .routeseq li.rs-after .rs-name{font-weight:600}}
 @media print{.sec-courses ol.rs li{padding-top:1.6pt;padding-bottom:1.6pt}.sec-courses ol.rs li.rs-after{padding-top:1pt;padding-bottom:1pt}}
 .am-i .amv{background:#3b6ea5;color:#fff;font-style:italic;font-family:Georgia,serif}
-.strava-logo{display:inline-block;vertical-align:-.12em;margin-right:.3em;flex:none}
+@media print{html body a[href*="strava.com"] svg.ic{display:inline-block!important}}
