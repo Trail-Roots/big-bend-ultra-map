@@ -16,11 +16,11 @@ export const hm = (min: number) => { const m = Math.max(5, Math.round(min / 5) *
 const LEG_LAB: Record<string, { t: number; dx: number; dy: number; a: string }> = {
   'Study Butte – Alpine': { t: 0.45, dx: 0.7, dy: 0, a: 'start' }, 'Presidio – Marfa': { t: 0.5, dx: -0.7, dy: 0, a: 'end' },
   'Marfa – Alpine': { t: 0.5, dx: 0, dy: -1.1, a: 'middle' }, 'Presidio – park road (end of pavement)': { t: 0.5, dx: -7, dy: 4.5, a: 'start' },
-  'Lone Star Ranch Rd': { t: 0.35, dx: 0, dy: 1.0, a: 'middle' },
+  'Lone Star Ranch Rd': { t: 0.9, dx: 0.3, dy: 1.0, a: 'start' },
   'End of pavement – Sauceda': { t: 0.3, dx: 0, dy: -1.1, a: 'middle' },
 };
 const TOWN_LAB: Record<string, [number, number, string]> = { Alpine: [-0.6, 0.6, 'end'], Marfa: [-0.6, -0.5, 'end'], Presidio: [-0.6, 0.4, 'end'], Redford: [-0.6, 0.35, 'end'], Lajitas: [-0.6, 0.9, 'end'], Terlingua: [0, -0.9, 'middle'], 'Study Butte': [0.6, 0.9, 'start'], Sauceda: [-0.6, -0.5, 'end'] };
-const AIR_LAB: Record<string, [number, number, string]> = { 'Alpine-Casparis Airport': [-0.5, -0.7, 'end'], 'Marfa Airport': [0.5, -0.6, 'start'], 'Presidio Lely Airport': [0.5, -0.5, 'start'], 'Lajitas Airport': [0.5, -0.7, 'start'], 'Sauceda airstrip': [0.5, 0.6, 'start'], 'Terlingua Ranch Airport': [-0.5, -0.6, 'end'] };
+const AIR_LAB: Record<string, [number, number, string]> = { 'Alpine-Casparis Airport': [-0.5, -0.7, 'end'], 'Marfa Airport': [0.5, -0.6, 'start'], 'Presidio Lely Airport': [0.5, -0.5, 'start'], 'Lajitas Airport': [0.5, 2.0, 'start'], 'Sauceda airstrip': [0.5, 0.6, 'start'], 'Terlingua Ranch Airport': [-0.5, -0.6, 'end'] };
 type P = (q: [number, number]) => [number, number];
 /** the regional layer; fs = label font size, sw = stroke unit (both in output units); web = non-scaling strokes */
 export function regionLayer(c: Ctx, proj: P, o: { fs: number; sw: number; tol: number; web: boolean; inner?: boolean }) {
@@ -70,14 +70,14 @@ export function regionTop(c: Ctx, proj: P, o: { fs: number; sw: number; web: boo
     s += `<g class="rg-pt rg-air" data-ax="${f1(x)}" data-ay="${f1(y)}">${f.properties.label ? txt(x + t[0] * o.fs, y + t[1] * o.fs, esc(f.properties.label), 'fill="#7a7a7a" font-style="italic"', o.fs * 0.72, t[2]) : ''}</g>`; }
   // towns, hospital
   for (const f of F.filter((f) => f.properties.kind === 'town')) { const [x, y] = proj(f.geometry.coordinates), t = TOWN_LAB[f.properties.name] || [0.6, 0, 'start'], big = ['Alpine', 'Marfa', 'Presidio'].includes(f.properties.name);
-    s += `<g class="rg-pt rg-town" data-ax="${f1(x)}" data-ay="${f1(y)}"><circle cx="${f1(x)}" cy="${f1(y)}" r="${f1(o.fs * (big ? 0.3 : 0.22))}" fill="#333" stroke="#fff" stroke-width="${f1(o.fs * 0.08)}"/>${txt(x + t[0] * o.fs, y + t[1] * o.fs, esc(f.properties.name), `fill="#222"${big ? ' font-weight="700"' : ''}`, o.fs * (big ? 1.1 : 0.9), t[2])}${f.properties.name === 'Sauceda' ? drives(F, 'Sauceda', ['FM 170', 'Hospital', 'S/F']).map((r, i) => txt(x + t[0] * o.fs, y + t[1] * o.fs - o.fs * (0.95 + (2 - i) * 0.85), r, 'class="rg-drive" fill="#6b6b6b"', o.fs * 0.75, t[2])).join('') : ''}</g>`; }
+    s += `<g class="rg-pt rg-town" data-ax="${f1(x)}" data-ay="${f1(y)}"><circle cx="${f1(x)}" cy="${f1(y)}" r="${f1(o.fs * (big ? 0.3 : 0.22))}" fill="#333" stroke="#fff" stroke-width="${f1(o.fs * 0.08)}"/>${txt(x + t[0] * o.fs, y + t[1] * o.fs, esc(f.properties.name), `fill="#222"${big ? ' font-weight="700"' : ''}`, o.fs * (big ? 1.1 : 0.9), t[2])}${f.properties.name === 'Sauceda' ? drives(F, 'Sauceda', ['FM 170', 'Hospital', 'S/F']).map((r, i) => txt(x + t[0] * o.fs, y + t[1] * o.fs - o.fs * (1.1 + (2 - i) * 0.85), r, 'class="rg-drive" fill="#6b6b6b"', o.fs * 0.75, t[2])).join('') : ''}</g>`; }
   for (const f of F.filter((f) => f.properties.kind === 'hospital')) { const [x, y] = proj(f.geometry.coordinates), h = o.fs * 0.9;
     s += `<g class="rg-pt rg-hosp" data-ax="${f1(x)}" data-ay="${f1(y)}"><rect x="${f1(x - h / 2)}" y="${f1(y - h / 2)}" width="${f1(h)}" height="${f1(h)}" rx="${f1(h * 0.15)}" fill="#c4161c" stroke="#fff" stroke-width="${f1(o.fs * 0.08)}"/><path d="M${f1(x - h * 0.28)},${f1(y)}h${f1(h * 0.56)}M${f1(x)},${f1(y - h * 0.28)}v${f1(h * 0.56)}" stroke="#fff" stroke-width="${f1(h * 0.2)}"/>${txt(x + h * 0.85, y - o.fs * 0.1, 'Big Bend Regional Medical Center', 'fill="#b3261e" font-weight="700"', o.fs * 0.8, 'start')}${txt(x + h * 0.85, y + o.fs * 0.85, 'Hospital', 'fill="#6b6b6b"', o.fs * 0.75, 'start')}${drives(F, 'Hospital', ['Sauceda', 'S/F']).map((r, i) => txt(x + h * 0.85, y + o.fs * (1.7 + i * 0.85), r, 'class="rg-drive" fill="#6b6b6b"', o.fs * 0.75, 'start')).join('')}</g>`; }
   // country / river names
   { const [x, y] = proj(RLAB.mexico); s += txt(x, y, 'MEXICO', 'fill="#9a9a9a" font-weight="700" letter-spacing="3"', o.fs * 1.05); }
   { const [x, y] = proj([-103.42, 29.75]); s += txt(x, y, 'TEXAS', 'fill="#9a9a9a" font-weight="700" letter-spacing="3"', o.fs * 1.05); }
   { const [x, y] = proj([-104.47, 29.66]); s += txt(x, y, 'Rio Grande', 'fill="#6f8ea3" font-style="italic"', o.fs * 0.85); }
-  { const [x, y] = proj(RLAB.park); s += txt(x, y, 'BIG BEND RANCH', 'class="rg-park" fill="#7c8a72" font-weight="700" letter-spacing="2"', o.fs * 0.85) + txt(x, y + o.fs * 0.95, 'STATE PARK', 'class="rg-park" fill="#7c8a72" font-weight="700" letter-spacing="2"', o.fs * 0.85); }
+  { const [x, y] = proj(RLAB.park); s += `<g class="rg-pt" data-ax="${f1(x)}" data-ay="${f1(y)}">` + txt(x, y, 'BIG BEND RANCH', 'class="rg-park" fill="#7c8a72" font-weight="700" letter-spacing="2"', o.fs * 0.85) + txt(x, y + o.fs * 0.95, 'STATE PARK', 'class="rg-park" fill="#7c8a72" font-weight="700" letter-spacing="2"', o.fs * 0.85) + '</g>'; }
   for (const [n, lo, la] of RLAB.counties) { const [x, y] = proj([lo, la]); s += txt(x, y, n, 'class="rg-county" fill="#a3a3a3" letter-spacing="2"', o.fs * 0.7); }
   // cell towers (OSM-mapped, communication:mobile_phone=yes): small mast symbol, no coverage drawn
   for (const f of F.filter((f) => f.properties.kind === 'celltower')) { const [x, y] = proj(f.geometry.coordinates), h = o.fs * 0.55;
