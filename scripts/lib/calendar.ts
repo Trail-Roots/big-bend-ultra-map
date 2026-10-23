@@ -10,7 +10,7 @@ export async function loadCalendar(srcDir: string): Promise<{ events: CalEvent[]
   try { const r = await fetch(CAL_ICS, { signal: AbortSignal.timeout(15000) }); if (r.ok) { const t = await r.text(); if (t.includes('BEGIN:VCALENDAR')) { fs.writeFileSync(f, t); fetched = true; } } } catch { /* offline: use snapshot */ }
   const t = fs.readFileSync(f, 'utf8').replace(/\r?\n[ \t]/g, '');
   const un = (s: string) => s.replace(/\\,/g, ',').replace(/\\;/g, ';').replace(/\\n/gi, '\n').replace(/\\\\/g, '\\');
-  const dt = (v: string | undefined) => { if (!v) return null; const m = v.match(/(\d{4})(\d\d)(\d\d)(?:T(\d\d)(\d\d)(\d\d)(Z)?)?/); if (!m) return null; return m[7] ? new Date(Date.UTC(+m[1], +m[2] - 1, +m[3], +(m[4] ?? 0), +(m[5] ?? 0))) : new Date(Date.UTC(+m[1], +m[2] - 1, +m[3], +(m[4] ?? 0) + 6, +(m[5] ?? 0))); }; // floating/TZID times are Central (CST, UTC-6 in January)
+  const dt = icsDate;
   // every VEVENT; recurring events (RRULE: DAILY / WEEKLY / MONTHLY / YEARLY with INTERVAL, COUNT, UNTIL, BYDAY for WEEKLY; EXDATE) are
   // expanded into their occurrences, and a RECURRENCE-ID instance replaces the occurrence it overrides. Open-ended rules stop 3 years after
   // the fetch (the only bound; there is no other date window or event-type filter here).
@@ -43,3 +43,11 @@ export async function loadCalendar(srcDir: string): Promise<{ events: CalEvent[]
 /** minutes after midnight Jan 17 2027 Central (CST = UTC-6) */
 export const raceMin = (d: Date) => (d.getTime() - Date.UTC(2027, 0, 17, 6, 0)) / 60000;
 export const inRaceYear = (e: CalEvent) => !!e.start && e.start.getUTCFullYear() >= 2027 && raceMin(e.start) > -2000 && raceMin(e.start) < 3000;
+
+/** ICS date value -> instant. UTC (…Z) as is; floating / TZID date-times and date-only values (all-day; DTEND is exclusive) are wall-clock
+ *  times in America/Chicago, using the real CST/CDT offset for that date (date-only = midnight Central). */
+export function icsDate(v: string | undefined): Date | null { if (!v) return null; const m = v.match(/(\d{4})(\d\d)(\d\d)(?:T(\d\d)(\d\d)(\d\d)(Z)?)?/); if (!m) return null;
+  const w = Date.UTC(+m[1], +m[2] - 1, +m[3], +(m[4] ?? 0), +(m[5] ?? 0)); if (m[7]) return new Date(w);
+  const off = (t: number) => { const p = Object.fromEntries(new Intl.DateTimeFormat("en-US", { timeZone: "America/Chicago", hourCycle: "h23", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" }).formatToParts(new Date(t)).map((x) => [x.type, x.value]));
+    return Date.UTC(+p.year, +p.month - 1, +p.day, +p.hour, +p.minute) - t; };
+  let t = w + 6 * 36e5; t = w - off(t); return new Date(w - off(t)); }

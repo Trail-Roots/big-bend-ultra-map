@@ -45,6 +45,34 @@ try {
     console.log(w, q || 'site', tag, 'shown', r.n, 'first', r.first, r.empty ? '(empty state)' : '');
     if (out) { const c = await p.$('#pb-cal'); await c!.scrollIntoViewIfNeeded(); await c!.screenshot({ path: `${out}-cal-${w}${q ? '-embed' : ''}-${tag}.png` }); if (tag === 'during') await p.screenshot({ path: `${out}-nav-${w}${q ? '-embed' : ''}.png`, clip: { x: 0, y: 0, width: w, height: 60 } }); }
     await p.close(); }
+  // all-day / multi-day / timed visibility, Central time, any visitor time zone. Each clock is checked twice: with app.js blocked (only the
+  // inline pre-paint script in the page has run) and with the full app (its filter + per-minute recheck). Date-only events: DTEND is
+  // exclusive, so the race-day FAQ (Jan 17, all day) must show until Jan 18 00:00 CT. Multi-day / timed: a synthetic item checks the
+  // per-minute recheck hides it exactly when its end passes.
+  { const FAQ = "ℹ️ Event FAQ", CT = (d: number, h: number, m: number) => new Date(Date.UTC(2027, 0, d, h + 6, m)).toISOString();
+    const cases: [string, string, boolean][] = [[CT(16, 23, 59), "Jan 16 23:59 CT", true], [CT(17, 0, 1), "Jan 17 00:01 CT", true], [CT(17, 12, 0), "Jan 17 12:00 CT", true], [CT(17, 23, 59), "Jan 17 23:59 CT", true], [CT(18, 0, 1), "Jan 18 00:01 CT", false]];
+    const ev = (await import("../scripts/lib/calendar")).icsDate; let n = 0;
+    // parser: date-only = midnight Central, exclusive end; floating times use the real CST/CDT offset
+    for (const [v, iso] of [["20270117", "2027-01-17T06:00:00.000Z"], ["20270118", "2027-01-18T06:00:00.000Z"], ["20270117T053000", "2027-01-17T11:30:00.000Z"], ["20260926T234500", "2026-09-27T04:45:00.000Z"], ["20270117T120000Z", "2027-01-17T12:00:00.000Z"]] as const)
+      if (ev(v)!.toISOString() !== iso) bad.push(`icsDate(${v}) = ${ev(v)!.toISOString()}, want ${iso}`);
+    for (const tz of ["America/Chicago", "UTC", "America/Los_Angeles", "Asia/Tokyo"]) for (const [iso, lab, want] of cases) for (const pre of [true, false]) {
+      const ctx = await b.newContext({ viewport: { width: 1440, height: 900 }, timezoneId: tz }); const p = await ctx.newPage(); await p.clock.setFixedTime(new Date(iso));
+      if (pre) await p.route(/app\.js/, (r) => r.abort());
+      await p.goto(U, { waitUntil: pre ? "domcontentloaded" : "networkidle", timeout: 90000 });
+      const r = await p.evaluate((FAQ) => { const it = [...document.querySelectorAll<HTMLElement>("#pb-cal .cv-item")].find((e) => e.querySelector(".cv-s")!.textContent === FAQ)!;
+        return { b: it?.dataset.b, vis: !!it?.offsetParent, txt: it?.querySelector(".cv-t")?.textContent }; }, FAQ);
+      if (r.b !== "1440" || r.vis !== want || r.txt !== "All day") bad.push(`all-day FAQ ${tz} ${lab} ${pre ? "pre-paint" : "app"}: ${JSON.stringify(r)}, want visible=${want}`); n++;
+      await ctx.close(); }
+    // per-minute recheck (app.js): synthetic items added after load, then the clock advances past their end. A 2-day all-day item
+    // (Jan 17-18, exclusive DTEND Jan 19 = minute 2880) and a timed item ending Jan 18 12:00 CT (minute 2160); visitor zones differ from CT.
+    for (const [id, tz, b0, x] of [["t-md", "Asia/Tokyo", 2880, CT(18, 23, 58)], ["t-tm", "America/Los_Angeles", 2160, CT(18, 11, 58)]] as const) {
+      const ctx = await b.newContext({ viewport: { width: 1440, height: 900 }, timezoneId: tz }); const p = await ctx.newPage(); await p.clock.install({ time: new Date(x) });
+      await p.goto(U, { waitUntil: "networkidle", timeout: 90000 });
+      await p.evaluate(([id, b0]) => document.querySelector("#pb-cal .cv-empty")!.insertAdjacentHTML("beforebegin", `<section class="cv-dgrp" data-day="9"><h3 class="cv-day">test</h3><ol><li class="cv-ev cv-item" data-race="" data-a="0" data-b="${b0}" id="${id}"><span class="cv-t">x</span><span class="cv-s">t</span></li></ol></section>`), [id, b0] as const);
+      const st = () => p.evaluate((id) => !!document.getElementById(id)!.offsetParent, id);
+      await p.clock.runFor(60000); const v1 = await st(); await p.clock.runFor(2 * 60000); const v2 = await st(); // :59 -> :01 past the end
+      if (!v1 || v2) bad.push(`${id} recheck (${tz}): 1 min before end visible=${v1}, 1 min after visible=${v2}`); console.log(id, "recheck", tz, "before end", v1, "after end", v2); await ctx.close(); }
+    console.log("all-day checks", n, "(4 time zones x 5 clocks x pre-paint/app)"); }
   // map badge: temperature (5y avg) on the daylight badge, no clipping at 360
   for (const w of [1440, 360]) { const p = await b.newPage({ viewport: { width: w, height: 900 } }); await p.goto(U, { waitUntil: 'networkidle', timeout: 90000 }); await p.waitForTimeout(2500);
     const r = await p.evaluate(() => { const e = document.querySelector<HTMLElement>('.daynight')!, m = document.querySelector('svg.mainmap')!.getBoundingClientRect(), r = e.getBoundingClientRect(); return [e.textContent, getComputedStyle(e).display !== 'none' && r.left >= m.left - .5 && r.right <= m.right + .5 && e.scrollWidth <= e.clientWidth + 1]; });
