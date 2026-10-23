@@ -52,7 +52,8 @@ function raceHill(c, k: string, V, view, W: number, H: number) {
 export function renderRaceMap(c, k: string, card?: boolean) {
   // card thumbnails: the race view re-fit to the card's exact aspect (site/lib/cardview.ts), same symbol scale, one generated relief image over the whole frame
   const view0 = c.layout.views[k], view = card ? { ...view0, ...cardView(view0) } : clearCorner(c, k, view0), H = view0.fig[3] * SHEET.h * RACE_F, W = card ? H * CARD_ASPECT : view0.fig[2] * SHEET.w * RACE_F, V = viewProjection(view, W, H), col = c.colors, cc = c.courses.colors[k];
-  let s = `<g class="topo">${card ? `<image href="hillshade/card-${k}.png" x="0" y="0" width="${f1(W)}" height="${f1(H)}" preserveAspectRatio="none"/>` : raceHill(c, k, V, view, W, H)}</g>`;
+  // race maps are simplified (Erik): no hillshade / terrain shading, no park or property boundaries, no zoom boxes; those are main-map only
+  let s = ''; void raceHill;
   const pts: [number, number][] = []; // every drawn line, sampled, for label collision tests
   const sample = (L: [number, number][][]) => { for (const l of L) for (let i = 1; i < l.length; i++) { const [a, b] = [l[i - 1], l[i]], n = Math.max(1, Math.ceil(Math.hypot(b[0] - a[0], b[1] - a[1]) / 3)); for (let j = 0; j <= n; j++) pts.push([a[0] + (b[0] - a[0]) * j / n, a[1] + (b[1] - a[1]) * j / n]); } };
   let base = ''; for (const f of c.network.features.filter((f) => f.properties.cls === 'paved')) { const d = V.path(f); sample(V.lines(f)); base += `<path d="${d}" class="ln" stroke="#fff" stroke-width="14"/><path d="${d}" class="ln" stroke="#333" stroke-width="10"/><path d="${d}" class="ln" stroke="#fff" stroke-width="2.2" stroke-dasharray="13.2 11"/>`; }
