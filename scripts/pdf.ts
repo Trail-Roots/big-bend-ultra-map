@@ -21,7 +21,7 @@ try {
   await p.pdf({ path: OUT, preferCSSPageSize: true, printBackground: true });
   // one PDF per course page (same CSS as "Print this course")
   for (const k of await p.$$eval('.coursepage', (e) => e.map((x) => (x as HTMLElement).dataset.course!))) {
-    await p.evaluate((k) => { document.body.classList.add('printone'); document.querySelectorAll('.coursepage').forEach((x) => x.classList.toggle('on', (x as HTMLElement).dataset.course === k)); }, k);
+    await p.evaluate((k) => { document.body.classList.add('printone'); document.querySelectorAll('.coursepage, .routeseq').forEach((x) => x.classList.toggle('on', (x as HTMLElement).dataset.course === k)); }, k);
     await p.pdf({ path: path.join(D, `course-${k}.pdf`), preferCSSPageSize: true, printBackground: true });
   }
   await p.evaluate(() => document.body.classList.remove('printone'));
@@ -53,8 +53,8 @@ const pdfText = (n?: number) => { const doc = mupdf.Document.openDocument(fs.rea
     fs.writeFileSync(path.join(P, f), pg.toPixmap(mupdf.Matrix.scale(150 / 72, 150 / 72), mupdf.ColorSpace.DeviceRGB, false, true).asJPEG(82)); files.push(f); }
   if (files.length !== pages.length) throw new Error(`print images ${files.length} != pages ${pages.length}`);
   fs.writeFileSync(path.join(P, 'pages.json'), JSON.stringify(files.map((f, i) => ({ src: 'print/' + f, o: pages[i] }))));
-  // expected page sequence (README): map | access + elevation | calendar | 5 race pages | 2 plans | 6 station pages | operations
-  const EXPECT = 'PLP' + 'LLLLL' + 'PP' + 'PPPPPP' + 'L' + 'P'; if (pages.join('') !== EXPECT) throw new Error(`[pdf] page sequence ${pages.join('')} != expected ${EXPECT}`);
+  // expected page sequence (README): map | access + elevation | calendar | 5 x (race page + 1..8 portrait trail-by-trail pages) | 2 plans | 6 station pages | operations | regional
+  if (!/^PLP(LP{1,8}){5}PPPPPPPPLP$/.test(pages.join(''))) throw new Error(`[pdf] page sequence ${pages.join('')} unexpected`);
   console.log('print images', files.length, pages.join('')); }
 // PDF check: every aid-station print page carries its visible primary coordinates link text ("Map: lat, lng")
 { const st = JSON.parse(fs.readFileSync(path.join(import.meta.dir, '../content/stations.json'), 'utf8')), txt = pdfText();

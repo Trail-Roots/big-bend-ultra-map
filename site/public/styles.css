@@ -568,3 +568,29 @@ svg g.layer[data-layer="region"]{display:none}
 svg.mainmap.zreg g.layer[data-layer="region"]{display:inline}
 svg.mainmap.zreg g.layer:is([data-layer="topo"],[data-layer="labels"],[data-layer="stationLabels"],[data-layer="pois"],[data-layer="arrows"],[data-layer="zoom"]),svg.mainmap.zreg .bgtr{display:none!important}
 svg.mainmap.zreg g.legend,svg.mainmap.zreg g.layer[data-layer="park"] text{display:none}
+/* ---------- trail-by-trail pages (PDF only; site/lib/routeseq.ts): vertical route line, segments, junction photo frames ---------- */
+.routeseq{display:none}
+@media print{
+  .sec-courses .coursepage .msfig{display:none!important} /* the horizontal strip is replaced by the trail-by-trail pages in print */
+  body.printone .routeseq:not(.on){display:none!important}
+  .sec-courses .routeseq{display:block;break-before:page;font:9pt/1.3 "Liberation Sans","Noto Sans",Arial,sans-serif;color:#2a2a2a}
+  .routeseq .rs-head h2{display:flex;align-items:center;gap:6pt;margin:0 0 2pt;font-size:15pt}.routeseq .rs-head h2 svg{height:20pt;width:auto}
+  .routeseq .rs-head .note{margin:0 0 8pt;font-size:7.5pt;color:#666}
+  ol.rs{list-style:none;margin:0;padding:0 0 0 .1in}
+  ol.rs li{position:relative;margin:0;padding-left:.42in;break-inside:avoid}
+  ol.rs li::before{content:"";position:absolute;left:.13in;top:0;bottom:0;width:4pt;background:var(--rc)}
+  ol.rs li:first-child::before{top:.12in}ol.rs li:last-child::before{bottom:auto;height:.12in}
+  .rs-seg{min-height:.3in;display:flex;align-items:center;gap:7pt;padding:3pt 0}
+  .rs-seg .rs-name{font-weight:700;font-size:10.5pt}.rs-seg .rs-unk{font-weight:400;font-style:italic;color:#777}.rs-seg .rs-d{font-weight:600}.rs-seg .rs-r{color:#777;font-size:8pt}
+  .rs-node{display:grid;grid-template-columns:2.3in 1fr;align-items:center;column-gap:10pt;padding:3pt 0}
+  .rs-pin{position:absolute;left:.15in;top:50%;transform:translate(-50%,-50%);display:flex;gap:1pt;z-index:1}
+  .rs-pin i{display:block;width:8pt;height:8pt;border-radius:50%;background:#fff;border:2.2pt solid #2a2a2a}
+  .rs-crit .rs-pin i{width:9pt;height:9pt;background:#2a2a2a;border-color:#fff;box-shadow:0 0 0 1.4pt #2a2a2a}
+  .rs-st{width:20pt;height:20pt;display:block}
+  .rs-txt b{font-weight:700;margin-right:3pt}.rs-txt .rs-aid{display:block;font-size:8pt;color:#a33}
+  .rs-node:not(.rs-crit){grid-template-columns:1fr}
+  .rs-ph{display:flex;gap:7pt}
+  .rs-fr{margin:0;width:1.95in;height:1.15in;border:1pt solid #cfcfcf;background:#f1f1f1;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden}
+  .rs-fr img{width:100%;height:100%;object-fit:cover}
+  .rs-empty span{font-size:9pt;color:#888;font-weight:600}.rs-empty small{font-size:6.5pt;color:#999;text-align:center;padding:0 4pt}
+}

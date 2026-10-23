@@ -1,4 +1,5 @@
 import { milestones } from '../lib/milestones';
+import { routeSeqPage } from '../lib/routeseq';
 // One landscape letter page per race (100K -> 10K): left half its own race map (only that route), right half its header, elevation
 // profile and GPX distance / cutoff matrix. In the main PDF after page 1; each also prints alone as course-<k>.pdf.
 import { esc, f1, station, BAND_OP } from '../lib/util';
@@ -56,7 +57,7 @@ export function render(c) {
   const pages = c.courses.order.map((k) => {
     const C = c.courses.courses[k];
     return `<article class="doc coursepage" id="course-${k}" data-course="${k}"><figure class="cpmap">${renderRaceMap(c, k)}</figure><div class="cpright"><header class="cphead"><h2 class="bibh" style="color:${c.courses.colors[k]}">${miniBibSvg(k, c.courses.colors[k], 1)} ${C.distance_mi.toFixed(1)} mi · ${totalGain(c, k).toLocaleString('en-US')} ft gain · start ${esc(C.start)}</h2><span class="cplinks">${C.stravaUrl ? `<a href="${esc(C.stravaUrl)}" target="_blank" rel="noopener" title="${k} route on Strava">${icon('strava')}Strava</a>` : ''}</span><span class="ui cpbtns"><button type="button" class="printone" data-course="${k}">${icon('printer')}Print this course</button><a href="course-${k}.pdf" download aria-label="${k} course page (PDF)">${icon('filedown')}PDF</a></span></header>
-${profile(c, k)}${milestones(c, k)}${courseTable(c, k)}<figure class="cpheat"><figcaption>Busiest times at ${k} aid stations · cutoffs</figcaption>${renderRaceHeat(c, k)}</figure></div></article>`;
+${profile(c, k)}${milestones(c, k)}${courseTable(c, k)}<figure class="cpheat"><figcaption>Busiest times at ${k} aid stations · cutoffs</figcaption>${renderRaceHeat(c, k)}</figure></div></article>${routeSeqPage(c, k)}`;
   }).join('');
   void nav;
   // web: compact Strava-style race cards; each opens its full (print-view) race page in a lightbox. Print / PDF: the full pages, unchanged order.

@@ -10,6 +10,7 @@ import { bib, BIB } from './panels';
 import { accessPatterns, offRoads } from './mainmap';
 import { BAND_TINT, tint, offsetLine, viewProjection, SHEET, R, f1, esc, station, leaderLine } from './util';
 import { STATION_TPL } from './labels';
+import { trailLabels } from './traillabels';
 
 /** sheet-unit scale vs the mini-map view, so symbols and text use the main map's sizes at race-page print size */
 export const RACE_F = 4;
@@ -130,6 +131,8 @@ export function renderRaceMap(c, k: string, card?: boolean) {
     let done = false; for (let dist = 16; dist < 200 && !done; dist += 6) for (const [dx, dy] of dirs) { const al = dx > 0 ? 'start' : dx < 0 ? 'end' : 'middle', cx = x + dx * dist, cy = y + dy * dist, x0 = al === 'start' ? cx : al === 'end' ? cx - bw : cx - bw / 2, y0 = dy < 0 ? cy - bh : dy > 0 ? cy : cy - bh / 2, b = { x0, x1: x0 + bw, y0, y1: y0 + bh };
       if (free(b)) { placed.push(b); labels += `<text x="${f1(al === 'start' ? x0 : al === 'end' ? x0 + bw : x0 + bw / 2)}" y="${f1(y0 + bh * 0.78)}" class="f-serif" font-size="22" font-style="italic" font-weight="700" fill="${cc}" text-anchor="${al}" stroke="#fff" stroke-width="6" paint-order="stroke">${t}</text>`; done = true; break; } }
     if (!done) throw new Error('[racemap 10K] no clear spot for the turnaround label'); }
+  // trail / road names along this race (site/lib/sequence.ts), set beside their trail, clear of every line, marker and label (race pages only)
+  if (!card) labels += trailLabels(c, k, V, W, H, pts, ob, placed);
   console.log(`  racemap ${k}: ${placed.length} labels placed clear of ${pts.length} line samples, ${ob.length} symbols`);
   return `<svg class="racemap" data-race="${k}" data-f="${RACE_F}" viewBox="0 0 ${f1(W)} ${f1(H)}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${k} course map"><defs><filter id="logohalo${k}" x="-10%" y="-10%" width="120%" height="120%"><feMorphology in="SourceAlpha" operator="dilate" radius="4" result="d"/><feFlood flood-color="#fff"/><feComposite in2="d" operator="in"/><feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge></filter><clipPath id="rc${k}"><rect width="${f1(W)}" height="${f1(H)}"/></clipPath></defs><rect width="${f1(W)}" height="${f1(H)}" fill="#fff"/><g clip-path="url(#rc${k})">${s}${labels}</g>${bibSvg}${northSvg}${card ? '' : `<rect width="${f1(W)}" height="${f1(H)}" fill="none" stroke="#d4d4d4" stroke-width="2"/>`}${logoSvg}</svg>`;
 }
