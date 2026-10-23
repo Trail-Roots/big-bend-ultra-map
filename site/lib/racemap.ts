@@ -62,13 +62,8 @@ export function renderRaceMap(c, k: string, card?: boolean) {
   if (nk) { const nf = c.courseGeo[nk].features[0], o = card ? 15 : 7, sw = card ? 6 : 2.5; sample(V.lines(nf));
     // next longer race: thin dashed line in its full colour, offset beside the road (never on the trail-type pattern); the current race band covers it where they share the road
     s += `<path d="${V.lines(nf).filter((l) => l.length > 1).map((l) => 'M' + offsetLine(l, o).map((q) => `${f1(q[0])},${f1(q[1])}`).join('L')).join('')}" class="ln under" data-course="${nk}" fill="none" stroke="${c.courses.colors[nk]}" stroke-width="${sw}" stroke-dasharray="${f1(sw * 2.4)} ${f1(sw * 2)}" stroke-opacity=".8"/>`; }
-  // other races' segments (on-course features this race does not use) are drawn in the main map's existing subdued off-course style
-  // (offRoads / STYLE.off in util.ts: grey #9b968e / #8f8a82, lw 3, per-trail-type dash); this race's own segments keep the on-course patterns
-  const onK = (() => { const R: number[][] = []; for (const l of c.courseGeo[k].features[0].geometry.type === 'MultiLineString' ? c.courseGeo[k].features[0].geometry.coordinates : [c.courseGeo[k].features[0].geometry.coordinates]) for (let i = 1; i < l.length; i++) { const [a, b] = [l[i - 1], l[i]], n = Math.max(1, Math.ceil(Math.hypot((b[0] - a[0]) * 93, (b[1] - a[1]) * 111) / 0.01)); for (let j = 0; j <= n; j++) R.push([a[0] + (b[0] - a[0]) * j / n, a[1] + (b[1] - a[1]) * j / n]); }
-    const G = new Map<string, number[][]>(), key = (x: number, y: number) => `${Math.floor(x / 0.001)},${Math.floor(y / 0.001)}`; for (const q of R) { const kk = key(q[0], q[1]); (G.get(kk) || G.set(kk, []).get(kk)!).push(q); }
-    const near = (q: number[]) => { const gx = Math.floor(q[0] / 0.001), gy = Math.floor(q[1] / 0.001); for (let dx = -1; dx <= 1; dx++) for (let dy = -1; dy <= 1; dy++) for (const r of G.get(`${gx + dx},${gy + dy}`) || []) if (Math.hypot((r[0] - q[0]) * 93, (r[1] - q[1]) * 111) < 0.04) return true; return false; };
-    return (f: any) => { const L = f.geometry.type === 'MultiLineString' ? f.geometry.coordinates.flat() : f.geometry.coordinates; return L.filter(near).length / L.length > 0.5; }; })();
-  const NET = c.network.features.map((f: any) => f.properties.on_course && !onK(f) ? { ...f, properties: { ...f.properties, on_course: false } } : f);
+  // every line exactly as the main map draws it (same layers + styles: offRoads, FM 170, connectors, accessPatterns for every on-course trail); only the selected race gets its band
+  const NET = c.network.features;
   const rf = c.courseGeo[k].features[0], d = V.path(rf); sample(V.lines(rf));
   // race route = solid light tint band of the race colour BENEATH the full trail-type layer (every road / trail drawn exactly as without the band)
   s += `<path d="${d}" class="ln" stroke="${tint(cc, BAND_TINT)}" stroke-width="${card ? 42 : 18}" stroke-linejoin="round"/>` + offRoads(NET, V, false, true) + base + offRoads(NET, V) + accessPatterns(NET.filter((f: any) => f.properties.on_course), V, col);
