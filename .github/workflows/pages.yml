@@ -19,7 +19,16 @@ jobs:
       - uses: oven-sh/setup-bun@v2
       - run: bun install --frozen-lockfile
       # minimal build only: no QA/checks here (calcheck/printcheck/qa run locally); embed heights come from the committed site/embed-heights.json
-      - run: bun run content && bun run site
+      - run: bun scripts/content.ts
+      # timeline model (~9 s) only depends on these inputs: reuse it when they are unchanged
+      - id: tlcache
+        uses: actions/cache@v4
+        with:
+          path: content/timeline.json
+          key: tl-${{ hashFiles('scripts/timeline.ts', 'sources/results/**', 'content/courses.json', 'content/cutoffs.json', 'content/stations.json', 'content/profiles/**') }}
+      - if: steps.tlcache.outputs.cache-hit != 'true'
+        run: bun scripts/timeline.ts
+      - run: bun run site
       # PDF + print images + card thumbnails are deployed artifacts: reuse them when the built site is unchanged
       - id: pdfkey
         run: echo "key=pdf-${{ hashFiles('dist/**') }}" >> "$GITHUB_OUTPUT"
@@ -28,6 +37,11 @@ jobs:
         with:
           path: pdfout
           key: ${{ steps.pdfkey.outputs.key }}
+      - if: steps.pdfcache.outputs.cache-hit != 'true'
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: pw-${{ hashFiles('bun.lock', 'bun.lockb') }}
       - if: steps.pdfcache.outputs.cache-hit != 'true'
         run: |
           bunx playwright install chromium  # no apt: runner image already has Chromium's libs; print images via mupdf (WASM)
