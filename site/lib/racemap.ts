@@ -62,6 +62,9 @@ export function renderRaceMap(c, k: string, card?: boolean) {
   if (nk) { const nf = c.courseGeo[nk].features[0], o = card ? 15 : 7, sw = card ? 6 : 2.5; sample(V.lines(nf));
     // next longer race: thin dashed line in its full colour, offset beside the road (never on the trail-type pattern); the current race band covers it where they share the road
     s += `<path d="${V.lines(nf).filter((l) => l.length > 1).map((l) => 'M' + offsetLine(l, o).map((q) => `${f1(q[0])},${f1(q[1])}`).join('L')).join('')}" class="ln under" data-course="${nk}" fill="none" stroke="${c.courses.colors[nk]}" stroke-width="${sw}" stroke-dasharray="${f1(sw * 2.4)} ${f1(sw * 2)}" stroke-opacity=".8"/>`; }
+  // every other race's route faded in the background (the race-filter halo style of the main map, at low opacity) so nearby course trails read as context; this race stays on top
+  s += `<g class="otherroutes" opacity=".35">${O.filter((x) => x !== k).map((x) => `<path d="${V.path(c.courseGeo[x].features[0])}" class="ln" stroke="${tint(c.courses.colors[x], BAND_TINT)}" stroke-width="${card ? 30 : 12}" stroke-linejoin="round"/>`).join("")}</g>`;
+  for (const x of O) if (x !== k) sample(V.lines(c.courseGeo[x].features[0]));
   const rf = c.courseGeo[k].features[0], d = V.path(rf); sample(V.lines(rf));
   // race route = solid light tint band of the race colour BENEATH the full trail-type layer (every road / trail drawn exactly as without the band)
   s += `<path d="${d}" class="ln" stroke="${tint(cc, BAND_TINT)}" stroke-width="${card ? 42 : 18}" stroke-linejoin="round"/>` + offRoads(c.network.features, V, false, true) + base + offRoads(c.network.features, V) + accessPatterns(c.network.features.filter((f) => f.properties.on_course), V, col);

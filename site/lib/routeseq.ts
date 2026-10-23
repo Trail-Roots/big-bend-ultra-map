@@ -4,7 +4,7 @@
 // intersectionsSection: every physical junction once (shared junctions deduped by location + trails), with the races/miles that use it and
 // 2 photo frames; photos come from sources/curated/intersections.json (junction id -> image paths under site/public/).
 import fs from 'node:fs'; import path from 'node:path';
-import { trailSequence, type TSeg } from './sequence';
+import { trailSequence, ways, type TSeg } from './sequence';
 import { routeBranches, type Branch } from './junctions';
 import { esc, station } from './util';
 import { miniBibSvg } from './panels';
@@ -25,15 +25,25 @@ export function routeNodes(c: Ctx, k: string) {
   // turn direction from the GPX: route bearing over 40-120 m before vs after the junction (local meters). <25 deg = no direction stated
   const brg = (m0: number, m1: number) => { const a = llAt(m0), b = llAt(m1); return Math.atan2((b[1] - a[1]) * 110540, (b[0] - a[0]) * 111320 * k0); };
   const others = (bs: Branch[], cur?: string) => { const by = new Map<string, Branch[]>(); for (const b of bs) (by.get(b.name) ?? by.set(b.name, []).get(b.name)!).push(b); return [...by].map(([n, L]) => { const rs = [...new Set(L.map((b) => b.race!))].sort((x, y) => parseInt(y) - parseInt(x)), sd = new Set(L.map((b) => b.side)), side = sd.size === 1 && L[0].side ? ` ${L[0].side}` : ""; return `${rs.join("/")} ${n === cur ? `stay${rs.length > 1 ? "" : "s"} on ${n}` : `use${rs.length > 1 ? "" : "s"} ${n}${side ? ` (${side.trim()})` : ""}`}`; }); }, and = (L: string[]) => L.length < 2 ? L.join("") : L.slice(0, -1).join(", ") + " and " + L[L.length - 1];
+  const unres: string[] = [];
+  const bearOf = (d: number, bs: Branch[], m: number) => { const o = bs.map((b) => b.ang).filter((a): a is number => a != null && Math.abs(a - d) > 8);
+    if (o.length) return d > Math.max(...o) ? "bear left" : d < Math.min(...o) ? "bear right" : "bear center";
+    // shallow turn with no other race on the other branch: compare against the mapped (OSM) trail(s) leaving the junction that the route does not take
+    { const J = llAt(m), h = brg(m - 0.075, m - 0.025), near = co.filter((_, i) => Math.abs(mi[i] - m) < 0.15), angs: number[] = [];
+      for (const w of ways()) for (const p of w.d) { const r = M(J, p); if (r < 40 || r > 120 || near.some((q) => M(q, p) < 25)) continue;
+        let a = (Math.atan2((p[1] - J[1]) * 110540, (p[0] - J[0]) * 111320 * k0) - h) * 180 / Math.PI; a = ((a + 540) % 360) - 180; if (Math.abs(a) < 150) angs.push(a); }
+      const o = angs.filter((a) => Math.abs(a - d) > 8); if (o.length) return d > Math.max(...o) ? "bear left" : d < Math.min(...o) ? "bear right" : "bear center"; }
+    if (Math.abs(d) >= 8) return d > 0 ? "bear left" : "bear right";
+    unres.push(`${k} mi ${m.toFixed(2)}`); return ""; };
   const howTo = (pn: string | null | undefined, nn: string | null | undefined, isTurn: boolean, m: number, bs: Branch[] = []) => {
     const P = pn ?? "the unnamed segment", N = nn ?? "the unnamed segment";
-    const sf = /^Start area/.test(P) || /^Cross FM 170/.test(N), ob = bs.filter((b) => b.name !== N && !sf), pass = ob.length ? `; ${and(others(ob, P))}` : "", anyS = ob.some((b) => b.side);
-    if (isTurn) return { next: N, how: `Turn around on ${N} and return the way you came${bs.length ? `; ${and(others(bs, N))}` : ""}.`, dirSrc: "geom" as const };
-    let d = (brg(m + 0.025, m + 0.075) - brg(m - 0.075, m - 0.025)) * 180 / Math.PI; d = ((d + 540) % 360) - 180; const a = Math.abs(d), side = d > 0 ? "left" : "right";
-    const dir = a < 25 ? "" : a < 60 ? `bear ${side}` : a < 135 ? side : `sharp ${side}`, src = a < 25 && !anyS ? "neutral" as const : "geom" as const, pd = dir ? ` (${dir})` : "";
-    if (/^Cross FM 170/.test(N)) return { next: "Finish", how: `Leave ${P}${pd} and cross FM 170 to the finish${pass}.`, dirSrc: src };
-    if (/^Start area/.test(P)) return { next: N, how: `After crossing FM 170, take ${N}${pd}${pass}.`, dirSrc: src };
-    return { next: N, how: `Take ${N}${pd}, leaving ${P}${pass}.`, dirSrc: src }; };
+    const ob = bs.filter((b) => b.name !== N);
+    if (isTurn) return { next: N, how: `Turn around on ${N} and return the way you came.`, dirSrc: "geom" as const };
+    let d = (brg(m + 0.025, m + 0.075) - brg(m - 0.075, m - 0.025)) * 180 / Math.PI; d = ((d + 540) % 360) - 180;
+    const dir = bearOf(d, ob, m), src = dir ? "geom" as const : "neutral" as const, pd = dir ? ` (${dir})` : "";
+    if (/^Cross FM 170/.test(N)) return { next: "Finish", how: `Leave ${P}${pd} and cross FM 170 to the finish.`, dirSrc: src };
+    if (/^Start area/.test(P)) return { next: N, how: `After crossing FM 170, take ${N}${pd}.`, dirSrc: src };
+    return { next: N, how: `Take ${N}${pd}, leaving ${P}.`, dirSrc: src }; };
   const ev = routeBranches(c, k), evUsed = new Set<number>();
   const evAt = (m: number) => { const o: Branch[] = []; ev.forEach((e, i) => { if (!evUsed.has(i) && Math.abs(e.mile - m) < 0.06) { evUsed.add(i); o.push(...e.branches); } }); return o; };
   const cuts = c.cutoffs[k] as { station: string; mile: number }[], used = new Set<number>();
@@ -45,7 +55,7 @@ export function routeNodes(c: Ctx, k: string) {
   const inner = (p: TSeg, end: number) => { const items: { m: number; f: () => void }[] = [];
     for (const q of cuts) { const ix = cuts.indexOf(q); if (!used.has(ix) && q.mile > p.a + 0.2 && q.mile < end - 0.2) { used.add(ix); items.push({ m: q.mile, f: () => nodes.push({ id: id(), mile: q.mile, title: `${c.stations.stations[q.station].name} aid`, crit: false, stations: [q.station] }) }); } }
     ev.forEach((e, j) => { if (evTC.has(j) || evUsed.has(j) || e.mile <= p.a || e.mile >= end) return; const T = p.name ?? "the unnamed segment", ob = e.branches.filter((b) => b.name !== T); evUsed.add(j); if (!ob.length) return;
-      items.push({ m: e.mile, f: () => nodes.push({ id: id(), mile: e.mile, title: T, crit: true, pass: true, stations: [], ll: co[e.i], next: T, how: `Stay on ${T}; ${and(others(ob))}.`, dirSrc: ob.some((b) => b.side) ? "geom" : "neutral", trails: [...new Set([T, ...ob.map((b) => b.name)])].sort() }) }); });
+      items.push({ m: e.mile, f: () => nodes.push({ id: id(), mile: e.mile, title: T, crit: true, pass: true, stations: [], ll: co[e.i], next: T, how: (() => { let d = (brg(e.mile + 0.025, e.mile + 0.075) - brg(e.mile - 0.075, e.mile - 0.025)) * 180 / Math.PI; d = ((d + 540) % 360) - 180; const b = bearOf(d, ob, e.mile); return `Stay on ${T}${b ? ` (${b})` : ""} at its junction with ${and([...new Set(ob.map((x) => x.name))])}.`; })(), dirSrc: "geom", trails: [...new Set([T, ...ob.map((b) => b.name)])].sort() }) }); });
     items.sort((a, b) => a.m - b.m).forEach((x) => x.f()); };
   let n = 0; const id = () => `${k}-${String(++n).padStart(2, '0')}`;
   nodes.push({ id: id(), mile: 0, title: 'Start', crit: false, stations: near(0) });
@@ -59,6 +69,7 @@ export function routeNodes(c: Ctx, k: string) {
   });
   { const p = segs[segs.length - 1]; inner(p, p.b); }
   nodes.push({ id: id(), mile: f.properties.distance_mi, title: 'Finish', crit: false, stations: near(f.properties.distance_mi) });
+  if (unres.length) console.log(`  routeseq ${k}: bearing unresolved at ${unres.join(", ")}`);
   return nodes;
 }
 const fmt = (m: number) => m.toFixed(1);
@@ -91,7 +102,9 @@ export function routeSeqPage(c: Ctx, k: string) {
       R.push({ m: x.mile, h: `<li class="rs-seg rs-pass" id="rs-${k}-${x.id}"><span class="rs-pin">${j ? `<a class="rs-jx" href="#ix-${j.id}" aria-label="Intersection photos"></a>` : "<i></i>"}</span><span class="rs-mi">mi ${fmt(x.mile)}</span><span class="rs-name">${esc(x.next!)}</span><span class="rs-d"></span><span class="rs-dir">${esc(x.how!)}</span></li>` }); continue; }
     if (x.crit) { pend = x; continue; }
     const st = x.stations.map((q) => dot(c, q)).join(""), aid = aidOf(x);
-    R.push({ m: x.mile, h: `<li class="rs-node${x.stations.some((q) => q !== "S/F") ? " rs-aidrow" : ""}"><span class="rs-pin">${st || "<i></i>"}</span><span class="rs-mi">mi ${fmt(x.mile)}</span><span class="rs-title">${esc(x.title)}</span>${x.title === "Start" && c.courses.courses?.[k]?.start ? `<span class="rs-cut">· ${esc(String(c.courses.courses[k].start).replace(/:00 ?([AP])M$/, (_: string, a: string) => a.toLowerCase()).replace(/ ?([AP])M$/, (_: string, a: string) => a.toLowerCase()))}</span>` : ""}${cutAt(x.stations, x.mile)}${aid && !/aid$/.test(x.title) ? `<span class="rs-aid">${aid}</span>` : ""}${cur && aid && x.mile > cur.a + 0.05 && x.mile < cur.b - 0.05 ? `<span class="rs-cont"><span class="rs-name${cur.name ? "" : " rs-unk"}">${esc(cur.name ?? "Unnamed segment")}</span> <span class="rs-d">%%D%%</span></span>` : ""}</li>` });
+    R.push({ m: x.mile, h: `<li class="rs-node${x.stations.some((q) => q !== "S/F") ? " rs-aidrow" : ""}"><span class="rs-pin">${st || "<i></i>"}</span><span class="rs-mi">mi ${fmt(x.mile)}</span><span class="rs-title">${esc(x.title)}</span>${x.title === "Start" && c.courses.courses?.[k]?.start ? `<span class="rs-cut">· ${esc(String(c.courses.courses[k].start).replace(/:00 ?([AP])M$/, (_: string, a: string) => a.toLowerCase()).replace(/ ?([AP])M$/, (_: string, a: string) => a.toLowerCase()))}</span>` : ""}${cutAt(x.stations, x.mile)}${aid && !/aid$/.test(x.title) ? `<span class="rs-aid">${aid}</span>` : ""}</li>` });
+    if (cur && aid && x.mile > cur.a + 0.05 && x.mile < cur.b - 0.05) { const T = cur.name ?? "Unnamed segment", sn = x.stations.filter((q) => q !== "S/F").map((q) => c.stations.stations[q].name).join(" / ");
+      R.push({ m: x.mile + 1e-4, h: `<li class="rs-seg rs-after"><span class="rs-pin"><i></i></span><span class="rs-mi"></span><span class="rs-name${cur.name ? "" : " rs-unk"}">${esc(T)}</span><span class="rs-d">%%D%%</span><span class="rs-dir">${esc(`From ${sn}, stay on ${T}.`)}</span></li>` }); }
   }
   { const J = nodes.filter((x): x is Junction => !("seg" in x) && x.crit); console.log(`  routeseq ${k}: ${segs} segments, ${J.length} junctions (${J.filter((x) => x.pass).length} pass-through), directions ${J.filter((x) => x.dirSrc === "geom").length} geometry / ${J.filter((x) => x.dirSrc !== "geom").length} neutral, ${links} links`); }
   if (process.env.JDUMP) for (const x of nodes) if (!("seg" in x) && x.crit) console.log(`JD ${k}\t${x.mile.toFixed(2)}\t${x.pass ? "PASS" : x.turn ? "TURN" : "NAME"}\t${x.title}\t${x.how}`);

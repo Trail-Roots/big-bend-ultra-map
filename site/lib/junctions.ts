@@ -6,7 +6,7 @@ import { trailSequence } from './sequence';
 import type { Ctx } from './types';
 const k0 = Math.cos((29.35 * Math.PI) / 180), X = (p: number[]) => [p[0] * 111320 * k0, p[1] * 110540];
 const ON = 25, AWAY = 45, FAR = 90; // m: a path vertex within ON of the route is on it; the branch direction is read where the path is AWAY m off it
-export type Branch = { race?: string; name: string; side: 'left' | 'right' | null; B?: number[] };
+export type Branch = { race?: string; name: string; side: 'left' | 'right' | null; ang?: number; B?: number[] };
 export type JEv = { mile: number; i: number; branches: Branch[] };
 // branch sources = the OTHER races' GPX routes only (Erik: list junctions where races diverge / rejoin, not roads no race uses)
 type L = { race: string; d: number[][]; nm: string[] };
@@ -34,7 +34,7 @@ export function routeBranches(c: Ctx, k: string): JEv[] {
           const key = `${Math.round(m * 50)}|${dir}`; if (seen.has(key)) continue; seen.add(key);
           const B = l.d[tb], i0 = Math.max(0, i - 4), i1 = Math.min(co.length - 1, i + 4), h = [co[i1][0] - co[i0][0], co[i1][1] - co[i0][1]], v = [B[0] - co[i][0], B[1] - co[i][1]];
           const ang = Math.atan2(h[0] * v[1] - h[1] * v[0], h[0] * v[0] + h[1] * v[1]) * 180 / Math.PI, a = Math.abs(ang);
-          ev.push({ mile: m, i, branches: [{ B, race: l.race, name: l.nm[tb], side: a > 20 && a < 160 ? (ang > 0 ? 'left' : 'right') : null }] }); } } }
+          ev.push({ mile: m, i, branches: [{ B, race: l.race, name: l.nm[tb], ang, side: a > 20 && a < 160 ? (ang > 0 ? 'left' : 'right') : null }] }); } } }
   }
   // the route itself leaving / joining a path also shows up as a "branch" of that path; merge events within 0.03 mi
   ev.sort((a, b) => a.mile - b.mile); const out: JEv[] = [];

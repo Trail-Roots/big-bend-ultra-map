@@ -9,7 +9,7 @@ const DISPLAY: Record<string, string> = { 'Plia Montoya Road': 'Pila Montoya Rd'
 export const trailName = (n: string) => DISPLAY[n] ?? n.replace(/ Road$/, ' Rd');
 type W = { name: string; d: number[][] };
 let WAYS: W[] | null = null;
-function ways(): W[] {
+export function ways(): W[] {
   if (WAYS) return WAYS;
   const g = JSON.parse(fs.readFileSync(path.join(import.meta.dir, '../../sources/curated/route_trails.geojson'), 'utf8'));
   return (WAYS = g.features.map((f: any) => { const c = f.geometry.coordinates, d: number[][] = [];
