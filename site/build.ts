@@ -36,8 +36,9 @@ const { layersNav } = await import('./sections/10-map');
 // Register (RunSignup): navbar link on the web always; in print / PDF only while the site is a DRAFT (same flag as the watermark)
 const REG_URL = 'https://runsignup.com/Race/Register/?raceId=163892';
 const regNav = `<a class="ui navreg" href="${REG_URL}" target="_blank" rel="noopener" data-tip="Register on RunSignup (opens a new tab)">Register</a>`;
-const regPrint = (d: boolean) => d ? `<p class="regprint">Register: <a href="${REG_URL}">${REG_URL.replace(/^https:\/\//, '')}</a></p>` : '';
-if (regPrint(false) !== '' || !regPrint(true).includes(REG_URL)) throw new Error('[register] print link must follow the draft flag (on when draft, off when final)');
+const RACE_URL = 'https://trailroots.com/big-bend-ultra'; // print line points to the race page (the site's Register button still uses REG_URL)
+const regPrint = (d: boolean) => d ? `<p class="regprint">Race Page: <a href="${RACE_URL}">trailroots.com/big-bend-ultra</a></p>` : '';
+if (regPrint(false) !== '' || !regPrint(true).includes(RACE_URL)) throw new Error('[register] print link must follow the draft flag (on when draft, off when final)');
 let html = tpl.replace('{{layers}}', layersNav(ctx)).replace('{{bodyclass}}', draft ? 'draft' : '')
   .replace('{{draftbanner}}', draft ? WATERMARK + `<style>@page{@top-center{content:"DRAFT — NOT FINAL · Subject to change · Generated ${gen}";font:800 8pt system-ui,sans-serif;letter-spacing:.06em;color:#fff;background:#b3261e;margin:.05in 0 .05in;width:100%;-webkit-print-color-adjust:exact;print-color-adjust:exact}}</style>` : '')
   .replace('{{register}}', regNav).replace('{{draftnote}}', draft ? `<span class="draftnote" title="Generated ${gen}">Draft<span class="dn-long"> · subject to change</span></span>` : '').replace('{{base}}', './').replace(/{{ic:(\w+)}}/g, (_: string, n: string) => icon(n)).replace(/{{title}}/g, sections[0].meta.title).replace('{{defs}}', markerDefs(ctx.colors)).replace('{{body}}', body).replace(/{{year}}/g, '2027');

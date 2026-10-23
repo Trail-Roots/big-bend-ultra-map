@@ -61,10 +61,11 @@ const pdfText = (n?: number) => { const doc = mupdf.Document.openDocument(fs.rea
   const miss = st.order.filter((k: string) => { const L = st.stations[k].link_lonlat ?? st.stations[k].lonlat; return !txt.includes(`Map: ${L[1].toFixed(5)}, ${L[0].toFixed(5)}`); });
   if (miss.length) throw new Error('[pdf] station pages without coordinates link: ' + miss.join(', '));
   console.log('pdf station coord links', st.order.length, 'ok'); }
-// PDF check: the Register (RunSignup) line prints only while the site is a DRAFT (same flag as the watermark)
+// PDF check: the Race Page line prints only while the site is a DRAFT (same flag as the watermark)
 { const draft = JSON.parse(fs.readFileSync(path.join(import.meta.dir, '../content/site.json'), 'utf8')).draft === true, txt = pdfText(2);
-  if (txt.includes('runsignup.com/Race/Register') !== draft) throw new Error('[pdf] Register line on page 2 must be ' + (draft ? 'present (draft)' : 'absent (final)'));
-  console.log('pdf register line', draft ? 'present (draft)' : 'absent (final)'); }
+  if (pdfText().includes('runsignup.com/Race/Register')) throw new Error('[pdf] old Register line still printed');
+  if (txt.includes('Race Page: trailroots.com/big-bend-ultra') !== draft) throw new Error('[pdf] Race Page line on page 2 must be ' + (draft ? 'present (draft)' : 'absent (final)'));
+  console.log('pdf race page line', draft ? 'present (draft)' : 'absent (final)'); }
 // PDF check: every aid-station page is a named destination for the internal links from station number graphics
 { const raw = fs.readFileSync(OUT).toString('latin1'), st = JSON.parse(fs.readFileSync(path.join(import.meta.dir, '../content/stations.json'), 'utf8'));
   const name = (k: string) => '/station-' + encodeURIComponent(k).replace(/%/g, '#25');
