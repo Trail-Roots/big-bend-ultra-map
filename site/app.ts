@@ -516,3 +516,6 @@ if (document.documentElement.classList.contains('embed') && parent !== window) {
     for (const c of ['fit-nt', 'fit-sm', 'fit-xs']) { if (!over(e)) break; e.classList.add(c); }
     if (over(e)) { e.classList.add('fit-grow'); const s = e.querySelector<HTMLElement>('.cv-s'); e.style.minHeight = e.scrollHeight + Math.max(0, s ? s.scrollHeight - s.clientHeight : 0) + 4 + 'px'; } } };
   if (blks.length) { fit(); addEventListener('load', fit, { once: true }); let t = 0; addEventListener('resize', () => { clearTimeout(t); t = setTimeout(fit, 120) as unknown as number; }); document.fonts?.ready.then(fit); } }
+
+// print: Operations (race-day timeline) goes last, as in the PDF; put back after printing
+{ const t = document.getElementById('timeline'), home = t?.nextSibling ?? null; if (t) { addEventListener('beforeprint', () => t.parentElement!.appendChild(t)); addEventListener('afterprint', () => t.parentElement!.insertBefore(t, home)); } }
