@@ -92,6 +92,9 @@ fs.writeFileSync(path.join(D, 'index.html'), html);
   fs.writeFileSync(path.join(D, 'profiles.json'), JSON.stringify(V)); console.log('profile variants', Object.keys(V).length); }
 console.log('index.html', (html.length / 1024).toFixed(0) + ' KB,', sections.length, 'sections:', sections.map((s) => s.meta.id).join(', '));
 fs.cpSync(path.join(here, 'public'), D, { recursive: true });
+// embed.js reserved heights: committed table measured locally by tools/heights.ts (never in CI)
+{ const E = path.join(D, 'embed.js'), src = fs.readFileSync(E, 'utf8'); if (!src.includes('/*HEIGHTS*/null')) throw new Error('[embed.js] heights placeholder missing');
+  fs.writeFileSync(E, src.replace('/*HEIGHTS*/null', fs.readFileSync(path.join(here, 'embed-heights.json'), 'utf8').trim())); }
 const app = await Bun.build({ entrypoints: [path.join(here, 'app.ts')], outdir: D, minify: true, target: 'browser' });
 if (!app.success) throw new AggregateError(app.logs, 'app.ts bundle failed');
 fs.cpSync(path.join(C, 'hillshade'), path.join(D, 'hillshade'), { recursive: true });

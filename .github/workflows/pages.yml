@@ -17,9 +17,24 @@ jobs:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
       - run: bun install --frozen-lockfile
-      - run: bunx playwright install --with-deps chromium
-      - run: sudo apt-get install -y poppler-utils
-      - run: bun run build
+      # minimal build only: no QA/checks here (calcheck/printcheck/qa run locally); embed heights come from the committed site/embed-heights.json
+      - run: bun run content && bun run site
+      # PDF + print images + card thumbnails are deployed artifacts: reuse them when the built site is unchanged
+      - id: pdfkey
+        run: echo "key=pdf-${{ hashFiles('dist/**') }}" >> "$GITHUB_OUTPUT"
+      - id: pdfcache
+        uses: actions/cache@v4
+        with:
+          path: pdfout
+          key: ${{ steps.pdfkey.outputs.key }}
+      - if: steps.pdfcache.outputs.cache-hit != 'true'
+        run: |
+          sudo apt-get install -y poppler-utils
+          bunx playwright install --with-deps chromium
+          bun run pdf
+          mkdir -p pdfout && cp -r dist/*.pdf dist/cards dist/cards-embed.png dist/cards-embed.jpg dist/print pdfout/
+      - if: steps.pdfcache.outputs.cache-hit == 'true'
+        run: cp -r pdfout/* dist/
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist
