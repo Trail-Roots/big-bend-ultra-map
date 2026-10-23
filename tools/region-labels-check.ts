@@ -9,7 +9,7 @@ const RINGS = { web: await Bun.file('node_modules/.cache/rg-check-web.json').jso
 const audit = (root: string, rings: any) => (p: Page) => p.evaluate(([sel, clr, R]) => {
   const svg = document.querySelector(sel as string) as SVGSVGElement, sr = svg.getBoundingClientRect(), c = +clr;
   const skip = (e: Element) => !!e.closest('g.legend, g.scalebar, g.north, g.marker, use, g.zctl, defs, clipPath, [data-layer="dots"], [data-layer="tint"]');
-  const vis = (e: Element) => (e as any).checkVisibility ? (e as any).checkVisibility({ checkVisibilityCSS: true }) : true;
+  const vis = (e: Element) => !e.closest('g.rg-top[style*="none"]') && ((e as any).checkVisibility ? (e as any).checkVisibility({ checkVisibilityCSS: true }) : true);
   const boxes = (t: SVGTextElement): DOMRect[] => { if (!t.querySelector('textPath')) return [t.getBoundingClientRect()]; const m = t.getScreenCTM()!, o: DOMRect[] = [];
     for (let k = 0; k < t.getNumberOfChars(); k++) { let e: DOMRect; try { e = t.getExtentOfChar(k); } catch { continue; } if (!e.width) continue; const q = [[e.x, e.y], [e.x + e.width, e.y], [e.x, e.y + e.height], [e.x + e.width, e.y + e.height]].map(([x, y]) => [m.a * x + m.c * y + m.e, m.b * x + m.d * y + m.f]);
       const xs = q.map((v) => v[0]), ys = q.map((v) => v[1]); o.push(new DOMRect(Math.min(...xs), Math.min(...ys), Math.max(...xs) - Math.min(...xs), Math.max(...ys) - Math.min(...ys))); } return o; };
@@ -49,7 +49,7 @@ const audit = (root: string, rings: any) => (p: Page) => p.evaluate(([sel, clr, 
     if (id === 'park' && !allIn(Rg.park)) out.push('AREA park label not inside the park');
     if (id === 'MEXICO' && !allIn([Rg.mexico])) out.push('AREA MEXICO not south of the border');
     if (!['MEXICO', 'Rio Grande', 'sf'].includes(id) && pts.some(([x, y]) => pip(x, y, Rg.mexico))) out.push(`BORDER ${id} label south of the border`); }
-  const np = svg.querySelectorAll('g.rg-plane').length, nf = svg.querySelectorAll('g.rg-fuel').length;
+  const np = [...svg.querySelectorAll('g.rg-plane')].filter(vis).length, nf = [...svg.querySelectorAll('g.rg-fuel')].filter(vis).length;
   if (np !== 6) out.push(`ICONS ${np} airstrip icons (want 6)`); if (nf !== 5) out.push(`ICONS ${nf} fuel icons (want 5)`);
   return [...new Set(out)];
 }, [root, CLEAR, rings] as const);

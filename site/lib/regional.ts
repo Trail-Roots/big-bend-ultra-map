@@ -33,7 +33,8 @@ export function regionLayer(c: Ctx, proj: P, o: { fs: number; sw: number; tol: n
   const txt = (x: number, y: number, s: string, ex = '', fs = o.fs, a = 'middle') => `<text x="${f1(x)}" y="${f1(y)}" font-size="${f1(fs)}" text-anchor="${a}" dominant-baseline="central" ${halo} ${ex}>${s}</text>`;
   let s = '';
   // county lines (OSM admin_level 6): faint gray dash-dot, distinct from the dotted park boundary
-  for (const f of F.filter((f) => f.properties.kind === 'county')) for (const l of f.geometry.coordinates) s += ln(l, '#b0b0b0', 0.9, ` stroke-dasharray="${f1(6 * o.sw)} ${f1(2.5 * o.sw)} ${f1(1 * o.sw)} ${f1(2.5 * o.sw)}"`);
+  const rvP = F.filter((f) => f.properties.kind === 'river').flatMap((f) => f.geometry.coordinates).flat() as number[][], onRiver = (l: number[][]) => l.length > 2 && l.every((p) => rvP.some((q) => Math.abs(q[0] - p[0]) < 0.004 && Math.abs(q[1] - p[1]) < 0.004));
+  for (const f of F.filter((f) => f.properties.kind === 'county')) for (const l of f.geometry.coordinates) if (!onRiver(l)) s += ln(l, '#c6c6c6', 0.7, ` stroke-dasharray="${f1(6 * o.sw)} ${f1(2.5 * o.sw)} ${f1(1 * o.sw)} ${f1(2.5 * o.sw)}"`);
   // Rio Grande = the international border
   for (const f of F.filter((f) => f.properties.kind === 'river')) for (const l of f.geometry.coordinates) s += ln(l, '#9fb6c6', 1.6);
   // park boundary (subtle; full outline — the main map only draws the part in its frame)
@@ -71,9 +72,15 @@ export const mexRing = (riv: number[][]) => { const r = riv[0][0] < riv.at(-1)![
 export const PUMP = (x: number, y: number, t: number, sw: number) => `<rect x="${f1(x - t * 0.36)}" y="${f1(y - t * 0.45)}" width="${f1(t * 0.5)}" height="${f1(t * 0.9)}" rx="${f1(t * 0.06)}" fill="#6b6b6b" stroke="#fff" stroke-width="${f1(sw)}"/><rect x="${f1(x - t * 0.27)}" y="${f1(y - t * 0.36)}" width="${f1(t * 0.32)}" height="${f1(t * 0.22)}" fill="#fff"/><path d="M${f1(x + t * 0.14)},${f1(y - t * 0.2)}h${f1(t * 0.14)}v${f1(t * 0.5)}h${f1(t * 0.1)}v${f1(-t * 0.62)}" fill="none" stroke="#6b6b6b" stroke-width="${f1(t * 0.08)}"/>`;
 /** textPath guide: extend both ends along their end tangents (glyphs past a path end are not drawn; the placer already checked the space) */
 const extendPath = (q: Pt[]): Pt[] => { if (q.length < 2) return q; const e = (a: Pt, b: Pt): Pt => { const dx = a[0] - b[0], dy = a[1] - b[1], m = Math.hypot(dx, dy) || 1, L = q.reduce((s, p, i) => i ? s + Math.hypot(p[0] - q[i - 1][0], p[1] - q[i - 1][1]) : 0, 0) * 0.4; return [a[0] + dx / m * L, a[1] + dy / m * L]; }; return [e(q[0], q[1]), ...q, e(q.at(-1)!, q.at(-2)!)]; };
+/** runway tier by FAA id (FAA 5010 data via AirNav, checked Oct 2026): 'L' = paved runway of 5,000 ft or more, 'S' = shorter or unpaved strip.
+ *  E38 Alpine-Casparis 6,002 ft asphalt · MRF Marfa 6,203 ft asphalt · KPRS Presidio Lely 5,200 ft asphalt · T89 Lajitas 6,501 ft concrete
+ *  3T9 Sauceda (Big Bend Ranch SP) 5,500 ft asphalt/gravel, loose stones · 1E2 Terlingua Ranch 4,700 ft gravel/dirt, poor */
+const AIR_TIER: Record<string, 'L' | 'S'> = { E38: 'L', MRF: 'L', KPRS: 'L', T89: 'L', '3T9': 'S', '1E2': 'S' };
+/** single-engine propeller plane (top view: straight wing, slim fuselage, small tail, prop bar) — unpaved airstrip symbol */
+export const PROP = (x: number, y: number, t: number) => { const P = (q: number[][]) => 'M' + q.map(([a, b]) => `${f1(x + a * t)},${f1(y + b * t)}`).join('L') + 'Z'; return P([[0.06, -0.4], [0.06, -0.2], [0.5, -0.2], [0.5, -0.04], [0.06, -0.04], [0.04, 0.3], [0.2, 0.3], [0.2, 0.42], [-0.2, 0.42], [-0.2, 0.3], [-0.04, 0.3], [-0.06, -0.04], [-0.5, -0.04], [-0.5, -0.2], [-0.06, -0.2], [-0.06, -0.4]]) + P([[-0.22, -0.5], [0.22, -0.5], [0.22, -0.44], [-0.22, -0.44]]); };
 export const PLANE = (x: number, y: number, t: number) => { const q = [[0, -0.5], [0.07, -0.42], [0.07, -0.1], [0.5, 0.12], [0.5, 0.21], [0.07, 0.09], [0.06, 0.32], [0.2, 0.42], [0.2, 0.49], [0, 0.44], [-0.2, 0.49], [-0.2, 0.42], [-0.06, 0.32], [-0.07, 0.09], [-0.5, 0.21], [-0.5, 0.12], [-0.07, -0.1], [-0.07, -0.42]]; return 'M' + q.map(([a, b]) => `${f1(x + a * t)},${f1(y + b * t)}`).join('L') + 'Z'; };
 /** placement environment: display = (output - o0) * s (web: viewBox units at the max zoom-out; PDF: sheet units); frame + obstacles in display units */
-export type Env = { s: number; o0: Pt; frame: Box; lines: Pt[][]; marks: [number, number, number][]; boxes: Box[]; sfCols?: number; drives?: boolean; rowK?: number };
+export type Env = { s: number; o0: Pt; frame: Box; lines: Pt[][]; marks: [number, number, number][]; boxes: Box[]; sfCols?: number; drives?: boolean; rowK?: number; tag?: string; qa?: boolean };
 type Ln = { s: string; plain: string; fs: number; b?: boolean; i?: boolean; ls?: number; fill: string; cls?: string };
 /** labels + point symbols of the regional layer (drawn above the race routes); every label placed by regplace.ts (no label on any line or marker) */
 export function regionTop(c: Ctx, proj: P, o: { fs: number; sw: number; web: boolean }, env: Env) {
@@ -101,17 +108,17 @@ export function regionTop(c: Ctx, proj: P, o: { fs: number; sw: number; web: boo
     sym += grp(ha, `<rect x="${f1(A[0] - h / 2)}" y="${f1(A[1] - h / 2)}" width="${f1(h)}" height="${f1(h)}" rx="${f1(h * 0.15)}" fill="#c4161c" stroke="#fff" stroke-width="${f1(fs * 0.08)}"/><path d="M${f1(A[0] - h * 0.28)},${f1(A[1])}h${f1(h * 0.56)}M${f1(A[0])},${f1(A[1] - h * 0.28)}v${f1(h * 0.56)}" stroke="#fff" stroke-width="${f1(h * 0.2)}"/>`, ' rg-hosp'); }
   // fuel (curated from OSM amenity=fuel): one pump per town that has fuel, beside the town marker (first free spot around it)
   for (const f of F.filter((f) => f.properties.kind === 'fuel')) { const tw = towns.find((q) => q.properties.name === f.properties.town); if (!tw) continue; const c0 = D(tw.geometry.coordinates), r = fs * (BIG.includes(f.properties.town) ? 0.3 : 0.24), t = fs * 0.8; let at: Pt | null = null;
-    for (const d of [0.75, 0.95, 1.2, 1.5, 1.9]) for (const an of [0, 180, 45, 135, 225, 315, 90, 270, 20, 160, 200, 340, 65, 115, 245, 295]) { if (at) break; const k = an * Math.PI / 180, p: Pt = [c0[0] + Math.cos(k) * (r + d * t), c0[1] + Math.sin(k) * (r + d * t)]; if (!sp.hit([p[0] - t * 0.4, p[1] - t * 0.5, p[0] + t * 0.4, p[1] + t * 0.5], fs * 0.1)) at = p; }
+    for (const d of [0.75, 0.95, 1.2, 1.5, 1.9]) for (const an of (['Lajitas', 'Terlingua', 'Study Butte'].includes(f.properties.town) ? [295, 245, 270, 315, 225, 340, 200, 0, 180, 20, 160] : [0, 180, 45, 135, 225, 315, 90, 270, 20, 160, 200, 340, 65, 115, 245, 295])) { if (at) break; const k = an * Math.PI / 180, p: Pt = [c0[0] + Math.cos(k) * (r + d * t), c0[1] + Math.sin(k) * (r + d * t)]; if (!sp.hit([p[0] - t * 0.4, p[1] - t * 0.5, p[0] + t * 0.4, p[1] + t * 0.5], fs * 0.1)) at = p; }
     if (!at) { at = [c0[0] + r + 0.75 * t, c0[1]]; console.warn('[regional] fuel icon crowded:', f.properties.town); }
     sp.circ.push([at[0], at[1], t * 0.55]); const A = Out(at); sym += grp(at, PUMP(A[0], A[1], t, fs * 0.05), ' rg-fuel'); }
   // airstrips: traced runway stays; a small plane icon sits beside it (first free spot perpendicular to the runway)
-  for (const f of F.filter((f) => f.properties.kind === 'airstrip')) { const rw = (f.properties.runways || [])[0], c0 = D(f.geometry.coordinates), t = fs * 0.85;
+  for (const f of F.filter((f) => f.properties.kind === 'airstrip')) { const rw = (f.properties.runways || [])[0], c0 = D(f.geometry.coordinates), big = AIR_TIER[f.properties.code] === 'L', t = fs * (big ? 1.2 : 0.75);
     let ux = 1, uy = 0; if (rw) { const a = D(rw[0]), b = D(rw.at(-1)); const L = Math.hypot(b[0] - a[0], b[1] - a[1]) || 1; ux = (b[0] - a[0]) / L; uy = (b[1] - a[1]) / L; }
     const half = rw ? Math.max(...rw.map((q: any) => { const p = D(q); return Math.hypot(p[0] - c0[0], p[1] - c0[1]); })) : 0; let at: Pt | null = null;
     for (const d of [0.75, 1.1, 1.5, 2, 2.6, 3.3, 4]) for (const sd of [-1, 1]) for (const al of [0, 0.5, -0.5, 1, -1]) { if (at) break; const p: Pt = [c0[0] - uy * sd * d * t + ux * al * half, c0[1] + ux * sd * d * t + uy * al * half]; if (!sp.hit([p[0] - t / 2, p[1] - t / 2, p[0] + t / 2, p[1] + t / 2], fs * 0.12)) at = p; }
     if (!at) { at = [c0[0] - uy * 0.75 * t, c0[1] + ux * 0.75 * t]; console.warn('[regional] airstrip icon crowded:', f.properties.label); }
     sp.circ.push([at[0], at[1], t * 0.55]); const A = Out(at);
-    sym += grp(at, `<path d="${PLANE(A[0], A[1], t)}" fill="#6b6b6b" stroke="#fff" stroke-width="${f1(fs * 0.06)}" stroke-linejoin="round"/>`, ' rg-plane'); }
+    sym += grp(at, `<path d="${(big ? PLANE : PROP)(A[0], A[1], t)}" fill="#6b6b6b" stroke="#fff" stroke-width="${f1(fs * 0.06)}" stroke-linejoin="round"/>`, big ? ' rg-plane rg-plane-l' : ' rg-plane'); }
   // labels: content
   const T = (s: string, k: number, x: Partial<Ln> = {}): Ln => ({ s: esc(s), plain: s, fs: fs * k, fill: '#444', ...x });
   const wOf = (l: Ln) => textW(l.plain, l.fs, l.b, l.i, l.ls || 0), lh = (l: Ln) => l.fs * 1.24;
@@ -124,33 +131,38 @@ export function regionTop(c: Ctx, proj: P, o: { fs: number; sw: number; web: boo
   const SF = (c as any).stations.stations['S/F'].lonlat, sfa = D(SF);
   // web zoomed-out frame is narrow: compact block (2-line title, 1 column, nearby towns dropped: they sit right beside the S/F)
   const road = (f: any) => f.geometry.coordinates.map(D) as Pt[];
-  { const sq = D(F.find((f) => f.properties.kind === 'town' && f.properties.name === 'Sauceda').geometry.coordinates), x = sq[0], y = sq[1] - fs * 2.6; /* pinned just north of Sauceda */ items.push(blk('park', [T('BIG BEND RANCH', 0.62, { fill: '#9aa392', ls: 2.5 }), T('STATE PARK', 0.62, { fill: '#9aa392', ls: 2.5 })], { kind: 'area', at: [x, y], R: fs * 3, inside: parkRings, req: true })); }
+  { const sq = D(F.find((f) => f.properties.kind === 'town' && f.properties.name === 'Sauceda').geometry.coordinates), x = sq[0], y = sq[1] + fs * 2.6; /* pinned just south of Sauceda (the Sauceda label + drive times sit north of it) */ items.push(blk('park', [T('BIG BEND RANCH', 0.62, { fill: '#9aa392', ls: 2.5 }), T('STATE PARK', 0.62, { fill: '#9aa392', ls: 2.5 })], { kind: 'area', at: [x, y], R: fs * 3, inside: parkRings, req: true })); }
+  // the area north of FM 170 between Lajitas and Study Butte (Lajitas, Terlingua, Study Butte labels sit below the highway, still north of the river)
+  const BELOW170 = ['Lajitas', 'Terlingua', 'Study Butte'], n170: Pt[] = (() => { const r = F.find((f) => f.properties.kind === 'road' && f.properties.name === 'Lajitas – Study Butte').geometry.coordinates as number[][], a = r[0], b = r.at(-1)!;
+    return [[-104.6, a[1]], [a[0] - 0.06, a[1]], ...r, [b[0] + 0.3, b[1]], [b[0] + 0.3, 31.5], [-104.6, 31.5]].map((q) => D(q as any)); })();
   const sau = towns.find((f) => f.properties.name === 'Sauceda');
-  items.push(blk('Sauceda', [T('Sauceda', 1.0, { b: true, fill: '#222' }), ...(env.drives === false ? [] : drives(F, 'Sauceda', ['FM 170', 'Hospital', 'S/F']).map(row))], { kind: 'point', at: D(sau.geometry.coordinates), r: fs * 0.24, own: own.Sauceda, req: true, lmax: 70 }));
+  items.push(blk('Sauceda', [T('Sauceda', 1.0, { b: true, fill: '#222' }), ...(env.drives === false ? [] : drives(F, 'Sauceda', ['FM 170', 'Hospital', 'S/F']).map(row))], { kind: 'point', at: D(sau.geometry.coordinates), r: fs * 0.24, own: own.Sauceda, req: true, lmax: 8, pref: 'n', near: true }));
   { const f = F.find((f) => f.properties.kind === 'parkroad'); if (f) items.push(blk('parkroad', [T(`${f.properties.label || 'Park road'} (dirt)`, 0.6, { i: true, fill: '#4a4a4a' })], { kind: 'line', at: [0, 0], path: road(f), t: 0.35, req: true })); }
   const sfT = [T('Drive times from Start / Finish', env.rowK ? 0.8 : 0.88, { b: true, fill: '#222' })];
   if (env.drives !== false) items.push(blk('sf', [...sfT, ...drives(F, 'S/F', ['Hospital', 'Sauceda', 'Lajitas', 'Terlingua', 'Study Butte', 'Presidio', 'Marfa', 'Alpine']).map(row)], { kind: 'point', at: sfa, r: env.marks.find((m) => Math.hypot(m[0] - sfa[0], m[1] - sfa[1]) < 2)?.[2] ?? fs, req: true, lead: true, lmax: 70 }, 2));
-  items.push(blk('hosp', [T('Big Bend Regional', 0.9, { b: true, fill: '#a3201a' }), T('Medical Center', 0.9, { b: true, fill: '#a3201a' }), ...(env.drives === false ? [] : drives(F, 'Hospital', ['Sauceda', 'S/F']).map(row))], { kind: 'point', at: ha, r: h * 0.72, own: own.Hospital, req: true, lmax: 70, side: -1 }));
-  for (const f of towns.filter((f) => f.properties.name !== 'Sauceda').sort((a, b) => +BIG.includes(b.properties.name) - +BIG.includes(a.properties.name))) { const n = f.properties.name, big = BIG.includes(n);
-    items.push(blk(n, [T(n, big ? 1.15 : 1.0, { b: big, fill: '#222' })], { kind: 'point', at: D(f.geometry.coordinates), r: fs * (big ? 0.3 : 0.24), own: own[n], req: true, always: true, lmax: 8 })); }
-  { const f = F.find((f) => f.properties.kind === 'namedroad'); if (f) items.push(blk('lonestar', [T(f.properties.label || f.properties.name, 0.6, { i: true, fill: '#4a4a4a' })], { kind: 'line', at: [0, 0], path: road(f), t: 0.5, req: true })); }
+  items.push(blk('hosp', [T('Big Bend Regional', 0.9, { b: true, fill: '#a3201a' }), T('Medical Center', 0.9, { b: true, fill: '#a3201a' }), ...(env.drives === false ? [] : drives(F, 'Hospital', ['Sauceda', 'S/F']).map(row))], { kind: 'point', at: ha, r: h * 0.72, own: own.Hospital, req: true, lmax: 8, near: true }));
+  for (const f of towns.filter((f) => f.properties.name !== 'Sauceda').sort((a, b) => +BIG.includes(b.properties.name) - +BIG.includes(a.properties.name) || +(b.properties.name === 'Terlingua') - +(a.properties.name === 'Terlingua'))) { const n = f.properties.name, big = BIG.includes(n);
+    items.push(blk(n, [T(n, big ? 1.15 : 1.0, { b: big, fill: '#222' })], { kind: 'point', at: D(f.geometry.coordinates), r: fs * (big ? 0.3 : 0.24), own: own[n], req: true, always: true, lmax: BELOW170.includes(n) ? 13 : 8, near: BELOW170.includes(n), relax: BELOW170.includes(n), outside: BELOW170.includes(n) ? [n170] : undefined })); }
+  { const f = F.find((f) => f.properties.kind === 'namedroad'); if (f) items.push(blk('lonestar', [T(f.properties.label || f.properties.name, 0.36, { i: true, fill: '#4a4a4a' })], { kind: 'line', at: [0, 0], path: ((p: Pt[]) => { /* the road is shorter than its name: extend both ends along the end tangents so the text can run past them */ const ex = (a: Pt, b: Pt): Pt => { const dx = a[0] - b[0], dy = a[1] - b[1], m = Math.hypot(dx, dy) || 1; return [a[0] + dx / m * fs * 3.2, a[1] + dy / m * fs * 3.2]; }; return [ex(p[0], p[Math.min(3, p.length - 1)]), ...p, ex(p.at(-1)!, p[Math.max(0, p.length - 4)])]; })(road(f)), t: 0.5, req: !(o.web && env.qa), tight: true }) /* fully zoomed out on the web the name would be unreadably small among the course lines: it appears from the next zoom step */); }
   const cl: Pt[][] = []; for (const f of F.filter((f) => f.properties.kind === 'county')) for (const l of f.geometry.coordinates) cl.push(l.map(D));
   // each area label must lie wholly inside its own polygon (county rings built from the curated county lines, closed outside the map)
   const CR = countyRings(F), riv = F.filter((f) => f.properties.kind === 'river').flatMap((f) => f.geometry.coordinates).sort((a: any, b: any) => b.length - a.length)[0] as number[][];
-  for (const [n, lo, la] of RLAB.counties) items.push(blk(n, [T(n, 0.78, { fill: '#8a8a8a', ls: 2 })], { kind: 'area', at: D([lo, la]), R: fs * 40, inside: [CR[n].map(D)], req: n === 'BREWSTER COUNTY' }));
+  { const pres = CR['PRESIDIO COUNTY'], pb = pres.filter((p) => p[0] > -103.83 && p[1] > 29.3 && p[1] < 30.4).sort((a, b) => a[1] - b[1]), pj = CR['JEFF DAVIS COUNTY'].filter((p) => p[0] < -103.79 && p[1] < 30.7).sort((a, b) => a[0] - b[0]);
+    const R = (n: string) => CR[n].map((q) => D(q as any)), others = (n: string) => Object.keys(CR).filter((k) => k !== n).map(R);
+    for (const [n, path] of [['BREWSTER COUNTY', pb], ['PRESIDIO COUNTY', pb], ['JEFF DAVIS COUNTY', pj]] as [string, number[][]][]) items.push(blk(n, [T(n, 0.72, { fill: '#9a9a9a', ls: 2 })], { kind: 'line', at: [0, 0], path: path.map((q) => D(q as any)), t: 0.5, req: n === 'BREWSTER COUNTY', outside: others(n) })); }
   const refs = new Map<string, any>(); for (const f of F.filter((f) => f.properties.kind === 'road' && f.properties.ref)) { const q = refs.get(f.properties.ref); if (!q || f.geometry.coordinates.length > q.geometry.coordinates.length) refs.set(f.properties.ref, f); }
   for (const [r, f] of refs) items.push(blk('ref ' + r, [T(r, 0.85, { b: true, fill: '#555' })], { kind: 'line', at: [0, 0], path: road(f), t: 0.5, req: false }));
-  items.push(blk('MEXICO', [T('MEXICO', 1.05, { b: true, fill: '#999', ls: 3 })], { kind: 'area', at: D(RLAB.mexico), R: fs * 20, inside: [mexRing(riv).map(D)], req: false }));
+  items.push(blk('MEXICO', [T('MEXICO', 1.05, { b: true, fill: '#999', ls: 3 })], { kind: 'area', at: [env.frame[0] + (env.frame[2] - env.frame[0]) * 0.2, env.frame[3] - (env.frame[2] - env.frame[0]) * 0.12], R: fs * 20, inside: [mexRing(riv).map(D)], req: false }));
   items.push(blk('TEXAS', [T('TEXAS', 1.05, { b: true, fill: '#999', ls: 3 })], { kind: 'area', at: D([-103.42, 29.75]), R: fs * 8, req: false }));
   { const rv = F.filter((f) => f.properties.kind === 'river').flatMap((f) => f.geometry.coordinates).sort((a: any, b: any) => b.length - a.length)[0]; if (rv) items.push(blk('Rio Grande', [T('Rio Grande', 0.88, { i: true, fill: '#5b7d93' })], { kind: 'line', at: [0, 0], path: rv.map(D), t: 0.3, req: false })); }
   if (0) for (const f of F.filter((f) => f.properties.kind === 'airstrip' && f.properties.label)) items.push(blk('air ' + f.properties.label, [T(f.properties.label, 0.6, { i: true, fill: '#555' })], { lmax: 8, always: true, side: /Casparis/.test(f.properties.label) ? 1 : undefined, kind: 'point', at: D(f.geometry.coordinates), r: Math.max(fs * 0.3, ...(f.properties.runways || []).flat().map((q: any) => { const p = D(q), a = D(f.geometry.coordinates); return Math.hypot(p[0] - a[0], p[1] - a[1]); })), req: false }));
-  { const mx = [mexRing(F.filter((f) => f.properties.kind === 'river').flatMap((f) => f.geometry.coordinates).sort((a: any, b: any) => b.length - a.length)[0]).map(D)]; for (const it of items) if (!['MEXICO', 'Rio Grande', 'sf'].includes(it.id)) it.outside = mx; /* the S/F drive-time panel may use the open Mexico side (not a place label) */ }
+  { const mx = [mexRing(F.filter((f) => f.properties.kind === 'river').flatMap((f) => f.geometry.coordinates).sort((a: any, b: any) => b.length - a.length)[0]).map(D)]; for (const it of items) if (!['MEXICO', 'Rio Grande', 'sf'].includes(it.id)) it.outside = [...mx, ...(it.outside || [])]; /* the S/F drive-time panel may use the open Mexico side (not a place label) */ }
   const pl = place(sp, items, env.frame, fs * 0.32), byId = new Map(items.map((q) => [q.id, q]));
   // labels: output
   let s = '';
   const tx = (x: number, y: number, l: Ln, a: string) => `<text x="${f1(x)}" y="${f1(y)}" font-size="${f1(l.fs)}" text-anchor="${a}" dominant-baseline="central" ${halo} fill="${l.fill}"${l.b ? ' font-weight="700"' : ''}${l.i ? ' font-style="italic"' : ''}${l.ls ? ` letter-spacing="${l.ls}"` : ''}${l.cls ? ` class="${l.cls}"` : ''}>${l.s}</text>`;
   let tpN = 0;
-  for (const p of pl) { if (p.tp) { const it = byId.get(p.id)!, l = it.L[0], id = `rgtp-${o.web ? 'w' : 'p'}${tpN++}`, d = 'M' + extendPath(p.tp).map((q) => Out(q).map(f1).join(',')).join('L'), fz = o.web ? l.fs : l.fs / S;
+  for (const p of pl) { if (p.tp) { const it = byId.get(p.id)!, l = it.L[0], id = `rgtp-${o.web ? 'w' + (env.tag || '') : 'p'}${tpN++}`, d = 'M' + extendPath(p.tp).map((q) => Out(q).map(f1).join(',')).join('L'), fz = o.web ? l.fs : l.fs / S;
       s += `<path id="${id}" d="${d}" fill="none" stroke="none"/><text class="rg-road" data-lid="${esc(p.id)}" font-size="${f1(fz)}" dy="${(p.side! * (0.62 + fs * 0.32 * 1.2 / l.fs)).toFixed(2)}em" dominant-baseline="central" ${halo.replace(/stroke-width="([\d.]+)"/, (_, v) => `stroke-width="${f1(o.web ? +v * l.fs / fs : +v * l.fs / fs / S)}"`)} fill="${l.fill}"${l.b ? ' font-weight="700"' : ''}${l.i ? ' font-style="italic"' : ''}${l.ls ? ` letter-spacing="${l.ls}"` : ''}><textPath href="#${id}" startOffset="50%" text-anchor="middle">${l.s}</textPath></text>`; continue; } const it = byId.get(p.id)!, a: Pt = it.kind === 'point' ? it.at : [(p.box[0] + p.box[2]) / 2, (p.box[1] + p.box[3]) / 2], b = p.box; let inner = '';
     if (p.lead) { const q = L0(a, p.lead[1]), A = L0(a, p.lead[0]); inner += `<path class="rg-lead" d="M${f1(A[0])},${f1(A[1])}L${f1(q[0])},${f1(q[1])}" stroke="#8a8a8a" stroke-width="${f1(o.web ? 1 : fs * 0.06)}" fill="none"${o.web ? ' vector-effect="non-scaling-stroke"' : ''}/>`; }
     const nt = it.L.findIndex((l) => l.cls === 'rg-drive');
@@ -162,7 +174,7 @@ export function regionTop(c: Ctx, proj: P, o: { fs: number; sw: number; web: boo
   else { const miss = items.filter((q) => q.req && !pl.some((p) => p.id === q.id && !p.forced)).map((q) => q.id); if (miss.length) console.warn('[regional web] forced labels:', miss.join(', ')); }
   const dropped = items.filter((q) => !q.req && !pl.some((p) => p.id === q.id)).map((q) => q.id); if (dropped.length) console.log(`[regional${o.web ? ' web' : ''}] dropped optional labels:`, dropped.join(', '));
   // QA sidecar for tools/region-labels-check.ts (local only, not deployed): containment rings in output coordinates
-  try { require('fs').mkdirSync('node_modules/.cache', { recursive: true }); require('fs').writeFileSync(`node_modules/.cache/rg-check-${o.web ? 'web' : 'pdf'}.json`, JSON.stringify({ county: Object.fromEntries(Object.entries(CR).map(([k, r]) => [k, r.map((q) => Out(D(q as any)))])), park: parkRings.map((r) => r.map(Out)), mexico: mexRing(riv).map((q) => Out(D(q as any))) })); } catch {}
+  if (env.qa !== false) try { require('fs').mkdirSync('node_modules/.cache', { recursive: true }); require('fs').writeFileSync(`node_modules/.cache/rg-check-${o.web ? 'web' : 'pdf'}.json`, JSON.stringify({ county: Object.fromEntries(Object.entries(CR).map(([k, r]) => [k, r.map((q) => Out(D(q as any)))])), park: parkRings.map((r) => r.map(Out)), mexico: mexRing(riv).map((q) => Out(D(q as any))) })); } catch {}
   return sym + s;
 }
 /** drive-time table rows from the Start / Finish (OSRM on OSM roads) */
@@ -173,15 +185,23 @@ const geomLines = (g: any): [number, number][][] => !g ? [] : g.type === 'LineSt
 const WEB_UI: Box[] = [[0.29, 0, 0.71, 0.095], [0.91, 0, 1, 0.3], [0.07, 0, 0.18, 0.125], [0, 0, 0.05, 0.085], [0, 1.355, 0.32, 1.43]];
 export function regionFrag(c: Ctx, mainProj: P, rb: number[], W: number, H: number) {
   const kmin = rb[4], o = { fs: 21, sw: 1.2, tol: 0.4 / kmin, web: true };
-  const L = regionLayer(c, mainProj, o), Dp = (q: [number, number]): Pt => { const p = mainProj(q); return [(p[0] - rb[0]) * kmin, (p[1] - rb[1]) * kmin]; };
-  const lines: Pt[][] = [];
-  for (const f of c.network.features) if (!f.properties.bg) for (const l of geomLines(f.geometry)) lines.push(l.map(Dp));
-  for (const f of c.park.features) if (f.properties.kind === 'boundary') for (const l of geomLines(f.geometry)) lines.push(l.map(Dp));
-  for (const k of c.courses.order) for (const f of c.courseGeo[k].features) for (const l of geomLines(f.geometry)) lines.push(l.map(Dp));
-  for (const f of c.zoom?.features || []) for (const l of geomLines(f.geometry)) lines.push(l.map(Dp)); // main-map zoom boxes show in the zoomed-out view too
-  const marks: [number, number, number][] = c.stations.order.map((k: string) => { const p = Dp(c.stations.stations[k].lonlat); return [p[0], p[1], k === 'S/F' ? 40 : 33]; });
-  const env: Env = { s: kmin, o0: [rb[0], rb[1]], frame: [8, 8, W - 8, H - 8], rowK: 0.82, lines, marks, boxes: WEB_UI.map((b) => b.map((v) => v * W) as Box) };
-  return `<g class="rg-lines">${L.lines}</g><g class="rg-top">${regionTop(c, mainProj, o, env)}</g>`;
+  const L = regionLayer(c, mainProj, o);
+  // labels are counter-scaled (constant on-screen offset from their anchor), the map is not: a placement made for the max zoom-out would drift onto
+  // lines at closer zooms. So placement is recomputed per zoom band (k = kmin * 1.5^n < 1); zoom.ts shows the band with the largest kb <= k.
+  const bands: number[] = []; for (let k = kmin; k < 0.999 && bands.length < 6; k *= 1.5) bands.push(k);
+  let top = '';
+  bands.forEach((kb, bi) => {
+    const Dp = (q: [number, number]): Pt => { const p = mainProj(q); return [(p[0] - rb[0]) * kb, (p[1] - rb[1]) * kb]; };
+    const lines: Pt[][] = [];
+    for (const f of c.network.features) if (!f.properties.bg) for (const l of geomLines(f.geometry)) lines.push(l.map(Dp));
+    for (const f of c.park.features) if (f.properties.kind === 'boundary') for (const l of geomLines(f.geometry)) lines.push(l.map(Dp));
+    for (const k of c.courses.order) for (const f of c.courseGeo[k].features) for (const l of geomLines(f.geometry)) lines.push(l.map(Dp));
+    for (const f of c.zoom?.features || []) for (const l of geomLines(f.geometry)) lines.push(l.map(Dp)); // main-map zoom boxes show in the zoomed-out view too
+    const marks: [number, number, number][] = c.stations.order.map((k: string) => { const p = Dp(c.stations.stations[k].lonlat); return [p[0], p[1], k === 'S/F' ? 40 : 33]; });
+    const f = kb / kmin, env: Env = { s: kb, o0: [rb[0], rb[1]], frame: [8, 8, W * f - 8, H * f - 8], rowK: 0.82, lines, marks, boxes: bi === 0 ? WEB_UI.map((b) => b.map((v) => v * W) as Box) : [], tag: 'b' + bi, qa: bi === 0 };
+    top += `<g class="rg-top" data-kb="${kb.toFixed(5)}"${bi ? ' style="display:none"' : ''}>${regionTop(c, mainProj, o, env)}</g>`;
+  });
+  return `<g class="rg-lines">${L.lines}</g>${top}`;
 }
 /** PDF regional page: the main-map renderer in regional mode (own projection over REGION) */
 export function renderRegional(c: Ctx, W = 1143, H = 1418) {
@@ -201,11 +221,11 @@ export function renderRegional(c: Ctx, W = 1143, H = 1418) {
   fur += [[0, '0'], [w20 / 2, '10'], [w20, '20 mi']].map(([dx, t]) => `<text x="${f1(sx + (dx as number))}" y="${f1(sy + 6)}" font-size="13" text-anchor="middle" dominant-baseline="hanging" fill="${col.ink}">${t}</text>`).join('') + '</g>';
   fur += northG(W, W * 0.015, W * 0.015);
   // legend
-  const lx = W * 0.39, ly = H * 0.335; const it: [string, string][] = [['hw', 'Highway'], ['pr', 'Park road (dirt)'], ['rr', 'Race routes'], ['aid', 'Aid station · Start / Finish'], ['h', 'Hospital'], ['t', 'Town'], ['a', 'Airstrip (runway)'], ['fu', 'Fuel'], ['pk', 'Big Bend Ranch State Park'], ['co', 'County line'], ['rv', 'Rio Grande (US–Mexico border)']];
+  const lx = W * 0.035, ly = H * 0.14; const it: [string, string][] = [['hw', 'Highway'], ['pr', 'Park road (dirt)'], ['rr', 'Race routes'], ['aid', 'Aid station · Start / Finish'], ['h', 'Hospital'], ['t', 'Town'], ['a', 'Dirt/gravel airstrip'], ['a2', 'Paved airport'], ['fu', 'Fuel'], ['pk', 'Big Bend Ranch State Park'], ['co', 'County line'], ['rv', 'Rio Grande (US–Mexico border)']];
   let lg = `<g class="legend"><rect x="${f1(lx - 10)}" y="${f1(ly - 14)}" width="${f1(W * 0.32)}" height="${f1(it.length * 20 + 14)}" fill="#fff" fill-opacity=".92" stroke="#bbb"/>`;
   it.forEach(([k, t], i) => { const y = ly + 2 + i * 20, x = lx, P = `M${f1(x)},${f1(y)}h34`;
     lg += k === 'hw' ? `<path d="${P}" stroke="#fff" stroke-width="4.1"/><path d="${P}" stroke="#8a8a8a" stroke-width="2.4"/>` : k === 'pr' ? `<path d="${P}" stroke="#8a8a8a" stroke-width="1.6" stroke-dasharray="3.6 2.4"/>` : k === 'rr' ? c.courses.order.map((q, j) => `<path d="M${f1(x + j * 7)},${f1(y)}h6" stroke="${c.courses.colors[q]}" stroke-width="3"/>`).join('')
-      : k === 'aid' ? station(x + 17, y, '', false, { s: 300, colors: col, link: false }) : k === 'h' ? `<rect x="${f1(x + 11)}" y="${f1(y - 6)}" width="12" height="12" rx="2" fill="#c4161c"/>` : k === 'a' ? `<path d="M${f1(x + 6)},${f1(y + 4)}L${f1(x + 20)},${f1(y - 3)}" stroke="#7d7d7d" stroke-width="3.4"/><path d="${PLANE(x + 29, y, 13)}" fill="#6b6b6b"/>` : k === 'fu' ? PUMP(x + 17, y, 15, 1) : k === 'co' ? `<path d="${P}" stroke="#b0b0b0" stroke-width="1.2" stroke-dasharray="7.8 3.2 1.3 3.2"/>` : k === 't' ? `<circle cx="${f1(x + 17)}" cy="${f1(y)}" r="4" fill="#333"/>`
+      : k === 'aid' ? station(x + 17, y, '', false, { s: 300, colors: col, link: false }) : k === 'h' ? `<rect x="${f1(x + 11)}" y="${f1(y - 6)}" width="12" height="12" rx="2" fill="#c4161c"/>` : k === 'a' ? `<path d="M${f1(x + 6)},${f1(y + 4)}L${f1(x + 20)},${f1(y - 3)}" stroke="#7d7d7d" stroke-width="3.4"/><path d="${PROP(x + 29, y, 13)}" fill="#6b6b6b"/>` : k === 'a2' ? `<path d="M${f1(x + 4)},${f1(y + 4)}L${f1(x + 18)},${f1(y - 3)}" stroke="#7d7d7d" stroke-width="3.4"/><path d="${PLANE(x + 30, y, 18)}" fill="#6b6b6b"/>` : k === 'fu' ? PUMP(x + 17, y, 15, 1) : k === 'co' ? `<path d="${P}" stroke="#b0b0b0" stroke-width="1.2" stroke-dasharray="7.8 3.2 1.3 3.2"/>` : k === 't' ? `<circle cx="${f1(x + 17)}" cy="${f1(y)}" r="4" fill="#333"/>`
       : k === 'pk' ? `<rect x="${f1(x)}" y="${f1(y - 6)}" width="34" height="12" fill="${col.park}" fill-opacity=".1" stroke="${col.boundary}" stroke-width="1.2" stroke-dasharray="1.2 3"/>` : `<path d="${P}" stroke="#9fb6c6" stroke-width="2"/>`;
     lg += `<text x="${f1(x + 44)}" y="${f1(y)}" font-size="13" dominant-baseline="central" fill="${col.ink}">${t}</text>`; });
   lg += '</g>';
