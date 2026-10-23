@@ -47,11 +47,11 @@ function scaleBar(z: Z) {
   const t = g.querySelectorAll('text'); t[1].setAttribute('x', String(sx + w)); t[1].textContent = `${L} mi`;
 }
 /** background trails (.bgtr, shown at the 1 mi scale bar) must never sit under a curved label: slide each curved label along its own path to the first
- * offset whose glyphs clear every visible background-trail point (labels never cover data); back to the centre when the trails are hidden */
+ * offset whose glyphs clear every visible background-trail point and the dashed zoom-box lines (labels never cover data); back to the centre when the trails are hidden */
 const bgPts = new WeakMap<Z, number[][]>();
 function bgLabels(z: Z) {
   const on = z.svg.classList.contains('z1mi');
-  let P = bgPts.get(z); if (on && !P) { P = []; for (const p of z.g.querySelectorAll<SVGPathElement>('.bgtr path')) { const L = p.getTotalLength(); for (let d = 0; d <= L; d += 4) { const q = p.getPointAtLength(d); P.push([q.x, q.y]); } } bgPts.set(z, P); }
+  let P = bgPts.get(z); if (on && !P) { P = []; for (const p of z.g.querySelectorAll<SVGPathElement>('.bgtr path, [data-layer="zoom"] path')) { const L = p.getTotalLength(); for (let d = 0; d <= L; d += 4) { const q = p.getPointAtLength(d); P.push([q.x, q.y]); } } bgPts.set(z, P); }
   for (const t of z.texts) { const tp = t.el.querySelector('textPath'); if (!tp) continue; if (!on || !P!.length) { tp.setAttribute('startOffset', '50%'); continue; }
     const r = (t.fs / z.k) * 0.75 + 3 / z.k, hit = () => { const n = t.el.getNumberOfChars(); for (let i = 0; i < n; i++) { let c: DOMPoint; try { c = t.el.getStartPositionOfChar(i); } catch { continue; } for (const q of P!) if (Math.abs(q[0] - c.x) < r && Math.abs(q[1] - c.y) < r) return true; } return false; };
     for (const o of [50, 40, 60, 30, 70, 20, 80, 10, 90]) { tp.setAttribute('startOffset', o + '%'); if (!hit()) break; } } }
