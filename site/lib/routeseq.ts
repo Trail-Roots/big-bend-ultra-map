@@ -24,11 +24,11 @@ export function routeNodes(c: Ctx, k: string) {
   const llAt = (m: number) => { let bi = 0, bd = Infinity; mi.forEach((v, i) => { const d = Math.abs(v - m); if (d < bd) { bd = d; bi = i; } }); return co[bi]; };
   // turn direction from the GPX: route bearing over 40-120 m before vs after the junction (local meters). <25 deg = no direction stated
   const brg = (m0: number, m1: number) => { const a = llAt(m0), b = llAt(m1); return Math.atan2((b[1] - a[1]) * 110540, (b[0] - a[0]) * 111320 * k0); };
-  const others = (bs: Branch[]) => [...new Set(bs.map((b) => b.name))].map((n) => { const sd = new Set(bs.filter((b) => b.name === n).map((b) => b.side)); return sd.has("left") && sd.has("right") ? `${n} on both sides` : sd.has("left") ? `${n} on the left` : sd.has("right") ? `${n} on the right` : n; }), and = (L: string[]) => L.length < 2 ? L.join("") : L.slice(0, -1).join(", ") + " and " + L[L.length - 1];
+  const others = (bs: Branch[], cur?: string) => { const by = new Map<string, Branch[]>(); for (const b of bs) (by.get(b.name) ?? by.set(b.name, []).get(b.name)!).push(b); return [...by].map(([n, L]) => { const rs = [...new Set(L.map((b) => b.race!))].sort((x, y) => parseInt(y) - parseInt(x)), sd = new Set(L.map((b) => b.side)), side = sd.size === 1 && L[0].side ? ` ${L[0].side}` : ""; return `${rs.join("/")} ${n === cur ? `stay${rs.length > 1 ? "" : "s"} on ${n}` : `use${rs.length > 1 ? "" : "s"} ${n}${side ? ` (${side.trim()})` : ""}`}`; }); }, and = (L: string[]) => L.length < 2 ? L.join("") : L.slice(0, -1).join(", ") + " and " + L[L.length - 1];
   const howTo = (pn: string | null | undefined, nn: string | null | undefined, isTurn: boolean, m: number, bs: Branch[] = []) => {
     const P = pn ?? "the unnamed segment", N = nn ?? "the unnamed segment";
-    const sf = /^Start area/.test(P) || /^Cross FM 170/.test(N), ob = bs.filter((b) => b.name !== N && b.name !== P && !(sf && b.name === "FM 170")), pass = ob.length ? `, passing ${and(others(ob))}` : "", anyS = ob.some((b) => b.side);
-    if (isTurn) return { next: N, how: `Turn around on ${N} and return the way you came${ob.length ? ` (${and(ob.map((b) => b.name))} also meets here)` : ""}.`, dirSrc: "geom" as const };
+    const sf = /^Start area/.test(P) || /^Cross FM 170/.test(N), ob = bs.filter((b) => b.name !== N && !sf), pass = ob.length ? `; ${and(others(ob, P))}` : "", anyS = ob.some((b) => b.side);
+    if (isTurn) return { next: N, how: `Turn around on ${N} and return the way you came${bs.length ? `; ${and(others(bs, N))}` : ""}.`, dirSrc: "geom" as const };
     let d = (brg(m + 0.025, m + 0.075) - brg(m - 0.075, m - 0.025)) * 180 / Math.PI; d = ((d + 540) % 360) - 180; const a = Math.abs(d), side = d > 0 ? "left" : "right";
     const dir = a < 25 ? "" : a < 60 ? `bear ${side}` : a < 135 ? side : `sharp ${side}`, src = a < 25 && !anyS ? "neutral" as const : "geom" as const, pd = dir ? ` (${dir})` : "";
     if (/^Cross FM 170/.test(N)) return { next: "Finish", how: `Leave ${P}${pd} and cross FM 170 to the finish${pass}.`, dirSrc: src };
@@ -45,7 +45,7 @@ export function routeNodes(c: Ctx, k: string) {
   const inner = (p: TSeg, end: number) => { const items: { m: number; f: () => void }[] = [];
     for (const q of cuts) { const ix = cuts.indexOf(q); if (!used.has(ix) && q.mile > p.a + 0.2 && q.mile < end - 0.2) { used.add(ix); items.push({ m: q.mile, f: () => nodes.push({ id: id(), mile: q.mile, title: `${c.stations.stations[q.station].name} aid`, crit: false, stations: [q.station] }) }); } }
     ev.forEach((e, j) => { if (evTC.has(j) || evUsed.has(j) || e.mile <= p.a || e.mile >= end) return; const T = p.name ?? "the unnamed segment", ob = e.branches.filter((b) => b.name !== T); evUsed.add(j); if (!ob.length) return;
-      items.push({ m: e.mile, f: () => nodes.push({ id: id(), mile: e.mile, title: T, crit: true, pass: true, stations: [], ll: co[e.i], next: T, how: `Stay on ${T}, passing ${and(others(ob))}.`.replace(/passing (FM 170) on both sides/, "crossing $1"), dirSrc: ob.some((b) => b.side) ? "geom" : "neutral", trails: [...new Set([T, ...ob.map((b) => b.name)])].sort() }) }); });
+      items.push({ m: e.mile, f: () => nodes.push({ id: id(), mile: e.mile, title: T, crit: true, pass: true, stations: [], ll: co[e.i], next: T, how: `Stay on ${T}; ${and(others(ob))}.`, dirSrc: ob.some((b) => b.side) ? "geom" : "neutral", trails: [...new Set([T, ...ob.map((b) => b.name)])].sort() }) }); });
     items.sort((a, b) => a.m - b.m).forEach((x) => x.f()); };
   let n = 0; const id = () => `${k}-${String(++n).padStart(2, '0')}`;
   nodes.push({ id: id(), mile: 0, title: 'Start', crit: false, stations: near(0) });
