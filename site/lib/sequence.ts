@@ -38,6 +38,18 @@ export function trailSequence(c: Ctx, k: string): TSeg[] {
   while (raw.length > 2 && ends(raw[raw.length - 1]) && ends(raw[raw.length - 2])) { raw[raw.length - 2].b = raw[raw.length - 1].b; raw.pop(); }
   if (ends(raw[0])) { raw[0].name = 'Start area, cross FM 170'; raw[0].src = 'osm'; }
   if (ends(raw[raw.length - 1])) { raw[raw.length - 1].name = 'Cross FM 170 to finish'; raw[raw.length - 1].src = 'osm'; }
+  // remaining unnamed stretches (Erik): take the name of the adjoining named trail they continue — the neighbour whose heading at the
+  // shared end lines up best with the unnamed stretch — then merge; junction rows that only existed because of the gap disappear with it
+  const hd = (i: number, j: number) => Math.atan2((co[j][1] - co[i][1]) * 110540, (co[j][0] - co[i][0]) * 111320 * k0);
+  const dif = (x: number, y: number) => { let d = Math.abs(x - y) % (2 * Math.PI); return d > Math.PI ? 2 * Math.PI - d : d; };
+  const cl = (q: number) => Math.max(0, Math.min(co.length - 1, q));
+  raw.forEach((u, i) => { if (u.name || i === 0 || i === raw.length - 1) return; const p = raw[i - 1], n = raw[i + 1]; if (!p.name && !n.name) return;
+    const uIn = hd(cl(u.i0), cl(u.i0 + 8)), uOut = hd(cl(u.i1 - 8), cl(u.i1)), pOut = hd(cl(p.i1 - 8), cl(p.i1)), nIn = hd(cl(n.i0), cl(n.i0 + 8));
+    const okP = !!p.name && !p.name.startsWith('Start area'), okN = !!n.name && !n.name.startsWith('Cross FM 170');
+    const pick = okP && (!okN || dif(pOut, uIn) <= dif(uOut, nIn)) ? p.name! : n.name!;
+    if (process.env.JDUMP) console.log(`UN ${k}\t${u.a.toFixed(2)}-${u.b.toFixed(2)}\tprev ${p.name}\tnext ${n.name}\t-> ${pick}`);
+    u.name = pick; u.src = 'map'; });
+  raw = mg(raw, () => false);
   // short leftover pieces between the end segments and the first trail
   return (CACHE[k] = raw);
 }

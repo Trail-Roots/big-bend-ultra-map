@@ -1,0 +1,6 @@
+{
+  "_note": "Erik-confirmed bearings; win over computed ones. Key: junction id (Intersections section) -> trail taken -> \"bear left\" | \"bear right\" | \"bear center\" | \"continue\" (unresolved/sharp: 'Continue onto <trail>, leaving <prev trail>.').",
+  "J29273-103756": { "Dog Cholla": "bear center" },
+  "J29296-103762": { "Crystal Trail": "bear left", "Buena Suerte": "continue" },
+  "J29308-103776": { "Buena Suerte": "continue" }
+}

@@ -10,10 +10,14 @@ import { esc, station } from './util';
 import { miniBibSvg } from './panels';
 import type { Ctx } from './types';
 const k0 = Math.cos((29.35 * Math.PI) / 180), M = (a: number[], b: number[]) => Math.hypot((a[0] - b[0]) * 111320 * k0, (a[1] - b[1]) * 110540);
+// Erik's confirmed bearings win over computed ones: { "<junction id>": { "<trail taken>": "bear left" | "bear right" | "bear center" } }
+const BEAR = path.join(import.meta.dir, '../../sources/curated/bearings.json');
 const MAN = path.join(import.meta.dir, '../../sources/curated/intersections.json');
 export type Junction = { id: string; mile: number; title: string; crit: boolean; stations: string[]; ll?: number[]; trails?: string[]; turn?: boolean; next?: string; how?: string; dirSrc?: "geom" | "neutral"; pass?: boolean };
 /** segments (10K split at its turnaround) + junction nodes, in running order */
-export function routeNodes(c: Ctx, k: string) {
+const RNC: Record<string, ReturnType<typeof routeNodes0>> = {};
+export function routeNodes(c: Ctx, k: string) { return (RNC[k] ??= routeNodes0(c, k)); }
+function routeNodes0(c: Ctx, k: string) {
   let segs: TSeg[] = trailSequence(c, k).map((s) => ({ ...s }));
   const f = c.courseGeo[k].features[0], co = f.geometry.coordinates as number[][], mi = f.properties.mi as number[];
   const tp = c.pois.features.find((p: any) => p.properties.kind === 'turnaround' && p.properties.course === k);
@@ -83,6 +87,13 @@ export function masterJunctions(c: Ctx) {
     if (!m) { m = { id: "", no: out.length + 1, ll: x.ll!, trails: tr, turn: !!x.turn, uses: [] }; out.push(m); }
     m.uses.push({ k, mile: x.mile, node: x.id, next: x.next!, how: x.how!, src: x.dirSrc! }); byNode.set(k + "/" + x.id, m); }
   const seen = new Set<string>(); for (const j of out) { const b = `J${Math.round(j.ll[1] * 1000)}-${Math.round(-j.ll[0] * 1000)}`; let id = b, n = 0; while (seen.has(id)) id = b + String.fromCharCode(98 + n++); seen.add(id); j.id = id; }
+  const ov = fs.existsSync(BEAR) ? JSON.parse(fs.readFileSync(BEAR, "utf8")) : {}; let nov = 0;
+  for (const k of c.courses.order) for (const x of routeNodes(c, k)) { if ("seg" in x || !x.crit) continue; const j = byNode.get(k + "/" + x.id), b = j && ov[j.id]?.[x.next!]; if (process.env.JDUMP && j && x.how && !/\((?:bear |sharp )?(?:left|right|center)\)/.test(x.how)) console.log(`NB ${k}\t${x.mile.toFixed(2)}\t${j.id}\t${x.next}\t${x.how}`); if (typeof b !== "string") continue;
+    if (!b || !x.how) continue; let h = x.how.replace(/ \((?:bear |sharp )?(?:left|right|center)\)/, ""); if (b === "continue") { const lv = h.match(/leaving ([^.,]+)/); if (!lv) continue; x.how = `Continue onto ${x.next}, leaving ${lv[1]}.`; x.dirSrc = "neutral"; nov++; continue; }
+    const p0 = h.toLowerCase().indexOf("take " + x.next!.toLowerCase()); if (p0 < 0) continue; const p = p0 + 5;
+    x.how = h.slice(0, p + x.next!.length) + ` (${b})` + h.slice(p + x.next!.length); x.dirSrc = "geom"; nov++;
+    const u = j!.uses.find((u) => u.k === k && u.node === x.id); if (u) u.how = x.how; }
+  console.log(`  bearings: ${nov} junction rows from sources/curated/bearings.json`);
   return { list: out, byNode };
 }
 let MJC: ReturnType<typeof masterJunctions> | null = null; const mj = (c: Ctx) => (MJC ??= masterJunctions(c));
