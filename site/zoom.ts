@@ -38,10 +38,17 @@ function apply(z: Z) {
     it.el.setAttribute('transform', `${it.base} translate(${it.cx} ${it.cy}) scale(${m / k}) translate(${-it.cx} ${-it.cy})`);
   }
   for (const t of z.texts) { t.el.setAttribute('font-size', String(t.fs / k)); if (t.sw) t.el.setAttribute('stroke-width', String(t.sw / k)); }
+  rgBand(z);
   scaleBar(z);
   bgLabels(z);
   z.svg.dispatchEvent(new CustomEvent('zoomchange'));
   const ctl = z.svg.parentElement?.querySelector('.zctl'); ctl?.classList.toggle('zoomed', k !== 1);
+}
+/** regional labels: one placement per zoom band (regional.ts); show the band with the largest kb <= k */
+function rgBand(z: Z) {
+  const T = [...z.g.querySelectorAll<SVGGElement>('g.rg-top[data-kb]')]; if (!T.length) return;
+  let pick = T[0]; for (const t of T) if (+t.dataset.kb! <= z.k * 1.0001 && +t.dataset.kb! > +pick.dataset.kb!) pick = t;
+  for (const t of T) t.style.display = t === pick ? '' : 'none';
 }
 /** scale bar follows the zoom: longest "nice" length (miles) that fits the bar's original width */
 function scaleBar(z: Z) {

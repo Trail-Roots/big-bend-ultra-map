@@ -17,7 +17,7 @@ const grow = (b: Box, p: number): Box => [b[0] - p, b[1] - p, b[2] + p, b[3] + p
 const boxBox = (a: Box, b: Box) => a[0] < b[2] && b[0] < a[2] && a[1] < b[3] && b[1] < a[3];
 const boxCirc = (b: Box, x: number, y: number, r: number) => { const dx = Math.max(b[0] - x, 0, x - b[2]), dy = Math.max(b[1] - y, 0, y - b[3]); return dx * dx + dy * dy < r * r; };
 export class Space {
-  why = ''; segs: number[][] = []; grid = new Map<number, number[]>(); circ: [number, number, number][] = []; boxes: Box[] = [];
+  why = ''; wk = -1; segs: number[][] = []; grid = new Map<number, number[]>(); circ: [number, number, number][] = []; boxes: Box[] = [];
   constructor(public cell = 40) {}
   private key(i: number, j: number) { return i * 100003 + j; }
   line(p: Pt[]) { for (let i = 1; i < p.length; i++) this.seg(p[i - 1], p[i]); }
@@ -31,7 +31,7 @@ export class Space {
     this.why = 'box'; for (const o of this.boxes) if (boxBox(g, o)) return true;
     for (const [x, y, r] of this.circ) if (boxCirc(g, x, y, r)) { this.why = 'mark'; return true; }
     if (lines) { const c = this.cell, seen = new Set<number>();
-      for (let i = Math.floor(g[0] / c); i <= Math.floor(g[2] / c); i++) for (let j = Math.floor(g[1] / c); j <= Math.floor(g[3] / c); j++) for (const k of this.grid.get(this.key(i, j)) || []) { if (seen.has(k)) continue; seen.add(k); const s = this.segs[k]; if (segBox(s[0], s[1], s[2], s[3], g)) { this.why = 'line'; return true; } } }
+      for (let i = Math.floor(g[0] / c); i <= Math.floor(g[2] / c); i++) for (let j = Math.floor(g[1] / c); j <= Math.floor(g[3] / c); j++) for (const k of this.grid.get(this.key(i, j)) || []) { if (seen.has(k)) continue; seen.add(k); const s = this.segs[k]; if (segBox(s[0], s[1], s[2], s[3], g)) { this.why = 'line'; this.wk = k; return true; } } }
     return false;
   }
   /** leader a-b: must not cross label boxes or markers (other than the own marker at a) */
@@ -48,20 +48,21 @@ export class Space {
 export const pip = (p: Pt, r: Pt[]) => { let c = false; for (let i = 0, j = r.length - 1; i < r.length; j = i++) if ((r[i][1] > p[1]) !== (r[j][1] > p[1]) && p[0] < (r[j][0] - r[i][0]) * (p[1] - r[i][1]) / (r[j][1] - r[i][1]) + r[i][0]) c = !c; return c; };
 export const crosses = (a: Pt, b: Pt, lines: Pt[][]) => lines.some((l) => l.some((q, i) => i > 0 && segSeg(a, b, l[i - 1], q)));
 export type Lab = { id: string; w: number; h: number; req: boolean;
-  kind: 'point' | 'line' | 'area'; at: Pt; r?: number; own?: number; path?: Pt[]; t?: number; R?: number; domain?: Pt[][]; inside?: Pt[][]; lead?: boolean; lmax?: number; side?: 1 | -1; always?: boolean; outside?: Pt[][] };
+  kind: 'point' | 'line' | 'area'; at: Pt; r?: number; own?: number; path?: Pt[]; t?: number; R?: number; domain?: Pt[][]; inside?: Pt[][]; lead?: boolean; lmax?: number; side?: 1 | -1; always?: boolean; outside?: Pt[][]; pref?: 'n'; tight?: boolean; near?: boolean; relax?: boolean; far?: boolean };
 export type Placed = { id: string; box: Box; a: 'start' | 'end' | 'middle'; lead?: [Pt, Pt]; forced?: boolean; tp?: Pt[]; side?: number; noBox?: boolean };
 /** place labels in the given order; frame = allowed area; pad = clearance */
 export function place(sp: Space, labs: Lab[], frame: Box, pad: number) {
   const out: Placed[] = [], inF = (b: Box) => b[0] >= frame[0] && b[1] >= frame[1] && b[2] <= frame[2] && b[3] <= frame[3];
   for (const L of labs) {
     const { w, h } = L, mk = (cx: number, cy: number): Box => [cx - w / 2, cy - h / 2, cx + w / 2, cy + h / 2];
-    const st: Record<string, number> = {}, inMx = (b0: Box) => { const e = L.h * 0.6, b: Box = [b0[0] - e, b0[1] - e, b0[2] + e, b0[3] + e]; return !!L.outside && L.outside.some((r) => [[b[0], b[1]], [b[2], b[1]], [b[0], b[3]], [b[2], b[3]], [(b[0] + b[2]) / 2, b[1]], [(b[0] + b[2]) / 2, b[3]], [(b[0] + b[2]) / 2, (b[1] + b[3]) / 2]].some((q) => pip(q as Pt, r))); }, ok = (b: Box) => { if (inMx(b)) { st.border = (st.border || 0) + 1; return false; } if (!inF(b)) { st.frame = (st.frame || 0) + 1; return false; } if (sp.hit(b, pad)) { st[sp.why] = (st[sp.why] || 0) + 1; return false; } return true; };
+    const st: Record<string, number> = {}, inMx = (b0: Box) => { const e = L.h * 0.4, b: Box = [b0[0] - e, b0[1] - e, b0[2] + e, b0[3] + e]; return !!L.outside && L.outside.some((r) => [[b[0], b[1]], [b[2], b[1]], [b[0], b[3]], [b[2], b[3]], [(b[0] + b[2]) / 2, b[1]], [(b[0] + b[2]) / 2, b[3]], [(b[0] + b[2]) / 2, (b[1] + b[3]) / 2]].some((q) => pip(q as Pt, r))); }, ok = (b: Box) => { if (inMx(b)) { st.border = (st.border || 0) + 1; return false; } if (!inF(b)) { st.frame = (st.frame || 0) + 1; return false; } if (sp.hit(b, pad)) { st[sp.why] = (st[sp.why] || 0) + 1; return false; } return true; };
     let best: Placed | null = null;
-    const lead = (x: number, y: number, r0: number, own: number, dmax = 40) => {
+    const lead = (x: number, y: number, r0: number, own: number, dmax = 40, onlyN = false) => {
       const r = r0 + pad * 1.5, f = Math.min(Math.max(h, 14), 28);
-      for (const strict of [true, false]) for (const d of [0.6, 1, 1.5, 2, 2.6, 3.3, 4, 5, 6, 7.5, 9, 11, 13, 16, 20, 24, 29, 34, 40, 47, 55, 63, 70].filter((q) => q <= dmax).map((q) => q * f)) for (let k = 0; k < 36; k++) {
+      const DS = [0.6, 1, 1.5, 2, 2.6, 3.3, 4, 5, 6, 7.5, 9, 11, 13, 16, 20, 24, 29, 34, 40, 47, 55, 63, 70].filter((q) => q <= dmax).map((q) => q * f), SD: [boolean, number][] = L.near ? DS.flatMap((d) => [[true, d], [false, d]] as [boolean, number][]) : [true, false].flatMap((t) => DS.map((d) => [t, d] as [boolean, number]));
+      for (const [strict, d] of SD) for (let k = 0; k < 36; k++) {
         const th = (Math.ceil(k / 2) * 10 * (k % 2 ? 1 : -1)) * Math.PI / 180, ux = Math.cos(th), uy = Math.sin(th);
-        for (const sgn of [1, -1]) { const vx = ux * sgn, vy = uy; if (L.side && vx * L.side < 0.2) continue; const he = Math.abs(vx) * w / 2 + Math.abs(vy) * h / 2;
+        for (const sgn of [1, -1]) { const vx = ux * sgn, vy = uy; if (L.side && vx * L.side < 0.2) continue; if (onlyN && vy > -0.3) continue; const he = Math.abs(vx) * w / 2 + Math.abs(vy) * h / 2;
           // try right/left then rotate: th sweeps around both sides
           for (const sh of [0, 0.25, -0.25, 0.45, -0.45]) { const cx = x + vx * (r + d + he) - vy * sh * w, cy = y + vy * (r + d + he) + vx * sh * h, b = mk(cx, cy), a: Placed['a'] = vx > 0.35 ? 'start' : vx < -0.35 ? 'end' : 'middle';
           const q: Pt = [Math.max(b[0], Math.min(b[2], x)), Math.max(b[1], Math.min(b[3], y))], dq = Math.hypot(q[0] - x, q[1] - y) || 1, qq: Pt = [q[0] - (q[0] - x) / dq * pad, q[1] - (q[1] - y) / dq * pad];
@@ -69,9 +70,11 @@ export function place(sp: Space, labs: Lab[], frame: Box, pad: number) {
       return null; };
     if (L.kind === 'point') {
       const [x, y] = L.at, r = (L.r || 0) + pad * 1.5;
-      const C: [number, number, Placed['a']][] = [[x + r + w / 2, y, 'start'], [x - r - w / 2, y, 'end'], [x + r * 0.7 + w / 2, y - r * 0.7 - h / 2, 'start'], [x + r * 0.7 + w / 2, y + r * 0.7 + h / 2, 'start'], [x - r * 0.7 - w / 2, y - r * 0.7 - h / 2, 'end'], [x - r * 0.7 - w / 2, y + r * 0.7 + h / 2, 'end'], [x, y - r - h / 2, 'middle'], [x, y + r + h / 2, 'middle']];
+      const C: [number, number, Placed['a']][] = [[x + r + w / 2, y, 'start'], [x - r - w / 2, y, 'end'], [x + r * 0.7 + w / 2, y - r * 0.7 - h / 2, 'start'], [x + r * 0.7 + w / 2, y + r * 0.7 + h / 2, 'start'], [x - r * 0.7 - w / 2, y - r * 0.7 - h / 2, 'end'], [x - r * 0.7 - w / 2, y + r * 0.7 + h / 2, 'end'], [x, y - r - h / 2, 'middle'], [x, y + r + h / 2, 'middle']]; if (L.pref === 'n') C.unshift(C.splice(6, 1)[0]);
       if (!L.always) for (const [cx, cy, a] of C) { if (L.side && (a === 'middle' || (a === 'start') !== (L.side > 0))) continue; const b = mk(cx, cy); if (ok(b)) { best = { id: L.id, box: b, a }; break; } }
-      if (!best && L.lead !== false) best = lead(x, y, L.r || 0, L.own ?? -1, L.lmax ?? (L.lead ? 24 : 12));
+      if (!best && L.lead !== false) best = (L.pref === 'n' ? lead(x, y, L.r || 0, L.own ?? -1, (L.lmax ?? 12) * 1.5, true) : null) || lead(x, y, L.r || 0, L.own ?? -1, L.lmax ?? (L.lead ? 24 : 12)) || (L.lmax && L.near ? lead(x, y, L.r || 0, L.own ?? -1, L.lmax * 2) : null);
+      // relax: the extra keep-out rings after the first (the Mexico ring) are a preference; if nothing fits, place with the border alone
+      if (!best && L.relax && L.outside && L.outside.length > 1) { const keep = L.outside; L.outside = keep.slice(0, 1); best = lead(x, y, L.r || 0, L.own ?? -1, L.lmax ?? 12); L.outside = keep; if (best && process.env.RDEBUG) console.log('  relaxed', L.id); }
     } else if (L.kind === 'line') {
       const P = L.path!, seg = P.slice(1).map((q, i) => Math.hypot(q[0] - P[i][0], q[1] - P[i][1])), tot = seg.reduce((s, v) => s + v, 0);
       const at = (t: number): [Pt, Pt] => { let r = t * tot; for (let i = 0; i < seg.length; i++) { if (r <= seg[i]) { const u = r / (seg[i] || 1); return [[P[i][0] + (P[i + 1][0] - P[i][0]) * u, P[i][1] + (P[i + 1][1] - P[i][1]) * u], [(P[i + 1][0] - P[i][0]) / (seg[i] || 1), (P[i + 1][1] - P[i][1]) / (seg[i] || 1)]]; } r -= seg[i]; } return [P.at(-1)!, [1, 0]]; };
@@ -79,10 +82,10 @@ export function place(sp: Space, labs: Lab[], frame: Box, pad: number) {
       // text along the road: window of the label's length centred at t, smoothed, read left -> right; text sits beside the road (dy), never on it
       const win = (t: number) => { const n = Math.max(6, Math.ceil(w / (h * 0.5))), Q: Pt[] = []; for (let i = 0; i <= n; i++) { const u = t + (i / n - 0.5) * (w * 1.25) / tot; if (u < -3 || u > 4) return null; if (u < 0 || u > 1) { const e = u < 0 ? 0 : 1, [p0, tg] = at(e === 0 ? 0 : 0.9999); Q.push([p0[0] + tg[0] * (u - e) * tot, p0[1] + tg[1] * (u - e) * tot]); } else Q.push(at(u)[0]); }
         for (let k = 0; k < 10; k++) for (let i = 1; i < Q.length - 1; i++) Q[i] = [(Q[i - 1][0] + 2 * Q[i][0] + Q[i + 1][0]) / 4, (Q[i - 1][1] + 2 * Q[i][1] + Q[i + 1][1]) / 4];
-        if (Q[0][0] > Q.at(-1)![0]) Q.reverse(); return Q; };
+        { const dx = Q.at(-1)![0] - Q[0][0], dy = Q.at(-1)![1] - Q[0][1]; if (Math.abs(dx) < Math.abs(dy) * 0.6 ? dy > 0 : dx < 0) Q.reverse(); } /* L->R; near-vertical: bottom -> top */ return Q; };
       const turn = (Q: Pt[]) => { let s = 0; for (let i = 1; i < Q.length - 1; i++) { const a1 = Math.atan2(Q[i][1] - Q[i - 1][1], Q[i][0] - Q[i - 1][0]), a2 = Math.atan2(Q[i + 1][1] - Q[i][1], Q[i + 1][0] - Q[i][0]); let d = Math.abs(a2 - a1); if (d > Math.PI) d = 2 * Math.PI - d; s += d; } return s; };
       search: for (const lim of [0.5, 0.9, 1.4, 2, 3]) for (const t of ts) { const Q = win(t); if (!Q || turn(Q) > lim) { st.turn = (st.turn || 0) + 1; continue; }
-        for (const om of [1, 1.7, 2.6, 3.6, 5, ...(L.req ? [6.5, 8, 10, 12] : [])]) for (const sd of [-1, 1]) { if (om > 5 && sd > 0) continue; /* far offsets only above (north) */ // -1 = above (left of the L->R direction), 1 = below
+        for (const om of [1, 1.7, 2.6, 3.6, 5, ...(L.far ? [6.5, 8, 10, 12] : [])].filter((q) => !L.tight || q <= 2.6)) for (const sd of [-1, 1]) { if (om > 5 && sd > 0) continue; /* far offsets only above (north) */ // -1 = above (left of the L->R direction), 1 = below
           const off = (h * 0.5 + pad * 1.2) * om, O: Pt[] = Q.map((q, i) => { const a = Q[Math.max(0, i - 1)], b = Q[Math.min(Q.length - 1, i + 1)], dx = b[0] - a[0], dy = b[1] - a[1], m = Math.hypot(dx, dy) || 1; return [q[0] - dy / m * off * sd, q[1] + dx / m * off * sd] as Pt; }); { /* drop folds (an offset curve reverses on tight inner bends), then re-smooth */ const gx = O.at(-1)![0] - O[0][0], gy = O.at(-1)![1] - O[0][1]; const K: Pt[] = [O[0]]; for (const q of O.slice(1)) { const p = K.at(-1)!; if ((q[0] - p[0]) * gx + (q[1] - p[1]) * gy > 0) K.push(q); } for (let it = 0; it < 3; it++) for (let i = 1; i < K.length - 1; i++) K[i] = [(K[i - 1][0] + K[i][0] * 2 + K[i + 1][0]) / 4, (K[i - 1][1] + K[i][1] * 2 + K[i + 1][1]) / 4]; O.length = 0; O.push(...K); } { const ol = O.reduce((q, p, i) => i ? q + Math.hypot(p[0] - O[i - 1][0], p[1] - O[i - 1][1]) : 0, 0); if (O.length < 2) continue; if (ol < w * 1.2) { /* folds removed: extend the ends along their tangents so the whole label fits (boxes below cover the extension) */ const ex = (a: Pt, b: Pt, d: number): Pt => { const m = Math.hypot(a[0] - b[0], a[1] - b[1]) || 1; return [a[0] + (a[0] - b[0]) / m * d, a[1] + (a[1] - b[1]) / m * d]; }, d = (w * 1.2 - ol) / 2, n = Math.max(1, Math.ceil(d / (h * 0.5))); const A = O[0], B = O[1], Y = O.at(-1)!, Z = O.at(-2)!; for (let i = 1; i <= n; i++) { O.unshift(ex(A, B, d * i / n)); O.push(ex(Y, Z, d * i / n)); } } }
           const bs = O.map((q) => [q[0] - h * 0.45, q[1] - h * 0.5, q[0] + h * 0.45, q[1] + h * 0.5] as Box);
           if (bs.every((b) => inF(b) && !inMx(b) && !sp.hit(b, pad * 0.8))) { const bb: Box = [Math.min(...bs.map((b) => b[0])), Math.min(...bs.map((b) => b[1])), Math.max(...bs.map((b) => b[2])), Math.max(...bs.map((b) => b[3]))]; for (const b of bs) sp.boxes.push(b); best = { id: L.id, box: bb, a: 'middle', tp: O, side: 0, noBox: true } /* the text runs on the offset curve itself (a big dy on a bend squeezes or spreads glyphs) */; break search; }
