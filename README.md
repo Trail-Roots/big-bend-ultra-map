@@ -210,6 +210,7 @@ notice next to Download PDF on the web page. Set it to `false` and rebuild (`bun
 
 - Trail Roots · Big Bend Ultra race page (header, logo, footer): <https://trailroots.com/big-bend-ultra>
 - Register: <https://runsignup.com/Race/Register/?raceId=163892>
+- Accommodations (Stay22, opens in a new tab): <https://www.stay22.com/embed/6a3b6089aa090046926ecf10>
 - Trail Roots · Big Bend Ultra race page (header, logo, footer): <https://trailroots.com/regulations>
 - https://www.t-mobile.com/coverage/satellite-phone-service: <https://www.t-mobile.com/coverage/satellite-phone-service>
 - Cutoff Times: <https://docs.google.com/spreadsheets/d/1FZw9u3cEPj2rPkT9pba0crKXQ9RnULilq0reSMw1LvU/edit?usp=sharing>
