@@ -48,12 +48,13 @@ export class Space {
 export const pip = (p: Pt, r: Pt[]) => { let c = false; for (let i = 0, j = r.length - 1; i < r.length; j = i++) if ((r[i][1] > p[1]) !== (r[j][1] > p[1]) && p[0] < (r[j][0] - r[i][0]) * (p[1] - r[i][1]) / (r[j][1] - r[i][1]) + r[i][0]) c = !c; return c; };
 export const crosses = (a: Pt, b: Pt, lines: Pt[][]) => lines.some((l) => l.some((q, i) => i > 0 && segSeg(a, b, l[i - 1], q)));
 export type Lab = { id: string; w: number; h: number; req: boolean;
-  kind: 'point' | 'line' | 'area'; at: Pt; r?: number; own?: number; path?: Pt[]; t?: number; R?: number; domain?: Pt[][]; inside?: Pt[][]; lead?: boolean; lmax?: number; side?: 1 | -1; always?: boolean; outside?: Pt[][]; pref?: 'n'; tight?: boolean; near?: boolean; relax?: boolean; far?: boolean };
+  kind: 'point' | 'line' | 'area'; at: Pt; r?: number; own?: number; path?: Pt[]; t?: number; R?: number; domain?: Pt[][]; inside?: Pt[][]; lead?: boolean; lmax?: number; side?: 1 | -1; always?: boolean; outside?: Pt[][]; pref?: 'n' | 'sw'; grp?: string; tight?: boolean; near?: boolean; relax?: boolean; far?: boolean };
 export type Placed = { id: string; box: Box; a: 'start' | 'end' | 'middle'; lead?: [Pt, Pt]; forced?: boolean; tp?: Pt[]; side?: number; noBox?: boolean };
 /** place labels in the given order; frame = allowed area; pad = clearance */
 export function place(sp: Space, labs: Lab[], frame: Box, pad: number) {
   const out: Placed[] = [], inF = (b: Box) => b[0] >= frame[0] && b[1] >= frame[1] && b[2] <= frame[2] && b[3] <= frame[3];
   for (const L of labs) {
+    if (L.grp && out.some((p) => (p as any).grp === L.grp)) continue; // an earlier alternative of this label already placed
     const { w, h } = L, mk = (cx: number, cy: number): Box => [cx - w / 2, cy - h / 2, cx + w / 2, cy + h / 2];
     const st: Record<string, number> = {}, inMx = (b0: Box) => { const e = L.h * 0.4, b: Box = [b0[0] - e, b0[1] - e, b0[2] + e, b0[3] + e]; return !!L.outside && L.outside.some((r) => [[b[0], b[1]], [b[2], b[1]], [b[0], b[3]], [b[2], b[3]], [(b[0] + b[2]) / 2, b[1]], [(b[0] + b[2]) / 2, b[3]], [(b[0] + b[2]) / 2, (b[1] + b[3]) / 2]].some((q) => pip(q as Pt, r))); }, ok = (b: Box) => { if (inMx(b)) { st.border = (st.border || 0) + 1; return false; } if (!inF(b)) { st.frame = (st.frame || 0) + 1; return false; } if (sp.hit(b, pad)) { st[sp.why] = (st[sp.why] || 0) + 1; return false; } return true; };
     let best: Placed | null = null;
@@ -70,7 +71,7 @@ export function place(sp: Space, labs: Lab[], frame: Box, pad: number) {
       return null; };
     if (L.kind === 'point') {
       const [x, y] = L.at, r = (L.r || 0) + pad * 1.5;
-      const C: [number, number, Placed['a']][] = [[x + r + w / 2, y, 'start'], [x - r - w / 2, y, 'end'], [x + r * 0.7 + w / 2, y - r * 0.7 - h / 2, 'start'], [x + r * 0.7 + w / 2, y + r * 0.7 + h / 2, 'start'], [x - r * 0.7 - w / 2, y - r * 0.7 - h / 2, 'end'], [x - r * 0.7 - w / 2, y + r * 0.7 + h / 2, 'end'], [x, y - r - h / 2, 'middle'], [x, y + r + h / 2, 'middle']]; if (L.pref === 'n') C.unshift(C.splice(6, 1)[0]);
+      const C: [number, number, Placed['a']][] = [[x + r + w / 2, y, 'start'], [x - r - w / 2, y, 'end'], [x + r * 0.7 + w / 2, y - r * 0.7 - h / 2, 'start'], [x + r * 0.7 + w / 2, y + r * 0.7 + h / 2, 'start'], [x - r * 0.7 - w / 2, y - r * 0.7 - h / 2, 'end'], [x - r * 0.7 - w / 2, y + r * 0.7 + h / 2, 'end'], [x, y - r - h / 2, 'middle'], [x, y + r + h / 2, 'middle']]; if (L.pref === 'n') C.unshift(C.splice(6, 1)[0]); if (L.pref === 'sw') C.unshift(C.splice(5, 1)[0], C.splice(1, 1)[0]);
       if (!L.always) for (const [cx, cy, a] of C) { if (L.side && (a === 'middle' || (a === 'start') !== (L.side > 0))) continue; const b = mk(cx, cy); if (ok(b)) { best = { id: L.id, box: b, a }; break; } }
       if (!best && L.lead !== false) best = (L.pref === 'n' ? lead(x, y, L.r || 0, L.own ?? -1, (L.lmax ?? 12) * 1.5, true) : null) || lead(x, y, L.r || 0, L.own ?? -1, L.lmax ?? (L.lead ? 24 : 12)) || (L.lmax && L.near ? lead(x, y, L.r || 0, L.own ?? -1, L.lmax * 2) : null);
       // relax: the extra keep-out rings after the first (the Mexico ring) are a preference; if nothing fits, place with the border alone
@@ -100,7 +101,7 @@ export function place(sp: Space, labs: Lab[], frame: Box, pad: number) {
     if (!best && process.env.RDEBUG) console.log('  fail', L.id, L.path ? JSON.stringify([L.path[0], L.path.at(-1), L.path.length].map((q: any) => Array.isArray(q) ? q.map(Math.round) : q)) : '', JSON.stringify(L.at), JSON.stringify(frame), JSON.stringify(st), Math.round(L.w), Math.round(L.h));
     if (!best) { if (!L.req) continue; const b = L.kind === 'point' ? mk(L.at[0] + (L.r || 0) + pad + w / 2, L.at[1]) : mk(L.at[0], L.at[1]); best = { id: L.id, box: b, a: L.kind === 'point' ? 'start' : 'middle', forced: true }; }
     if (!best.noBox) sp.boxes.push(best.box); if (best.lead) sp.seg(best.lead[0], best.lead[1]);
-    out.push(best);
+    if (L.grp) (best as any).grp = L.grp; out.push(best);
   }
   return out;
 }
