@@ -11,7 +11,9 @@ export function greenParking(svg: string) {
   if (a < 0 || b < a) throw new Error('[floorplan] parking layer not found');
   const mid = svg.slice(a, b).replace(/rgb\(59,130,246\)/g, PARK_GREEN.fill).replace(/rgb\(29,78,216\)/g, PARK_GREEN.stroke);
   if (/59,130,246|29,78,216/.test(mid)) throw new Error('[floorplan] blue left in parking layer');
-  return svg.slice(0, a) + mid + svg.slice(b);
+  const out = svg.slice(0, a) + mid + svg.slice(b), o = out.indexOf('>', out.indexOf('<svg')) + 1;
+  // restricted-entry barricade drawn much thicker (Erik, Oct 23 2026): a stylesheet override in the display copy; the source drawing stays byte-identical
+  return out.slice(0, o) + '<style>#Gate path{stroke-width:11px!important}#Gate path+path{stroke-width:7.5px!important;stroke-dasharray:8.5,8.5!important}#Gate path+path+path{stroke-dasharray:0,8.5,8.5,0!important}</style>' + out.slice(o);
 }
 type View = { x: number; y: number; w: number; h: number };
 export const FINISH_VIEW: View = { x: 940, y: 1690, w: 970, h: 760 }; // lot, picnic area, S/F, building front, gate + drop-off at the Y
