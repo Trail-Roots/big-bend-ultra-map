@@ -13,6 +13,7 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
@@ -29,8 +30,7 @@ jobs:
           key: ${{ steps.pdfkey.outputs.key }}
       - if: steps.pdfcache.outputs.cache-hit != 'true'
         run: |
-          sudo apt-get update -q && sudo apt-get install -y poppler-utils  # pdftoppm: deployed print images
-          bunx playwright install --with-deps chromium
+          bunx playwright install chromium  # no apt: runner image already has Chromium's libs; print images via mupdf (WASM)
           bun run pdf
           mkdir -p pdfout && cp -r dist/*.pdf dist/cards dist/cards-embed.png dist/cards-embed.jpg dist/print pdfout/
       - if: steps.pdfcache.outputs.cache-hit == 'true'
