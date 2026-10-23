@@ -70,7 +70,7 @@ export function render(c: Ctx) {
     </header>
     <div class="profilebox" id="pb-prof">${renderProfile(c)}</div>
   </div>
-    <div class="calbox" id="pb-cal">${renderViews(c)}</div>
+    <div class="calbox" id="pb-cal">${renderViews(c)}</div><script>/* hide already-ended calendar events before first paint (app.js repeats this every minute) */(function(){var n=(Date.now()-Date.UTC(2027,0,17,6,0))/6e4,c=0;document.querySelectorAll("#pb-cal .cv-scroll .cv-dgrp").forEach(function(g){var k=0;g.querySelectorAll(".cv-item").forEach(function(e){var on=+e.dataset.b>=n;e.hidden=!on;if(on)k++});g.hidden=!k;c+=k});var em=document.querySelector("#pb-cal .cv-empty");if(em)em.hidden=c>0})()</script>
   </div>
   <script type="application/json" id="hoverdata">${JSON.stringify(hoverData(c))}</script><script type="application/json" id="heatdata">${JSON.stringify(Object.fromEntries(c.stations.order.map((k) => [k, k === 'S/F' ? c.timeline.finish_crowd.by_course15 : c.timeline.stations[k].by_course15])))}</script><script type="application/json" id="tempdata">${JSON.stringify({ s: TEMP_AVG })}</script>
 </div>`;
