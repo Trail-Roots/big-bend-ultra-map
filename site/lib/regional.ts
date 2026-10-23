@@ -8,16 +8,16 @@ import { northG } from './north';
 import type { Ctx } from './types';
 const m3857 = ([lon, lat]: [number, number]) => [R * lon * Math.PI / 180, R * Math.log(Math.tan(Math.PI / 4 + lat * Math.PI / 360))];
 /** regional extent (lon / lat): Alpine + the hospital to Lajitas, Presidio to Study Butte */
-export const REGION = { sw: [-104.49, 29.19] as [number, number], ne: [-103.29, 30.47] as [number, number] };
+export const REGION = { sw: [-104.62, 29.13] as [number, number], ne: [-103.27, 30.49] as [number, number] };
 export const regionBox3857 = () => { const a = m3857(REGION.sw), b = m3857(REGION.ne); return { x: [a[0], b[0]], y: [a[1], b[1]] }; };
 /** drive time label: rounded to the nearest 5 min */
 export const hm = (min: number) => { const m = Math.max(5, Math.round(min / 5) * 5), h = Math.floor(m / 60), r = m % 60; return h ? `${h} h${r ? ` ${r} min` : ''}` : `${r} min`; };
 // label placement per road leg: t = position along the leg, (dx, dy) = offset of the label anchor in 'em' of the label font, a = text-anchor
 const LEG_LAB: Record<string, { t: number; dx: number; dy: number; a: string }> = {
-  'S/F – Presidio': { t: 0.55, dx: -2.7, dy: 7.4, a: 'start' },
   'Study Butte – Alpine': { t: 0.45, dx: 0.7, dy: 0, a: 'start' }, 'Presidio – Marfa': { t: 0.5, dx: -0.7, dy: 0, a: 'end' },
   'Marfa – Alpine': { t: 0.5, dx: 0, dy: -1.1, a: 'middle' }, 'Presidio – park road (end of pavement)': { t: 0.5, dx: -7, dy: 4.5, a: 'start' },
-  'End of pavement – Sauceda': { t: 0.5, dx: 13.2, dy: -6.4, a: 'middle' },
+  'Lone Star Ranch Rd': { t: 0.35, dx: 0, dy: 1.0, a: 'middle' },
+  'End of pavement – Sauceda': { t: 0.3, dx: 0, dy: -1.1, a: 'middle' },
 };
 const TOWN_LAB: Record<string, [number, number, string]> = { Alpine: [-0.6, 0.6, 'end'], Marfa: [-0.6, -0.5, 'end'], Presidio: [-0.6, 0.4, 'end'], Redford: [-0.6, 0.35, 'end'], Lajitas: [-0.6, 0.9, 'end'], Terlingua: [0, -0.9, 'middle'], 'Study Butte': [0.6, 0.9, 'start'], Sauceda: [-0.6, -0.5, 'end'] };
 const AIR_LAB: Record<string, [number, number, string]> = { 'Alpine-Casparis Airport': [-0.5, -0.7, 'end'], 'Marfa Airport': [0.5, -0.6, 'start'], 'Presidio Lely Airport': [0.5, -0.5, 'start'], 'Lajitas Airport': [0.5, -0.7, 'start'], 'Sauceda airstrip': [0.5, 0.6, 'start'], 'Terlingua Ranch Airport': [-0.5, -0.6, 'end'] };
@@ -30,6 +30,8 @@ export function regionLayer(c: Ctx, proj: P, o: { fs: number; sw: number; tol: n
   const halo = `stroke="#fff" stroke-width="${f1(o.fs * 0.28)}" paint-order="stroke" stroke-linejoin="round"`;
   const txt = (x: number, y: number, s: string, ex = '', fs = o.fs, a = 'middle') => `<text x="${f1(x)}" y="${f1(y)}" font-size="${f1(fs)}" text-anchor="${a}" dominant-baseline="central" ${halo} ${ex}>${s}</text>`;
   let s = '';
+  // county lines (OSM admin_level 6): faint gray dash-dot, distinct from the dotted park boundary
+  for (const f of F.filter((f) => f.properties.kind === 'county')) for (const l of f.geometry.coordinates) s += ln(l, '#b0b0b0', 0.9, ` stroke-dasharray="${f1(6 * o.sw)} ${f1(2.5 * o.sw)} ${f1(1 * o.sw)} ${f1(2.5 * o.sw)}"`);
   // Rio Grande = the international border
   for (const f of F.filter((f) => f.properties.kind === 'river')) for (const l of f.geometry.coordinates) s += ln(l, '#9fb6c6', 1.6);
   // park boundary (subtle; full outline — the main map only draws the part in its frame)
@@ -39,32 +41,50 @@ export function regionLayer(c: Ctx, proj: P, o: { fs: number; sw: number; tol: n
   for (const f of roads) s += ln(f.geometry.coordinates, '#fff', 3.4);
   for (const f of roads) s += ln(f.geometry.coordinates, '#8a8a8a', 2);
   for (const f of park) s += ln(f.geometry.coordinates, '#8a8a8a', 1.3, ` stroke-dasharray="${f1(3 * o.sw)} ${f1(2 * o.sw)}"`);
+  for (const f of F.filter((f) => f.properties.kind === 'airstrip')) for (const r of f.properties.runways || []) s += ln(r, '#7d7d7d', 2.6, ' stroke-linecap="butt"');
   return { lines: s, F, txt, d, ln };
 }
+/** drive times at the points: from -> rows "to  time · mi" (OSRM on OSM roads; park dirt road 5 min/mi) */
+const DN: Record<string, string> = { 'S/F': 'Start / Finish', Hospital: 'Hospital' };
+const drives = (F: any[], from: string, to: string[]) => to.map((t) => [t, F.find((f) => f.properties.kind === 'drive' && ((f.properties.from === from && f.properties.to === t) || (f.properties.from === t && f.properties.to === from)))]).filter((q) => q[1]).map(([t, f]) => `${esc(DN[t] || t)}: ${hm(f.properties.min)} · ${Math.round(f.properties.mi)} mi`);
+/** placement (lon / lat of the block's anchor, text-anchor) of the Start / Finish drive-time block, county names, park name, Mexico */
+export const RLAB = { sf: [-104.555, 29.19, 'start'] as [number, number, string], mexico: [-103.93, 29.16] as [number, number], park: [-104.07, 29.41] as [number, number],
+  counties: [['BREWSTER COUNTY', -103.45, 30.02], ['PRESIDIO COUNTY', -104.4, 30.05], ['JEFF DAVIS COUNTY', -104.25, 30.47]] as [string, number, number][] };
 /** labels + point symbols of the regional layer (drawn above the race routes) */
 export function regionTop(c: Ctx, proj: P, o: { fs: number; sw: number; web: boolean }) {
   const F = (c as any).regional.features as any[], halo = `stroke="#fff" stroke-width="${f1(o.fs * 0.28)}" paint-order="stroke" stroke-linejoin="round"`;
   const txt = (x: number, y: number, s: string, ex = '', fs = o.fs, a = 'middle') => `<text x="${f1(x)}" y="${f1(y)}" font-size="${f1(fs)}" text-anchor="${a}" dominant-baseline="central" ${halo} ${ex}>${s}</text>`;
   let s = '';
   const along = (cs: [number, number][], t: number) => { const P = cs.map(proj); let L = 0; const seg = P.slice(1).map((q, i) => { const l = Math.hypot(q[0] - P[i][0], q[1] - P[i][1]); L += l; return l; }); let r = t * L; for (let i = 0; i < seg.length; i++) { if (r <= seg[i]) { const u = r / (seg[i] || 1); return [P[i][0] + (P[i + 1][0] - P[i][0]) * u, P[i][1] + (P[i + 1][1] - P[i][1]) * u]; } r -= seg[i]; } return P.at(-1)!; };
-  // drive time / distance labels on the legs (small, subdued); dirt park road: 5 min / mi convention
-  for (const f of F.filter((f) => (f.properties.kind === 'road' || f.properties.kind === 'parkroad') && LEG_LAB[f.properties.name])) {
+  // road names on the legs (no drive times here: they are shown at the points)
+  const done = new Set<string>();
+  for (const f of F.filter((f) => (f.properties.kind === 'road' || f.properties.kind === 'parkroad' || f.properties.kind === 'namedroad') && LEG_LAB[f.properties.name])) {
     const L = LEG_LAB[f.properties.name], [x, y] = along(f.geometry.coordinates, L.t), p = f.properties, fs = o.fs * 0.82;
-    const ref = p.kind === 'road' ? `<tspan font-weight="700" fill="#555">${esc(p.ref)}</tspan> · ` : '<tspan font-style="italic">park road (dirt)</tspan> · ';
-    s += txt(x + L.dx * fs, y + L.dy * fs, `${ref}${hm(p.min)} · ${Math.round(p.mi)} mi`, `class="rg-drive" fill="#6b6b6b"`, fs, L.a);
+    const t = p.kind === 'road' ? `<tspan font-weight="700" fill="#555">${esc(p.ref)}</tspan>` : p.kind === 'namedroad' ? `<tspan font-style="italic">${esc(p.name)}</tspan>`
+      : `<tspan font-style="italic">${esc(p.label || 'Park road')} (dirt)</tspan>`;
+    if (p.kind === 'road' && done.has(p.ref + L.t)) continue; done.add(p.ref + L.t);
+    s += txt(x + L.dx * fs, y + L.dy * fs, t, `class="rg-drive" fill="#6b6b6b"`, fs, L.a);
   }
   // airstrips (OSM aeroway): small subdued runway marker; public fields labelled
-  for (const f of F.filter((f) => f.properties.kind === 'airstrip')) { const [x, y] = proj(f.geometry.coordinates), r = o.fs * 0.3, t = AIR_LAB[f.properties.label] || [0.6, 0, 'start'];
-    s += `<g class="rg-pt rg-air" data-ax="${f1(x)}" data-ay="${f1(y)}"><circle cx="${f1(x)}" cy="${f1(y)}" r="${f1(r)}" fill="#8c8c8c" stroke="#fff" stroke-width="${f1(o.fs * 0.07)}"/><path d="M${f1(x - r * 0.62)},${f1(y + r * 0.62)}L${f1(x + r * 0.62)},${f1(y - r * 0.62)}" stroke="#fff" stroke-width="${f1(r * 0.45)}"/>${f.properties.label ? txt(x + t[0] * o.fs, y + t[1] * o.fs, esc(f.properties.label), 'fill="#7a7a7a" font-style="italic"', o.fs * 0.72, t[2]) : ''}</g>`; }
+  for (const f of F.filter((f) => f.properties.kind === 'airstrip')) { const [x, y] = proj(f.geometry.coordinates), t = AIR_LAB[f.properties.label] || [0.6, 0, 'start'];
+    s += `<g class="rg-pt rg-air" data-ax="${f1(x)}" data-ay="${f1(y)}">${f.properties.label ? txt(x + t[0] * o.fs, y + t[1] * o.fs, esc(f.properties.label), 'fill="#7a7a7a" font-style="italic"', o.fs * 0.72, t[2]) : ''}</g>`; }
   // towns, hospital
   for (const f of F.filter((f) => f.properties.kind === 'town')) { const [x, y] = proj(f.geometry.coordinates), t = TOWN_LAB[f.properties.name] || [0.6, 0, 'start'], big = ['Alpine', 'Marfa', 'Presidio'].includes(f.properties.name);
-    s += `<g class="rg-pt rg-town" data-ax="${f1(x)}" data-ay="${f1(y)}"><circle cx="${f1(x)}" cy="${f1(y)}" r="${f1(o.fs * (big ? 0.3 : 0.22))}" fill="#333" stroke="#fff" stroke-width="${f1(o.fs * 0.08)}"/>${txt(x + t[0] * o.fs, y + t[1] * o.fs, esc(f.properties.name), `fill="#222"${big ? ' font-weight="700"' : ''}`, o.fs * (big ? 1.1 : 0.9), t[2])}</g>`; }
+    s += `<g class="rg-pt rg-town" data-ax="${f1(x)}" data-ay="${f1(y)}"><circle cx="${f1(x)}" cy="${f1(y)}" r="${f1(o.fs * (big ? 0.3 : 0.22))}" fill="#333" stroke="#fff" stroke-width="${f1(o.fs * 0.08)}"/>${txt(x + t[0] * o.fs, y + t[1] * o.fs, esc(f.properties.name), `fill="#222"${big ? ' font-weight="700"' : ''}`, o.fs * (big ? 1.1 : 0.9), t[2])}${f.properties.name === 'Sauceda' ? drives(F, 'Sauceda', ['FM 170', 'Hospital', 'S/F']).map((r, i) => txt(x + t[0] * o.fs, y + t[1] * o.fs - o.fs * (0.95 + (2 - i) * 0.85), r, 'class="rg-drive" fill="#6b6b6b"', o.fs * 0.75, t[2])).join('') : ''}</g>`; }
   for (const f of F.filter((f) => f.properties.kind === 'hospital')) { const [x, y] = proj(f.geometry.coordinates), h = o.fs * 0.9;
-    s += `<g class="rg-pt rg-hosp" data-ax="${f1(x)}" data-ay="${f1(y)}"><rect x="${f1(x - h / 2)}" y="${f1(y - h / 2)}" width="${f1(h)}" height="${f1(h)}" rx="${f1(h * 0.15)}" fill="#c4161c" stroke="#fff" stroke-width="${f1(o.fs * 0.08)}"/><path d="M${f1(x - h * 0.28)},${f1(y)}h${f1(h * 0.56)}M${f1(x)},${f1(y - h * 0.28)}v${f1(h * 0.56)}" stroke="#fff" stroke-width="${f1(h * 0.2)}"/>${txt(x + h * 0.85, y - o.fs * 0.1, 'Big Bend Regional Medical Center', 'fill="#b3261e" font-weight="700"', o.fs * 0.8, 'start')}${txt(x + h * 0.85, y + o.fs * 0.85, 'Hospital', 'fill="#6b6b6b"', o.fs * 0.75, 'start')}${hospDrive(F) ? txt(x + h * 0.85, y + o.fs * 1.7, hospDrive(F), 'class="rg-drive" fill="#6b6b6b"', o.fs * 0.75, 'start') : ''}</g>`; }
+    s += `<g class="rg-pt rg-hosp" data-ax="${f1(x)}" data-ay="${f1(y)}"><rect x="${f1(x - h / 2)}" y="${f1(y - h / 2)}" width="${f1(h)}" height="${f1(h)}" rx="${f1(h * 0.15)}" fill="#c4161c" stroke="#fff" stroke-width="${f1(o.fs * 0.08)}"/><path d="M${f1(x - h * 0.28)},${f1(y)}h${f1(h * 0.56)}M${f1(x)},${f1(y - h * 0.28)}v${f1(h * 0.56)}" stroke="#fff" stroke-width="${f1(h * 0.2)}"/>${txt(x + h * 0.85, y - o.fs * 0.1, 'Big Bend Regional Medical Center', 'fill="#b3261e" font-weight="700"', o.fs * 0.8, 'start')}${txt(x + h * 0.85, y + o.fs * 0.85, 'Hospital', 'fill="#6b6b6b"', o.fs * 0.75, 'start')}${drives(F, 'Hospital', ['Sauceda', 'S/F']).map((r, i) => txt(x + h * 0.85, y + o.fs * (1.7 + i * 0.85), r, 'class="rg-drive" fill="#6b6b6b"', o.fs * 0.75, 'start')).join('')}</g>`; }
   // country / river names
-  { const [x, y] = proj([-104.05, 29.33]); s += txt(x, y, 'MEXICO', 'fill="#9a9a9a" font-weight="700" letter-spacing="3"', o.fs * 1.05); }
+  { const [x, y] = proj(RLAB.mexico); s += txt(x, y, 'MEXICO', 'fill="#9a9a9a" font-weight="700" letter-spacing="3"', o.fs * 1.05); }
   { const [x, y] = proj([-103.42, 29.75]); s += txt(x, y, 'TEXAS', 'fill="#9a9a9a" font-weight="700" letter-spacing="3"', o.fs * 1.05); }
-  { const [x, y] = proj([-104.2, 29.43]); s += txt(x, y, 'Rio Grande', 'fill="#6f8ea3" font-style="italic"', o.fs * 0.85); }
+  { const [x, y] = proj([-104.47, 29.66]); s += txt(x, y, 'Rio Grande', 'fill="#6f8ea3" font-style="italic"', o.fs * 0.85); }
+  { const [x, y] = proj(RLAB.park); s += txt(x, y, 'BIG BEND RANCH', 'class="rg-park" fill="#7c8a72" font-weight="700" letter-spacing="2"', o.fs * 0.85) + txt(x, y + o.fs * 0.95, 'STATE PARK', 'class="rg-park" fill="#7c8a72" font-weight="700" letter-spacing="2"', o.fs * 0.85); }
+  for (const [n, lo, la] of RLAB.counties) { const [x, y] = proj([lo, la]); s += txt(x, y, n, 'class="rg-county" fill="#a3a3a3" letter-spacing="2"', o.fs * 0.7); }
+  // cell towers (OSM-mapped, communication:mobile_phone=yes): small mast symbol, no coverage drawn
+  for (const f of F.filter((f) => f.properties.kind === 'celltower')) { const [x, y] = proj(f.geometry.coordinates), h = o.fs * 0.55;
+    s += `<g class="rg-pt rg-tower" data-ax="${f1(x)}" data-ay="${f1(y)}"><path d="M${f1(x - h * 0.3)},${f1(y + h * 0.5)}L${f1(x)},${f1(y - h * 0.5)}L${f1(x + h * 0.3)},${f1(y + h * 0.5)}M${f1(x - h * 0.15)},${f1(y)}h${f1(h * 0.3)}" fill="none" stroke="#777" stroke-width="${f1(o.fs * 0.08)}" stroke-linejoin="round"/></g>`; }
+  // Start / Finish: drive times to the hospital, Sauceda and the towns (block in open ground with a thin leader to the marker)
+  { const SF = (c as any).stations.stations['S/F'].lonlat, [ax, ay] = proj(SF), [x, y] = proj([RLAB.sf[0], RLAB.sf[1]]), a = RLAB.sf[2], rows = drives(F, 'S/F', ['Hospital', 'Sauceda', 'Lajitas', 'Terlingua', 'Study Butte', 'Presidio', 'Marfa', 'Alpine']), lh = o.fs * 0.85, cw = o.fs * 13, half = Math.ceil(rows.length / 2);
+    s += `<path class="rg-lead" d="M${f1(ax)},${f1(ay)}L${f1(x + cw * 2)},${f1(y)}" stroke="#9a9a9a" stroke-width="${f1(o.web ? 0.8 : o.fs * 0.05)}" fill="none"${o.web ? ' vector-effect="non-scaling-stroke"' : ''}/><g class="rg-pt rg-sfd" data-ax="${f1(x)}" data-ay="${f1(y)}">${txt(x, y, 'Drive times from Start / Finish', 'fill="#444" font-weight="700"', o.fs * 0.78, a)}${rows.map((r, i) => txt(x + (i >= half ? cw : 0), y + lh * ((i % half) + 1), r, 'class="rg-drive" fill="#6b6b6b"', o.fs * 0.75, a)).join('')}</g>`; }
   return s;
 }
 /** drive-time table rows from the Start / Finish (OSRM on OSM roads) */
@@ -88,30 +108,25 @@ export function renderRegional(c: Ctx, W = 1143, H = 1418) {
   let st = ''; for (const k of c.stations.order) { const s = c.stations.stations[k], [x, y] = V.p(s.lonlat); st += station(x, y, k, s.spectator, k === 'S/F' ? { s: 520, fs: 9, colors: col, link: false } : { s: 300, fs: 9, colors: col, link: false }); }
   // furniture: scale bar (20 mi), north arrow, legend, drive-time table
   const mi = 1609.344 * V.ppm / Math.cos(((REGION.sw[1] + REGION.ne[1]) / 2) * Math.PI / 180) /* sheet units per mile at mid-latitude */;
-  const sx = W * 0.05, sy = H * 0.965, w20 = 20 * mi;
+  const sx = W * 0.05, sy = H * 0.1, w20 = 20 * mi;
   let fur = `<g class="scalebar"><path stroke="${col.ink}" stroke-width="2" fill="none" d="M${f1(sx)},${f1(sy)}h${f1(w20)}M${f1(sx)},${f1(sy)}v-7M${f1(sx + w20 / 2)},${f1(sy)}v-7M${f1(sx + w20)},${f1(sy)}v-7"/>`;
   fur += [[0, '0'], [w20 / 2, '10'], [w20, '20 mi']].map(([dx, t]) => `<text x="${f1(sx + (dx as number))}" y="${f1(sy + 6)}" font-size="13" text-anchor="middle" dominant-baseline="hanging" fill="${col.ink}">${t}</text>`).join('') + '</g>';
   fur += northG(W, W * 0.015, W * 0.015);
-  const rows = driveRows(c), tx = W * 0.39, ty = H * 0.55, rh = 19;
-  let tb = `<g class="rg-table"><rect x="${f1(tx - 10)}" y="${f1(ty - 28)}" width="${f1(W * 0.32)}" height="${f1(rows.length * rh + 74)}" fill="#fff" fill-opacity=".92" stroke="#bbb"/><text x="${f1(tx)}" y="${f1(ty - 12)}" font-size="14" font-weight="700" fill="${col.ink}">Drive times from the Start / Finish</text>`;
-  rows.forEach(([to, t, d], i) => { const y = ty + 10 + i * rh; tb += `<text x="${f1(tx)}" y="${f1(y)}" font-size="13" fill="${col.ink}">${esc(to)}</text><text x="${f1(tx + W * 0.2)}" y="${f1(y)}" font-size="13" text-anchor="end" fill="${col.ink}">${t}</text><text x="${f1(tx + W * 0.295)}" y="${f1(y)}" font-size="13" text-anchor="end" fill="#6b6b6b">${d}</text>`; });
-  tb += `<text x="${f1(tx)}" y="${f1(ty + 14 + rows.length * rh)}" font-size="10" fill="#6b6b6b">Paved roads: OSRM routing on OpenStreetMap, no traffic,</text><text x="${f1(tx)}" y="${f1(ty + 27 + rows.length * rh)}" font-size="10" fill="#6b6b6b">rounded to 5 min. Park dirt roads: 5 min/mi.</text></g>`;
   // legend
-  const lx = W * 0.39, ly = H * 0.335; const it: [string, string][] = [['hw', 'Highway (drive time · distance)'], ['pr', 'Park road (dirt)'], ['rr', 'Race routes'], ['aid', 'Aid station · Start / Finish'], ['h', 'Hospital'], ['t', 'Town'], ['a', 'Airstrip / airport'], ['pk', 'Big Bend Ranch State Park'], ['rv', 'Rio Grande (US–Mexico border)']];
+  const lx = W * 0.39, ly = H * 0.335; const it: [string, string][] = [['hw', 'Highway'], ['pr', 'Park road (dirt)'], ['rr', 'Race routes'], ['aid', 'Aid station · Start / Finish'], ['h', 'Hospital'], ['t', 'Town'], ['a', 'Airport / airstrip (runway)'], ['pk', 'Big Bend Ranch State Park'], ['co', 'County line'], ['ct', 'Cell tower (OSM-mapped; not a coverage map)'], ['rv', 'Rio Grande (US–Mexico border)']];
   let lg = `<g class="legend"><rect x="${f1(lx - 10)}" y="${f1(ly - 14)}" width="${f1(W * 0.32)}" height="${f1(it.length * 20 + 14)}" fill="#fff" fill-opacity=".92" stroke="#bbb"/>`;
   it.forEach(([k, t], i) => { const y = ly + 2 + i * 20, x = lx, P = `M${f1(x)},${f1(y)}h34`;
     lg += k === 'hw' ? `<path d="${P}" stroke="#fff" stroke-width="4.1"/><path d="${P}" stroke="#8a8a8a" stroke-width="2.4"/>` : k === 'pr' ? `<path d="${P}" stroke="#8a8a8a" stroke-width="1.6" stroke-dasharray="3.6 2.4"/>` : k === 'rr' ? c.courses.order.map((q, j) => `<path d="M${f1(x + j * 7)},${f1(y)}h6" stroke="${c.courses.colors[q]}" stroke-width="3"/>`).join('')
-      : k === 'aid' ? station(x + 17, y, '', false, { s: 300, colors: col, link: false }) : k === 'h' ? `<rect x="${f1(x + 11)}" y="${f1(y - 6)}" width="12" height="12" rx="2" fill="#c4161c"/>` : k === 'a' ? `<circle cx="${f1(x + 17)}" cy="${f1(y)}" r="4.5" fill="#8c8c8c"/>` : k === 't' ? `<circle cx="${f1(x + 17)}" cy="${f1(y)}" r="4" fill="#333"/>`
+      : k === 'aid' ? station(x + 17, y, '', false, { s: 300, colors: col, link: false }) : k === 'h' ? `<rect x="${f1(x + 11)}" y="${f1(y - 6)}" width="12" height="12" rx="2" fill="#c4161c"/>` : k === 'a' ? `<path d="M${f1(x + 8)},${f1(y + 4)}L${f1(x + 26)},${f1(y - 4)}" stroke="#7d7d7d" stroke-width="3.4"/>` : k === 'co' ? `<path d="${P}" stroke="#b0b0b0" stroke-width="1.2" stroke-dasharray="7.8 3.2 1.3 3.2"/>` : k === 'ct' ? `<path d="M${f1(x + 14)},${f1(y + 5)}L${f1(x + 17)},${f1(y - 5)}L${f1(x + 20)},${f1(y + 5)}M${f1(x + 15.5)},${f1(y)}h3" fill="none" stroke="#777" stroke-width="1.4"/>` : k === 't' ? `<circle cx="${f1(x + 17)}" cy="${f1(y)}" r="4" fill="#333"/>`
       : k === 'pk' ? `<rect x="${f1(x)}" y="${f1(y - 6)}" width="34" height="12" fill="${col.park}" fill-opacity=".1" stroke="${col.boundary}" stroke-width="1.2" stroke-dasharray="1.2 3"/>` : `<path d="${P}" stroke="#9fb6c6" stroke-width="2"/>`;
     lg += `<text x="${f1(x + 44)}" y="${f1(y)}" font-size="13" dominant-baseline="central" fill="${col.ink}">${t}</text>`; });
   lg += '</g>';
 
-  return `<svg class="regionmap" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Big Bend Ultra regional map"><defs><clipPath id="rclip"><rect width="${W}" height="${H}"/></clipPath></defs><rect width="${W}" height="${H}" fill="#fff"/><g clip-path="url(#rclip)">${L.lines}${net}${rr}${st}${regionTop(c, proj, o)}</g>${fur}${lg}${tb}<rect width="${W}" height="${H}" fill="none" stroke="#000" stroke-width="1.6"/></svg>`;
+  return `<svg class="regionmap" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Big Bend Ultra regional map"><defs><clipPath id="rclip"><rect width="${W}" height="${H}"/></clipPath></defs><rect width="${W}" height="${H}" fill="#fff"/><g clip-path="url(#rclip)">${L.lines}${net}${rr}${st}${regionTop(c, proj, o)}</g>${fur}${lg}<rect width="${W}" height="${H}" fill="none" stroke="#000" stroke-width="1.6"/></svg>`;
 }
 
-const hospDrive = (F: any[]) => { const f = F.find((f) => f.properties.kind === 'drive' && /hospital/i.test(f.properties.to)); return f ? `From Start / Finish: ${hm(f.properties.min)} · ${Math.round(f.properties.mi)} mi` : ''; };
 /** web: regional box in main-map units + minimum zoom (fills the frame) -> "x0 y0 x1 y1 kmin" on svg.mainmap */
 export function regionData(_c: Ctx, V: any, W: number, H: number) {
-  const a = V.p(REGION.sw), b = V.p(REGION.ne), x0 = a[0], x1 = b[0], y0 = b[1], y1 = a[1], kmin = Math.max(W / (x1 - x0), H / (y1 - y0));
+  const a = V.p(REGION.sw), b = V.p(REGION.ne), x0 = a[0], x1 = b[0], y0 = b[1], y1 = a[1], kmin = Math.min(W / (x1 - x0), H / (y1 - y0)) /* whole regional box fits when fully zoomed out */;
   return [x0, y0, x1, y1].map(f1).join(' ') + ' ' + kmin.toFixed(4);
 }

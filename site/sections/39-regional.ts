@@ -3,5 +3,5 @@ import type { Ctx } from '../lib/types';
 import { renderRegional } from '../lib/regional';
 export const meta = { id: 'regional', title: 'Regional map', print: true };
 export function render(c: Ctx) {
-  return `<div class="rgpage"><h2 class="rg-h">Regional map · getting to the race</h2>${renderRegional(c)}</div>`;
+  return `<div class="rgpage"><h2 class="rg-h">Regional map</h2>${renderRegional(c)}</div>`;
 }

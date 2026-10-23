@@ -566,5 +566,5 @@ dialog.lightbox{z-index:2147483647}dialog.lightbox::backdrop{z-index:2147483646}
 @media print{.sec-regional .rgpage{break-before:page;display:flex;flex-direction:column;height:10.3in;overflow:hidden}.sec-regional .rg-h{margin:0 0 4pt;font-size:13pt}.sec-regional svg.regionmap{display:block;width:7.4in;height:auto;margin:0 auto}}
 svg g.layer[data-layer="region"]{display:none}
 svg.mainmap.zreg g.layer[data-layer="region"]{display:inline}
-svg.mainmap.zreg g.layer:is([data-layer="topo"],[data-layer="labels"],[data-layer="stationLabels"],[data-layer="pois"],[data-layer="arrows"],[data-layer="zoom"],[data-layer="dots"]),svg.mainmap.zreg .bgtr{display:none!important}
+svg.mainmap.zreg g.layer:is([data-layer="topo"],[data-layer="labels"],[data-layer="stationLabels"],[data-layer="pois"],[data-layer="arrows"],[data-layer="zoom"]),svg.mainmap.zreg .bgtr{display:none!important}
 svg.mainmap.zreg g.legend,svg.mainmap.zreg g.layer[data-layer="park"] text{display:none}

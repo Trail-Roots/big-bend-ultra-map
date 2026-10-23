@@ -155,7 +155,7 @@ if (hdEl && prof) {
   const SHADE: [string, number] = ['#888888', 0.17];
   // day / night indicator on the big map during the race-day simulation: badge (sun / twilight / moon + clock) and a light night tint
   const sky = TM.sun as { dawn: number; sunrise: number; sunset: number; dusk: number };
-  const tint = dotLayer ? el('rect', { x: -5000, y: -5000, width: 20000, height: 20000, fill: SHADE[0], 'fill-opacity': 0, style: 'pointer-events:none' }, dotLayer) as SVGRectElement : null;
+  const tint = dotLayer ? el('rect', { x: -200000, y: -200000, width: 400000, height: 400000, fill: SHADE[0], 'fill-opacity': 0, style: 'pointer-events:none' }, dotLayer) as SVGRectElement : null;
   if (tint) dotLayer!.insertBefore(tint, dotLayer!.firstChild);
   const badge = document.createElement('div'); badge.className = 'daynight ui'; badge.style.display = 'none'; main.parentElement!.appendChild(badge);
   // darkness 0..1 blended through civil twilight (dawn -> sunrise, sunset -> dusk), smoothstep for a gradual change
@@ -165,7 +165,7 @@ if (hdEl && prof) {
   // runner-dot size: slightly larger on desktop, noticeably larger on phones (DS = factor over the original 3.4 radius)
   const DS = matchMedia('(max-width:699px)').matches ? 1.9 : 1.25;
   const setTime = (t: number) => {
-    tShown = t; const z = 1 / zoomOf(main); document.dispatchEvent(new CustomEvent('racetime', { detail: t }));
+    tShown = t; const z = (zoomOf(main) < 1 ? 0.6 : 1) / zoomOf(main); /* regional view: dots stay, a bit smaller (like the station markers) */ document.dispatchEvent(new CustomEvent('racetime', { detail: t }));
     if (!Object.keys(TM.courses).some(raceOn)) { badge.style.display = 'none'; tint?.setAttribute('fill-opacity', '0'); } else { const ph = phase(t); badge.style.display = ''; badge.dataset.phase = ph; badge.textContent = `${ph === 'day' ? '☀' : ph === 'twilight' ? '◐' : '☾'} ${fmt(t)} · ${ph === 'day' ? 'daylight' : ph === 'twilight' ? ((((t % 1440) + 1440) % 1440) < 720 ? 'dawn' : 'dusk') : 'dark'}${Number.isFinite(tempAtJS(t)) ? ` · ${Math.round(tempAtJS(t))}°F` : ''}`; /* 5y avg hourly temperature at the animation time (same data as the timeline) */ if (tint) tint.setAttribute('fill-opacity', dark(t).toFixed(3)); }
     const ends: Record<string, { lead?: [number, any]; last?: [number, any] }> = {};
     for (const d of dots2) {
