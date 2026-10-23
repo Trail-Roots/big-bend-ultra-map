@@ -2,7 +2,7 @@
 // Contrabando / Buena Suerte / Waterhole part of the course (North Lone Star Mine is already the curated LoneStar road) -> sources/curated/park_trails.geojson (drawn only when zoomed to the 1 mi scale bar).
 // Usage: bun tools/osm-trails.ts [cached-overpass.json]
 import fs from 'node:fs';
-const NAMES = ['Buena Suerte', 'Dog Cholla', 'Camino Viejo', 'Crystal Trail', 'Rock Quarry', 'Contrabandista Spur', 'Waterhole Trail', 'West Main Trail', 'Dome Trail', 'Fresno Divide'];
+const NAMES = ['Buena Suerte', 'Dog Cholla', 'Camino Viejo', 'Crystal Trail', 'Waterhole Trail', 'West Main Trail', 'Dome Trail', 'Fresno Divide'];
 const Q = '[out:json][timeout:120];(way["highway"~"^(path|footway|track)$"](29.24,-103.85,29.42,-103.55););out geom tags;';
 const src = process.argv[2];
 const j = src ? JSON.parse(fs.readFileSync(src, 'utf8')) : await (await fetch('https://overpass-api.de/api/interpreter', { method: 'POST', headers: { 'User-Agent': 'bbu-map/1.0' }, body: new URLSearchParams({ data: Q }) })).json();
