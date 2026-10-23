@@ -27,7 +27,7 @@ try {
   for (const k of await p.$$eval('.coursepage', (e) => e.map((x) => (x as HTMLElement).dataset.course!))) {
     await p.evaluate((k) => { document.body.classList.add('printone'); document.querySelectorAll('.coursepage, .routeseq').forEach((x) => x.classList.toggle('on', (x as HTMLElement).dataset.course === k)); document.querySelectorAll('.ixe').forEach((x) => x.classList.toggle('off', !(x as HTMLElement).dataset.r!.split(' ').includes(k))); }, k);
     await p.pdf({ path: path.join(D, `course-${k}.pdf`), preferCSSPageSize: true, printBackground: true });
-    { const o = orient(path.join(D, `course-${k}.pdf`)).join(''); if (!/^LPP+$/.test(o)) throw new Error(`[pdf] course-${k}.pdf pages ${o}: want map, list, photo pages`); console.log(`pdf course-${k}: ${o.length} pages (map, list, ${o.length - 2} photo)`); }
+    { const o = orient(path.join(D, `course-${k}.pdf`)).join(''); if (!/^LLP+$/.test(o)) throw new Error(`[pdf] course-${k}.pdf pages ${o}: want map, list (both landscape), photo pages`); console.log(`pdf course-${k}: ${o.length} pages (map, list, ${o.length - 2} photo)`); }
   }
   await p.evaluate(() => document.body.classList.remove('printone'));
   // thumbnails for the limited cards embed (cards-embed.html): each race card map as a small JPEG (Playwright only, no ffmpeg on CI)
@@ -59,7 +59,7 @@ const pdfText = (n?: number) => { const doc = mupdf.Document.openDocument(fs.rea
   if (files.length !== pages.length) throw new Error(`print images ${files.length} != pages ${pages.length}`);
   fs.writeFileSync(path.join(P, 'pages.json'), JSON.stringify(files.map((f, i) => ({ src: 'print/' + f, o: pages[i] }))));
   // expected page sequence (README): map | access + elevation | calendar | [blank] | 5 x (race map on an odd page + 1 route list page) | intersections | 2 plans | 6 station pages | operations | regional
-  if (!/^PLPP?(LP){5}P{9,}LP$/.test(pages.join('')) || pages.map((x, i) => x === 'L' ? i + 1 : 0).filter(Boolean).slice(1, 6).some((n) => n % 2 === 0)) throw new Error(`[pdf] page sequence ${pages.join('')} unexpected`);
+  if (!/^PLPP?(LL){5}P{9,}LP$/.test(pages.join('')) || pages.map((x, i) => x === 'L' ? i + 1 : 0).filter(Boolean).slice(1, 11).filter((_, i) => i % 2 === 0).some((n) => n % 2 === 0)) throw new Error(`[pdf] page sequence ${pages.join('')} unexpected`);
   console.log('print images', files.length, pages.join('')); }
 // PDF check: every aid-station print page carries its visible primary coordinates link text ("Map: lat, lng")
 { const st = JSON.parse(fs.readFileSync(path.join(import.meta.dir, '../content/stations.json'), 'utf8')), txt = pdfText();
