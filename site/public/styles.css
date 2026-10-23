@@ -597,7 +597,7 @@ svg.mainmap.zreg g.legend,svg.mainmap.zreg g.layer[data-layer="park"] text{displ
   body.printone .ixe.off{display:none}
 }
 .lodgeprint{display:none}
-@media print{.pg1 .hdr .lodgeprint{display:block;margin:.04in 0 0;font:500 9pt system-ui,sans-serif;color:#555}.pg1 .hdr .lodgeprint a{color:#555;text-decoration:underline}}
+@media print{.pg1 .hdr .lodgeprint{display:block;margin:.02in 0 0;font:400 7.5pt system-ui,sans-serif;color:#777}.pg1 .hdr .lodgeprint a{color:inherit;text-decoration:none}}
 a.vw-plan{text-decoration:none}
 @media print{.rs-jx{display:block;width:7pt;height:7pt;background:#fff;border:1.5pt solid #2a2a2a;transform:rotate(45deg)}.ixu{font-size:9pt;margin-top:0}} /* junction: plain open diamond (link to its photos), no codes */
 @media print{.rs-dir{font-size:6.8pt;color:#888}.ixe h3{font-size:9.5pt;margin:0 0 1pt}.ixu{font-size:7pt;margin:0 0 1pt;color:#888}.ixu .ixhow{color:#777}.ixph{margin-top:3pt}}
@@ -607,3 +607,5 @@ a.vw-plan{text-decoration:none}
   ol.rs li.rs-aidrow{background:#f6ecec;font-weight:700}ol.rs li.rs-aidrow .rs-aid{font-size:8pt;font-weight:700;color:#a33}
   ol.rs li.rs-aidrow .rs-title{font-weight:700}
   ol.rs li{flex-wrap:wrap;row-gap:0}ol.rs li .rs-dir{flex-basis:100%;padding-left:.5in;margin-top:-1pt}}
+/* line markers: plain solid dots in the race color (junctions + plain rows); only aid stations / S/F keep their own markers */
+@media print{.rs-jx,.rs-pin i{width:7pt;height:7pt;border:0!important;border-radius:50%;background:var(--rc)!important;transform:none!important}}
