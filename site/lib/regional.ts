@@ -14,10 +14,10 @@ export const regionBox3857 = () => { const a = m3857(REGION.sw), b = m3857(REGIO
 export const hm = (min: number) => { const m = Math.max(5, Math.round(min / 5) * 5), h = Math.floor(m / 60), r = m % 60; return h ? `${h} h${r ? ` ${r} min` : ''}` : `${r} min`; };
 // label placement per road leg: t = position along the leg, (dx, dy) = offset of the label anchor in 'em' of the label font, a = text-anchor
 const LEG_LAB: Record<string, { t: number; dx: number; dy: number; a: string }> = {
-  'S/F – Presidio': { t: 0.55, dx: 0.6, dy: 1.4, a: 'start' },
+  'S/F – Presidio': { t: 0.55, dx: -2.7, dy: 7.4, a: 'start' },
   'Study Butte – Alpine': { t: 0.45, dx: 0.7, dy: 0, a: 'start' }, 'Presidio – Marfa': { t: 0.5, dx: -0.7, dy: 0, a: 'end' },
-  'Marfa – Alpine': { t: 0.5, dx: 0, dy: -1.1, a: 'middle' }, 'Presidio – park road (end of pavement)': { t: 0.5, dx: 0.6, dy: -0.9, a: 'start' },
-  'End of pavement – Sauceda': { t: 0.5, dx: 0, dy: -1.2, a: 'middle' },
+  'Marfa – Alpine': { t: 0.5, dx: 0, dy: -1.1, a: 'middle' }, 'Presidio – park road (end of pavement)': { t: 0.5, dx: -7, dy: 4.5, a: 'start' },
+  'End of pavement – Sauceda': { t: 0.5, dx: 13.2, dy: -6.4, a: 'middle' },
 };
 const TOWN_LAB: Record<string, [number, number, string]> = { Alpine: [-0.6, 0.6, 'end'], Marfa: [-0.6, -0.5, 'end'], Presidio: [-0.6, 0.4, 'end'], Redford: [-0.6, 0.35, 'end'], Lajitas: [-0.6, 0.9, 'end'], Terlingua: [0, -0.9, 'middle'], 'Study Butte': [0.6, 0.9, 'start'], Sauceda: [-0.6, -0.5, 'end'] };
 const AIR_LAB: Record<string, [number, number, string]> = { 'Alpine-Casparis Airport': [-0.5, -0.7, 'end'], 'Marfa Airport': [0.5, -0.6, 'start'], 'Presidio Lely Airport': [0.5, -0.5, 'start'], 'Lajitas Airport': [0.5, -0.7, 'start'], 'Sauceda airstrip': [0.5, 0.6, 'start'], 'Terlingua Ranch Airport': [-0.5, -0.6, 'end'] };
@@ -60,7 +60,7 @@ export function regionTop(c: Ctx, proj: P, o: { fs: number; sw: number; web: boo
   for (const f of F.filter((f) => f.properties.kind === 'town')) { const [x, y] = proj(f.geometry.coordinates), t = TOWN_LAB[f.properties.name] || [0.6, 0, 'start'], big = ['Alpine', 'Marfa', 'Presidio'].includes(f.properties.name);
     s += `<g class="rg-pt rg-town" data-ax="${f1(x)}" data-ay="${f1(y)}"><circle cx="${f1(x)}" cy="${f1(y)}" r="${f1(o.fs * (big ? 0.3 : 0.22))}" fill="#333" stroke="#fff" stroke-width="${f1(o.fs * 0.08)}"/>${txt(x + t[0] * o.fs, y + t[1] * o.fs, esc(f.properties.name), `fill="#222"${big ? ' font-weight="700"' : ''}`, o.fs * (big ? 1.1 : 0.9), t[2])}</g>`; }
   for (const f of F.filter((f) => f.properties.kind === 'hospital')) { const [x, y] = proj(f.geometry.coordinates), h = o.fs * 0.9;
-    s += `<g class="rg-pt rg-hosp" data-ax="${f1(x)}" data-ay="${f1(y)}"><rect x="${f1(x - h / 2)}" y="${f1(y - h / 2)}" width="${f1(h)}" height="${f1(h)}" rx="${f1(h * 0.15)}" fill="#c4161c" stroke="#fff" stroke-width="${f1(o.fs * 0.08)}"/><path d="M${f1(x - h * 0.28)},${f1(y)}h${f1(h * 0.56)}M${f1(x)},${f1(y - h * 0.28)}v${f1(h * 0.56)}" stroke="#fff" stroke-width="${f1(h * 0.2)}"/>${txt(x + h * 0.85, y - o.fs * 0.1, 'Big Bend Regional Medical Center', 'fill="#b3261e" font-weight="700"', o.fs * 0.8, 'start')}${txt(x + h * 0.85, y + o.fs * 0.85, 'Hospital · ER 24/7', 'fill="#6b6b6b"', o.fs * 0.75, 'start')}${hospDrive(F) ? txt(x + h * 0.85, y + o.fs * 1.7, hospDrive(F), 'class="rg-drive" fill="#6b6b6b"', o.fs * 0.75, 'start') : ''}</g>`; }
+    s += `<g class="rg-pt rg-hosp" data-ax="${f1(x)}" data-ay="${f1(y)}"><rect x="${f1(x - h / 2)}" y="${f1(y - h / 2)}" width="${f1(h)}" height="${f1(h)}" rx="${f1(h * 0.15)}" fill="#c4161c" stroke="#fff" stroke-width="${f1(o.fs * 0.08)}"/><path d="M${f1(x - h * 0.28)},${f1(y)}h${f1(h * 0.56)}M${f1(x)},${f1(y - h * 0.28)}v${f1(h * 0.56)}" stroke="#fff" stroke-width="${f1(h * 0.2)}"/>${txt(x + h * 0.85, y - o.fs * 0.1, 'Big Bend Regional Medical Center', 'fill="#b3261e" font-weight="700"', o.fs * 0.8, 'start')}${txt(x + h * 0.85, y + o.fs * 0.85, 'Hospital', 'fill="#6b6b6b"', o.fs * 0.75, 'start')}${hospDrive(F) ? txt(x + h * 0.85, y + o.fs * 1.7, hospDrive(F), 'class="rg-drive" fill="#6b6b6b"', o.fs * 0.75, 'start') : ''}</g>`; }
   // country / river names
   { const [x, y] = proj([-104.05, 29.33]); s += txt(x, y, 'MEXICO', 'fill="#9a9a9a" font-weight="700" letter-spacing="3"', o.fs * 1.05); }
   { const [x, y] = proj([-103.42, 29.75]); s += txt(x, y, 'TEXAS', 'fill="#9a9a9a" font-weight="700" letter-spacing="3"', o.fs * 1.05); }
