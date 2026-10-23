@@ -27,7 +27,7 @@ try {
   await p.evaluate(() => { const ix = document.querySelector('.ixsec'), b = (window as any).__ixBack; if (ix && b) { b[0].insertBefore(ix, b[1]); document.querySelector('.ixhome')?.remove(); } });
   // one PDF per course page (same CSS as "Print this course")
   for (const k of await p.$$eval('.coursepage', (e) => e.map((x) => (x as HTMLElement).dataset.course!))) {
-    await p.evaluate((k) => { document.body.classList.add('printone'); document.querySelectorAll('.coursepage, .routeseq').forEach((x) => x.classList.toggle('on', (x as HTMLElement).dataset.course === k)); document.querySelectorAll('.ixe').forEach((x) => x.classList.toggle('off', !(x as HTMLElement).dataset.r!.split(' ').includes(k))); }, k);
+    await p.evaluate((k) => { document.body.classList.add('printone'); document.querySelectorAll('.coursepage, .routeseq').forEach((x) => x.classList.toggle('on', (x as HTMLElement).dataset.course === k)); document.querySelectorAll('.ixe').forEach((x) => x.classList.toggle('off', !(x as HTMLElement).dataset.r!.split(' ').includes(k))); document.querySelectorAll<HTMLElement>('.ixgh').forEach((h) => (h.style.display = 'none')); /* per-course: just its junctions, no distance groups */ }, k);
     await p.pdf({ path: path.join(D, `course-${k}.pdf`), preferCSSPageSize: true, printBackground: true });
     { const o = orient(path.join(D, `course-${k}.pdf`)).join(''); if (!/^LLP+$/.test(o)) throw new Error(`[pdf] course-${k}.pdf pages ${o}: want map, list (both landscape), photo pages`); console.log(`pdf course-${k}: ${o.length} pages (map, list, ${o.length - 2} photo)`); }
   }

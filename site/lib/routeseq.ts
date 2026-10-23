@@ -143,17 +143,23 @@ export function routeSeqPage(c: Ctx, k: string) {
 }
 export function intersectionsSection(c: Ctx) {
   const man = fs.existsSync(MAN) ? JSON.parse(fs.readFileSync(MAN, "utf8")) : {}, imgs = man.junctions ?? {}, { list } = mj(c);
-  const ent = list.map((j) => { const ph: string[] = imgs[j.id] ?? [];
+  const html = (j: MJ) => { const ph: string[] = imgs[j.id] ?? [];
     // Erik: just the junction (its trail names), the photo frames and link(s) back to the route lists — no miles / distances
     const twins = list.filter((q) => q.trails.join("|") === j.trails.join("|") && q.turn === j.turn), ns = (q: MJ) => q.ll[1] - j.ll[1], ew = (q: MJ) => q.ll[0] - j.ll[0];
     // same trail pair meeting twice: tell them apart by compass position (geometry only), never by mileage
     const pos = twins.length < 2 ? "" : (() => { const o = twins.filter((q) => q !== j); const vs = Math.max(...o.map((q) => Math.abs(ns(q)))) >= Math.max(...o.map((q) => Math.abs(ew(q)) * 0.87)); return vs ? (o.every((q) => ns(q) < 0) ? " (north)" : o.every((q) => ns(q) > 0) ? " (south)" : " (middle)") : (o.every((q) => ew(q) < 0) ? " (east)" : o.every((q) => ew(q) > 0) ? " (west)" : " (middle)"); })();
     const nm = j.trails.join(" & ") + (j.turn ? " (turnaround)" : "") + pos, seenR = new Set<string>();
     const back = j.uses.filter((u) => !seenR.has(u.k) && seenR.add(u.k)).map((u) => `<a href="#rs-${u.k}-${u.node}" style="color:${c.courses.colors[u.k]}">${u.k}</a>`).join(" · ");
-    return `<section class="ixe" id="ix-${j.id}" data-r="${[...seenR].join(" ")}"><h3>${esc(nm)}</h3><p class="ixu">Back to route list: ${back}</p><div class="ixph">${[0, 1].map((i) => ph[i] ? `<figure class="rs-fr"><img src="${esc(ph[i])}" alt="${esc(nm)}"/></figure>` : `<figure class="rs-fr rs-empty"><span>Photo</span></figure>`).join("")}</div></section>`; }).join("");
+    return `<section class="ixe" id="ix-${j.id}" data-r="${[...seenR].join(" ")}"><h3>${esc(nm)}</h3><p class="ixu">Back to route list: ${back}</p><div class="ixph">${[0, 1].map((i) => ph[i] ? `<figure class="rs-fr"><img src="${esc(ph[i])}" alt="${esc(nm)}"/></figure>` : `<figure class="rs-fr rs-empty"><span>Photo</span></figure>`).join("")}</div></section>`; };
+  // Erik: grouped by race distance, shortest first; each junction once, in the first (shortest) race that uses it; entries still list ALL their races
+  const seen = new Set<string>(), groups = [...c.courses.order].sort((a: string, b: string) => parseFloat(a) - parseFloat(b)).map((k: string) => {
+    const js = list.filter((j) => !seen.has(j.id) && j.uses.some((u) => u.k === k)); js.forEach((j) => seen.add(j.id)); return { k, js }; }).filter((g: any) => g.js.length);
+  if (seen.size !== list.length) throw new Error("[intersections] junctions without a race group");
+  console.log("  intersections groups: " + groups.map((g: any) => g.k + " " + g.js.length).join(", "));
+  const ent = groups.map((g: any) => `<h2 class="ixgh">${esc(g.k)}</h2><div class="ixg">${g.js.map(html).join("")}</div>`).join("");
   const dd = list.flatMap((j) => j.uses); console.log(`  intersections directions: ${dd.filter((u) => u.src === "geom").length} from geometry, ${dd.filter((u) => u.src === "neutral").length} neutral (Continue)`);
   console.log(`  intersections: ${list.length} junctions (from ${list.reduce((a, j) => a + j.uses.length, 0)} route junctions)`);
-  return `<article class="doc ixsec"><h2>Intersections</h2><div class="ixg">${ent}</div></article>`;
+  return `<article class="doc ixsec"><h2>Intersections</h2>${ent}</article>`;
 }
 
 /** where the list splits into OUT / BACK. Turnaround POI if the race has one; else the GPX point farthest (straight line) from the start.
