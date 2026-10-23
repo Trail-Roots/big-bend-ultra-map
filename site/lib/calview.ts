@@ -44,24 +44,24 @@ export function renderCalendar(c: Ctx) {
     `<li class="cv-ev cv-item${race(e.s) ? ' cv-race' : ''}" data-race="${race(e.s) ?? ''}" role="button" aria-expanded="false"${attrs(e)}><span class="cv-t">${when(e)}</span><span class="cv-s">${esc(e.s)}</span>${e.loc ? `<span class="cv-l"><a class="cv-maplink" href="${mapsUrl(e.loc)}" target="_blank" rel="noopener">${esc(place(e.loc))}</a></span>` : ''}<div class="cv-det" hidden>${e.d ? `<div class="cv-desc">${safeDesc(e.d)}</div>` : ''}${e.loc ? `<p class="cv-dloc"><b>Location</b> <a class="cv-maplink" href="${mapsUrl(e.loc)}" target="_blank" rel="noopener">${esc(e.loc)}</a></p>` : ''}${!e.d && !e.loc ? '<p class="cv-dnone">No further details.</p>' : ''}</div></li>`).join('')}</ol></section>`).join('');
   // ---- print: hour-by-hour grid from race day forward ----
   const pe = ev.filter((e) => e.a >= 0 && e.a < 3000) /* print: race weekend only, as before */, timed = pe.filter((e) => !allDay(e)), alld = pe.filter(allDay);
-  const G0 = Math.floor(Math.min(...timed.map((e) => e.a)) / 60) * 60, G1 = Math.ceil(Math.max(...timed.map((e) => Math.max(e.b ?? e.a, e.a + MINDUR))) / 60) * 60;
-  const end = (e: E) => Math.max(e.b ?? e.a, e.a + MINDUR), pos = new Map<E, { col: number; n: number }>();
-  let cl: E[] = [], cend = -1e9; const cols: number[] = [];
-  const flush = () => { const n = Math.max(1, ...cl.map((e) => pos.get(e)!.col + 1)); cl.forEach((e) => (pos.get(e)!.n = n)); cl = []; cols.length = 0; };
-  for (const e of timed) { if (e.a >= cend && cl.length) flush(); let col = cols.findIndex((t) => t <= e.a); if (col < 0) { col = cols.length; cols.push(0); } cols[col] = end(e); pos.set(e, { col, n: 1 }); cl.push(e); cend = Math.max(cend, end(e)); }
-  if (cl.length) flush();
-  const hours: number[] = []; for (let m = G0; m <= G1; m += 60) hours.push(m);
-  const Y = (m: number) => ((m - G0) / 60).toFixed(4);
-  const blocks = timed.map((e) => { const p = pos.get(e)!, d = end(e) - e.a, k = race(e.s);
-    return `<div class="cv-ev cv-blk${d <= 45 ? ' cv-short' : ''}${k ? ' cv-race' : ''}"${attrs(e, false)} style="${k ? `--rc:${c.courses.colors[k]};` : ''}top:calc(${Y(e.a)} * var(--hh));height:calc(${(d / 60).toFixed(4)} * var(--hh) - 2px);left:calc(${(p.col / p.n * 100).toFixed(3)}% + 1px);width:calc(${(100 / p.n).toFixed(3)}% - 3px)"><span class="cv-s">${esc(e.s).replace(/@/g, '@<wbr>')}</span><span class="cv-t">${when(e)}</span></div>`; }).join('');
-  const mids = hours.filter((m) => m % 1440 === 0 && m > G0);
-  const grid = `<div class="cv-print"><div class="cv-pday">${dayName(dayOf(G0))} · race day${mids.map((m) => ` → ${dayName(dayOf(m))}`).join('')}</div>
-    ${alld.map((e) => `<div class="cv-ev cv-allday"${attrs(e)}><span class="cv-t">All day</span><span class="cv-s">${esc(e.s)}</span></div>`).join('')}
-    <div class="cv-grid" style="height:calc(${(G1 - G0) / 60} * var(--hh))">
-      ${hours.map((m) => `<div class="cv-hr${m % 1440 === 0 ? ' cv-mid' : ''}" style="top:calc(${Y(m)} * var(--hh))"><span>${m % 1440 === 0 ? dayName(dayOf(m)).split(',')[0] + ' 12 AM' : hr(m)}</span></div>`).join('')}
-      ${mids.map((m) => `<div class="cv-dline" style="top:calc(${Y(m)} * var(--hh))"><b>${dayName(dayOf(m))}</b></div>`).join('')}
+  // one printed page per day (Erik): each page is that day's full 24 hours (12 AM - 12 AM) filling the page; overlap columns per day
+  const end = (e: E) => Math.max(e.b ?? e.a, e.a + MINDUR);
+  const pdays = [...new Set(pe.map((e) => dayOf(e.a)))].sort((x, y) => x - y);
+  const dayPage = (d: number) => { const D0 = d * 1440, D1 = D0 + 1440, tm = timed.filter((e) => dayOf(e.a) === d), ad = alld.filter((e) => dayOf(e.a) === d), pos = new Map<E, { col: number; n: number }>();
+    let cl: E[] = [], cend = -1e9; const cols: number[] = [];
+    const flush = () => { const n = Math.max(1, ...cl.map((e) => pos.get(e)!.col + 1)); cl.forEach((e) => (pos.get(e)!.n = n)); cl = []; cols.length = 0; };
+    for (const e of tm) { if (e.a >= cend && cl.length) flush(); let col = cols.findIndex((t) => t <= e.a); if (col < 0) { col = cols.length; cols.push(0); } cols[col] = end(e); pos.set(e, { col, n: 1 }); cl.push(e); cend = Math.max(cend, end(e)); }
+    if (cl.length) flush();
+    const Y = (m: number) => ((m - D0) / 60).toFixed(4), hours: number[] = []; for (let m = D0; m <= D1; m += 60) hours.push(m);
+    const blocks = tm.map((e) => { const p = pos.get(e)!, dd = Math.min(end(e), D1) - e.a, k = race(e.s);
+      return `<div class="cv-ev cv-blk${dd <= 45 ? ' cv-short' : ''}${k ? ' cv-race' : ''}"${attrs(e, false)} style="${k ? `--rc:${c.courses.colors[k]};` : ''}top:calc(${Y(e.a)} * var(--hh));height:calc(${(dd / 60).toFixed(4)} * var(--hh) - 2px);left:calc(${(p.col / p.n * 100).toFixed(3)}% + 1px);width:calc(${(100 / p.n).toFixed(3)}% - 3px)"><span class="cv-s">${esc(e.s).replace(/@/g, '@<wbr>')}</span><span class="cv-t">${when(e)}</span></div>`; }).join('');
+    return `<div class="cv-dpage"><div class="cv-pday">${d !== pdays[0] ? "Race calendar (continued) · " : ""}${dayName(d)}${d === 0 ? ' · race day' : ''} · times CT</div>
+    ${ad.map((e) => `<div class="cv-ev cv-allday"${attrs(e)}><span class="cv-t">All day</span><span class="cv-s">${esc(e.s)}</span></div>`).join('')}
+    <div class="cv-grid" style="height:calc(24 * var(--hh))">
+      ${hours.map((m) => `<div class="cv-hr${m === D0 || m === D1 ? ' cv-mid' : ''}" style="top:calc(${Y(m)} * var(--hh))"><span>${hr(m)}</span></div>`).join('')}
       <div class="cv-col">${blocks}</div>
-    </div></div>`;
+    </div></div>`; };
+  const grid = `<div class="cv-print">${pdays.map(dayPage).join('')}</div>`;
   return `<div class="cv">
   <div class="cv-head"><div class="cv-title"><b>Race calendar</b><span class="cv-date cv-web">Upcoming events · times CT</span><span class="cv-date cv-pr">From race day forward · times CT</span></div></div>
   <div class="cv-scroll" tabindex="0" aria-label="Race calendar events">${agenda}<p class="cv-empty" hidden>No upcoming events.</p></div>

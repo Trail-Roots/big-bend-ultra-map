@@ -619,3 +619,12 @@ a.vw-plan{text-decoration:none}
 @media print{ol.rs li .rs-cont{flex-basis:100%;padding-left:calc(.5in + 6pt);font-weight:400}ol.rs li .rs-cont .rs-name{font-weight:700;color:#2a2a2a}}
 @media print{.sec-courses .routeseq li.rs-after{padding-top:1pt;padding-bottom:1pt}.sec-courses .routeseq li.rs-after .rs-name{font-weight:600}}
 @media print{.sec-courses ol.rs li{padding-top:1.6pt;padding-bottom:1.6pt}.sec-courses ol.rs li.rs-after{padding-top:1pt;padding-bottom:1pt}}
+
+/* print calendar: one portrait page per day (Jan 17, Jan 18), each the full 24 h filling the page */
+@media print{
+  html body .sec-map .calbox{height:auto;overflow:visible}
+  html body .calbox .cv{--hh:.376in}
+  .calbox .cv-dpage{break-inside:avoid}.calbox .cv-dpage + .cv-dpage{break-before:page}
+  .calbox .cv-dpage .cv-pday{font-size:11pt;padding:.06in 0 .02in}
+  .calbox .cv-dpage .cv-grid{margin:.12in 0 0}
+  .calbox .cv-blk{font-size:8.6pt;line-height:1.15}}
