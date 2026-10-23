@@ -561,3 +561,10 @@ dialog.lightbox{z-index:2147483647}dialog.lightbox::backdrop{z-index:2147483646}
   html:not(.pdfgen) body>*{display:none!important}
   html:not(.pdfgen) body::before{content:"Big Bend Ultra 2027 course map — print the PDF: https://trail-roots.github.io/big-bend-ultra-map/big-bend-ultra-2027-map.pdf";display:block;font:600 14pt system-ui,sans-serif;color:#222;padding:1in .5in}
 }
+/* regional map: PDF-only page (printed last, next to Operations) + web zoom-out mode of the main map (zoom.ts adds .zreg when k < 1) */
+@media screen{.sec-regional{display:none!important}}
+@media print{.sec-regional .rgpage{break-before:page;display:flex;flex-direction:column;height:10.3in;overflow:hidden}.sec-regional .rg-h{margin:0 0 4pt;font-size:13pt}.sec-regional svg.regionmap{display:block;width:7.4in;height:auto;margin:0 auto}}
+svg g.layer[data-layer="region"]{display:none}
+svg.mainmap.zreg g.layer[data-layer="region"]{display:inline}
+svg.mainmap.zreg g.layer:is([data-layer="topo"],[data-layer="labels"],[data-layer="stationLabels"],[data-layer="pois"],[data-layer="arrows"],[data-layer="zoom"],[data-layer="dots"]),svg.mainmap.zreg .bgtr{display:none!important}
+svg.mainmap.zreg g.legend,svg.mainmap.zreg g.layer[data-layer="park"] text{display:none}

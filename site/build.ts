@@ -9,7 +9,7 @@ import { markerDefs } from './lib/util';
 const WM_SVG = `url("data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"><text x="512" y="500" transform="rotate(-35 500 500)" text-anchor="middle" dominant-baseline="central" font-family="system-ui,sans-serif" font-weight="900" font-size="220" fill="#b3261e" fill-opacity=".16" letter-spacing="10">DRAFT</text></svg>')}")`;
 // one watermark per printed page, drawn by that page's root box (a position:fixed element is sized by the FIRST page, so it sat off-centre on
 // portrait pages): the overlay spans the full printable area (equal .28in margins all round => centred on the sheet), contain => never clipped
-const WM_LAND = 'html body .sec-map #pb-main, html body .sec-map .charts, html body .sec-timeline .tlpage, html body .sec-courses .coursepage', WM_PORT = 'html body .sec-map .calbox, html body .sec-finish-plan, html body .sec-parking-plan, html body .sec-stpages .stpage';
+const WM_LAND = 'html body .sec-map #pb-main, html body .sec-map .charts, html body .sec-timeline .tlpage, html body .sec-courses .coursepage', WM_PORT = 'html body .sec-map .calbox, html body .sec-finish-plan, html body .sec-parking-plan, html body .sec-stpages .stpage, html body .sec-regional .rgpage';
 const WATERMARK = `<style>@media print{${WM_LAND},${WM_PORT}{position:relative}${WM_LAND.split(', ').map((q) => q + '::after').join(',')},${WM_PORT.split(', ').map((q) => q + '::after').join(',')}{content:"";position:absolute;left:0;top:0;width:100%;background:${WM_SVG} center/contain no-repeat;pointer-events:none;z-index:9999}${WM_LAND.split(', ').map((q) => q + '::after').join(',')}{height:7.94in}${WM_PORT.split(', ').map((q) => q + '::after').join(',')}{height:10.44in}}</style>`;
 const here = import.meta.dir, root = path.resolve(here, '..');
 const C = path.join(root, 'content'), D = path.join(root, 'dist');
@@ -20,7 +20,7 @@ const ctx: Ctx = {
   network: J('network.geojson'), networkFull: fs.existsSync(path.join(C, 'network_full.geojson')) ? J('network_full.geojson') : undefined, park: J('park.geojson'), pois: J('pois.geojson'), zoom: J('zoomboxes.geojson'),
   arrows: J('arrows.geojson'), labels: J('labels.geojson'), areaLabels: J('area_labels.geojson'), timeline: J('timeline.json'), stationLabels: J('station_labels.geojson'), poiLabels: J('poi_labels.geojson'),
   courseGeo: Object.fromEntries(courses.order.map((k: string) => [k, J(`courses/${k}.geojson`)])),
-  logistics: J('logistics.json'), calendar: J('calendar.json'),
+  logistics: J('logistics.json'), regional: J('regional.geojson'), calendar: J('calendar.json'),
   profiles: { ...Object.fromEntries(courses.order.map((k: string) => [k, J(`profiles/${k}.json`)])), callouts: J('profiles/callouts.json') },
 };
 fs.rmSync(D, { recursive: true, force: true }); fs.mkdirSync(D, { recursive: true });
@@ -93,6 +93,9 @@ fs.writeFileSync(path.join(D, 'index.html'), html);
   fs.writeFileSync(path.join(D, 'profiles.json'), JSON.stringify(V)); console.log('profile variants', Object.keys(V).length); }
 console.log('index.html', (html.length / 1024).toFixed(0) + ' KB,', sections.length, 'sections:', sections.map((s) => s.meta.id).join(', '));
 fs.cpSync(path.join(here, 'public'), D, { recursive: true });
+// web: regional layer of the main map (lazy-loaded by zoom.ts when zooming out past the default frame)
+{ const { regionFrag } = await import('./lib/regional'); const { viewProjection, SHEET } = await import('./lib/util'); const fig = ctx.layout.views.main.fig, W = fig[2] * SHEET.w, H = fig[3] * SHEET.h, V = viewProjection(ctx.layout.views.main, W, H), kmin = +(html.match(/data-rbox="[^"]* ([0-9.]+)"/) || [])[1];
+  if (!kmin) throw new Error('[regional] svg.mainmap data-rbox missing'); fs.writeFileSync(path.join(D, 'region.svg'), regionFrag(ctx, V.p, kmin)); }
 // embed.js reserved heights: committed table measured locally by tools/heights.ts (never in CI)
 { const E = path.join(D, 'embed.js'), src = fs.readFileSync(E, 'utf8'); if (!src.includes('/*HEIGHTS*/null')) throw new Error('[embed.js] heights placeholder missing');
   fs.writeFileSync(E, src.replace('/*HEIGHTS*/null', fs.readFileSync(path.join(here, 'embed-heights.json'), 'utf8').trim())); }

@@ -12,7 +12,7 @@ try {
   await p.evaluate(() => document.fonts.ready); await p.emulateMedia({ media: 'print' });
   await p.evaluate(() => document.documentElement.classList.add('pdfgen')); // full print layout (the live page prints only a pointer to this PDF)
   // Operations (race-day timeline) prints last: move its section to the end of the page before rendering
-  await p.evaluate(() => { const t = document.getElementById('timeline'); if (t) t.parentElement!.appendChild(t); });
+  await p.evaluate(() => { const t = document.getElementById('timeline'); if (t) t.parentElement!.appendChild(t); const r = document.getElementById('regional'); if (r) r.parentElement!.appendChild(r); }); // regional map prints after Operations (last page)
   // photos: re-encode every raster <img> at 300 dpi of its printed size (JPEG q80; the sources are 1600 px phone shots) so the PDF does not carry full-res files
   await p.evaluate(async () => { for (const im of [...document.querySelectorAll<HTMLImageElement>('img')]) { const r = im.getBoundingClientRect(); if (!r.width || !im.naturalWidth || /\.svg($|\?)/.test(im.currentSrc)) continue;
     const s = Math.min(1, (r.width / 96 * 300) / im.naturalWidth, (r.height / 96 * 300) / im.naturalHeight); if (s > 0.95) continue;
@@ -54,7 +54,7 @@ const pdfText = (n?: number) => { const doc = mupdf.Document.openDocument(fs.rea
   if (files.length !== pages.length) throw new Error(`print images ${files.length} != pages ${pages.length}`);
   fs.writeFileSync(path.join(P, 'pages.json'), JSON.stringify(files.map((f, i) => ({ src: 'print/' + f, o: pages[i] }))));
   // expected page sequence (README): map | access + elevation | calendar | 5 race pages | 2 plans | 6 station pages | operations
-  const EXPECT = 'PLP' + 'LLLLL' + 'PP' + 'PPPPPP' + 'L'; if (pages.join('') !== EXPECT) throw new Error(`[pdf] page sequence ${pages.join('')} != expected ${EXPECT}`);
+  const EXPECT = 'PLP' + 'LLLLL' + 'PP' + 'PPPPPP' + 'L' + 'P'; if (pages.join('') !== EXPECT) throw new Error(`[pdf] page sequence ${pages.join('')} != expected ${EXPECT}`);
   console.log('print images', files.length, pages.join('')); }
 // PDF check: every aid-station print page carries its visible primary coordinates link text ("Map: lat, lng")
 { const st = JSON.parse(fs.readFileSync(path.join(import.meta.dir, '../content/stations.json'), 'utf8')), txt = pdfText();

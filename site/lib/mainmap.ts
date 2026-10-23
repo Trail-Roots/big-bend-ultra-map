@@ -1,3 +1,4 @@
+import { regionData } from './regional';
 import { northG, NORTH_INSET } from './north';
 import { stationLabel, poiLabel, areaLabel } from './labels';
 import { chaikin, mergeChains, simplifyPts, leaderLine, poiDot, SHEET, viewProjection, esc, f1, lineD, dash, STYLE, station, textBlock, gmapLink, tireTrack, doubleTrack, BAND_OP, BAND_TINT, tint } from './util';
@@ -82,10 +83,10 @@ export function renderMain(c) {
   // logo: drawn LAST (above every layer, labels, markers and runner dots) with a white halo
   const logo = `<a href="https://trailroots.com/big-bend-ultra" target="_blank" rel="noopener"><image class="maplogo" filter="url(#logohalo)" href="logo_ink_crop.png" x="${f1(W * 0.08)}" y="${f1(H * (1 - 0.985))}" width="${f1(LOGO_PT)}" height="${f1(LOGO_PT * 776 / 730)}" preserveAspectRatio="xMidYMid meet"/></a>`;
   fur += legend(c, W, H);
-  const order = ['topo', 'park', 'roads', 'access', 'courses', 'zoom', 'arrows', 'stations', 'pois', 'stationLabels', 'labels', 'dots'];
+  const order = ['region', 'topo', 'park', 'roads', 'access', 'courses', 'zoom', 'arrows', 'stations', 'pois', 'stationLabels', 'labels', 'dots'];
   const vis = Object.fromEntries(LAYERS.map(l => [l[0], l[2]]));
   const grp = order.map(k => `<g class="layer" data-layer="${k}"${(vis[k] === false) ? ' style="display:none"' : ''}>${g[k] || ''}</g>`).join('\n');
-  return `<svg class="mainmap" viewBox="0 0 ${f1(W)} ${f1(H)}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Big Bend Ultra main course map"><defs><filter id="logohalo" x="-10%" y="-10%" width="120%" height="120%"><feMorphology in="SourceAlpha" operator="dilate" radius="5" result="d"/><feFlood flood-color="#fff"/><feComposite in2="d" operator="in"/><feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge></filter><clipPath id="mclip"><rect width="${f1(W)}" height="${f1(H)}"/></clipPath></defs><rect width="${f1(W)}" height="${f1(H)}" fill="#fff"/><g clip-path="url(#mclip)"><g class="zv">${grp}</g></g>${fur}<rect width="${f1(W)}" height="${f1(H)}" fill="none" stroke="#000" stroke-width="1.6"/>${logo}</svg>`;
+  return `<svg class="mainmap" data-rbox="${regionData(c, V, W, H)}" viewBox="0 0 ${f1(W)} ${f1(H)}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Big Bend Ultra main course map"><defs><filter id="logohalo" x="-10%" y="-10%" width="120%" height="120%"><feMorphology in="SourceAlpha" operator="dilate" radius="5" result="d"/><feFlood flood-color="#fff"/><feComposite in2="d" operator="in"/><feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge></filter><clipPath id="mclip"><rect width="${f1(W)}" height="${f1(H)}"/></clipPath></defs><rect width="${f1(W)}" height="${f1(H)}" fill="#fff"/><g clip-path="url(#mclip)"><g class="zv">${grp}</g></g>${fur}<rect width="${f1(W)}" height="${f1(H)}" fill="none" stroke="#000" stroke-width="1.6"/>${logo}</svg>`;
 }
 /** notched arrowhead (dart), centred on the route point and pointing along the route.
  *  Normalised shape pointing +x: tip (0.6,0), top-back (-0.5,-0.5), notch (-0.28,0), bottom-back (-0.5,0.5) — length:height 1.1:1. */

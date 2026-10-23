@@ -517,4 +517,4 @@ if (document.documentElement.classList.contains('embed') && parent !== window) {
   if (blks.length) { fit(); addEventListener('load', fit, { once: true }); let t = 0; addEventListener('resize', () => { clearTimeout(t); t = setTimeout(fit, 120) as unknown as number; }); document.fonts?.ready.then(fit); } }
 
 // print: Operations (race-day timeline) goes last, as in the PDF; put back after printing
-{ const t = document.getElementById('timeline'), home = t?.nextSibling ?? null; if (t) { addEventListener('beforeprint', () => t.parentElement!.appendChild(t)); addEventListener('afterprint', () => t.parentElement!.insertBefore(t, home)); } }
+{ const t = document.getElementById('timeline'), home = t?.nextSibling ?? null; if (t) { addEventListener('beforeprint', () => { t.parentElement!.appendChild(t); const r = document.getElementById('regional'); if (r) t.parentElement!.appendChild(r); }); /* regional map stays last, after Operations */ addEventListener('afterprint', () => t.parentElement!.insertBefore(t, home)); } }

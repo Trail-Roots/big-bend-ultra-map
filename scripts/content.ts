@@ -282,7 +282,7 @@ for (const f of park.features) {
 w('park.geojson', park);
 
 // curated layers (hand-placed decisions frozen from the approved PDF): copied verbatim
-for (const f of ['network.geojson', 'labels.geojson', 'area_labels.geojson', 'station_labels.geojson', 'poi_labels.geojson', 'pois.geojson', 'zoomboxes.geojson', 'layout.json', 'site.json']) fs.copyFileSync(path.join(SRC, 'curated', f), path.join(OUT, f));
+for (const f of ['network.geojson', 'labels.geojson', 'area_labels.geojson', 'station_labels.geojson', 'poi_labels.geojson', 'pois.geojson', 'zoomboxes.geojson', 'layout.json', 'site.json', 'regional.geojson']) fs.copyFileSync(path.join(SRC, 'curated', f), path.join(OUT, f));
 // background roads / trails that run ALONG an official route (any race GPX; GPX = source of truth) are clipped out so the route is not double-marked
 // (e.g. La Posta Rd, the Piedmontoya tracks, the Solitario road toward Shutup). Buffer CLIP_M around every route, clipped only where a line stays inside it for ALONG_MIN or more (parallel duplicates; crossings stay); kept pieces that touch a clipped
 // stretch are extended to the nearest route point so branches / crossings still meet the route cleanly; slivers shorter than CLIP_MIN between two

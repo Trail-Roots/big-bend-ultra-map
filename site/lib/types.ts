@@ -5,7 +5,7 @@ export interface Ctx {
   layout: any; colors: Record<string, string>; courses: { order: string[]; colors: Record<string, string>; courses: Record<string, any> };
   stations: { order: string[]; stations: Record<string, any> }; cutoffs: Record<string, { station: string; mile: number; cutoff: string }[]>;
   network: FC; networkFull?: FC; park: FC; pois: FC; zoom: FC; arrows: FC; labels: FC; areaLabels: FC; timeline: any; stationLabels: FC; poiLabels: FC;
-  courseGeo: Record<string, FC>; profiles: Record<string, any>; logistics: any; calendar: { events: { s: string; a: number; b: number | null; loc: string }[] };
+  courseGeo: Record<string, FC>; profiles: Record<string, any>; logistics: any; regional?: FC; calendar: { events: { s: string; a: number; b: number | null; loc: string }[] };
 }
 /** one section of the single-page site; files in site/sections/ render in filename order */
 export interface Section { meta: { id: string; title: string; /** opt out of the print/PDF pages (default: printed) */ print?: boolean }; render(c: Ctx): string }
