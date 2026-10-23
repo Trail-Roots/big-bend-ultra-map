@@ -29,7 +29,7 @@ jobs:
           key: ${{ steps.pdfkey.outputs.key }}
       - if: steps.pdfcache.outputs.cache-hit != 'true'
         run: |
-          sudo apt-get install -y poppler-utils
+          sudo apt-get update -q && sudo apt-get install -y poppler-utils  # pdftoppm: deployed print images
           bunx playwright install --with-deps chromium
           bun run pdf
           mkdir -p pdfout && cp -r dist/*.pdf dist/cards dist/cards-embed.png dist/cards-embed.jpg dist/print pdfout/
