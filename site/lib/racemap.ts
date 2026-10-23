@@ -62,18 +62,16 @@ export function renderRaceMap(c, k: string, card?: boolean) {
   if (nk) { const nf = c.courseGeo[nk].features[0], o = card ? 15 : 7, sw = card ? 6 : 2.5; sample(V.lines(nf));
     // next longer race: thin dashed line in its full colour, offset beside the road (never on the trail-type pattern); the current race band covers it where they share the road
     s += `<path d="${V.lines(nf).filter((l) => l.length > 1).map((l) => 'M' + offsetLine(l, o).map((q) => `${f1(q[0])},${f1(q[1])}`).join('L')).join('')}" class="ln under" data-course="${nk}" fill="none" stroke="${c.courses.colors[nk]}" stroke-width="${sw}" stroke-dasharray="${f1(sw * 2.4)} ${f1(sw * 2)}" stroke-opacity=".8"/>`; }
-  // every other race's route faded in the background (the race-filter halo style of the main map, at low opacity) so nearby course trails read as context; this race stays on top
-  s += `<g class="otherroutes" opacity=".35">${O.filter((x) => x !== k).map((x) => `<path d="${V.path(c.courseGeo[x].features[0])}" class="ln" stroke="${tint(c.courses.colors[x], BAND_TINT)}" stroke-width="${card ? 30 : 12}" stroke-linejoin="round"/>`).join("")}</g>`;
-  for (const x of O) if (x !== k) sample(V.lines(c.courseGeo[x].features[0]));
-  // plus every named course trail (sources/curated/route_trails.geojson, the full OSM ways) faded the same way, so trail stretches no race uses
-  // (e.g. Buena Suerte beside Crystal Trail) still show inside each map's frame
-  let RTL: any[] = [];
-  { const RT = JSON.parse(fs.readFileSync(path.join(import.meta.dir, '../../sources/curated/route_trails.geojson'), 'utf8')).features.filter((g: any) => !/^FM 170$|interpretive/.test(g.properties.name));
-    s += `<g class="othertrails" opacity=".35">${RT.map((g: any) => `<path d="${V.path(g)}" class="ln" stroke="${tint('#8a8170', BAND_TINT)}" stroke-width="${card ? 30 : 12}" stroke-linejoin="round"/>`).join("")}</g>`;
-    RTL = RT; } // sampled for the trail-name labels (below); station labels keep their spots
+  // other races' segments (on-course features this race does not use) are drawn in the main map's existing subdued off-course style
+  // (offRoads / STYLE.off in util.ts: grey #9b968e / #8f8a82, lw 3, per-trail-type dash); this race's own segments keep the on-course patterns
+  const onK = (() => { const R: number[][] = []; for (const l of c.courseGeo[k].features[0].geometry.type === 'MultiLineString' ? c.courseGeo[k].features[0].geometry.coordinates : [c.courseGeo[k].features[0].geometry.coordinates]) for (let i = 1; i < l.length; i++) { const [a, b] = [l[i - 1], l[i]], n = Math.max(1, Math.ceil(Math.hypot((b[0] - a[0]) * 93, (b[1] - a[1]) * 111) / 0.01)); for (let j = 0; j <= n; j++) R.push([a[0] + (b[0] - a[0]) * j / n, a[1] + (b[1] - a[1]) * j / n]); }
+    const G = new Map<string, number[][]>(), key = (x: number, y: number) => `${Math.floor(x / 0.001)},${Math.floor(y / 0.001)}`; for (const q of R) { const kk = key(q[0], q[1]); (G.get(kk) || G.set(kk, []).get(kk)!).push(q); }
+    const near = (q: number[]) => { const gx = Math.floor(q[0] / 0.001), gy = Math.floor(q[1] / 0.001); for (let dx = -1; dx <= 1; dx++) for (let dy = -1; dy <= 1; dy++) for (const r of G.get(`${gx + dx},${gy + dy}`) || []) if (Math.hypot((r[0] - q[0]) * 93, (r[1] - q[1]) * 111) < 0.04) return true; return false; };
+    return (f: any) => { const L = f.geometry.type === 'MultiLineString' ? f.geometry.coordinates.flat() : f.geometry.coordinates; return L.filter(near).length / L.length > 0.5; }; })();
+  const NET = c.network.features.map((f: any) => f.properties.on_course && !onK(f) ? { ...f, properties: { ...f.properties, on_course: false } } : f);
   const rf = c.courseGeo[k].features[0], d = V.path(rf); sample(V.lines(rf));
   // race route = solid light tint band of the race colour BENEATH the full trail-type layer (every road / trail drawn exactly as without the band)
-  s += `<path d="${d}" class="ln" stroke="${tint(cc, BAND_TINT)}" stroke-width="${card ? 42 : 18}" stroke-linejoin="round"/>` + offRoads(c.network.features, V, false, true) + base + offRoads(c.network.features, V) + accessPatterns(c.network.features.filter((f) => f.properties.on_course), V, col);
+  s += `<path d="${d}" class="ln" stroke="${tint(cc, BAND_TINT)}" stroke-width="${card ? 42 : 18}" stroke-linejoin="round"/>` + offRoads(NET, V, false, true) + base + offRoads(NET, V) + accessPatterns(NET.filter((f: any) => f.properties.on_course), V, col);
   for (const f of c.network.features) if (!f.properties.bg) sample(V.lines(f)); // every drawn road / trail counts for label collisions
   // arrows: this race's arrows, at the main map's arrow size
   const arrows = c.arrows.features.filter((f) => f.properties.map === k).map((f) => ({ ...f, properties: { ...f.properties, size_pt: 12.4 } }));
@@ -141,7 +139,6 @@ export function renderRaceMap(c, k: string, card?: boolean) {
       if (free(b)) { placed.push(b); labels += `<text x="${f1(al === 'start' ? x0 : al === 'end' ? x0 + bw : x0 + bw / 2)}" y="${f1(y0 + bh * 0.78)}" class="f-serif" font-size="22" font-style="italic" font-weight="700" fill="${cc}" text-anchor="${al}" stroke="#fff" stroke-width="6" paint-order="stroke">${t}</text>`; done = true; break; } }
     if (!done) throw new Error('[racemap 10K] no clear spot for the turnaround label'); }
   // trail / road names along this race (site/lib/sequence.ts), set beside their trail, clear of every line, marker and label (race pages only)
-  for (const g of RTL) sample(V.lines(g));
   if (!card) labels += trailLabels(c, k, V, W, H, pts, ob, placed);
   console.log(`  racemap ${k}: ${placed.length} labels placed clear of ${pts.length} line samples, ${ob.length} symbols`);
   return `<svg class="racemap" data-race="${k}" data-f="${RACE_F}" viewBox="0 0 ${f1(W)} ${f1(H)}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${k} course map"><defs><filter id="logohalo${k}" x="-10%" y="-10%" width="120%" height="120%"><feMorphology in="SourceAlpha" operator="dilate" radius="4" result="d"/><feFlood flood-color="#fff"/><feComposite in2="d" operator="in"/><feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge></filter><clipPath id="rc${k}"><rect width="${f1(W)}" height="${f1(H)}"/></clipPath></defs><rect width="${f1(W)}" height="${f1(H)}" fill="#fff"/><g clip-path="url(#rc${k})">${s}${labels}</g>${bibSvg}${northSvg}${card ? '' : `<rect width="${f1(W)}" height="${f1(H)}" fill="none" stroke="#d4d4d4" stroke-width="2"/>`}${logoSvg}</svg>`;
