@@ -65,6 +65,13 @@ export function renderRaceMap(c, k: string, card?: boolean) {
     s += `<path d="${V.lines(nf).filter((l) => l.length > 1).map((l) => 'M' + offsetLine(l, o).map((q) => `${f1(q[0])},${f1(q[1])}`).join('L')).join('')}" class="ln under" data-course="${nk}" fill="none" stroke="${c.courses.colors[nk]}" stroke-width="${sw}" stroke-dasharray="${f1(sw * 2.4)} ${f1(sw * 2)}" stroke-opacity=".8"/>`; }
   // every line exactly as the main map draws it (same layers + styles: offRoads, FM 170, connectors, accessPatterns for every on-course trail); only the selected race gets its band
   const NET = c.network.features;
+  // the main map's background park trails (its .bgtr layer: off-route Buena Suerte / Dome Trail etc., shown on the main map when zoomed in), same offRoads drawing and the same .7 opacity, beneath FM 170
+  // shown exactly when the main map would show its .bgtr layer at this map's scale (zoom.ts scaleBar: z1mi when the 'nice' bar length <= 1 mi,
+  // bar width = the main map's 5-mi bar as a share of the frame width)
+  const SB = c.layout.scalebar, ppmiR = SB.m5 / 5 * V.ppm, maxR = SB.m5 / (c.layout.views.main.x[1] - c.layout.views.main.x[0]) * W;
+  const LR = [50, 20, 10, 5, 2, 1, 0.5, 0.25, 0.1].find((m) => m * ppmiR <= maxR * 1.05) ?? 0.1, showBg = LR <= 1;
+  console.log(`[racemap ${k}${card ? ' card' : ''}] scale bar ${LR} mi -> background trails ${showBg ? 'shown' : 'hidden'}`);
+  if (showBg) s += `<g class="racebgtr" opacity=".7">${offRoads(NET.filter((f: any) => f.properties.bg), V, true)}</g>`; // sampled for the trail-name labels only (below), so station labels keep their spots
   const rf = c.courseGeo[k].features[0], d = V.path(rf); sample(V.lines(rf));
   // race route = solid light tint band of the race colour BENEATH the full trail-type layer (every road / trail drawn exactly as without the band)
   s += `<path d="${d}" class="ln" stroke="${tint(cc, BAND_TINT)}" stroke-width="${card ? 42 : 18}" stroke-linejoin="round"/>` + offRoads(NET, V, false, true) + base + offRoads(NET, V) + accessPatterns(NET.filter((f: any) => f.properties.on_course), V, col);
@@ -135,6 +142,7 @@ export function renderRaceMap(c, k: string, card?: boolean) {
       if (free(b)) { placed.push(b); labels += `<text x="${f1(al === 'start' ? x0 : al === 'end' ? x0 + bw : x0 + bw / 2)}" y="${f1(y0 + bh * 0.78)}" class="f-serif" font-size="22" font-style="italic" font-weight="700" fill="${cc}" text-anchor="${al}" stroke="#fff" stroke-width="6" paint-order="stroke">${t}</text>`; done = true; break; } }
     if (!done) throw new Error('[racemap 10K] no clear spot for the turnaround label'); }
   // trail / road names along this race (site/lib/sequence.ts), set beside their trail, clear of every line, marker and label (race pages only)
+  for (const f of NET) if (f.properties.bg) sample(V.lines(f));
   if (!card) labels += trailLabels(c, k, V, W, H, pts, ob, placed);
   console.log(`  racemap ${k}: ${placed.length} labels placed clear of ${pts.length} line samples, ${ob.length} symbols`);
   return `<svg class="racemap" data-race="${k}" data-f="${RACE_F}" viewBox="0 0 ${f1(W)} ${f1(H)}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${k} course map"><defs><filter id="logohalo${k}" x="-10%" y="-10%" width="120%" height="120%"><feMorphology in="SourceAlpha" operator="dilate" radius="4" result="d"/><feFlood flood-color="#fff"/><feComposite in2="d" operator="in"/><feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge></filter><clipPath id="rc${k}"><rect width="${f1(W)}" height="${f1(H)}"/></clipPath></defs><rect width="${f1(W)}" height="${f1(H)}" fill="#fff"/><g clip-path="url(#rc${k})">${s}${labels}</g>${bibSvg}${northSvg}${card ? '' : `<rect width="${f1(W)}" height="${f1(H)}" fill="none" stroke="#d4d4d4" stroke-width="2"/>`}${logoSvg}</svg>`;
