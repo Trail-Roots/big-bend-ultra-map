@@ -275,10 +275,9 @@ initZoom();
 
 
 // ---- course pages: print one course only ----
-document.querySelectorAll<HTMLButtonElement>('button.printone').forEach((b) => b.addEventListener('click', () => {
-  document.body.classList.add('printone'); document.querySelectorAll('.coursepage').forEach((p) => p.classList.toggle('on', (p as HTMLElement).dataset.course === b.dataset.course));
-  const done = () => { document.body.classList.remove('printone'); removeEventListener('afterprint', done); }; addEventListener('afterprint', done); print();
-}));
+// print = the generated PDFs (single source of truth): open them in a new tab to print from there
+document.querySelectorAll<HTMLButtonElement>('button.printone').forEach((b) => b.addEventListener('click', () => { open(`course-${b.dataset.course}.pdf`, '_blank'); }));
+addEventListener('keydown', (e) => { if ((e.metaKey || e.ctrlKey) && !e.altKey && e.key.toLowerCase() === 'p') { e.preventDefault(); open('big-bend-ultra-2027-map.pdf', '_blank'); } });
 
 // ---- floor plans: wheel zoom toward the cursor, drag / touch pan, pinch, double-click reset; web only (reset in print) ----
 document.querySelectorAll<HTMLElement>('.fp-zoom:not(.fp-static)').forEach((box) => {

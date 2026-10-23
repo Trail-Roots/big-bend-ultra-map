@@ -10,8 +10,14 @@ const srv = serveDist(0), b = await chromium.launch();
 try {
   const p = await b.newPage(); await p.goto(`http://localhost:${srv.port}/`, { waitUntil: 'networkidle' });
   await p.evaluate(() => document.fonts.ready); await p.emulateMedia({ media: 'print' });
+  await p.evaluate(() => document.documentElement.classList.add('pdfgen')); // full print layout (the live page prints only a pointer to this PDF)
   // Operations (race-day timeline) prints last: move its section to the end of the page before rendering
   await p.evaluate(() => { const t = document.getElementById('timeline'); if (t) t.parentElement!.appendChild(t); });
+  // photos: re-encode every raster <img> at 300 dpi of its printed size (JPEG q80; the sources are 1600 px phone shots) so the PDF does not carry full-res files
+  await p.evaluate(async () => { for (const im of [...document.querySelectorAll<HTMLImageElement>('img')]) { const r = im.getBoundingClientRect(); if (!r.width || !im.naturalWidth || /\.svg($|\?)/.test(im.currentSrc)) continue;
+    const s = Math.min(1, (r.width / 96 * 300) / im.naturalWidth, (r.height / 96 * 300) / im.naturalHeight); if (s > 0.95) continue;
+    const cv = document.createElement('canvas'); cv.width = Math.round(im.naturalWidth * s); cv.height = Math.round(im.naturalHeight * s); cv.getContext('2d')!.drawImage(im, 0, 0, cv.width, cv.height);
+    const png = /\.png($|\?)/i.test(im.currentSrc); im.srcset = ''; im.src = cv.toDataURL(png ? 'image/png' : 'image/jpeg', 0.8); await im.decode().catch(() => {}); } });
   await p.pdf({ path: OUT, preferCSSPageSize: true, printBackground: true });
   // one PDF per course page (same CSS as "Print this course")
   for (const k of await p.$$eval('.coursepage', (e) => e.map((x) => (x as HTMLElement).dataset.course!))) {
@@ -33,6 +39,11 @@ try {
     await el.screenshot({ path: path.join(D, 'cards-embed.png'), type: 'png' }); await el.screenshot({ path: path.join(D, 'cards-embed.jpg'), type: 'jpeg', quality: 85 });
     await q.close(); console.log('cards embed image (elevation profile)', (fs.statSync(path.join(D, 'cards-embed.png')).size / 1024).toFixed(0) + ' KB png', (fs.statSync(path.join(D, 'cards-embed.jpg')).size / 1024).toFixed(0) + ' KB jpg'); }
 } finally { await b.close(); srv.stop(true); }
+/** shrink: Chromium writes every dash / round cap as outline curves with 5-decimal coords; round path-op operands to 0.01 (at 300 dpi max pixel delta 24/255, AA only) and re-save compressed */
+function slim(f: string) { const doc = mupdf.Document.openDocument(fs.readFileSync(f), 'application/pdf') as mupdf.PDFDocument;
+  for (let i = 0; i < doc.countPages(); i++) { const c = doc.findPage(i).get('Contents'); for (const st of c.isArray() ? Array.from({ length: c.length }, (_, k) => c.get(k)) : [c])
+    st.writeStream(st.readStream().asString().replace(/^([-\d. ]+) (m|l|c|v|y|re)$/gm, (_, n: string, op: string) => n.split(' ').map((x) => { const r = (+x).toFixed(2).replace(/\.?0+$/, ''); return r === '-0' ? '0' : r; }).join(' ') + ' ' + op)); }
+  fs.writeFileSync(f, doc.saveToBuffer('garbage=4,compress').asUint8Array()); }
 console.log('pdf', path.relative(process.cwd(), OUT), (fs.statSync(OUT).size / 1024 / 1024).toFixed(2) + ' MB');
 const pdfText = (n?: number) => { const doc = mupdf.Document.openDocument(fs.readFileSync(OUT), 'application/pdf'); let t = ''; for (let i = 0; i < doc.countPages(); i++) if (!n || i === n - 1) t += doc.loadPage(i).toStructuredText('preserve-whitespace').asText() + '\n'; return t; };
 // print images for embed.js: a host page can't print the cross-origin iframe (it comes out blank), so embed.js prints these page images instead
@@ -60,3 +71,7 @@ const pdfText = (n?: number) => { const doc = mupdf.Document.openDocument(fs.rea
   const miss = st.order.filter((k: string) => !new RegExp(name(k).replace(/[#/]/g, '\\$&') + ' ?\\[').test(raw)), links = (raw.match(/\/Dest \/station-/g) || []).length;
   if (miss.length || !links) throw new Error('[pdf] station page destinations missing: ' + miss.join(', ') + ' links ' + links);
   console.log('pdf internal station links', links, '-> 6 station pages'); }
+
+// last, after all checks (they read the raw Chromium output)
+for (const f of fs.readdirSync(D).filter((f) => f.endsWith('.pdf'))) slim(path.join(D, f));
+console.log('pdf slimmed', (fs.statSync(OUT).size / 1024 / 1024).toFixed(2) + ' MB');
