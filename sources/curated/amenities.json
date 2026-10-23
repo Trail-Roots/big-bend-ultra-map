@@ -1,9 +1,58 @@
 {
-  "_note": "Aid-station amenities (Erik, Oct 23 2026). All stations: basic first aid (band-aid kit, no medic), water + sports drinks, at minimum a privy-style toilet. toilet: 'privy' | 'rural' (non-flush, better than a privy). dropBags: true/false per race sheet Drop Bags column; Start/Finish is the drop-off point (dropoff), not an access point. vehicle: 'any' | '4x4'. camp: overnight volunteer camp. Parking is not listed separately (spectator access covers it).",
-  "S/F": { "snacks": true, "toilet": "rural", "dropBags": "dropoff", "spectators": true, "vehicle": "any", "camp": false, "photo": "photos/barton-warnock.jpg" },
-  "1": { "snacks": true, "toilet": "privy", "dropBags": false, "spectators": false, "vehicle": "4x4", "camp": false, "photo": "photos/waterhole.jpg" },
-  "2": { "snacks": true, "toilet": "rural", "dropBags": false, "spectators": true, "vehicle": "any", "camp": false, "photo": "photos/contrabando.jpg" },
-  "3": { "snacks": true, "toilet": "privy", "dropBags": true, "spectators": false, "vehicle": "4x4", "camp": false, "photo": "photos/whit-roy.jpg" },
-  "4": { "snacks": true, "toilet": "privy", "dropBags": true, "spectators": false, "vehicle": "4x4", "camp": true, "photo": "photos/shutup.jpg" },
-  "5": { "snacks": true, "toilet": "privy", "dropBags": false, "spectators": false, "vehicle": "4x4", "camp": true, "photo": "photos/solitario.jpg" }
+  "1": {
+    "snacks": true,
+    "toilet": "privy",
+    "dropBags": false,
+    "spectators": false,
+    "vehicle": "4x4",
+    "camp": false,
+    "photo": "photos/waterhole.jpg"
+  },
+  "2": {
+    "snacks": true,
+    "toilet": "restrooms",
+    "dropBags": false,
+    "spectators": true,
+    "vehicle": "any",
+    "camp": false,
+    "photo": "photos/contrabando.jpg"
+  },
+  "3": {
+    "snacks": true,
+    "toilet": "privy",
+    "dropBags": true,
+    "spectators": false,
+    "vehicle": "4x4",
+    "camp": false,
+    "photo": "photos/whit-roy.jpg"
+  },
+  "4": {
+    "snacks": true,
+    "toilet": "privy",
+    "dropBags": true,
+    "spectators": false,
+    "vehicle": "4x4",
+    "camp": true,
+    "photo": "photos/shutup.jpg"
+  },
+  "5": {
+    "snacks": true,
+    "toilet": "privy",
+    "dropBags": false,
+    "spectators": false,
+    "vehicle": "4x4",
+    "camp": true,
+    "photo": "photos/solitario.jpg"
+  },
+  "_note": "Aid-station amenities (Erik, Oct 23 2026). List only what a station has. All stations: basic first aid, water + sports drinks. medic: Start/Finish only. toilet: privy | restrooms. dropBags: true/false per race sheet Drop Bags column. vehicle: any | 4x4. camp: overnight volunteer camp.",
+  "S/F": {
+    "snacks": true,
+    "toilet": "restrooms",
+    "dropBags": false,
+    "spectators": true,
+    "vehicle": "any",
+    "camp": false,
+    "photo": "photos/barton-warnock.jpg",
+    "medic": true
+  }
 }

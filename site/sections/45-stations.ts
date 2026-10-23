@@ -7,17 +7,16 @@ import { icon } from '../lib/icons';
 import amen from '../../sources/curated/amenities.json';
 import type { Ctx } from '../lib/types';
 export const meta = { id: 'stations', title: 'Aid stations', print: false };
-import cal from '../../content/calendar.json';
 /** drop-bag drop-off deadlines at Start / Finish: the "Last call for ... drop bags" calendar events (minutes from race-day midnight, CT) */
-const DROP = ((cal as any).events ?? (cal as any).items ?? Object.values(cal).find(Array.isArray) ?? []).filter((e: any) => /Last call for .* drop bags/i.test(e.s ?? '')).map((e: any) => { const m = e.a, d = new Date(Date.UTC(2027, 0, 17) + m * 60000), h = d.getUTCHours(), mm = d.getUTCMinutes(); return `${e.s.match(/for (\S+)/i)[1]} by ${['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][d.getUTCDay()]} Jan ${d.getUTCDate()}, ${(h % 12) || 12}:${String(mm).padStart(2, '0')} ${h < 12 ? 'AM' : 'PM'}`; });
 /** amenity rows: [state y/n/i(nfo), label] */
-const amRows = (a: any): [string, string][] => [
-  ['y', 'Water + sports drinks'], [a.snacks ? 'y' : 'n', 'Snacks'], ['y', 'Basic first aid (no medic)'],
-  ['y', a.toilet === 'rural' ? 'Rural toilets (non-flush)' : 'Privy-style toilet'],
-  a.dropBags === 'dropoff' ? ['i', `Drop bag drop-off${DROP.length ? ': ' + DROP.join(' · ') : ''}`] : [a.dropBags ? 'y' : 'n', 'Drop bag access'],
-  [a.spectators ? 'y' : 'n', 'Spectator access'],
+// only what a station HAS (Erik, Oct 23 2026: never list what it lacks)
+const amRows = (a: any): [string, string][] => ([
+  ['y', 'Water + sports drinks'], a.snacks && ['y', 'Snacks'], ['y', a.medic ? 'Medic & first aid' : 'Basic first aid'],
+  ['y', a.toilet === 'restrooms' ? 'Restrooms' : 'Privy'],
+  a.dropBags === true && ['y', 'Drop bag access'],
+  a.spectators && ['y', 'Spectator access'],
   ['i', a.vehicle === 'any' ? 'Any vehicle' : '4x4 only'],
-  ...(a.camp ? [['i', 'Volunteers camp here overnight'] as [string, string]] : [])];
+  a.camp && ['i', 'Volunteers camp here overnight']] as any[]).filter(Boolean);
 // secondary, subtler named-place link (the primary link is always coordinates); none where no valid named place exists
 const NEAR: Record<string, string> = { 'S/F': 'Barton Warnock Visitor Center', '2': 'West Contrabando Trailhead', '3': 'Whit-Roy Cinnabar Mine', '5': 'Paso al Solitario' };
 /** '5:30 AM' -> '\u20075:30a' (hour padded with a figure space so every time lines up digit for digit) */
