@@ -13,7 +13,7 @@ try {
   await p.evaluate(() => document.fonts.ready); await p.emulateMedia({ media: 'print' });
   await p.evaluate(() => document.documentElement.classList.add('pdfgen')); // full print layout (the live page prints only a pointer to this PDF)
   // Operations (race-day timeline) prints last: move its section to the end of the page before rendering
-  await p.evaluate(() => { const t = document.getElementById('timeline'); if (t) t.parentElement!.appendChild(t); const r = document.getElementById('regional'); if (r) r.parentElement!.appendChild(r); }); // regional map prints after Operations (last page)
+  await p.evaluate(() => { const t = document.getElementById('timeline'); if (t) t.parentElement!.appendChild(t); const r = document.getElementById('regional'); if (r) r.parentElement!.appendChild(r); const ix = document.querySelector('.ixsec'), sp = [...document.querySelectorAll('.stpage')].at(-1); if (ix && sp) { const h = document.createElement('div'); h.className = 'sec-courses ixhome'; (window as any).__ixBack = [ix.parentElement, ix.nextSibling]; ix.before(document.createComment('ix')); sp.after(h); h.appendChild(ix); } }); // Erik: intersections print right after the aid-station pages // regional map prints after Operations (last page)
   // photos: re-encode every raster <img> at 300 dpi of its printed size (JPEG q80; the sources are 1600 px phone shots) so the PDF does not carry full-res files
   await p.evaluate(async () => { for (const im of [...document.querySelectorAll<HTMLImageElement>('img')]) { const r = im.getBoundingClientRect(); if (!r.width || !im.naturalWidth || /\.svg($|\?)/.test(im.currentSrc)) continue;
     const s = Math.min(1, (r.width / 96 * 300) / im.naturalWidth, (r.height / 96 * 300) / im.naturalHeight); if (s > 0.95) continue;
@@ -23,6 +23,8 @@ try {
   // duplex: every race map must be a front (odd) page with its route list on the back. Race maps are landscape pages 2..6; if the first
   // lands on an even page, show the "intentionally left blank" page before it and render again
   { const o = orient(OUT), l = o.map((x, i) => x === "L" ? i + 1 : 0).filter(Boolean); if (l[1] % 2 === 0) { await p.evaluate(() => document.documentElement.classList.add("padrace")); await p.pdf({ path: OUT, preferCSSPageSize: true, printBackground: true }); console.log("pdf blank page added before the first race map (duplex)"); } }
+  // per-course PDFs: put the intersections back in the courses section (their print CSS is scoped there)
+  await p.evaluate(() => { const ix = document.querySelector('.ixsec'), b = (window as any).__ixBack; if (ix && b) { b[0].insertBefore(ix, b[1]); document.querySelector('.ixhome')?.remove(); } });
   // one PDF per course page (same CSS as "Print this course")
   for (const k of await p.$$eval('.coursepage', (e) => e.map((x) => (x as HTMLElement).dataset.course!))) {
     await p.evaluate((k) => { document.body.classList.add('printone'); document.querySelectorAll('.coursepage, .routeseq').forEach((x) => x.classList.toggle('on', (x as HTMLElement).dataset.course === k)); document.querySelectorAll('.ixe').forEach((x) => x.classList.toggle('off', !(x as HTMLElement).dataset.r!.split(' ').includes(k))); }, k);
@@ -58,7 +60,7 @@ const pdfText = (n?: number) => { const doc = mupdf.Document.openDocument(fs.rea
     fs.writeFileSync(path.join(P, f), pg.toPixmap(mupdf.Matrix.scale(150 / 72, 150 / 72), mupdf.ColorSpace.DeviceRGB, false, true).asJPEG(82)); files.push(f); }
   if (files.length !== pages.length) throw new Error(`print images ${files.length} != pages ${pages.length}`);
   fs.writeFileSync(path.join(P, 'pages.json'), JSON.stringify(files.map((f, i) => ({ src: 'print/' + f, o: pages[i] }))));
-  // expected page sequence (README): map | access + elevation | calendar | [blank] | 5 x (race map on an odd page + 1 route list page) | intersections | 2 plans | 6 station pages | operations | regional
+  // expected page sequence (README): map | access + elevation | calendar | [blank] | 5 x (race map on an odd page + 1 route list page) | 2 plans | 6 station pages | intersections | operations | regional
   if (!/^PLPP?(LL){5}P{9,}LP$/.test(pages.join('')) || pages.map((x, i) => x === 'L' ? i + 1 : 0).filter(Boolean).slice(1, 11).filter((_, i) => i % 2 === 0).some((n) => n % 2 === 0)) throw new Error(`[pdf] page sequence ${pages.join('')} unexpected`);
   console.log('print images', files.length, pages.join('')); }
 // PDF check: every aid-station print page carries its visible primary coordinates link text ("Map: lat, lng")
