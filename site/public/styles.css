@@ -549,3 +549,8 @@ dialog.lightbox{z-index:2147483647}dialog.lightbox::backdrop{z-index:2147483646}
 .racecard .rc-btns{flex-wrap:wrap!important;gap:4px}
 .racecard .rc-btns a,.racecard .rc-btns button{font-size:.7rem;line-height:1;padding:.4rem .45rem}
 .racecard .rc-media .rc-full{font-size:.68rem;padding:.3rem .4rem;right:5px;bottom:5px}}
+/* background park trails (OSM): only at the 1 mi scale bar or closer, never in print */
+.bgtr{display:none;opacity:.7}svg.z1mi .bgtr{display:inline}
+@media print{svg .bgtr{display:none!important}}
+/* print: no topo shading (hillshade) on any map; the web keeps it */
+@media print{svg g.topo,svg g.layer[data-layer="topo"]{display:none!important}}

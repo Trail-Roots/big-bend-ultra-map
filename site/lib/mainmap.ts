@@ -27,6 +27,8 @@ export function renderMain(c) {
   for (const f of c.areaLabels.features) add('park', areaLabel(f, V.p));
   // roads
   const net = c.network.features;
+  // background park trails first (under FM 170 and every other road): hidden until the map is zoomed to the 1 mi scale bar (zoom.ts toggles .z1mi; never printed)
+  add('roads', `<g class="bgtr">${offRoads(net.filter(f => f.properties.bg), V, true)}</g>`);
   for (const f of net.filter(f => f.properties.cls === 'paved')) { const d = V.path(f); add('roads', `<path d="${d}" class="ln" stroke="#fff" stroke-width="14"/><path d="${d}" class="ln" stroke="#333" stroke-width="10"/><path d="${d}" class="ln" stroke="#fff" stroke-width="2.2" stroke-dasharray="${dash([6, 5], 2.2)}" stroke-linecap="butt"/>`); }
   for (const f of net.filter(f => f.properties.cls === 'connector')) { const d = V.path(f); add('roads', `<path d="${d}" class="ln" stroke="${col.cream}" stroke-width="12" stroke-linecap="butt"/><path d="${d}" class="ln" stroke="#000" stroke-width="7"/>`); }
   add('roads', offRoads(net, V));
@@ -148,9 +150,9 @@ export function accessPatterns(on: any[], V: any, col: any) {
 }
 
 /** off-course roads / trails by trail type (SSOT: main map and race / card maps) */
-export function offRoads(net: any[], V: any) {
+export function offRoads(net: any[], V: any, bg = false) {
   let o = ''; const add = (_: string, x: string) => (o += x);
-  for (const f of net.filter(f => !f.properties.on_course && STYLE.off[f.properties.cls])) {
+  for (const f of net.filter(f => !f.properties.on_course && !!f.properties.bg === bg && STYLE.off[f.properties.cls])) {
     const s = STYLE.off[f.properties.cls], d = V.path(f);
     if (f.properties.cls === 'unpaved') { add('roads', doubleTrack(V.lines(f), s.color, s.lw, 0.7, [8, 0.8])); continue; } // unpaved: dashed double track (the pre-Oct-16 4x4 style)
     if (f.properties.cls === '4x4') { add('roads', tireTrack(V.lines(f), s.color, 4, 3)); continue; } // 4x4: tire tread

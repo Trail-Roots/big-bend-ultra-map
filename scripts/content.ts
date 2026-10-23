@@ -290,6 +290,8 @@ for (const f of ['network.geojson', 'labels.geojson', 'area_labels.geojson', 'st
 // (the milestone strips name on-course segments from the overlapping named roads).
 { const CLIP_M = 150, CLIP_MIN = 80, ALONG_MIN = 300, net = JSON.parse(fs.readFileSync(path.join(OUT, 'network.geojson'), 'utf8'));
   fs.writeFileSync(path.join(OUT, 'network_full.geojson'), JSON.stringify(net));
+  // background park trails (OpenStreetMap, tools/osm-trails.ts): subdued foot trails shown only when zoomed to the 1 mi scale bar (bg); clipped along the routes like the rest
+  { const pt = path.join(ROOT, 'sources/curated/park_trails.geojson'); if (fs.existsSync(pt)) for (const f of JSON.parse(fs.readFileSync(pt, 'utf8')).features) net.features.push({ type: 'Feature', properties: { cls: 'foot_bike', on_course: false, name: f.properties.name, bg: true }, geometry: f.geometry }); }
   const kx = 111320 * Math.cos((29.3 * Math.PI) / 180), ky = 110540, P = (c: number[]) => [c[0] * kx, c[1] * ky], U = (p: number[]) => [+(p[0] / kx).toFixed(6), +(p[1] / ky).toFixed(6)];
   const segs: number[][][] = ORDER.flatMap((k: string) => { const l = JSON.parse(fs.readFileSync(path.join(OUT, 'courses', `${k}.geojson`), 'utf8')).features[0].geometry.coordinates as number[][]; return l.slice(1).map((q, i) => [P(l[i]), P(q)]); });
   const near = (p: number[]) => { let m = Infinity, best = p; for (const [a, b] of segs) { if (Math.min(a[0], b[0]) - m > p[0] || Math.max(a[0], b[0]) + m < p[0] || Math.min(a[1], b[1]) - m > p[1] || Math.max(a[1], b[1]) + m < p[1]) continue;
@@ -299,11 +301,12 @@ for (const f of ['network.geojson', 'labels.geojson', 'area_labels.geojson', 'st
     // densify to ~5 m so clip boundaries are precise
     const src = (f.geometry.coordinates as number[][]).map(P), pts: number[][] = [src[0]];
     for (let i = 1; i < src.length; i++) { const a = src[i - 1], b = src[i], n = Math.max(1, Math.ceil(Math.hypot(b[0] - a[0], b[1] - a[1]) / 5)); for (let j = 1; j <= n; j++) pts.push(j === n ? b : [a[0] + (b[0] - a[0]) * j / n, a[1] + (b[1] - a[1]) * j / n]); }
-    const nr = pts.map(near), keep = nr.map((r) => r.d >= CLIP_M);
+    const bg = !!f.properties.bg, cm = bg ? 40 : CLIP_M, am = bg ? 60 : ALONG_MIN; // OSM park trails share the GPX tread: tighter buffer, any shared stretch
+    const nr = pts.map(near), keep = nr.map((r) => r.d >= cm);
     if (!keep.some(Boolean)) { cut++; continue; } // the whole line lies on a route: drop it
     // only stretches that run ALONG a route for at least ALONG_MIN are clipped; shorter near-route stretches are crossings / junction approaches: kept
     for (let i = 0; i < pts.length;) { if (keep[i]) { i++; continue; } let j = i, L = 0; while (j + 1 < pts.length && !keep[j + 1]) { L += Math.hypot(pts[j + 1][0] - pts[j][0], pts[j + 1][1] - pts[j][1]); j++; }
-      if (L < ALONG_MIN) for (let k = i; k <= j; k++) keep[k] = true; i = j + 1; }
+      if (L < am) for (let k = i; k <= j; k++) keep[k] = true; i = j + 1; }
     if (keep.every(Boolean)) { out.push(f); continue; }
     const runs: { i: number; j: number }[] = []; for (let i = 0; i < pts.length;) { if (!keep[i]) { i++; continue; } let j = i; while (j + 1 < pts.length && keep[j + 1]) j++; runs.push({ i, j }); i = j + 1; }
     const len = (r: { i: number; j: number }) => { let L = 0; for (let k = r.i + 1; k <= r.j; k++) L += Math.hypot(pts[k][0] - pts[k - 1][0], pts[k][1] - pts[k - 1][1]); return L; };

@@ -25,7 +25,7 @@ export function raceProjection(c, k: string) { const v0 = c.layout.views[k], H =
 function clearCorner(c, k: string, view0, quiet = false) {
   const H = view0.fig[3] * SHEET.h * RACE_F, W = view0.fig[2] * SHEET.w * RACE_F, ins = W * NORTH_INSET, nb = northBox(W, ins, ins), lw = W * 0.0915, lh = lw * 776 / 730;
   const box = { x0: 0, y0: 0, x1: W * 0.08 + lw + 10, y1: Math.max(nb.y1, W * 0.0214 + lh) + 10 };
-  const nk = c.courses.order[c.courses.order.indexOf(k) - 1], feats = [c.courseGeo[k].features[0], ...(nk ? [c.courseGeo[nk].features[0]] : []), ...c.network.features];
+  const nk = c.courses.order[c.courses.order.indexOf(k) - 1], feats = [c.courseGeo[k].features[0], ...(nk ? [c.courseGeo[nk].features[0]] : []), ...c.network.features.filter((f: any) => !f.properties.bg)];
   const hits = (v) => { const V = viewProjection(v, W, H); return feats.some((ft) => V.lines(ft).some((l) => l.some(([x, y], i) => { if (x >= box.x0 && x <= box.x1 && y >= box.y0 && y <= box.y1) return true; const q = l[i + 1]; if (!q) return false; const n = Math.ceil(Math.hypot(q[0] - x, q[1] - y) / 3); for (let j = 1; j < n; j++) { const px = x + (q[0] - x) * j / n, py = y + (q[1] - y) * j / n; if (px >= box.x0 && px <= box.x1 && py >= box.y0 && py <= box.y1) return true; } return false; }))); };
   if (!hits(view0)) return view0;
   // the sheet view leaves big empty areas on the race page: re-fit to THIS race's route (padded), page aspect, then grow / slide the frame only as far as the top-left corner needs
@@ -64,7 +64,7 @@ export function renderRaceMap(c, k: string, card?: boolean) {
   const rf = c.courseGeo[k].features[0], d = V.path(rf); sample(V.lines(rf));
   // race route = solid light tint band of the race colour BENEATH the full trail-type layer (every road / trail drawn exactly as without the band)
   s += `<path d="${d}" class="ln" stroke="${tint(cc, BAND_TINT)}" stroke-width="${card ? 42 : 18}" stroke-linejoin="round"/>` + base + offRoads(c.network.features, V) + accessPatterns(c.network.features.filter((f) => f.properties.on_course), V, col);
-  for (const f of c.network.features) sample(V.lines(f)); // every drawn road / trail counts for label collisions
+  for (const f of c.network.features) if (!f.properties.bg) sample(V.lines(f)); // every drawn road / trail counts for label collisions
   // arrows: this race's arrows, at the main map's arrow size
   const arrows = c.arrows.features.filter((f) => f.properties.map === k).map((f) => ({ ...f, properties: { ...f.properties, size_pt: 12.4 } }));
   const ob: Bx[] = [];

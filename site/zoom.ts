@@ -34,6 +34,7 @@ function apply(z: Z) {
   }
   for (const t of z.texts) { t.el.setAttribute('font-size', String(t.fs / k)); if (t.sw) t.el.setAttribute('stroke-width', String(t.sw / k)); }
   scaleBar(z);
+  bgLabels(z);
   z.svg.dispatchEvent(new CustomEvent('zoomchange'));
   const ctl = z.svg.parentElement?.querySelector('.zctl'); ctl?.classList.toggle('zoomed', k > 1);
 }
@@ -42,9 +43,18 @@ function scaleBar(z: Z) {
   const g = z.svg.querySelector<SVGGElement>('g.scalebar'); if (!g) return;
   const sx = +g.dataset.sx!, sy = +g.dataset.sy!, ppmi = +g.dataset.ppmi! * z.k, tick = +g.dataset.tick!, max = +g.dataset.max!;
   const L = [10, 5, 2, 1, 0.5, 0.25, 0.1].find((m) => m * ppmi <= max * 1.05) ?? 0.1, w = L * ppmi;
-  g.querySelector('path')!.setAttribute('d', `M${sx},${sy}h${w}M${sx},${sy}v${-tick}M${sx + w / 2},${sy}v${-tick}M${sx + w},${sy}v${-tick}`);
+  z.svg.classList.toggle('z1mi', L <= 1); g.querySelector('path')!.setAttribute('d', `M${sx},${sy}h${w}M${sx},${sy}v${-tick}M${sx + w / 2},${sy}v${-tick}M${sx + w},${sy}v${-tick}`);
   const t = g.querySelectorAll('text'); t[1].setAttribute('x', String(sx + w)); t[1].textContent = `${L} mi`;
 }
+/** background trails (.bgtr, shown at the 1 mi scale bar) must never sit under a curved label: slide each curved label along its own path to the first
+ * offset whose glyphs clear every visible background-trail point (labels never cover data); back to the centre when the trails are hidden */
+const bgPts = new WeakMap<Z, number[][]>();
+function bgLabels(z: Z) {
+  const on = z.svg.classList.contains('z1mi');
+  let P = bgPts.get(z); if (on && !P) { P = []; for (const p of z.g.querySelectorAll<SVGPathElement>('.bgtr path')) { const L = p.getTotalLength(); for (let d = 0; d <= L; d += 4) { const q = p.getPointAtLength(d); P.push([q.x, q.y]); } } bgPts.set(z, P); }
+  for (const t of z.texts) { const tp = t.el.querySelector('textPath'); if (!tp) continue; if (!on || !P!.length) { tp.setAttribute('startOffset', '50%'); continue; }
+    const r = (t.fs / z.k) * 0.75 + 3 / z.k, hit = () => { const n = t.el.getNumberOfChars(); for (let i = 0; i < n; i++) { let c: DOMPoint; try { c = t.el.getStartPositionOfChar(i); } catch { continue; } for (const q of P!) if (Math.abs(q[0] - c.x) < r && Math.abs(q[1] - c.y) < r) return true; } return false; };
+    for (const o of [50, 40, 60, 30, 70, 20, 80, 10, 90]) { tp.setAttribute('startOffset', o + '%'); if (!hit()) break; } } }
 function toSvg(z: Z, cx: number, cy: number) { const m = z.svg.getScreenCTM()!; const p = new DOMPoint(cx, cy).matrixTransform(m.inverse()); return [p.x, p.y]; }
 function zoomAt(z: Z, f: number, px: number, py: number) {
   const k = Math.min(MAX, Math.max(MIN, z.k * f)), r = k / z.k;
