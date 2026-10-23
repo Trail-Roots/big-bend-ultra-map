@@ -94,8 +94,8 @@ fs.writeFileSync(path.join(D, 'index.html'), html);
 console.log('index.html', (html.length / 1024).toFixed(0) + ' KB,', sections.length, 'sections:', sections.map((s) => s.meta.id).join(', '));
 fs.cpSync(path.join(here, 'public'), D, { recursive: true });
 // web: regional layer of the main map (lazy-loaded by zoom.ts when zooming out past the default frame)
-{ const { regionFrag } = await import('./lib/regional'); const { viewProjection, SHEET } = await import('./lib/util'); const fig = ctx.layout.views.main.fig, W = fig[2] * SHEET.w, H = fig[3] * SHEET.h, V = viewProjection(ctx.layout.views.main, W, H), kmin = +(html.match(/data-rbox="[^"]* ([0-9.]+)"/) || [])[1];
-  if (!kmin) throw new Error('[regional] svg.mainmap data-rbox missing'); fs.writeFileSync(path.join(D, 'region.svg'), regionFrag(ctx, V.p, kmin)); }
+{ const { regionFrag } = await import('./lib/regional'); const { viewProjection, SHEET } = await import('./lib/util'); const fig = ctx.layout.views.main.fig, W = fig[2] * SHEET.w, H = fig[3] * SHEET.h, V = viewProjection(ctx.layout.views.main, W, H), rb = ((html.match(/data-rbox="([^"]+)"/) || [])[1] || '').split(' ').map(Number), kmin = rb[4];
+  if (!kmin) throw new Error('[regional] svg.mainmap data-rbox missing'); fs.writeFileSync(path.join(D, 'region.svg'), regionFrag(ctx, V.p, rb, W, H)); }
 // embed.js reserved heights: committed table measured locally by tools/heights.ts (never in CI)
 { const E = path.join(D, 'embed.js'), src = fs.readFileSync(E, 'utf8'); if (!src.includes('/*HEIGHTS*/null')) throw new Error('[embed.js] heights placeholder missing');
   fs.writeFileSync(E, src.replace('/*HEIGHTS*/null', fs.readFileSync(path.join(here, 'embed-heights.json'), 'utf8').trim())); }
