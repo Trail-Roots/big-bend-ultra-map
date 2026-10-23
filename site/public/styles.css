@@ -616,3 +616,4 @@ a.vw-plan{text-decoration:none}
   ol.rs li:first-child::before{top:calc(2.5pt + .575em)}ol.rs li:last-child::before{bottom:auto;height:calc(2.5pt + .575em)}}
 @media print{.sec-courses .routeseq{font-size:7.8pt}ol.rs li{padding-top:2pt;padding-bottom:2pt}.rs-pin{top:calc(2pt + .575em)}ol.rs li:first-child::before{top:calc(2pt + .575em)}ol.rs li:last-child::before{height:calc(2pt + .575em)}.rs-dir{font-size:6.6pt!important}.routeseq h2{margin-bottom:2pt}}
 @media print{.rs-cut{font-weight:700;color:#a33;margin-left:4pt}ol.rs li.rs-aidrow .rs-st{width:19pt;height:19pt}ol.rs li.rs-aidrow .rs-pin{top:50%}}
+@media print{ol.rs li .rs-cont{flex-basis:100%;padding-left:calc(.5in + 6pt);font-weight:400}ol.rs li .rs-cont .rs-name{font-weight:700;color:#2a2a2a}}
