@@ -590,6 +590,7 @@ svg.mainmap.zreg g.legend,svg.mainmap.zreg g.layer[data-layer="park"] text{displ
   .ixsec h2{margin:0 0 6pt;font-size:14pt}
   .ixg{display:grid;grid-template-columns:1fr 1fr;gap:8pt 14pt}
   .ixe{break-inside:avoid}.ixe h3{margin:0;font-size:9pt;display:flex;gap:4pt;align-items:center}
+  .rs-nl{color:inherit;text-decoration:none} /* row title links to the same intersection as its dot, same look */
   .ixu{margin:1pt 0 3pt}.ixu a{text-decoration:none;font-weight:600}.ixid{float:right;color:#aaa;font-size:6.5pt}
   .ixph{display:flex;gap:5pt}
   .rs-fr{margin:0;width:1.65in;height:1in;border:1pt solid #cfcfcf;background:#f1f1f1;display:flex;align-items:center;justify-content:center;overflow:hidden}
