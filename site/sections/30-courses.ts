@@ -7,7 +7,7 @@ import { miniBibSvg } from '../lib/panels';
 import { courseTable, totalGain } from '../lib/coursetable';
 import { renderRaceMap } from '../lib/racemap';
 import { SITE_URL } from './10-map';
-import { icon } from '../lib/icons';
+import { icon, stravaLogo } from '../lib/icons';
 import { renderRaceHeat } from '../lib/timeline';
 import siteCfg from '../../content/site.json';
 /** card thumbnail: the race's own map in the established race-map style (ids made unique) */
@@ -17,7 +17,7 @@ function card(c, k: string) {
   return `<article class="racecard" data-course="${k}" style="--rc:${cc}"><div class="rc-media"><button type="button" class="rc-open" data-course="${k}" aria-label="Open the full ${k} race page">${thumb(c, k)}</button><button type="button" class="rc-open rc-full" data-course="${k}">${icon('expand')}Full page</button></div>
 <div class="rc-body"><h3 class="bibh">${miniBibSvg(k, cc, 0.8)}<span>Big Bend Ultra ${k}</span></h3>
 <dl class="rc-stats"><div><dt>Distance</dt><dd>${C.distance_mi.toFixed(1)} mi</dd></div><div><dt>Elev gain</dt><dd>${totalGain(c, k).toLocaleString('en-US')} ft</dd></div><div><dt>Start</dt><dd>${esc(C.start)}</dd></div></dl>
-<div class="rc-btns"><a href="${SITE_URL}${esc(C.gpx)}" download title="Download the ${k} GPX">${icon('route')}.GPX</a>${C.stravaUrl ? `<span class="splitbtn"><a href="${esc(C.stravaUrl)}" target="_blank" rel="noopener" title="${k} route on Strava (opens the Strava app on a phone)">${icon('strava')}Strava</a>${club ? `<a href="${esc(club)}" target="_blank" rel="noopener" title="Trail Roots club on Strava">Join our club</a>` : ''}</span>` : ''}</div></div></article>`;
+<div class="rc-btns"><a href="${SITE_URL}${esc(C.gpx)}" download title="Download the ${k} GPX">${icon('route')}.GPX</a>${C.stravaUrl ? `<span class="splitbtn"><a href="${esc(C.stravaUrl)}" target="_blank" rel="noopener" title="${k} route on Strava (opens the Strava app on a phone)">${stravaLogo()}Strava</a>${club ? `<a href="${esc(club)}" target="_blank" rel="noopener" title="Trail Roots club on Strava">${stravaLogo()}Join our club</a>` : ''}</span>` : ''}</div></div></article>`;
 }
 export const meta = { id: 'courses', title: 'Race pages' };
 const uniq = (svg: string, k: string) => svg.replace(/\bid="([^"]+)"/g, `id="$1-cp${k}"`).replace(/url\(#([^)]+)\)/g, `url(#$1-cp${k})`).replace('class="mini"', 'class="mini mini-cp"').replace(/ data-mini="[^"]*"/, '');
@@ -56,7 +56,7 @@ export function render(c) {
   const nav = c.courses.order.map((k) => `<a href="#course-${k}" style="color:${c.courses.colors[k]}">${miniBibSvg(k, c.courses.colors[k], 0.7)}</a>`).join('');
   const pages = c.courses.order.map((k) => {
     const C = c.courses.courses[k];
-    return `<article class="doc coursepage" id="course-${k}" data-course="${k}"><figure class="cpmap">${renderRaceMap(c, k)}</figure><div class="cpright"><header class="cphead"><h2 class="bibh" style="color:${c.courses.colors[k]}">${miniBibSvg(k, c.courses.colors[k], 1)} ${C.distance_mi.toFixed(1)} mi · ${totalGain(c, k).toLocaleString('en-US')} ft gain · start ${esc(C.start)}</h2><span class="cplinks">${C.stravaUrl ? `<a href="${esc(C.stravaUrl)}" target="_blank" rel="noopener" title="${k} route on Strava">${icon('strava')}Strava</a>` : ''}</span><span class="ui cpbtns"><button type="button" class="printone" data-course="${k}">${icon('printer')}Print this course</button><a href="course-${k}.pdf" download aria-label="${k} course page (PDF)">${icon('filedown')}PDF</a></span></header>
+    return `<article class="doc coursepage" id="course-${k}" data-course="${k}"><figure class="cpmap">${renderRaceMap(c, k)}</figure><div class="cpright"><header class="cphead"><h2 class="bibh" style="color:${c.courses.colors[k]}">${miniBibSvg(k, c.courses.colors[k], 1)} ${C.distance_mi.toFixed(1)} mi · ${totalGain(c, k).toLocaleString('en-US')} ft gain · start ${esc(C.start)}</h2><span class="cplinks">${C.stravaUrl ? `<a href="${esc(C.stravaUrl)}" target="_blank" rel="noopener" title="${k} route on Strava">${stravaLogo()}Strava</a>` : ''}</span><span class="ui cpbtns"><button type="button" class="printone" data-course="${k}">${icon('printer')}Print this course</button><a href="course-${k}.pdf" download aria-label="${k} course page (PDF)">${icon('filedown')}PDF</a></span></header>
 ${profile(c, k)}${milestones(c, k)}${courseTable(c, k)}<figure class="cpheat"><figcaption>Busiest times at ${k} aid stations · cutoffs</figcaption>${renderRaceHeat(c, k)}</figure></div></article>${routeSeqPage(c, k)}`;
   }).join('');
   void nav;

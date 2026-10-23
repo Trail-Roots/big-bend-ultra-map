@@ -619,3 +619,5 @@ a.vw-plan{text-decoration:none}
 @media print{ol.rs li .rs-cont{flex-basis:100%;padding-left:calc(.5in + 6pt);font-weight:400}ol.rs li .rs-cont .rs-name{font-weight:700;color:#2a2a2a}}
 @media print{.sec-courses .routeseq li.rs-after{padding-top:1pt;padding-bottom:1pt}.sec-courses .routeseq li.rs-after .rs-name{font-weight:600}}
 @media print{.sec-courses ol.rs li{padding-top:1.6pt;padding-bottom:1.6pt}.sec-courses ol.rs li.rs-after{padding-top:1pt;padding-bottom:1pt}}
+.am-i .amv{background:#3b6ea5;color:#fff;font-style:italic;font-family:Georgia,serif}
+.strava-logo{display:inline-block;vertical-align:-.12em;margin-right:.3em;flex:none}

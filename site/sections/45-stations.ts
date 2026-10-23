@@ -7,7 +7,17 @@ import { icon } from '../lib/icons';
 import amen from '../../sources/curated/amenities.json';
 import type { Ctx } from '../lib/types';
 export const meta = { id: 'stations', title: 'Aid stations', print: false };
-const AM: [string, string][] = [['aid', 'Aid station'], ['water', 'Water'], ['snacks', 'Snacks'], ['toilet', 'Toilet'], ['medic', 'Medic'], ['dropBags', 'Drop bags'], ['spectators', 'Spectator access'], ['parking', 'Parking']];
+import cal from '../../content/calendar.json';
+/** drop-bag drop-off deadlines at Start / Finish: the "Last call for ... drop bags" calendar events (minutes from race-day midnight, CT) */
+const DROP = ((cal as any).events ?? (cal as any).items ?? Object.values(cal).find(Array.isArray) ?? []).filter((e: any) => /Last call for .* drop bags/i.test(e.s ?? '')).map((e: any) => { const m = e.a, d = new Date(Date.UTC(2027, 0, 17) + m * 60000), h = d.getUTCHours(), mm = d.getUTCMinutes(); return `${e.s.match(/for (\S+)/i)[1]} by ${['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][d.getUTCDay()]} Jan ${d.getUTCDate()}, ${(h % 12) || 12}:${String(mm).padStart(2, '0')} ${h < 12 ? 'AM' : 'PM'}`; });
+/** amenity rows: [state y/n/i(nfo), label] */
+const amRows = (a: any): [string, string][] => [
+  ['y', 'Water + sports drinks'], [a.snacks ? 'y' : 'n', 'Snacks'], ['y', 'Basic first aid (no medic)'],
+  ['y', a.toilet === 'rural' ? 'Rural toilets (non-flush)' : 'Privy-style toilet'],
+  a.dropBags === 'dropoff' ? ['i', `Drop bag drop-off${DROP.length ? ': ' + DROP.join(' · ') : ''}`] : [a.dropBags ? 'y' : 'n', 'Drop bag access'],
+  [a.spectators ? 'y' : 'n', 'Spectator access'],
+  ['i', a.vehicle === 'any' ? 'Any vehicle' : '4x4 only'],
+  ...(a.camp ? [['i', 'Volunteers camp here overnight'] as [string, string]] : [])];
 // secondary, subtler named-place link (the primary link is always coordinates); none where no valid named place exists
 const NEAR: Record<string, string> = { 'S/F': 'Barton Warnock Visitor Center', '2': 'West Contrabando Trailhead', '3': 'Whit-Roy Cinnabar Mine', '5': 'Paso al Solitario' };
 /** '5:30 AM' -> '\u20075:30a' (hour padded with a figure space so every time lines up digit for digit) */
@@ -15,7 +25,7 @@ const sh = (t: string) => t.replace(/^(\d{1,2}):(\d\d) ?([AP])M$/i, (_, h, m, a)
 /** one station's detail block: the web lightbox template body, or (print) the same block (photo / placeholder and coordinates link included) */
 export function stCard(c: Ctx, k: string, print = false) {
     const s = c.stations.stations[k], a = (amen as any)[k] ?? {}, LL = s.link_lonlat ?? s.lonlat, ll = `${LL[1].toFixed(6)},${LL[0].toFixed(6)}`, llTxt = `${LL[1].toFixed(5)}, ${LL[0].toFixed(5)}`; /* primary map link: ALWAYS coordinates, always visible (web + print) */
-    const am = AM.map(([f, lab]) => { const v = a[f]; return `<li class="am am-${v === true ? 'y' : v === false ? 'n' : 'u'}"><span class="amv" aria-hidden="true">${v === true ? '✓' : v === false ? '✕' : '?'}</span>${lab}</li>`; }).join('');
+    const am = amRows(a).map(([v, lab]) => `<li class="am am-${v === 'y' ? 'y' : v === 'n' ? 'n' : 'i'}"><span class="amv" aria-hidden="true">${v === 'y' ? '✓' : v === 'n' ? '✕' : 'i'}</span>${esc(lab)}</li>`).join('');
     /* Timing: every race that passes here, one line per visit: mileage at the station (GPX), then its cutoff in bold when it has one (Google Calendar) */
     /* Timing: one row per event (every visit of every race here): race | mileage (GPX, right-aligned) | start / cutoff | time (bold; Google Calendar), tabular numerals */
     const cuts = c.courses.order.flatMap((r) => c.cutoffs[r].map((x, i) => ({ x, i })).filter(({ x }) => x.station === k).map(({ x, i }, j) => { const lab = i === 0 ? 'start' : x.cutoff !== 'TBD' ? 'cutoff' : '', t = lab ? sh(x.cutoff) : '';
