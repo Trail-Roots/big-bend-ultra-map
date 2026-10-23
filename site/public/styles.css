@@ -609,3 +609,10 @@ a.vw-plan{text-decoration:none}
   ol.rs li{flex-wrap:wrap;row-gap:0}ol.rs li .rs-dir{flex-basis:100%;padding-left:.5in;margin-top:-1pt}}
 /* line markers: plain solid dots in the race color (junctions + plain rows); only aid stations / S/F keep their own markers */
 @media print{.rs-jx,.rs-pin i{width:7pt;height:7pt;border:0!important;border-radius:50%;background:var(--rc)!important;transform:none!important}}
+/* list rhythm: title + its grey description tight, clear gap before the next item; dot centered on the title line; description under the trail name */
+@media print{ol.rs li{align-items:baseline;padding-top:2.5pt;padding-bottom:2.5pt;min-height:0;line-height:1.15}
+  .rs-pin{top:calc(2.5pt + .575em)}
+  ol.rs li .rs-dir{padding-left:calc(.5in + 6pt);margin-top:.3pt;line-height:1.1}
+  ol.rs li:first-child::before{top:calc(2.5pt + .575em)}ol.rs li:last-child::before{bottom:auto;height:calc(2.5pt + .575em)}}
+@media print{.sec-courses .routeseq{font-size:7.8pt}ol.rs li{padding-top:2pt;padding-bottom:2pt}.rs-pin{top:calc(2pt + .575em)}ol.rs li:first-child::before{top:calc(2pt + .575em)}ol.rs li:last-child::before{height:calc(2pt + .575em)}.rs-dir{font-size:6.6pt!important}.routeseq h2{margin-bottom:2pt}}
+@media print{.rs-cut{font-weight:700;color:#a33;margin-left:4pt}ol.rs li.rs-aidrow .rs-st{width:19pt;height:19pt}ol.rs li.rs-aidrow .rs-pin{top:50%}}

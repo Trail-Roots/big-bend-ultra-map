@@ -79,18 +79,19 @@ const jname = (j: MJ) => j.turn ? `Turnaround on ${j.trails[0]}` : j.trails.join
 export function routeSeqPage(c: Ctx, k: string) {
   const nodes = routeNodes(c, k), cc = c.courses.colors[k], { byNode } = mj(c);
   const R: { m: number; h: string }[] = []; let rows = "", pend: Junction | null = null, segs = 0, links = 0;
+  const cutAt = (st: string[], m: number) => { const q = (c.cutoffs[k] as any[]).find((q) => st.includes(q.station) && q.station !== "S/F" && Math.abs(q.mile - m) < 0.3); return q?.cutoff && q.cutoff !== "TBD" ? `<span class="rs-cut">Cutoff ${esc(q.cutoff.replace(/:00 ?([AP])M$/, (_: string, a: string) => a.toLowerCase()).replace(/ ?([AP])M$/, (_: string, a: string) => a.toLowerCase()))}</span>` : ""; };
   const aidOf = (x: Junction) => x.stations.filter((q) => q !== "S/F").map((q) => `Aid ${q} · ${esc(c.stations.stations[q].name)}`).join(", ");
   for (const x of nodes) {
     if ("seg" in x) { const s = x.seg; segs++; const j = pend ? byNode.get(k + "/" + pend.id) : null; if (j) links++;
       const aid = pend ? aidOf(pend) : "";
-      if (aid) R.push({ m: s.a - 1e-4, h: `<li class="rs-node rs-aidrow"><span class="rs-pin">${pend!.stations.filter((q) => q !== "S/F").map((q) => dot(c, q)).join("")}</span><span class="rs-mi">mi ${fmt(s.a)}</span><span class="rs-title">${pend!.stations.filter((q) => q !== "S/F").map((q) => esc(c.stations.stations[q].name) + " aid").join(", ")}</span></li>` });
+      if (aid) R.push({ m: s.a - 1e-4, h: `<li class="rs-node rs-aidrow"><span class="rs-pin">${pend!.stations.filter((q) => q !== "S/F").map((q) => dot(c, q)).join("")}</span><span class="rs-mi">mi ${fmt(s.a)}</span><span class="rs-title">${pend!.stations.filter((q) => q !== "S/F").map((q) => esc(c.stations.stations[q].name) + " aid").join(", ")}</span>${cutAt(pend!.stations, s.a)}</li>` });
       R.push({ m: s.a, h: `<li class="rs-seg"${pend ? ` id="rs-${k}-${pend.id}"` : ""}><span class="rs-pin">${j ? `<a class="rs-jx" href="#ix-${j.id}" aria-label="Intersection photos"></a>` : "<i></i>"}</span><span class="rs-mi">${pend ? "mi " + fmt(s.a) : ""}</span><span class="rs-name${s.name ? "" : " rs-unk"}">${esc(s.name ?? "Unnamed segment")}</span><span class="rs-d">${(s.b - s.a).toFixed(1)} mi</span>${pend?.how ? `<span class="rs-dir">${esc(pend.how)}</span>` : ""}</li>` });
       pend = null; continue; }
     if (x.crit && x.pass) { const j = byNode.get(k + "/" + x.id); if (j) links++;
       R.push({ m: x.mile, h: `<li class="rs-seg rs-pass" id="rs-${k}-${x.id}"><span class="rs-pin">${j ? `<a class="rs-jx" href="#ix-${j.id}" aria-label="Intersection photos"></a>` : "<i></i>"}</span><span class="rs-mi">mi ${fmt(x.mile)}</span><span class="rs-name">${esc(x.next!)}</span><span class="rs-d"></span><span class="rs-dir">${esc(x.how!)}</span></li>` }); continue; }
     if (x.crit) { pend = x; continue; }
     const st = x.stations.map((q) => dot(c, q)).join(""), aid = aidOf(x);
-    R.push({ m: x.mile, h: `<li class="rs-node${x.stations.some((q) => q !== "S/F") ? " rs-aidrow" : ""}"><span class="rs-pin">${st || "<i></i>"}</span><span class="rs-mi">mi ${fmt(x.mile)}</span><span class="rs-title">${esc(x.title)}</span>${aid && !/aid$/.test(x.title) ? `<span class="rs-aid">${aid}</span>` : ""}</li>` });
+    R.push({ m: x.mile, h: `<li class="rs-node${x.stations.some((q) => q !== "S/F") ? " rs-aidrow" : ""}"><span class="rs-pin">${st || "<i></i>"}</span><span class="rs-mi">mi ${fmt(x.mile)}</span><span class="rs-title">${esc(x.title)}</span>${cutAt(x.stations, x.mile)}${aid && !/aid$/.test(x.title) ? `<span class="rs-aid">${aid}</span>` : ""}</li>` });
   }
   { const J = nodes.filter((x): x is Junction => !("seg" in x) && x.crit); console.log(`  routeseq ${k}: ${segs} segments, ${J.length} junctions (${J.filter((x) => x.pass).length} pass-through), directions ${J.filter((x) => x.dirSrc === "geom").length} geometry / ${J.filter((x) => x.dirSrc !== "geom").length} neutral, ${links} links`); }
   // two columns: OUT up to the turnaround (or, for loops / lollipops, the point farthest from the start), BACK after it
