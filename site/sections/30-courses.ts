@@ -1,5 +1,5 @@
 import { milestones } from '../lib/milestones';
-import { routeSeqPage } from '../lib/routeseq';
+import { routeSeqPage, intersectionsSection } from '../lib/routeseq';
 // One landscape letter page per race (100K -> 10K): left half its own race map (only that route), right half its header, elevation
 // profile and GPX distance / cutoff matrix. In the main PDF after page 1; each also prints alone as course-<k>.pdf.
 import { esc, f1, station, BAND_OP } from '../lib/util';
@@ -61,6 +61,6 @@ ${profile(c, k)}${milestones(c, k)}${courseTable(c, k)}<figure class="cpheat"><f
   }).join('');
   void nav;
   // web: compact Strava-style race cards; each opens its full (print-view) race page in a lightbox. Print / PDF: the full pages, unchanged order.
-  return `<div class="ui racecards" role="list">${c.courses.order.map((k) => card(c, k)).join('')}</div><div class="cppages">${pages}</div>
+  return `<div class="ui racecards" role="list">${c.courses.order.map((k) => card(c, k)).join('')}</div><div class="cppages"><div class="padblank"><p>This page intentionally left blank</p></div>${pages}${intersectionsSection(c)}</div>
 <dialog class="lightbox" id="racebox" aria-label="Race page"><button type="button" class="lb-close" aria-label="Close">${icon('x')}</button><div class="lb-body"></div></dialog>`;
 }

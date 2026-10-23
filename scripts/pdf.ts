@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { serveDist } from '../tools/serve';
 import * as mupdf from 'mupdf'; // PDF -> JPEG print images + text checks (WASM; no poppler / apt in CI)
+const orient = (f: string) => { const d = mupdf.Document.openDocument(fs.readFileSync(f), 'application/pdf'), o: string[] = []; for (let i = 0; i < d.countPages(); i++) { const [x0, y0, x1, y1] = d.loadPage(i).getBounds(); o.push(x1 - x0 > y1 - y0 ? 'L' : 'P'); } return o; };
 const D = path.resolve(import.meta.dir, '..', 'dist'), OUT = path.join(D, 'big-bend-ultra-2027-map.pdf');
 // PDF render is skipped when its inputs are unchanged (CI restores dist outputs from actions/cache; see .github/workflows/pages.yml)
 const srv = serveDist(0), b = await chromium.launch();
@@ -19,10 +20,14 @@ try {
     const cv = document.createElement('canvas'); cv.width = Math.round(im.naturalWidth * s); cv.height = Math.round(im.naturalHeight * s); cv.getContext('2d')!.drawImage(im, 0, 0, cv.width, cv.height);
     const png = /\.png($|\?)/i.test(im.currentSrc); im.srcset = ''; im.src = cv.toDataURL(png ? 'image/png' : 'image/jpeg', 0.8); await im.decode().catch(() => {}); } });
   await p.pdf({ path: OUT, preferCSSPageSize: true, printBackground: true });
+  // duplex: every race map must be a front (odd) page with its route list on the back. Race maps are landscape pages 2..6; if the first
+  // lands on an even page, show the "intentionally left blank" page before it and render again
+  { const o = orient(OUT), l = o.map((x, i) => x === "L" ? i + 1 : 0).filter(Boolean); if (l[1] % 2 === 0) { await p.evaluate(() => document.documentElement.classList.add("padrace")); await p.pdf({ path: OUT, preferCSSPageSize: true, printBackground: true }); console.log("pdf blank page added before the first race map (duplex)"); } }
   // one PDF per course page (same CSS as "Print this course")
   for (const k of await p.$$eval('.coursepage', (e) => e.map((x) => (x as HTMLElement).dataset.course!))) {
-    await p.evaluate((k) => { document.body.classList.add('printone'); document.querySelectorAll('.coursepage, .routeseq').forEach((x) => x.classList.toggle('on', (x as HTMLElement).dataset.course === k)); }, k);
+    await p.evaluate((k) => { document.body.classList.add('printone'); document.querySelectorAll('.coursepage, .routeseq').forEach((x) => x.classList.toggle('on', (x as HTMLElement).dataset.course === k)); document.querySelectorAll('.ixe').forEach((x) => x.classList.toggle('off', !(x as HTMLElement).dataset.r!.split(' ').includes(k))); }, k);
     await p.pdf({ path: path.join(D, `course-${k}.pdf`), preferCSSPageSize: true, printBackground: true });
+    { const o = orient(path.join(D, `course-${k}.pdf`)).join(''); if (!/^LPP+$/.test(o)) throw new Error(`[pdf] course-${k}.pdf pages ${o}: want map, list, photo pages`); console.log(`pdf course-${k}: ${o.length} pages (map, list, ${o.length - 2} photo)`); }
   }
   await p.evaluate(() => document.body.classList.remove('printone'));
   // thumbnails for the limited cards embed (cards-embed.html): each race card map as a small JPEG (Playwright only, no ffmpeg on CI)
@@ -53,8 +58,8 @@ const pdfText = (n?: number) => { const doc = mupdf.Document.openDocument(fs.rea
     fs.writeFileSync(path.join(P, f), pg.toPixmap(mupdf.Matrix.scale(150 / 72, 150 / 72), mupdf.ColorSpace.DeviceRGB, false, true).asJPEG(82)); files.push(f); }
   if (files.length !== pages.length) throw new Error(`print images ${files.length} != pages ${pages.length}`);
   fs.writeFileSync(path.join(P, 'pages.json'), JSON.stringify(files.map((f, i) => ({ src: 'print/' + f, o: pages[i] }))));
-  // expected page sequence (README): map | access + elevation | calendar | 5 x (race page + 1..8 portrait trail-by-trail pages) | 2 plans | 6 station pages | operations | regional
-  if (!/^PLP(LP{1,8}){5}PPPPPPPPLP$/.test(pages.join(''))) throw new Error(`[pdf] page sequence ${pages.join('')} unexpected`);
+  // expected page sequence (README): map | access + elevation | calendar | [blank] | 5 x (race map on an odd page + 1 route list page) | intersections | 2 plans | 6 station pages | operations | regional
+  if (!/^PLPP?(LP){5}P{9,}LP$/.test(pages.join('')) || pages.map((x, i) => x === 'L' ? i + 1 : 0).filter(Boolean).slice(1, 6).some((n) => n % 2 === 0)) throw new Error(`[pdf] page sequence ${pages.join('')} unexpected`);
   console.log('print images', files.length, pages.join('')); }
 // PDF check: every aid-station print page carries its visible primary coordinates link text ("Map: lat, lng")
 { const st = JSON.parse(fs.readFileSync(path.join(import.meta.dir, '../content/stations.json'), 'utf8')), txt = pdfText();
@@ -73,6 +78,11 @@ const pdfText = (n?: number) => { const doc = mupdf.Document.openDocument(fs.rea
   if (miss.length || !links) throw new Error('[pdf] station page destinations missing: ' + miss.join(', ') + ' links ' + links);
   console.log('pdf internal station links', links, '-> 6 station pages'); }
 
+// PDF check: every route-list junction number links to its Intersections entry and back (named destinations)
+{ const raw = fs.readFileSync(OUT).toString("latin1"), ix = new Set(raw.match(/\/ix-J[\w-]+(?= ?\[)/g) ?? []), rs = new Set(raw.match(/\/rs-\w+-\w+-\d+(?= ?\[)/g) ?? []), lk = (raw.match(/\/Dest \/(ix|rs)-/g) || []).length;
+  const want = [...fs.readFileSync(path.join(D, "index.html"), "utf8").matchAll(/class="ixe" id="(ix-[^"]+)"/g)].map((m) => "/" + m[1]), miss = want.filter((x) => !ix.has(x));
+  if (miss.length || !rs.size || !lk) throw new Error("[pdf] intersection link targets missing: " + miss.join(", ") + " back " + rs.size + " links " + lk);
+  console.log("pdf intersections", want.length, "entries,", rs.size, "back-link targets,", lk, "links"); }
 // last, after all checks (they read the raw Chromium output)
 for (const f of fs.readdirSync(D).filter((f) => f.endsWith('.pdf'))) slim(path.join(D, f));
 console.log('pdf slimmed', (fs.statSync(OUT).size / 1024 / 1024).toFixed(2) + ' MB');
