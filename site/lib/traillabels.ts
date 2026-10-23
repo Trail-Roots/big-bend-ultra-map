@@ -19,11 +19,11 @@ export function trailLabels(c, k: string, V, W: number, H: number, pts: [number,
   const names = [...new Set(seq.map((s) => s.name).filter((n): n is string => !!n && !/^Start area|^Cross FM 170/.test(n)))];
   let out = "", n = 0; const miss: string[] = [], tiers: string[] = [];
   const hitBox = (x: number, y: number, pad: number) => [...ob, ...placed].some((q) => x > q.x0 - pad && x < q.x1 + pad && y > q.y0 - pad && y < q.y1 + pad);
-  const occ = (name: string) => seq.filter((x) => x.name === name).sort((a, b) => (b.b - b.a) - (a.b - a.a)).map((s) => co.slice(s.i0, s.i1 + 1).map((p) => V.p(p) as number[])).filter((L) => L.length >= 2);
+  const occ = (name: string, only?: (x: any) => boolean) => seq.filter((x) => x.name === name && (!only || only(x))).sort((a, b) => (b.b - b.a) - (a.b - a.a)).map((s) => co.slice(s.i0, s.i1 + 1).map((p) => V.p(p) as number[])).filter((L) => L.length >= 2);
   const txt = (fs: number) => `class="f-serif" font-size="${fs}" font-style="italic" fill="#5d5850" stroke="#fff" stroke-width="${fs < 20 ? 4 : 5}" paint-order="stroke" stroke-linejoin="round"`;
   // 1) follow the trail beside the line (full size, then smaller and slightly curvier for short segments)
-  const follow = (name: string, FS: number, minCh: number) => { const cw = FS * 0.5, R = FS * 0.55, w = name.length * cw + 8;
-    for (const L of occ(name)) {
+  const follow = (name: string, FS: number, minCh: number, only?: (x: any) => boolean) => { const cw = FS * 0.5, R = FS * 0.55, w = name.length * cw + 8;
+    for (const L of occ(name, only)) {
       const cum = [0]; for (let i = 1; i < L.length; i++) cum.push(cum[i - 1] + Math.hypot(L[i][0] - L[i - 1][0], L[i][1] - L[i - 1][1]));
       const tot = cum[cum.length - 1]; if (tot < w * 1.1) continue;
       const starts: number[] = []; for (let t = (tot - w) / 2, d = 0; d <= (tot - w) / 2; d += 6) { starts.push(t - d); if (d) starts.push(t + d); }
@@ -43,8 +43,8 @@ export function trailLabels(c, k: string, V, W: number, H: number, pts: [number,
           return true; } } }
     return false; };
   // 2) horizontal name in clear space with a short leader line to the trail (leader may touch only its own anchor end)
-  const leader = (name: string, FS: number, rMax: number) => { const tw = name.length * FS * 0.5 + 6, th = FS * 1.15;
-    for (const L of occ(name)) { const anchors = [0.5, 0.35, 0.65, 0.2, 0.8].map((q) => L[Math.min(L.length - 1, Math.floor(L.length * q))]);
+  const leader = (name: string, FS: number, rMax: number, only?: (x: any) => boolean) => { const tw = name.length * FS * 0.5 + 6, th = FS * 1.15;
+    for (const L of occ(name, only)) { const anchors = [0.5, 0.35, 0.65, 0.2, 0.8].map((q) => L[Math.min(L.length - 1, Math.floor(L.length * q))]);
       for (const [ax, ay] of anchors) for (let r = 34; r <= rMax; r += 12) for (let d = 0; d < 16; d++) { const t = d / 16 * 2 * Math.PI, cx = ax + Math.cos(t) * r, cy = ay + Math.sin(t) * r;
         const b = { x0: cx - tw / 2, x1: cx + tw / 2, y0: cy - th / 2, y1: cy + th / 2 };
         if (b.x0 < 6 || b.y0 < 6 || b.x1 > W - 6 || b.y1 > H - 6) continue;
@@ -57,9 +57,12 @@ export function trailLabels(c, k: string, V, W: number, H: number, pts: [number,
         out += `<g class="traillab"><path d="M${f1(sx)},${f1(sy)}L${f1(ex)},${f1(ey)}" stroke="#5d5850" stroke-width="1.6" fill="none"/><text ${txt(FS)} x="${f1(cx)}" y="${f1(cy)}" text-anchor="middle" dominant-baseline="central">${esc(name)}</text></g>`;
         return true; } }
     return false; };
-  for (const name of names) {
-    const tier = follow(name, TRAIL_FS, 0.86) ? "" : follow(name, 16, 0.8) ? "small" : leader(name, 16, 160) ? "leader" : leader(name, 14, 320) ? "leader-small" : (miss.push(name), "");
-    if (tier) tiers.push(name + ":" + tier); }
+  const put = (name: string, only?: (x: any) => boolean) => follow(name, TRAIL_FS, 0.86, only) ? "full" : follow(name, 16, 0.8, only) ? "small" : leader(name, 16, 160, only) ? "leader" : leader(name, 14, 320, only) ? "leader-small" : "";
+  // trails at the start (first 3 mi out of the start area) are labeled at the start, on every map that uses them (Erik)
+  const START_MI = 3, early = new Set(seq.filter((x) => x.name && x.a < START_MI && !/^Start area|^Cross FM 170/.test(x.name)).map((x) => x.name!));
+  // required labels first (one per trail; early trails at the start)
+  for (const name of names) if (!early.has(name)) { const t = put(name); if (!t) miss.push(name); else if (t !== "full") tiers.push(name + ":" + t); }
+  for (const name of names) if (early.has(name)) { const t = put(name, (x) => x.a < START_MI) || put(name); if (!t) miss.push(name); else tiers.push(name + "@start:" + t); }
   if (tiers.length) console.log(`  racemap ${k}: fallback labels ${tiers.join(", ")}`);
   console.log(`  racemap ${k}: ${names.length - miss.length}/${names.length} trail names placed${miss.length ? ' (no clear spot: ' + miss.join(', ') + ')' : ''}`);
   if (miss.length) throw new Error(`racemap ${k}: trail names not placed: ${miss.join(", ")}`);
