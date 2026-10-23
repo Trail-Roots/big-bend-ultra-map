@@ -215,7 +215,7 @@ export function renderRegional(c: Ctx, W = 1143, H = 1418) {
   let st = ''; for (const k of c.stations.order) { const s = c.stations.stations[k], [x, y] = V.p(s.lonlat); st += station(x, y, k, s.spectator, k === 'S/F' ? { s: 520, fs: 9, colors: col, link: false } : { s: 300, fs: 9, colors: col, link: false }); }
   // furniture: scale bar (20 mi), north arrow, legend, drive-time table
   const mi = 1609.344 * V.ppm / Math.cos(((REGION.sw[1] + REGION.ne[1]) / 2) * Math.PI / 180) /* sheet units per mile at mid-latitude */;
-  const sx = W * 0.05, sy = H * 0.1, w20 = 20 * mi;
+  const sx = W * 0.05, sy = H * 0.955, w20 = 20 * mi; // bottom-left (Erik, Oct 23 2026: "scale should always be in the bottom left")
   let fur = `<g class="scalebar"><path stroke="${col.ink}" stroke-width="2" fill="none" d="M${f1(sx)},${f1(sy)}h${f1(w20)}M${f1(sx)},${f1(sy)}v-7M${f1(sx + w20 / 2)},${f1(sy)}v-7M${f1(sx + w20)},${f1(sy)}v-7"/>`;
   fur += [[0, '0'], [w20 / 2, '10'], [w20, '20 mi']].map(([dx, t]) => `<text x="${f1(sx + (dx as number))}" y="${f1(sy + 6)}" font-size="13" text-anchor="middle" dominant-baseline="hanging" fill="${col.ink}">${t}</text>`).join('') + '</g>';
   fur += northG(W, W * 0.015, W * 0.015);
