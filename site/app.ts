@@ -414,6 +414,8 @@ if (document.documentElement.classList.contains('embed') && parent !== window) {
     if (!sbox.open) { embedModal(sbox, true); sbox.showModal(); } };
   // zoomed map: a copy of the main map framed on station k (zoom transform reset); hh = half height / half width of the frame
   /* zf = main frame width / zoomed frame half-width: 6 = 3x the main map's base scale, where its scale bar reads 1 mi (zoom.ts rule: 1 mi from 2.625x up to 5.25x) */
+  /* per-station framing overrides (Erik): station at the far left of the frame, route across the right */
+  const ST_LEFT = new Set(['2']);
   function stMap(host: HTMLElement | null, k: string, hh: number, zf = 6) {
     const main = document.querySelector<SVGSVGElement>('svg.mainmap'), mk = main?.querySelector<SVGGElement>(`g.stpick[data-station="${CSS.escape(k)}"] g.marker`);
     if (main && host && mk) { const m = /translate\(([-\d.]+)[ ,]+([-\d.]+)\)/.exec(mk.getAttribute('transform') || ''); if (m) { const x = +m[1], y = +m[2], R = main.viewBox.baseVal.width / zf;
@@ -425,11 +427,14 @@ if (document.documentElement.classList.contains('embed') && parent !== window) {
         g.querySelectorAll('text,tspan').forEach((t) => { if (t.tagName === 'text' && t.querySelector('tspan')) return; const tx = t.tagName === 'tspan' ? t.closest('text')! : t, fs = +(tx.getAttribute('font-size') || 20), X = +(t.getAttribute('x') ?? tx.getAttribute('x') ?? 0), Y = +(t.getAttribute('y') ?? tx.getAttribute('y') ?? 0), w = (t.textContent || '').length * fs * 0.62, an = tx.getAttribute('text-anchor'), xl = an === 'middle' ? X - w / 2 : an === 'end' ? X - w : X; add(xl, Y - fs * 0.6, xl + w, Y + fs * 0.6); });
         g.querySelectorAll('path').forEach((p) => { const n = (p.getAttribute('d') || '').match(/-?[\d.]+/g)?.map(Number) ?? []; for (let i = 0; i + 1 < n.length; i += 2) add(n[i], n[i + 1], n[i], n[i + 1]); });
         const ax = +(g.getAttribute('data-ax') || NaN), ay = +(g.getAttribute('data-ay') || NaN); if (!isNaN(ax)) add(ax - 22, ay - 22, ax + 22, ay + 22); return { x0, y0, x1, y1 }; };
-      const own = cl.querySelector(`g.stlabel[data-station="${CSS.escape(k)}"]`), ob = own ? lbox(own) : { x0: x, y0: y, x1: x, y1: y }, M = 3;
+      const own = cl.querySelector(`g.stlabel[data-station="${CSS.escape(k)}"]`);
+      /* far-left stations: their own label goes just right of and below the marker (no leader), so the marker can sit at the left edge */
+      if (own && ST_LEFT.has(k)) { own.querySelectorAll('path.leader').forEach((p) => p.remove()); const b0 = lbox(own); own.removeAttribute('data-ax'); const b1 = lbox(own); own.setAttribute('transform', `translate(${(x + 40 - b1.x0).toFixed(1)} ${(y + 34 - b1.y0).toFixed(1)})`); void b0; }
+      const ob0 = own ? lbox(own) : { x0: x, y0: y, x1: x, y1: y }, sh = own && ST_LEFT.has(k) ? /translate\(([-\d.]+) ([-\d.]+)\)/.exec(own.getAttribute('transform') || '') : null, ob = sh ? { x0: ob0.x0 + +sh[1], x1: ob0.x1 + +sh[1], y0: ob0.y0 + +sh[2], y1: ob0.y1 + +sh[2] } : ob0, M = 3;
       const RM = k === 'S/F' ? 44 : 36, rx0 = Math.min(ob.x0, x - RM) - M, ry0 = Math.min(ob.y0, y - RM) - M, rx1 = Math.max(ob.x1, x + RM) + M, ry1 = Math.max(ob.y1, y + RM) + M; /* marker + its red-cross badge */
       const mi = +(main.querySelector<SVGGElement>('g.scalebar')?.dataset.ppmi || 80), rp: number[][] = [], seenQ = new Set<string>(); void mi; /* all route near enough to matter (shared stretches counted once) — no 1 mi limit */
       main.querySelectorAll('g.raceroute path').forEach((p) => { const n = (p.getAttribute('d') || '').match(/-?[\d.]+/g)?.map(Number) ?? []; for (let i = 2; i + 1 < n.length; i += 2) { const a = [n[i - 2], n[i - 1]], b = [n[i], n[i + 1]], L = Math.hypot(b[0] - a[0], b[1] - a[1]); for (let t = 0; t < L; t += 3) { const q = [a[0] + (b[0] - a[0]) * t / L, a[1] + (b[1] - a[1]) * t / L]; const key = Math.round(q[0] / 3) + ',' + Math.round(q[1] / 3); if (!seenQ.has(key) && Math.abs(q[0] - x) < 2 * fw && Math.abs(q[1] - y) < 2 * fh) { seenQ.add(key); rp.push(q); } } } });
-      const lo = (a: number, b: number) => [Math.max(a, b)], cx0 = Math.max(VB.x, rx1 - fw), cx1 = Math.min(VB.x + VB.width - fw, rx0), cy0 = Math.max(VB.y, ry1 - fh), cy1 = Math.min(VB.y + VB.height - fh, ry0); void lo;
+      const lo = (a: number, b: number) => [Math.max(a, b)], cx1 = Math.min(VB.x + VB.width - fw, rx0), cx0 = ST_LEFT.has(k) ? cx1 : Math.max(VB.x, rx1 - fw), cy0 = Math.max(VB.y, ry1 - fh), cy1 = Math.min(VB.y + VB.height - fh, ry0); void lo;
       let vx = Math.max(VB.x, Math.min(VB.x + VB.width - fw, x - R)), vy = Math.max(VB.y, Math.min(VB.y + VB.height - fh, y - R * hh));
       if (cx0 <= cx1 && cy0 <= cy1) { let best = -1; for (let X = cx0; X <= cx1 + 0.01; X += Math.max(2, (cx1 - cx0) / 40)) for (let Y = cy0; Y <= cy1 + 0.01; Y += Math.max(2, (cy1 - cy0) / 40)) {
           const n = rp.filter((q) => q[0] > X + 2 && q[0] < X + fw - 2 && q[1] > Y + 2 && q[1] < Y + fh - 2).length, sc = n - Math.hypot(X + R - x, Y + fh / 2 - y) * 1e-3; if (sc > best) { best = sc; vx = X; vy = Y; } } }
