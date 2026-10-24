@@ -233,7 +233,8 @@ html body svg.ic{width:1.15em!important;height:1.15em!important;max-width:none!i
 /* ---------- race cards (web, modeled on the Strava route cards on trailroots.com/sky-island); full pages open in a lightbox ---------- */
 @media screen{
   .sec-courses .cppages > .coursepage{display:none}
-  .racecards{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px;max-width:var(--SW,1200px);margin:24px auto;padding:0 1rem;box-sizing:border-box}
+  /* 5 race cards, never a lone card on the last row (Erik): 5 across on wide screens, 3+2 in between, 1 per row on phones (below) */
+  .racecards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;max-width:var(--SW,1200px);margin:24px auto;padding:0 1rem;box-sizing:border-box}
   .racecard{background:#fff;border:1px solid #dcdcdc;border-radius:8px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 1px 3px #0000001a;font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
   .racecard .rc-open:not(.rc-full){display:block;padding:0;border:0;background:none;cursor:zoom-in;border-bottom:1px solid #eee}
   .racecard svg.rc-map{display:block;width:100%;height:auto}.racecard svg.rc-elev{display:block;width:100%;height:38px;background:var(--bg-subtle)}
@@ -540,7 +541,7 @@ dialog.lightbox{z-index:2147483647}dialog.lightbox::backdrop{z-index:2147483646}
 .cv-allday{margin-left:50px}
 .cv-blk .cv-s{font-size:11.5px;line-height:14px}
 /* Race cards: two per row, tighter */
-.racecards{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:12px auto;padding:0 8px}
+.racecards{grid-template-columns:minmax(0,1fr);gap:8px;margin:12px auto;padding:0 8px} /* phones: one per row (no 2+2+1 orphan) */
 .racecard .rc-body{padding:7px 8px 8px;gap:6px}
 .racecard .rc-body h3{font-size:.86rem;line-height:18px;gap:.3rem;flex-wrap:wrap}
 .racecard .rc-stats{flex-wrap:wrap;gap:4px 10px}
@@ -631,3 +632,4 @@ a.vw-plan{text-decoration:none}
   .calbox .cv-blk{font-size:8.6pt;line-height:1.15}}
 .am-i .amv{background:#3b6ea5;color:#fff;font-style:italic;font-family:Georgia,serif}
 @media print{html body a[href*="strava.com"] svg.ic{display:inline-block!important}}
+@media screen and (min-width:1100px){.racecards{grid-template-columns:repeat(5,minmax(0,1fr))}}
