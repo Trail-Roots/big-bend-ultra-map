@@ -632,4 +632,5 @@ a.vw-plan{text-decoration:none}
   .calbox .cv-blk{font-size:8.6pt;line-height:1.15}}
 .am-i .amv{background:#3b6ea5;color:#fff;font-style:italic;font-family:Georgia,serif}
 @media print{html body a[href*="strava.com"] svg.ic{display:inline-block!important}}
-@media screen and (min-width:1100px){.racecards{grid-template-columns:repeat(5,minmax(0,1fr))}}
+@media screen and (max-width:899px){.rc-btns{flex-wrap:wrap!important}} /* narrow 3+2 cards: Strava | Join our club split button takes the second line instead of overflowing */
+@media screen and (max-width:739px){.racecards{grid-template-columns:minmax(0,1fr)}} /* below ~740px a third of the width is too narrow for the card stats and buttons: one per row */
