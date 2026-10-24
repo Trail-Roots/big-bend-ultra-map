@@ -303,7 +303,7 @@ a.stlink{color:inherit;text-decoration:none}@media screen{a.stlink{border-bottom
 /* race cards: site styling (no brand colours); thumbnail = the race map itself; Strava | Join our club split button */
 @media screen{
   .racecard svg.rc-map{display:block;width:100%!important;max-width:100%;height:auto!important;max-height:none!important;aspect-ratio:1/1;margin:0;box-shadow:none} /* card map drawn at exactly this aspect (site/lib/cardview.ts) */
-  .racecard .rc-open:not(.rc-full){background:var(--bg-subtle)!important}
+  .racecard .rc-open:not(.rc-full){background:var(--bg-subtle)!important;width:100%;box-sizing:border-box} /* the map button spans the whole card so the map fills it */
   .rc-btns .splitbtn{display:inline-flex}.rc-btns .splitbtn a{border-radius:0}.rc-btns .splitbtn a:first-child{border-radius:4px 0 0 4px}.rc-btns .splitbtn a:last-child{border-radius:0 4px 4px 0;margin-left:-1px}.rc-btns .splitbtn a:only-child{border-radius:4px}
   .rc-btns .splitbtn a:hover{position:relative;z-index:1}
 }
