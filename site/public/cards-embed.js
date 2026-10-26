@@ -2,6 +2,8 @@
    Inserts an iframe of cards-embed.html (race-card previews only; every click opens trailroots.com/big-bend-ultra in a new tab) into
    #bbu-cards (or right after the script tag) and keeps its height matched to the content, so there is never an inner scrollbar. */
 (function () {
+  // schema.org event (Google event markup) for the HOST page: added to its <head> once, however many embeds / re-inits
+  (function (ld) { if (!ld || document.querySelector('script[type="application/ld+json"][data-bbu-event]')) return; var j = document.createElement('script'); j.type = 'application/ld+json'; j.setAttribute('data-bbu-event', ''); j.text = ld.replace(/</g, '\\u003c'); (document.head || document.documentElement).appendChild(j); })(/*EVENTLD*/null);
   var s = document.currentScript; if (!s) return;
   var base = new URL('./', s.src), origin = base.origin;
   var f = document.createElement('iframe');

@@ -3,6 +3,8 @@
    Also: keeps the map's navbar pinned to the top of the HOST window (sends the iframe's position on scroll), and makes the host's
    Print give the real 8 print pages (a cross-origin iframe prints blank, so the built page images are printed instead). */
 (function () {
+  // schema.org event (Google event markup) for the HOST page: added to its <head> once, however many embeds / re-inits
+  (function (ld) { if (!ld || document.querySelector('script[type="application/ld+json"][data-bbu-event]')) return; var j = document.createElement('script'); j.type = 'application/ld+json'; j.setAttribute('data-bbu-event', ''); j.text = ld.replace(/</g, '\\u003c'); (document.head || document.documentElement).appendChild(j); })(/*EVENTLD*/null);
   var s = document.currentScript; if (!s) return;
   var base = new URL('./', s.src), origin = base.origin;
   var f = document.createElement('iframe');

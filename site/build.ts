@@ -83,6 +83,8 @@ const noTitles = (h: string) => h.replace(/<title>[\s\S]*?<\/title>/g, '').repla
 { const { RACE_VIEWS } = await import('./lib/racemap'); fs.writeFileSync(path.join(D, 'race-views.json'), JSON.stringify(RACE_VIEWS)); }
 html = html.replace('<!--regprint-->', regPrint(draft));
 if ((html.match(/class="ui navreg"/g) || []).length !== 1 || html.includes('class="regprint"') !== draft) throw new Error('[register] navbar link missing or print link not matching draft=' + draft);
+const { eventLd, ldScript } = await import('./lib/eventld'); const LD = eventLd(ctx);
+if (!html.includes('</head>')) throw new Error('[event ld] </head> missing'); html = html.replace('</head>', ldScript(LD) + '</head>');
 fs.writeFileSync(path.join(D, 'index.html'), html);
 // limited embed (race cards only, all links to the Trail Roots race page): dist/cards-embed.html + cards-embed.js; thumbnails from scripts/pdf.ts
 { const { cardsEmbedHtml, CARDS_TARGET } = await import('./lib/cardsembed'); const ch = cardsEmbedHtml(ctx); const hrefs = [...ch.matchAll(/href="([^"]*)"/g)].map((m) => m[1]);
@@ -99,6 +101,9 @@ fs.cpSync(path.join(here, 'public'), D, { recursive: true });
 // embed.js reserved heights: committed table measured locally by tools/heights.ts (never in CI)
 { const E = path.join(D, 'embed.js'), src = fs.readFileSync(E, 'utf8'); if (!src.includes('/*HEIGHTS*/null')) throw new Error('[embed.js] heights placeholder missing');
   fs.writeFileSync(E, src.replace('/*HEIGHTS*/null', fs.readFileSync(path.join(here, 'embed-heights.json'), 'utf8').trim())); }
+// event JSON-LD for the host page (embed.js + cards-embed.js add it to the host <head> once)
+for (const n of ['embed.js', 'cards-embed.js']) { const E = path.join(D, n), src = fs.readFileSync(E, 'utf8'); if (!src.includes('/*EVENTLD*/null')) throw new Error('[' + n + '] event ld placeholder missing');
+  fs.writeFileSync(E, src.replace('/*EVENTLD*/null', JSON.stringify(JSON.stringify(LD)))); }
 const app = await Bun.build({ entrypoints: [path.join(here, 'app.ts')], outdir: D, minify: true, target: 'browser' });
 if (!app.success) throw new AggregateError(app.logs, 'app.ts bundle failed');
 fs.cpSync(path.join(C, 'hillshade'), path.join(D, 'hillshade'), { recursive: true });
