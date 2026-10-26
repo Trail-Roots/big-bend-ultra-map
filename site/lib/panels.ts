@@ -122,9 +122,10 @@ export function profileBody(c, vis?: string[]) {
   if (minor) for (let v = 1; v < x1; v++) if (v % step) s += `<path d="M${f1(X(v))},${f1(H)}v6" stroke="#c8c8c8" stroke-width="1"/>`;
   for (let v = 0; v <= D + 0.01; v += step) s += `<path d="M${f1(X(v))},${f1(H)}v10" stroke="${col.mute}" stroke-width="1"/><text class="dist" x="${f1(X(v))}" y="${f1(H + 10)}" font-size="19" text-anchor="middle" dominant-baseline="hanging" fill="${col.mute}">${v}m</text>`;
   const pts = k => pr[k].mi.map((m, i) => [X(m), Y(pr[k].ft[i])]);
+  const occ: number[][] = V.flatMap((k) => pts(k)).map(([px, py]) => [px - 3, py - 3, px + 3, py + 3]); // drawn content (lines + station badges) for the screen top trim
   if (V.includes(longest)) { const pl = pts(longest), base = Math.max(y0, Math.min(2200, y0)); s += `<path data-course="${longest}" d="${lineD(pl)}L${f1(pl[pl.length - 1][0])},${f1(Y(base))}L${f1(pl[0][0])},${f1(Y(base))}z" fill="${col.shade}" fill-opacity="${col.shade_op}"/>`; }
   for (const k of O) if (V.includes(k)) s += `<path class="ln prof" data-course="${k}" d="${lineD(pts(k))}" stroke="${c.courses.colors[k]}" stroke-width="${k === '100K' ? 4 : 3}"/>`;
-  const lgx = W - 46 - MINIBIB.w, lgy = 16; s += `<rect x="${lgx - 10}" y="${lgy - 6}" width="${W - lgx + 10}" height="${O.length * 32 + 10}" fill="#fff" fill-opacity=".9"/>`;
+  const lgx = W - 46 - MINIBIB.w, lgy = 16; s += `<rect class="plgbg" x="${lgx - 10}" y="${lgy - 6}" width="${W - lgx + 10}" height="${O.length * 32 + 10}" fill="#fff" fill-opacity=".9"/>`;
   // legend keeps every race; hidden races at low opacity, clickable (app.ts toggles the race)
   O.forEach((k, i) => { s += `<g class="plegend" data-legend="${k}" opacity="${V.includes(k) ? 1 : 0.18}" style="cursor:pointer"><rect x="${lgx - 6}" y="${lgy + i * 32}" width="${W - lgx + 6}" height="30" fill="#fff" fill-opacity="0"/><path d="M${lgx},${lgy + 14 + i * 32}h36" stroke="${c.courses.colors[k]}" stroke-width="4"/>` + miniBib(k, c.courses.colors[k], lgx + 46, lgy + 14 + i * 32 - 13, col) + '</g>'; });
   // station badges: one per station pass (same-station passes < 0.4 mi apart share one), each STRAIGHT ABOVE (or below) its exact
@@ -156,12 +157,23 @@ export function profileBody(c, vis?: string[]) {
     let order = [...grp].sort((p, q) => q[1] - p[1] || p[0][0] - q[0][0]), res = place(order);
     for (let n = 0; typeof res === "number" && n < 60; n++) {  const [g] = order.splice(res, 1); order.unshift(g); res = place(order); }
     if (typeof res === 'number') throw new Error(`[elevation chart] no clear spot for station ${order[res][2]} at mi ${order[res][0][0].toFixed(1)} (${V.join(',')})`);
+    for (const { x: cx, y: by } of res) occ.push([cx - R, by - R, cx + R, by + R]);
     for (const { x: cx, y: by, ax, ay, g: [xs, , lab] } of res) {
       const e = by + (by < ay ? R - 2 : -R + 2);
       for (const qx of ax) s += `<path class="leader" d="M${f1(qx)},${f1(ay)}V${f1(e)}" fill="none" stroke="${col.ink}" stroke-width="1.5"/><circle cx="${f1(qx)}" cy="${f1(ay)}" r="3" fill="${col.ink}"/>`;
       s += `<g class="pcall" data-st="${lab}" data-mi="${(xs.reduce((a, b) => a + b, 0) / xs.length).toFixed(2)}">` + station(cx, by, lab, c.stations.stations[lab].spectator, { s: PST, fs: 14, badge: false, colors: col }) + '</g>'; } }
   if (V.includes('100K')) for (const r of pr.callouts.rincon) s += `<circle cx="${f1(X(r.mi))}" cy="${f1(Y(r.ft))}" r="6.3" fill="#fff" stroke="${col.ink}" stroke-width="3"/>`;
-  return { s, x: [x0, x1], y: [y0, y1], W, H };
+  for (const tk of all ? [2500, 3500, 4500] : yt) occ.push([0, Y(tk) - 27, 90, Y(tk)]); // y-axis labels
+  if (V.includes('100K')) for (const r of pr.callouts.rincon) occ.push([X(r.mi) - 8, Y(r.ft) - 8, X(r.mi) + 8, Y(r.ft) + 8]);
+  return { s, x: [x0, x1], y: [y0, y1], W, H, occ, lg: [lgx - 10, lgy - 6, W, lgy - 6 + O.length * 32 + 10] };
+}
+/** screen only: empty band above the elevation chart (user units) that can be trimmed for one chart (profileBody result): down to 10 units
+ *  above the highest drawn content, with the legend moved down by the same amount and kept clear of all drawn content. Print keeps the full frame. */
+export function profileTrim(p: ReturnType<typeof profileBody>) {
+  let T = Math.floor(Math.min(...p.occ.map((b) => b[1])) - 10);
+  const hit = (t: number) => p.occ.some((b) => b[2] > p.lg[0] && b[0] < p.lg[2] && b[3] > p.lg[1] + t - 4 && b[1] < p.lg[3] + t + 4);
+  while (T > 0 && hit(T)) T -= 2;
+  return Math.max(0, T);
 }
 export function renderProfile(c) {
   const p = profileBody(c);

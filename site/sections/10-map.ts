@@ -1,5 +1,5 @@
 import { renderMain, mainLayers } from '../lib/mainmap';
-import { renderProfile } from '../lib/panels';
+import { renderProfile, profileBody, profileTrim } from '../lib/panels';
 import { icon } from '../lib/icons';
 import { esc, SHEET } from '../lib/util';
 export const meta = { id: 'map', title: 'Course & Access Map' };
@@ -39,6 +39,10 @@ export function render(c: Ctx) {
   const p1: [string, { l: number; t: number; w: number; h: number }][] = [['pb-main', { l: 0, t: 0, w: mainIn.w, h: mainIn.h }],
     ['pb-hdr', { l: cx0, t: c0, w: K * hdIn.w, h: K * hdIn.h }],
     ['pb-prof', { l: cx0, t: c0 + K * (hdIn.h + 0.25), w: K * evIn.w, h: K * evIn.h }], ['pb-cal', { l: cx0, t: c0 + K * (hdIn.h + 0.25 + evIn.h + GS), w: K * strIn.w, h: K * strIn.h }]]; // screen: elevation above the race-day calendar; subscribe row below it (CALH)
+  // screen only: trim the empty band above the elevation chart (TR user units, legend moved down by TR) and give the freed height to the calendar
+  const PB = profileBody(c), TR = profileTrim(PB), PH = PB.H + 40, dT = K * evIn.h * TR / PH;
+  const p1s = p1.map(([id, q]) => [id, id === 'pb-prof' ? { ...q, h: q.h - dT } : id === 'pb-cal' ? { ...q, t: q.t - dT, h: q.h + dT } : q] as [string, typeof q]);
+  const trimCss = `@media screen{html svg.profile .plgbg,html svg.profile .plegend{transform:translateY(var(--pt,0px))}}`; // viewBox trimmed by app.ts (screen only)
   const w1 = Math.max(...p1.map(([, q]) => q.l + q.w)), h1 = mainIn.h;
   const P1 = { ...place(w1, h1, 'landscape') }; // screen paper-view geometry (unchanged sheet)
   // print: map alone (best orientation), then header + elevation on their own page
@@ -56,7 +60,7 @@ export function render(c: Ctx) {
   // screen paper view: the same page-1 geometry in % of the 11 x 8.5 in sheet (margins included), so the screen sheet mirrors the PDF page
   const M = LETTER.margin, pct = (q: { l: number; t: number; w: number; h: number }) => `{left:${((M + P1.mx + q.l * P1.z) / LETTER.h * 100).toFixed(3)}%;top:${((M + P1.my + q.t * P1.z) / LETTER.w * 100).toFixed(3)}%;width:${(q.w * P1.z / LETTER.h * 100).toFixed(3)}%;height:${(q.h * P1.z / LETTER.w * 100).toFixed(3)}%}`;
   const css = pg('.sec-map #pb-main', 'pmain', mainIn.w, mainIn.h, PM) + pg('.sec-map .charts', 'pacc', w2, h2, P2) + `@media print{${q2.map(([id, q]) => `#${id}${id === 'pb-hdr' ? hdrCss(q) : px(q)}`).join('')}${wm('.sec-map #pb-main', PM)}${wm('.sec-map .charts', P2)}}`
-    + `@media screen and (min-width:1100px){${p1.map(([id, q]) => `html #${id}${pct(q)}`).join('')}}`;
+    + trimCss + `@media screen and (min-width:1100px){${p1s.map(([id, q]) => `html #${id}${pct(q)}`).join('')}}`;
   return `<style>${css}</style>
 
 <div class="sheet">
@@ -68,7 +72,7 @@ export function render(c: Ctx) {
       <div class="titles"><h1>${esc(hdr[0].text)}</h1><p class="subtitle">${esc(hdr[1].text)}</p><!--regprint--><p class="lodgeprint"><a href="https://www.stay22.com/embed/6a3b6089aa090046926ecf10">Accommodations</a></p></div>
       <div class="notice"><strong>${esc(notice[0])}</strong>${notice.slice(1).map(l => `<br>${/^\(\d/.test(l) ? `<span class="dist">${esc(l)}</span>` : esc(l)}`).join('')}</div>
     </header>
-    <div class="profilebox" id="pb-prof">${renderProfile(c)}</div>
+    <div class="profilebox" id="pb-prof">${renderProfile(c).replace('<svg class="profile"', `<svg class="profile" data-trim="${TR}" data-h="${PH.toFixed(1)}"`)}</div>
   </div>
     <div class="calbox" id="pb-cal">${renderViews(c)}</div><script>/* hide already-ended calendar events before first paint (app.js repeats this every minute) */(function(){var n=(Date.now()-Date.UTC(2027,0,17,6,0))/6e4,c=0;document.querySelectorAll("#pb-cal .cv-scroll .cv-dgrp").forEach(function(g){var k=0;g.querySelectorAll(".cv-item").forEach(function(e){var on=+e.dataset.b>=n;e.hidden=!on;if(on)k++});g.hidden=!k;c+=k});var em=document.querySelector("#pb-cal .cv-empty");if(em)em.hidden=c>0})()</script>
   </div>

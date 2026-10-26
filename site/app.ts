@@ -17,6 +17,13 @@ document.querySelectorAll<HTMLInputElement>('input[data-layer]').forEach((cb) =>
 type HD = { profile: { W: number; H: number; x: number[]; y: number[] }; courses: Record<string, { color: string; dist: number; s: number[][] }>; time: any };
 const hdEl = document.getElementById('hoverdata');
 const prof = document.querySelector<SVGSVGElement>('svg.profile');
+// screen: trim the empty band above the elevation chart (build-time trim per race subset; the legend moves down with it); print keeps the full frame
+let profT = +(prof?.dataset.trim || 0);
+const profVB = () => { if (!prof?.dataset.h) return; const pr = matchMedia('print').matches, t = pr ? 0 : profT, W = prof.viewBox.baseVal.width, H = +prof.dataset.h;
+  prof.setAttribute('viewBox', `0 ${t} ${W} ${H - t}`); prof.style.setProperty('--pt', t + 'px'); };
+const setProfTrim = (t: number) => { profT = t; if (prof) prof.dataset.trim = String(t); profVB(); };
+let profT0 = profT;
+profVB(); matchMedia('print').addEventListener('change', profVB); addEventListener('beforeprint', () => { profT0 = profT; profT = 0; profVB(); }); addEventListener('afterprint', () => { profT = profT0; profVB(); });
 if (hdEl && prof) {
   const HD: HD = JSON.parse(hdEl.textContent || '{}'), NS = 'http://www.w3.org/2000/svg';
   const el = (tag: string, attrs: Record<string, string | number>, parent: Element) => { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, String(attrs[k])); parent.appendChild(e); return e; };
@@ -346,7 +353,7 @@ if (document.documentElement.classList.contains('embed') && parent !== window) {
   const TL = tld ? JSON.parse(tld.textContent || '{}') : null;
   const HDt = JSON.parse(document.getElementById('hoverdata')?.textContent || '{}').time;
   const heatRamp = (v: number) => { const S = [[255, 244, 222], [247, 182, 92], [214, 72, 40], [140, 18, 18], [74, 8, 8]], x = Math.min(1, Math.max(0, v)) * (S.length - 1), i = Math.min(S.length - 2, Math.floor(x)), f = x - i; return 'rgb(' + S[i].map((a, j) => Math.round(a + (S[i + 1][j] - a) * f)).join(',') + ')'; };
-  const HD0 = JSON.parse(document.getElementById('hoverdata')?.textContent || '{}'); let origProf: { s: string; x: number[]; y: number[] } | null = null, profVariants: Promise<any> | null = null;
+  const HD0 = JSON.parse(document.getElementById('hoverdata')?.textContent || '{}'); let origProf: { s: string; x: number[]; y: number[]; t?: number } | null = null, profVariants: Promise<any> | null = null;
   const heatSrc = JSON.parse(document.getElementById('heatdata')?.textContent || 'null');
   // race filter: "All" checked + no individual race checked = every race; checking races shows only those; unchecking the last reverts to All
   const picked = (all: string[]) => { const p = [...document.querySelectorAll<HTMLInputElement>('input[data-race]')].filter((i) => i.checked).map((i) => i.dataset.race!); return p.length ? p : all; };
@@ -357,8 +364,8 @@ if (document.documentElement.classList.contains('embed') && parent !== window) {
     document.querySelectorAll<SVGElement | HTMLElement>('.mainmap [data-course], .tlcut [data-course]').forEach((e) => (e.style.display = on.includes(e.dataset.course!) ? '' : 'none'));
     // page-1 elevation chart: body for exactly the visible races, scaled to the longest visible route
     { const pb = document.querySelector<SVGGElement>('svg.profile g.pbody'), prof2 = pb?.ownerSVGElement; if (pb && prof2) { const key = on.join(',');
-      origProf ??= { s: pb.innerHTML, x: HD0.profile.x, y: HD0.profile.y };
-      const put = (v: { s: string; x: number[]; y: number[] }) => { pb.innerHTML = v.s; prof2.dispatchEvent(new CustomEvent('profilescale', { detail: v })); };
+      origProf ??= { s: pb.innerHTML, x: HD0.profile.x, y: HD0.profile.y, t: +(prof2.dataset.t0 ??= prof2.dataset.trim || '0') };
+      const put = (v: { s: string; x: number[]; y: number[]; t?: number }) => { pb.innerHTML = v.s; setProfTrim(v.t ?? 0); prof2.dispatchEvent(new CustomEvent('profilescale', { detail: v })); };
       if (on.length === all.length) put(origProf); else (profVariants ??= fetch('profiles.json').then((r) => r.json())).then((V) => { if (V[key] && picked(all).join(',') === key) put(V[key]); }); } }
     // main map: race routes in race colours when fewer than all races are shown, and zoom to fit them (reset for all / none)
     { const mm = document.querySelector<SVGSVGElement>('svg.mainmap'), sub = on.length > 0 && on.length < all.length, bb = [Infinity, Infinity, -Infinity, -Infinity];
