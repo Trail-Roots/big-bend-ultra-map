@@ -84,7 +84,8 @@ const noTitles = (h: string) => h.replace(/<title>[\s\S]*?<\/title>/g, '').repla
 html = html.replace('<!--regprint-->', regPrint(draft));
 if ((html.match(/class="ui navreg"/g) || []).length !== 1 || html.includes('class="regprint"') !== draft) throw new Error('[register] navbar link missing or print link not matching draft=' + draft);
 const { eventLd, ldScript } = await import('./lib/eventld'); const LD = eventLd(ctx);
-if (!html.includes('</head>')) throw new Error('[event ld] </head> missing'); html = html.replace('</head>', ldScript(LD) + '</head>');
+if (!html.includes('</head>')) throw new Error('[event ld] </head> missing'); // only when this page is NOT inside an iframe: Google inlines iframe content into the host page, so a framed copy would duplicate the host's event (embed.js adds it to the host)
+html = html.replace('</head>', `<script>if(self===top){var j=document.createElement('script');j.type='application/ld+json';j.setAttribute('data-bbu-event','');j.text=${JSON.stringify(JSON.stringify(LD).replace(/</g, '\\u003c'))};document.head.appendChild(j)}</script></head>`);
 fs.writeFileSync(path.join(D, 'index.html'), html);
 // limited embed (race cards only, all links to the Trail Roots race page): dist/cards-embed.html + cards-embed.js; thumbnails from scripts/pdf.ts
 { const { cardsEmbedHtml, CARDS_TARGET } = await import('./lib/cardsembed'); const ch = cardsEmbedHtml(ctx); const hrefs = [...ch.matchAll(/href="([^"]*)"/g)].map((m) => m[1]);
