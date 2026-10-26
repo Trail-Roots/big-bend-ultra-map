@@ -1,0 +1,93 @@
+{
+ "source": "https://runsignup.com/Rest/race/163892?format=json (public race page https://runsignup.com/Race/TX/Terlingua/BigBendUltra)",
+ "timezone": "America/Chicago",
+ "registrationUrl": "https://runsignup.com/Race/TX/Terlingua/BigBendUltra",
+ "note": "race_fee per registration period (RunSignup processing fee not included). Times are America/Chicago wall clock. Update from RunSignup and rebuild.",
+ "events": {
+  "10K": [
+   {
+    "opens": "7/4/2026 01:00",
+    "closes": "9/27/2026 00:59",
+    "price": "110.00"
+   },
+   {
+    "opens": "9/27/2026 01:00",
+    "closes": "11/15/2026 00:59",
+    "price": "125.00"
+   },
+   {
+    "opens": "11/15/2026 01:00",
+    "closes": "1/17/2027 12:59",
+    "price": "140.00"
+   }
+  ],
+  "20K": [
+   {
+    "opens": "7/4/2026 01:00",
+    "closes": "9/27/2026 00:59",
+    "price": "120.00"
+   },
+   {
+    "opens": "9/27/2026 01:00",
+    "closes": "11/15/2026 00:59",
+    "price": "135.00"
+   },
+   {
+    "opens": "11/15/2026 01:00",
+    "closes": "1/17/2027 12:59",
+    "price": "150.00"
+   }
+  ],
+  "35K": [
+   {
+    "opens": "7/4/2026 01:00",
+    "closes": "9/27/2026 00:59",
+    "price": "130.00"
+   },
+   {
+    "opens": "9/27/2026 01:00",
+    "closes": "11/15/2026 00:59",
+    "price": "145.00"
+   },
+   {
+    "opens": "11/15/2026 01:00",
+    "closes": "1/17/2027 12:59",
+    "price": "160.00"
+   }
+  ],
+  "55K": [
+   {
+    "opens": "7/4/2026 01:00",
+    "closes": "9/27/2026 00:59",
+    "price": "155.00"
+   },
+   {
+    "opens": "9/27/2026 01:00",
+    "closes": "11/15/2026 00:59",
+    "price": "175.00"
+   },
+   {
+    "opens": "11/15/2026 01:00",
+    "closes": "1/17/2027 12:59",
+    "price": "195.00"
+   }
+  ],
+  "100K": [
+   {
+    "opens": "7/4/2026 01:00",
+    "closes": "9/27/2026 00:59",
+    "price": "210.00"
+   },
+   {
+    "opens": "9/27/2026 01:00",
+    "closes": "11/15/2026 00:59",
+    "price": "240.00"
+   },
+   {
+    "opens": "11/15/2026 01:00",
+    "closes": "1/17/2027 12:59",
+    "price": "280.00"
+   }
+  ]
+ }
+}
