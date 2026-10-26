@@ -541,7 +541,7 @@ dialog.lightbox{z-index:2147483647}dialog.lightbox::backdrop{z-index:2147483646}
 .cv-allday{margin-left:50px}
 .cv-blk .cv-s{font-size:11.5px;line-height:14px}
 /* Race cards: two per row, tighter */
-.racecards{grid-template-columns:minmax(0,1fr);gap:8px;margin:12px auto;padding:0 8px} /* phones: one per row (no 2+2+1 orphan) */
+.racecards{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:12px auto;padding:0 8px} /* phones: two per row (2+2+1) */
 .racecard .rc-body{padding:7px 8px 8px;gap:6px}
 .racecard .rc-body h3{font-size:.86rem;line-height:18px;gap:.3rem;flex-wrap:wrap}
 .racecard .rc-stats{flex-wrap:wrap;gap:4px 10px}
@@ -633,4 +633,4 @@ a.vw-plan{text-decoration:none}
 .am-i .amv{background:#3b6ea5;color:#fff;font-style:italic;font-family:Georgia,serif}
 @media print{html body a[href*="strava.com"] svg.ic{display:inline-block!important}}
 @media screen and (max-width:899px){.rc-btns{flex-wrap:wrap!important}} /* narrow 3+2 cards: Strava | Join our club split button takes the second line instead of overflowing */
-@media screen and (max-width:739px){.racecards{grid-template-columns:minmax(0,1fr)}} /* below ~740px a third of the width is too narrow for the card stats and buttons: one per row */
+@media screen and (max-width:739px){.racecards{grid-template-columns:repeat(2,minmax(0,1fr))}} /* below ~740px: two per row (2+2+1), never one */
