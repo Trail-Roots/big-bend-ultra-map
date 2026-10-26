@@ -25,12 +25,12 @@ export function eventLd(ctx: any) {
     if (!st.loc.startsWith('Barton Warnock') || !fin.loc.startsWith('Barton Warnock')) throw new Error('[event ld] ' + k + ' start/finish not at Barton Warnock');
     return { '@type': 'SportsEvent', name: `Big Bend Ultra 2027 ${k}`, sport: 'Trail running', startDate: at(st.a), endDate: at(fin.a), eventStatus: 'https://schema.org/EventScheduled', eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode', location: place, organizer: org, url: RACE_URL, image: [IMAGE],
       description: `${k} trail race of the Big Bend Ultra at Big Bend Ranch State Park; start and finish at the Barton Warnock Visitor Center.`,
-      offers: f.map((t) => ({ '@type': 'Offer', name: `${k} registration`, price: (+t.price).toFixed(2), priceCurrency: 'USD', validFrom: chi(t.opens), priceValidUntil: chi(t.closes), availability: 'https://schema.org/InStock', url: REG_URL })) }; });
+      offers: f.map((t) => ({ '@type': 'Offer', name: `${k} registration`, price: (+t.price).toFixed(2), priceCurrency: 'USD', validFrom: chi(t.opens), validThrough: chi(t.closes), priceValidUntil: chi(t.closes), availability: 'https://schema.org/InStock', url: REG_URL })) }; });
   const all = order.flatMap((k) => TIERS(k).map((t) => +t.price));
   return { '@context': 'https://schema.org', '@type': 'SportsEvent', name: 'Big Bend Ultra 2027', sport: 'Trail running', startDate: sub.map((s) => s.startDate).sort()[0], endDate: sub.map((s) => s.endDate).sort().at(-1),
     eventStatus: 'https://schema.org/EventScheduled', eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode', location: place, organizer: org, url: RACE_URL, image: [IMAGE],
     description: 'Big Bend Ultra (23rd annual): 10K, 20K, 35K, 55K and 100K trail races at Big Bend Ranch State Park, Texas. All runners share the start and finish at the Barton Warnock Visitor Center.',
-    offers: { '@type': 'AggregateOffer', lowPrice: Math.min(...all).toFixed(2), highPrice: Math.max(...all).toFixed(2), priceCurrency: 'USD', offerCount: all.length, availability: 'https://schema.org/InStock', url: REG_URL },
+    offers: { '@type': 'AggregateOffer', lowPrice: Math.min(...all).toFixed(2), highPrice: Math.max(...all).toFixed(2), priceCurrency: 'USD', offerCount: all.length, validFrom: sub.flatMap((s) => s.offers.map((o) => o.validFrom)).sort()[0], validThrough: sub.flatMap((s) => s.offers.map((o) => o.validThrough)).sort().at(-1), availability: 'https://schema.org/InStock', url: REG_URL },
     subEvent: sub };
 }
 export const ldScript = (o: unknown) => `<script type="application/ld+json" data-bbu-event>${JSON.stringify(o).replace(/</g, '\\u003c')}</script>`;
