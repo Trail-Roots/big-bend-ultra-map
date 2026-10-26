@@ -513,6 +513,7 @@ dialog#racebox .lb-body{padding-top:60px} /* clear of the close / prev / next co
 .vw-tlbox,.vw-tlv{width:100%;height:100%}.vw-tlv svg.timeline{display:block;width:100%!important;height:100%!important;max-width:none!important;max-height:none!important}
 @media screen and (max-width:1099px){.vw-pane.on{display:flex;flex-direction:column;aspect-ratio:1.634;min-height:0;overflow:hidden}.vw-cal .callinks{flex:none}.vw-cal .cv{flex:1;min-height:0;height:auto!important}.vw-tlbox{flex:1;min-height:0}}
 @media screen and (max-width:560px){.vw-pane.on{aspect-ratio:.703}}
+@media screen and (max-width:1099px){html body .vw-pane.vw-cal.on{aspect-ratio:auto;height:clamp(320px,calc(var(--host-vh, 1vh) * 80),640px)}} /* calendar: height from the viewport, not the card width (the 1.634 box left one or two events visible on 561-900px screens and landscape phones) */
 
 /* lightboxes sit above everything in our page (also inside the embed's full-window iframe) */
 dialog.lightbox{z-index:2147483647}dialog.lightbox::backdrop{z-index:2147483646}
