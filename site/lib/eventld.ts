@@ -3,7 +3,12 @@
 // fees + registration windows + URL from RunSignup race 163892 (fees exclude RunSignup's processing fee), wording from trailroots.com/big-bend-ultra.
 const RACE_DAY = '2027-01-17', OFF = '-06:00'; // Terlingua, TX: US Central, standard time in January
 const RACE_URL = 'https://trailroots.com/big-bend-ultra';
-const IMAGE = 'https://trail-roots.github.io/big-bend-ultra-map/cards-embed.png';
+// race photo BigBendUltra2024-497 from trailroots.com/big-bend-ultra, cropped 16:9 / 4:3 / 1:1 by tools/ld-images.ts (site/public/ld)
+const IMAGE = ['16x9', '4x3', '1x1'].map((r) => `https://trail-roots.github.io/big-bend-ultra-map/ld/bbu-${r}.jpg`);
+// per-distance RunSignup registration (eventIds from https://runsignup.com/Rest/race/163892?format=json, 2027 event)
+const EVENT_ID: Record<string, number> = { '10K': 1109499, '20K': 1109500, '35K': 1109501, '55K': 1109502, '100K': 1109503 };
+const regUrl = (k: string) => { const id = EVENT_ID[k]; if (!id) throw new Error('[event ld] no RunSignup eventId for ' + k); return `https://runsignup.com/Race/Register/?raceId=163892&eventId=${id}`; };
+import { totalGain } from './coursetable';
 // registration price schedule (all tiers per distance): sources/curated/registration.json, pulled from RunSignup race 163892
 import REG from '../../sources/curated/registration.json';
 const REG_URL = (REG as any).registrationUrl as string;
@@ -19,16 +24,19 @@ export function eventLd(ctx: any) {
   const ev: any[] = ctx.calendar.events, order: string[] = ctx.courses.order;
   const one = (re: RegExp) => { const e = ev.filter((x) => re.test(x.s)); if (e.length !== 1) throw new Error('[event ld] calendar entry ' + re + ' x' + e.length); return e[0]; };
   const loc0 = one(/^\S+ 100K Race Start$/).loc as string; if (!/^Barton Warnock Visitor Center, 21800 FM170, Terlingua, TX 79852/.test(loc0)) throw new Error('[event ld] start location changed: ' + loc0);
-  const place = { '@type': 'Place', name: 'Barton Warnock Visitor Center, Big Bend Ranch State Park', address: { '@type': 'PostalAddress', streetAddress: '21800 FM170', addressLocality: 'Terlingua', addressRegion: 'TX', postalCode: '79852', addressCountry: 'US' } };
-  const org = { '@type': 'Organization', name: 'Trail Roots', url: 'https://trailroots.com' };
+  const sf = ctx.stations.stations['S/F']; if (!/^Barton Warnock/.test(sf.long)) throw new Error('[event ld] S/F station moved: ' + sf.long);
+  const place = { '@type': 'Place', geo: { '@type': 'GeoCoordinates', latitude: sf.lonlat[1], longitude: sf.lonlat[0] }, name: 'Barton Warnock Visitor Center, Big Bend Ranch State Park', address: { '@type': 'PostalAddress', streetAddress: '21800 FM170', addressLocality: 'Terlingua', addressRegion: 'TX', postalCode: '79852', addressCountry: 'US' } };
+  const org = { '@type': 'Organization', name: 'Trail Roots', url: 'https://trailroots.com/' }; // homepage JSON-LD (SportsOrganization) has no @id to reference
   const sub = order.map((k) => { const st = one(new RegExp(`^\\S+ ${k} Race Start$`)), fin = one(new RegExp(`^\\S+ ${k} Finish$`)), f = TIERS(k);
+    const mi = ctx.courses.courses[k].distance_mi as number, gain = totalGain(ctx, k) as number;
     if (!st.loc.startsWith('Barton Warnock') || !fin.loc.startsWith('Barton Warnock')) throw new Error('[event ld] ' + k + ' start/finish not at Barton Warnock');
-    return { '@type': 'SportsEvent', name: `Big Bend Ultra 2027 ${k}`, sport: 'Trail running', startDate: at(st.a), endDate: at(fin.a), eventStatus: 'https://schema.org/EventScheduled', eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode', location: place, organizer: org, url: RACE_URL, image: [IMAGE],
-      description: `${k} trail race of the Big Bend Ultra at Big Bend Ranch State Park; start and finish at the Barton Warnock Visitor Center.`,
-      offers: f.map((t) => ({ '@type': 'Offer', name: `${k} registration`, price: (+t.price).toFixed(2), priceCurrency: 'USD', validFrom: chi(t.opens), validThrough: chi(t.closes), priceValidUntil: chi(t.closes), availability: 'https://schema.org/InStock', url: REG_URL })) }; });
+    return { '@type': 'SportsEvent', name: `Big Bend Ultra 2027 ${k}`, sport: 'Trail running', startDate: at(st.a), endDate: at(fin.a), eventStatus: 'https://schema.org/EventScheduled', eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode', location: place, organizer: org, url: RACE_URL, image: IMAGE,
+      description: `${k} trail race of the Big Bend Ultra at Big Bend Ranch State Park (${mi} mi, ${gain.toLocaleString('en-US')} ft elevation gain on the GPX course); start and finish at the Barton Warnock Visitor Center.`,
+      additionalProperty: [{ '@type': 'PropertyValue', name: 'Distance', value: mi, unitText: 'mi', unitCode: 'SMI' }, { '@type': 'PropertyValue', name: 'Elevation gain', value: gain, unitText: 'ft', unitCode: 'FOT' }],
+      offers: f.map((t) => ({ '@type': 'Offer', name: `${k} registration`, price: (+t.price).toFixed(2), priceCurrency: 'USD', validFrom: chi(t.opens), validThrough: chi(t.closes), priceValidUntil: chi(t.closes), availability: 'https://schema.org/InStock', url: regUrl(k) })) }; });
   const all = order.flatMap((k) => TIERS(k).map((t) => +t.price));
   return { '@context': 'https://schema.org', '@type': 'SportsEvent', name: 'Big Bend Ultra 2027', sport: 'Trail running', startDate: sub.map((s) => s.startDate).sort()[0], endDate: sub.map((s) => s.endDate).sort().at(-1),
-    eventStatus: 'https://schema.org/EventScheduled', eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode', location: place, organizer: org, url: RACE_URL, image: [IMAGE],
+    eventStatus: 'https://schema.org/EventScheduled', eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode', location: place, organizer: org, url: RACE_URL, image: IMAGE,
     description: 'Big Bend Ultra (23rd annual): 10K, 20K, 35K, 55K and 100K trail races at Big Bend Ranch State Park, Texas. All runners share the start and finish at the Barton Warnock Visitor Center.',
     offers: { '@type': 'AggregateOffer', lowPrice: Math.min(...all).toFixed(2), highPrice: Math.max(...all).toFixed(2), priceCurrency: 'USD', offerCount: all.length, validFrom: sub.flatMap((s) => s.offers.map((o) => o.validFrom)).sort()[0], validThrough: sub.flatMap((s) => s.offers.map((o) => o.validThrough)).sort().at(-1), availability: 'https://schema.org/InStock', url: REG_URL },
     subEvent: sub };
