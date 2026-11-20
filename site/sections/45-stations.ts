@@ -55,44 +55,34 @@ export function amList(a: any, mode: 'web' | 'print') {
   }).join('')}</ul>`;
 }
 
-/** Brief cutoff / finish line from content/cutoffs.json (aligned with the race calendar). Starts and TBD visits are omitted. */
-export function briefCuts(c: Ctx, k: string) {
-  const hits: { r: string; t: string; n: number }[] = [];
+/** Compact cutoff times for the brief cards: "6:30 PM" → "6:30p". Starts and TBD visits are omitted. */
+const shortCut = (t: string) => t.replace(/(\d{1,2}:\d{2}) ?([AP])M/gi, (_, hm, a) => hm + a.toLowerCase()).replace(/, /g, ' / ');
+export function cutsCol(c: Ctx, k: string) {
+  const hits: { r: string; t: string }[] = [];
   for (const r of c.courses.order) {
     const vs = c.cutoffs[r].map((x: any, i: number) => ({ x, i })).filter(({ x, i }: any) => x.station === k && i > 0 && x.cutoff && x.cutoff !== 'TBD');
     if (!vs.length) continue;
-    hits.push(vs.length === 1 ? { r, t: vs[0].x.cutoff, n: 1 } : { r, t: vs.map((v: any, j: number) => `${v.x.cutoff} ${j === 0 ? 'outbound' : 'return'}`).join(', '), n: vs.length });
+    const raw = vs.length === 1 ? vs[0].x.cutoff : vs.map((v: any) => v.x.cutoff).join(', ');
+    hits.push({ r, t: (k === 'S/F' && (raw === '1:00 AM' || /Jan 18/.test(raw))) ? '1:00 AM Mon' : raw });
   }
-  if (!hits.length) return 'No station cutoff';
-  if (k === 'S/F') {
-    const toMin = (t: string) => { const m = t.match(/(\d{1,2}):(\d{2}) ?([AP])M/i); if (!m) return 0; let h = +m[1] % 12; if (m[3].toUpperCase() === 'P') h += 12; return (/Jan 18/.test(t) || (t === '1:00 AM') ? 1440 : 0) + h * 60 + +m[2]; };
-    const groups: { races: string[]; t: string }[] = [];
-    for (const h of [...hits].sort((a, b) => toMin(a.t) - toMin(b.t) || a.r.localeCompare(b.r))) {
-      const t = h.t === '1:00 AM' ? '1:00 AM Jan 18' : h.t;
-      const last = groups[groups.length - 1];
-      if (last && last.t === t) last.races.push(h.r); else groups.push({ races: [h.r], t });
-    }
-    return 'Finish: ' + groups.map((g) => `${g.races.join(', ')} ${g.t}`).join(' · ');
-  }
-  return (hits.length === 1 && hits[0].n === 1 ? 'Cutoff: ' : 'Cutoffs: ') + hits.map((h) => `${h.r} ${h.t}`).join(' · ');
+  const rows = hits.length
+    ? hits.map((h) => `<li><span class="stc-cr">${esc(h.r)}</span> <span class="stc-ct">${esc(shortCut(h.t))}</span></li>`).join('')
+    : `<li class="stc-cnone">None</li>`;
+  return `<div class="stc-cuts"><h4>Cutoffs</h4><ul>${rows}</ul></div>`;
 }
 
 function briefCard(c: Ctx, k: string) {
   const s = c.stations.stations[k], a = (amen as any)[k] ?? {};
   const title = k === 'S/F' ? s.name : `${k} · ${s.name}`;
-  const hours = s.hours ? `<p class="stc-hours">Open ${esc(String(s.hours).replace(/ - /, '–'))}</p>` : '';
   return `<article class="stcard-brief" data-station="${esc(k)}" role="listitem">
-<div class="stc-top">
-<button type="button" class="stc-open stc-mapbtn" data-station="${esc(k)}" aria-label="${esc(title)}: open station details"><div class="stc-map st-map" data-station="${esc(k)}"></div></button>
-<div class="stc-main">
-<button type="button" class="stc-open stc-body" data-station="${esc(k)}" aria-label="${esc(title)}: open station details">
-<header class="stc-head"><svg class="st-badge" viewBox="-42 -42 84 84" overflow="visible" aria-hidden="true">${station(0, 0, k, s.spectator, { s: k === 'S/F' ? 2900 : 2000, fs: k === 'S/F' ? 34 : 28, badge: false, colors: c.colors, link: false })}</svg><div><h3>${esc(title)}</h3>${s.long ? `<p class="stc-sub">${esc(s.long)}</p>` : ''}</div></header>
-${hours}<p class="stc-cuts">${esc(briefCuts(c, k))}</p>
-</button>
-<button type="button" class="stc-open stc-full" data-station="${esc(k)}">${icon('expand')}Details</button>
-</div>
-</div>
-${amList(a, 'web')}</article>`;
+<header class="stc-head">
+<button type="button" class="stc-mapbtn" data-station="${esc(k)}" tabindex="-1" aria-hidden="true"><div class="stc-map st-map" data-station="${esc(k)}"></div></button>
+<svg class="st-badge" viewBox="-42 -42 84 84" overflow="visible" aria-hidden="true">${station(0, 0, k, s.spectator, { s: k === 'S/F' ? 2900 : 2000, fs: k === 'S/F' ? 34 : 28, badge: false, colors: c.colors, link: false })}</svg>
+<div class="stc-title"><h3>${esc(title)}</h3>${s.long ? `<p class="stc-sub">${esc(s.long)}</p>` : ''}</div>
+<button type="button" class="stc-full" data-station="${esc(k)}" aria-label="${esc(title)}: open full screen">${icon('expand')}</button>
+</header>
+<div class="stc-cols">${amList(a, 'web')}${cutsCol(c, k)}</div>
+</article>`;
 }
 
 /** Screen-only grid of brief aid-station cards (embed + site), after the race cards. */

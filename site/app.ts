@@ -482,7 +482,7 @@ if (document.documentElement.classList.contains('embed') && parent !== window) {
   // clicks: station markers on the main map (instead of jumping to Google Maps; the lightbox links there), heat-map icons, race-table names, aid-station cards
   document.addEventListener('click', (e) => { const t = e.target as Element; if (!(t instanceof Element)) return;
     if (t.closest('a.am-cal, a[href="#drop-bags"]')) return; // drop-bag links go to the calendar (handled below)
-    const cardBtn = t.closest<HTMLElement>('.stc-open'); if (cardBtn?.dataset.station) { openStation(cardBtn.dataset.station); history.replaceState(null, '', `#station-${encodeURIComponent(cardBtn.dataset.station)}`); return; }
+    const card = t.closest<HTMLElement>('.stcard-brief'); if (card?.dataset.station && !(t as Element).closest('a')) { openStation(card.dataset.station); history.replaceState(null, '', `#station-${encodeURIComponent(card.dataset.station)}`); return; }
     const a = t.closest<Element>('g.stpick, a.stlink, g.marker[data-station], g.pcall[data-st]'); if (!a) return; const k = a.getAttribute('data-station') ?? a.getAttribute('data-st');
     const ms = a.closest<HTMLElement>('.msfig-here'); if (ms ? k === ms.dataset.here : a.closest('.lightbox.stbox, .sec-stpages, .st-badge')) return; /* never a station's own details; milestone strips there link to the OTHER stations */ if (!k) return;
     if (document.querySelector('svg.mainmap.panning')) return; e.preventDefault(); openStation(k); history.replaceState(null, '', `#station-${encodeURIComponent(k)}`); });
@@ -595,6 +595,28 @@ if (document.documentElement.classList.contains('embed') && parent !== window) {
   const go = (t: HTMLButtonElement, focus = false) => { tabs.forEach((x) => { const on = x === t; x.setAttribute('aria-selected', String(on)); x.tabIndex = on ? 0 : -1; document.getElementById('vw-' + x.dataset.view)?.classList.toggle('on', on); });
     pg!.dataset.view = t.dataset.view; if (focus) t.focus(); dispatchEvent(new Event('resize')); /* panes were display:none: let size-dependent code re-measure */ };
   tabs.forEach((t, i) => { t.addEventListener('click', () => go(t)); t.addEventListener('keydown', (e) => { const n = tabs.length, j = e.key === 'ArrowRight' ? (i + 1) % n : e.key === 'ArrowLeft' ? (i - 1 + n) % n : e.key === 'Home' ? 0 : e.key === 'End' ? n - 1 : -1; if (j >= 0) { e.preventDefault(); go(tabs[j], true); } }); }); }
+// desktop Full screen: the same calendar DOM fills the viewport (toggles stay in sync). Tries the Fullscreen API (works in the trailroots.com iframe because embed.js sets allow=fullscreen); if that is denied, a CSS overlay plus the existing host-window takeover (bbu-modal / bbu-full) is the fallback. Close button and Esc exit.
+{ const cv = document.querySelector<HTMLElement>('#pb-cal .cv');
+  if (cv) {
+    let ph: HTMLElement | null = null, host = false;
+    const reqFs = (el: HTMLElement) => { const fn = el.requestFullscreen || (el as HTMLElement & { webkitRequestFullscreen?: () => Promise<void> }).webkitRequestFullscreen; return fn ? fn.call(el) : Promise.reject(); };
+    const exitFs = () => { const d = document as Document & { webkitExitFullscreen?: () => void }; if (document.fullscreenElement || (d as Document & { webkitFullscreenElement?: Element }).webkitFullscreenElement) (document.exitFullscreen || d.webkitExitFullscreen)?.call(document); };
+    const fsEl = () => document.fullscreenElement || (document as Document & { webkitFullscreenElement?: Element }).webkitFullscreenElement || null;
+    const open = () => { if (document.documentElement.classList.contains('cal-fs')) return;
+      ph = document.createElement('div'); ph.className = 'cv-fsph'; ph.style.height = cv.getBoundingClientRect().height + 'px'; ph.setAttribute('aria-hidden', 'true'); cv.parentNode!.insertBefore(ph, cv);
+      document.documentElement.classList.add('cal-fs');
+      const after = () => { document.querySelector<HTMLButtonElement>('[data-cal-fs-close]')?.focus(); dispatchEvent(new Event('resize')); };
+      const fallback = () => { if (inEmbed) { host = true; parent.postMessage({ type: 'bbu-modal', open: true }, '*'); } after(); };
+      reqFs(cv).then(() => { if (fsEl()) after(); else fallback(); }).catch(fallback); };
+    const close = () => { if (!document.documentElement.classList.contains('cal-fs')) return;
+      exitFs(); document.documentElement.classList.remove('cal-fs'); if (host) { host = false; if (inEmbed) parent.postMessage({ type: 'bbu-modal', open: false }, '*'); }
+      ph?.remove(); ph = null; document.querySelector<HTMLButtonElement>('[data-cal-fs]')?.focus(); dispatchEvent(new Event('resize')); };
+    document.querySelectorAll<HTMLButtonElement>('[data-cal-fs]').forEach((b) => b.addEventListener('click', open));
+    document.querySelectorAll<HTMLButtonElement>('[data-cal-fs-close]').forEach((b) => b.addEventListener('click', close));
+    addEventListener('keydown', (e) => { if ((e.key === 'Escape' || e.key === 'Esc') && document.documentElement.classList.contains('cal-fs')) { e.preventDefault(); close(); } });
+    addEventListener('fullscreenchange', () => { if (!fsEl() && document.documentElement.classList.contains('cal-fs') && !host) close(); });
+    addEventListener('webkitfullscreenchange', () => { if (!fsEl() && document.documentElement.classList.contains('cal-fs') && !host) close(); });
+    addEventListener('beforeprint', () => close()); } }
 // calendar: fit each event block's text without clipping (screen only; print is sized in CSS)
 { const blks = [...document.querySelectorAll<HTMLElement>('.cv-blk')];
   const over = (e: HTMLElement) => e.scrollHeight > e.clientHeight + 1 || [...e.children].some((x) => (x as HTMLElement).scrollWidth > (x as HTMLElement).clientWidth + 1 || (x as HTMLElement).scrollHeight > (x as HTMLElement).clientHeight + 1 || (x as HTMLElement).getBoundingClientRect().bottom > e.getBoundingClientRect().bottom + .5);
