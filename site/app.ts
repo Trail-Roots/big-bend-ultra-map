@@ -356,9 +356,11 @@ if (document.documentElement.classList.contains('embed') && parent !== window) {
   const HD0 = JSON.parse(document.getElementById('hoverdata')?.textContent || '{}'); let origProf: { s: string; x: number[]; y: number[]; t?: number } | null = null, profVariants: Promise<any> | null = null;
   const heatSrc = JSON.parse(document.getElementById('heatdata')?.textContent || 'null');
   // race filter: "All" checked + no individual race checked = every race; checking races shows only those; unchecking the last reverts to All
-  const picked = (all: string[]) => { const p = [...document.querySelectorAll<HTMLInputElement>('input[data-race]')].filter((i) => i.checked).map((i) => i.dataset.race!); return p.length ? p : all; };
+  // Distance checkboxes exist in Layers and on the calendar; unique race keys, and every copy stays in sync.
+  const raceKeys = () => [...new Set([...document.querySelectorAll<HTMLInputElement>('input[data-race]')].map((i) => i.dataset.race!))];
+  const picked = (all: string[]) => { const p = [...new Set([...document.querySelectorAll<HTMLInputElement>('input[data-race]')].filter((i) => i.checked).map((i) => i.dataset.race!))]; return p.length ? p : all; };
   const apply = (force?: string[]) => {
-    const all = [...document.querySelectorAll<HTMLInputElement>('input[data-race]')].map((i) => i.dataset.race!), on = force ?? picked(all);
+    const all = raceKeys(), on = force ?? picked(all);
     for (const k of all) { const key = 'off' + k.replace(/\W/g, ''); if (on.includes(k)) delete root.dataset[key]; else root.dataset[key] = '1'; }
     // main map + page 1 charts + race cards
     document.querySelectorAll<SVGElement | HTMLElement>('.mainmap [data-course], .tlcut [data-course]').forEach((e) => (e.style.display = on.includes(e.dataset.course!) ? '' : 'none'));
@@ -377,8 +379,9 @@ if (document.documentElement.classList.contains('embed') && parent !== window) {
     // zoom boxes default (Erik, Oct 21 2026): shown with all races, hidden when a subset of races is picked; a manual Layers toggle of
     // "Zoom boxes" overrides the default for the rest of the visit (race changes no longer touch it). Print (force = all races) shows them unless the user turned them off.
     { const zb = document.querySelector<HTMLInputElement>('input[data-layer="zoom"]'); if (zb && zb.dataset.manual !== '1') { const want = force ? true : on.length === all.length; zb.checked = want; show('.mainmap g.layer[data-layer="zoom"]', want); } }
-    // "All" checkbox mirrors the state: checked = all, indeterminate = some, unchecked = none
-    { const ab = document.querySelector<HTMLInputElement>('input[data-race-all]'); if (ab && !force) ab.checked = !document.querySelector('input[data-race]:checked'); }
+    // "All" / per-race checkboxes (Layers + calendar) stay in sync: All checked and individuals unchecked when every race is on
+    if (!force) { const only = on.length !== all.length; document.querySelectorAll<HTMLInputElement>('input[data-race]').forEach((i) => { i.checked = only && on.includes(i.dataset.race!); });
+      document.querySelectorAll<HTMLInputElement>('input[data-race-all]').forEach((i) => { i.checked = !only; }); }
     // timeline: restack the visible races
     if (TL && tlsvg) { const acc = TL.xs.map(() => 0), mx = Math.max(1, ...TL.xs.map((_: number, i: number) => on.reduce((s, k) => s + (TL.v[k]?.[i] ?? 0), 0)));
       const Y = (v: number) => TL.base - (v / mx) * TL.hgt;
@@ -395,12 +398,15 @@ if (document.documentElement.classList.contains('embed') && parent !== window) {
     void NSf; void HDt; if (!force) document.dispatchEvent(new Event('racesel'));
   };
   document.querySelector<HTMLInputElement>('input[data-layer="zoom"]')?.addEventListener('change', (e) => { if (e.isTrusted) (e.target as HTMLInputElement).dataset.manual = '1'; });
-  document.querySelectorAll<HTMLInputElement>('input[data-race]').forEach((cb) => cb.addEventListener('change', () => apply()));
-  document.querySelector<HTMLInputElement>('input[data-race-all]')?.addEventListener('change', () => { document.querySelectorAll<HTMLInputElement>('input[data-race]').forEach((i) => (i.checked = false)); apply(); });
+  document.addEventListener('change', (e) => {
+    const t = e.target as HTMLInputElement; if (!(t instanceof HTMLInputElement)) return;
+    if (t.matches('input[data-race-all]')) { document.querySelectorAll<HTMLInputElement>('input[data-race]').forEach((i) => (i.checked = false)); apply(); }
+    else if (t.matches('input[data-race]')) { const k = t.dataset.race!, on = t.checked; document.querySelectorAll<HTMLInputElement>(`input[data-race="${k}"]`).forEach((i) => { i.checked = on; }); apply(); }
+  });
   // elevation legend: click a race to toggle it (same as its checkbox)
   document.querySelector('svg.profile')?.addEventListener('click', (e) => { const g = (e.target as Element).closest<SVGGElement>('g.plegend'); if (!g) return; const cb = document.querySelector<HTMLInputElement>(`input[data-race="${g.dataset.legend}"]`); if (cb) { cb.checked = !cb.checked; apply(); } });
   // print always shows every race (the filter is a screen view only)
-  addEventListener('beforeprint', () => apply([...document.querySelectorAll<HTMLInputElement>('input[data-race]')].map((i) => i.dataset.race!))); addEventListener('afterprint', () => apply());
+  addEventListener('beforeprint', () => apply(raceKeys())); addEventListener('afterprint', () => apply());
 }
 
 // ---- lightboxes: race card -> full (print-view) race page; aid station -> station details ----
@@ -473,8 +479,10 @@ if (document.documentElement.classList.contains('embed') && parent !== window) {
   document.querySelectorAll<HTMLElement>('.sec-stpages .stpage').forEach((pg) => { const own = '#station-' + encodeURIComponent(pg.dataset.st!);
     pg.querySelectorAll('a').forEach((a) => { if (a.getAttribute('href') === own) a.replaceWith(...a.childNodes); }); });
   sbox?.addEventListener('close', () => { embedModal(sbox, false); if (/^#station-/.test(location.hash)) history.replaceState(null, '', location.pathname + location.search); });
-  // clicks: station markers on the main map (instead of jumping to Google Maps; the lightbox links there), heat-map icons, race-table names
+  // clicks: station markers on the main map (instead of jumping to Google Maps; the lightbox links there), heat-map icons, race-table names, aid-station cards
   document.addEventListener('click', (e) => { const t = e.target as Element; if (!(t instanceof Element)) return;
+    if (t.closest('a.am-cal, a[href="#drop-bags"]')) return; // drop-bag links go to the calendar (handled below)
+    const cardBtn = t.closest<HTMLElement>('.stc-open'); if (cardBtn?.dataset.station) { openStation(cardBtn.dataset.station); history.replaceState(null, '', `#station-${encodeURIComponent(cardBtn.dataset.station)}`); return; }
     const a = t.closest<Element>('g.stpick, a.stlink, g.marker[data-station], g.pcall[data-st]'); if (!a) return; const k = a.getAttribute('data-station') ?? a.getAttribute('data-st');
     const ms = a.closest<HTMLElement>('.msfig-here'); if (ms ? k === ms.dataset.here : a.closest('.lightbox.stbox, .sec-stpages, .st-badge')) return; /* never a station's own details; milestone strips there link to the OTHER stations */ if (!k) return;
     if (document.querySelector('svg.mainmap.panning')) return; e.preventDefault(); openStation(k); history.replaceState(null, '', `#station-${encodeURIComponent(k)}`); });
@@ -486,7 +494,21 @@ if (document.documentElement.classList.contains('embed') && parent !== window) {
       for (const [d, ic, lab] of [[-1, 'chevl', 'Previous ' + what], [1, 'chevr', 'Next ' + what]] as [number, string, string][]) { const b = document.createElement('button'); b.type = 'button'; b.className = 'lb-nav ' + (d < 0 ? 'lb-prev' : 'lb-next'); b.setAttribute('aria-label', lab); b.dataset.tip = lab + (d < 0 ? ' (←)' : ' (→)'); b.innerHTML = icon(ic); b.addEventListener('click', (e) => { e.stopPropagation(); go(box, d); }); nav.appendChild(b); }
       box.addEventListener('keydown', (e) => { if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return; const t = e.target as HTMLElement; if (t.closest('input,textarea,select,[contenteditable]')) return; e.preventDefault(); go(box, e.key === 'ArrowLeft' ? -1 : 1); }); } }
   for (const box of [rbox, sbox]) if (box) { box.querySelector('.lb-close')!.addEventListener('click', () => box.close()); box.addEventListener('click', (e) => { const t = e.target as Element; if (t === box || t.classList?.contains('lb-body')) box.close(); }); /* backdrop + the empty padding around the content close it; Esc closes natively */ }
-  const fromHash = () => { const h = decodeURIComponent(location.hash); let m; if ((m = /^#course-(.+)$/.exec(h))) openRace(m[1]); else if ((m = /^#station-(.+)$/.exec(h))) openStation(m[1]); };
+  // Drop bags on a station card / lightbox: close any lightbox, show the calendar tab, expand the drop-bag events, scroll to them
+  const goDropBags = () => {
+    if (rbox?.open) rbox.close(); if (sbox?.open) sbox.close();
+    document.querySelectorAll<HTMLInputElement>('input[data-cat="drop-bags"]').forEach((i) => { i.checked = true; });
+    document.querySelector<HTMLButtonElement>('.vw-tab[data-view="cal"]')?.click();
+    document.dispatchEvent(new Event('racesel'));
+    const evs = [...document.querySelectorAll<HTMLElement>('#pb-cal .cv-item[data-cal="drop-bags"]')];
+    for (const e of evs) { e.hidden = false; e.setAttribute('aria-expanded', 'true'); const d = e.querySelector<HTMLElement>('.cv-det'); if (d) d.hidden = false; const g = e.closest<HTMLElement>('.cv-dgrp'); if (g) g.hidden = false; e.classList.add('cv-hilite'); }
+    const empty = document.querySelector<HTMLElement>('#pb-cal .cv-empty'); if (empty && evs.length) empty.hidden = true;
+    const target = document.getElementById('drop-bags') || evs[0] || document.getElementById('pb-cal');
+    target?.scrollIntoView({ block: 'start', behavior: 'smooth' });
+    setTimeout(() => evs.forEach((e) => e.classList.remove('cv-hilite')), 2500);
+  };
+  document.addEventListener('click', (e) => { const a = (e.target as Element).closest?.('a.am-cal, a[href="#drop-bags"]'); if (!a) return; e.preventDefault(); history.replaceState(null, '', '#drop-bags'); goDropBags(); });
+  const fromHash = () => { const h = decodeURIComponent(location.hash); let m; if (h === '#drop-bags') goDropBags(); else if ((m = /^#course-(.+)$/.exec(h))) openRace(m[1]); else if ((m = /^#station-(.+)$/.exec(h))) openStation(m[1]); };
   addEventListener('hashchange', fromHash); fromHash();
 }
 
@@ -515,11 +537,13 @@ if (document.documentElement.classList.contains('embed') && parent !== window) {
     const T0 = Date.UTC(2027, 0, 17, 6, 0); // midnight Jan 17 2027 CT (race day) = minute 0 of the calendar data
     const filter = () => { const now = (Date.now() - T0) / 60000; let n = 0;
       const offR = (k: string) => document.documentElement.dataset['off' + k.replace(/\W/g, '')] === '1'; // shared race selection (set by the race filter's apply())
-      sc.querySelectorAll<HTMLElement>('.cv-dgrp').forEach((g) => { let k = 0; g.querySelectorAll<HTMLElement>('.cv-item').forEach((e) => { const on = +e.dataset.b! >= now && (!e.dataset.race || !offR(e.dataset.race)); e.hidden = !on; if (on) k++; }); g.hidden = !k; n += k; });
+      const catOn = (id?: string) => { if (!id) return true; const b = document.querySelector<HTMLInputElement>(`input[data-cat="${CSS.escape(id)}"]`); return !b || b.checked; };
+      sc.querySelectorAll<HTMLElement>('.cv-dgrp').forEach((g) => { let k = 0; g.querySelectorAll<HTMLElement>('.cv-item').forEach((e) => { const on = +e.dataset.b! >= now && (!e.dataset.race || !offR(e.dataset.race)) && catOn(e.dataset.cat); e.hidden = !on; if (on) k++; }); g.hidden = !k; n += k; });
       sc.querySelector<HTMLElement>('.cv-empty')!.hidden = n > 0; };
     filter(); setInterval(filter, 60000);
     // calendar shows the selected races' events + universal ones (title names no race); all races selected = every event
-    document.addEventListener('racesel', filter); // one shared race selection: elevation legend, Layers race checkboxes -> map, elevation, timeline, calendar
+    document.addEventListener('racesel', filter); // one shared race selection: elevation legend, Layers / calendar distance checkboxes -> map, elevation, timeline, calendar
+    document.addEventListener('change', (e) => { if ((e.target as Element).matches?.('input[data-cat]')) filter(); });
     const tip = document.createElement('div'); tip.className = 'cv-tip'; tip.hidden = true; document.body.appendChild(tip);
     let pinned: HTMLElement | null = null;
     const show = (e: HTMLElement) => { tip.textContent = e.dataset.tip!; tip.hidden = false; const r = e.getBoundingClientRect(), tw = tip.offsetWidth, th = tip.offsetHeight;

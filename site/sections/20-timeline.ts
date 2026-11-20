@@ -1,5 +1,5 @@
 import { renderTimeline, renderIdleHeat } from '../lib/timeline';
-import { renderCalendar } from '../lib/calview';
+import { renderCalendar, CAL_LINKS } from '../lib/calview';
 import { renderParkingViewer, renderFinishViewer, SW } from '../lib/floorplan-svg';
 import { planLegend } from '../lib/siteplan';
 
@@ -41,4 +41,3 @@ export function render(c: Ctx) {
   <p class="note tl-note">Busiest times at each aid station (modelled per 15 min) and runners on course through race day.</p>
   <div class="tlbox" id="tl-body">${renderTimeline(c)}</div></div>`;
 }
-export const CAL_LINKS = `<div class="minilinks callinks"><span class="calnote">Save the race calendar to your phone (works offline):</span><a href="https://calendar.google.com/calendar/u/0?cid=Njc1ZWZhYmI1ZmY0MDE1OTZlNDk5Mzg5YWRiNzdiZTU4YTUxODhkMWFkOTc1MjE1MzgxZDUzNjI1OWVlMTU0NkBncm91cC5jYWxlbmRhci5nb29nbGUuY29t" target="_blank" rel="noopener" title="Subscribe to the Race: Big Bend Ultra Google Calendar">${icon('calendar')}Google Calendar</a><a href="webcal://calendar.google.com/calendar/ical/675efabb5ff401596e499389adb77be58a5188d1ad975215381d536259ee1546%40group.calendar.google.com/public/basic.ics" title="Subscribe in Apple / iCal (public calendar feed)">${icon('calendar')}Apple Calendar .ical</a></div>`;

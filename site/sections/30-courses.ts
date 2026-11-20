@@ -7,15 +7,25 @@ import { miniBibSvg } from '../lib/panels';
 import { courseTable, totalGain } from '../lib/coursetable';
 import { renderRaceMap } from '../lib/racemap';
 import { SITE_URL } from './10-map';
+import { stCardsHtml } from './45-stations';
 import { icon } from '../lib/icons';
 import { renderRaceHeat } from '../lib/timeline';
 import siteCfg from '../../content/site.json';
 /** card thumbnail: the race's own map in the established race-map style (ids made unique) */
 const thumb = (c, k: string) => uniq(renderRaceMap(c, k, true), `card${k}`).replace('class="racemap"', 'class="racemap rc-map"').replace(/ data-race="[^"]*"/, '');
+/** Compact elevation sparkline for a race card: only that race's GPX profile (content/profiles). No axes or labels, so it stays readable at phone card widths. */
+function cardProfile(c, k: string) {
+  const p = c.profiles[k], cc = c.courses.colors[k], D = c.courses.courses[k].distance_mi, W = 320, H = 48, PL = 2, PR = 2, PT = 5, PB = 3;
+  const lo0 = Math.min(...p.ft), hi0 = Math.max(...p.ft), pad = Math.max(20, (hi0 - lo0) * 0.08), lo = lo0 - pad, hi = hi0 + pad, span = hi - lo;
+  const X = (m: number) => PL + (m / D) * (W - PL - PR), Y = (ft: number) => PT + (1 - (ft - lo) / span) * (H - PT - PB);
+  const pts = p.mi.map((m: number, i: number) => `${f1(X(m))},${f1(Y(p.ft[i]))}`);
+  const last = p.mi[p.mi.length - 1];
+  return `<svg class="rc-elev" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${k} elevation profile, ${totalGain(c, k).toLocaleString('en-US')} ft gain" preserveAspectRatio="none"><path d="M${f1(X(0))},${H - PB}L${pts.join('L')}L${f1(X(last))},${H - PB}z" fill="${cc}" fill-opacity="${BAND_OP}"/><path d="M${pts.join('L')}" fill="none" stroke="${cc}" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/></svg>`;
+}
 function card(c, k: string) {
   const C = c.courses.courses[k], cc = c.courses.colors[k], club = (siteCfg as any).stravaClub as string;
   return `<article class="racecard" data-course="${k}" style="--rc:${cc}"><div class="rc-media"><button type="button" class="rc-open" data-course="${k}" aria-label="Open the full ${k} race page">${thumb(c, k)}</button><button type="button" class="rc-open rc-full" data-course="${k}">${icon('expand')}Full page</button></div>
-<div class="rc-body"><h3 class="bibh">${miniBibSvg(k, cc, 0.8)}<span>Big Bend Ultra ${k}</span></h3>
+${cardProfile(c, k)}<div class="rc-body"><h3 class="bibh">${miniBibSvg(k, cc, 0.8)}<span>Big Bend Ultra ${k}</span></h3>
 <dl class="rc-stats"><div><dt>Distance</dt><dd>${C.distance_mi.toFixed(1)} mi</dd></div><div><dt>Elev gain</dt><dd>${totalGain(c, k).toLocaleString('en-US')} ft</dd></div><div><dt>Start</dt><dd>${esc(C.start)}</dd></div></dl>
 <div class="rc-btns"><a href="${SITE_URL}${esc(C.gpx)}" download title="Download the ${k} GPX">${icon('route')}.GPX</a>${C.stravaUrl ? `<span class="splitbtn"><a href="${esc(C.stravaUrl)}" target="_blank" rel="noopener" title="${k} route on Strava (opens the Strava app on a phone)">${icon('strava')}Strava</a>${club ? `<a href="${esc(club)}" target="_blank" rel="noopener" title="Trail Roots club on Strava">Join our club</a>` : ''}</span>` : ''}</div></div></article>`;
 }
@@ -61,6 +71,6 @@ ${profile(c, k)}${milestones(c, k)}${courseTable(c, k)}<figure class="cpheat"><f
   }).join('');
   void nav;
   // web: compact Strava-style race cards; each opens its full (print-view) race page in a lightbox. Print / PDF: the full pages, unchanged order.
-  return `<div class="ui racecards" role="list">${c.courses.order.map((k) => card(c, k)).join('')}</div><div class="cppages"><div class="padblank"><p>This page intentionally left blank</p></div>${pages}${intersectionsSection(c)}</div>
+  return `<div class="ui racecards" role="list">${c.courses.order.map((k) => card(c, k)).join('')}</div>${stCardsHtml(c)}<div class="cppages"><div class="padblank"><p>This page intentionally left blank</p></div>${pages}${intersectionsSection(c)}</div>
 <dialog class="lightbox" id="racebox" aria-label="Race page"><button type="button" class="lb-close" aria-label="Close">${icon('x')}</button><div class="lb-body"></div></dialog>`;
 }

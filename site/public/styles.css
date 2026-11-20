@@ -237,7 +237,7 @@ html body svg.ic{width:1.15em!important;height:1.15em!important;max-width:none!i
   .racecards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;max-width:var(--SW,1200px);margin:24px auto;padding:0 1rem;box-sizing:border-box}
   .racecard{background:#fff;border:1px solid #dcdcdc;border-radius:8px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 1px 3px #0000001a;font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
   .racecard .rc-open:not(.rc-full){display:block;padding:0;border:0;background:none;cursor:zoom-in;border-bottom:1px solid #eee}
-  .racecard svg.rc-map{display:block;width:100%;height:auto}.racecard svg.rc-elev{display:block;width:100%;height:38px;background:var(--bg-subtle)}
+  .racecard svg.rc-map{display:block;width:100%;height:auto}.racecard svg.rc-elev{display:block;width:100%;max-width:100%;height:44px;box-sizing:border-box;background:var(--bg-subtle);border-bottom:1px solid #eee;flex:none}
   .rc-body{padding:10px 12px 12px;display:flex;flex-direction:column;gap:8px}
   .rc-body h3{margin:0;font-size:1rem;display:flex;align-items:center;gap:.45rem;color:#242428}
   .rc-stats{display:flex;gap:16px;margin:0}.rc-stats div{display:flex;flex-direction:column}.rc-stats dt{font-size:.68rem;line-height:13px;color:#6d6d78;text-transform:none}.rc-stats dd{margin:0;font-weight:700;font-size:.95rem;line-height:18px;color:#242428}
@@ -279,7 +279,7 @@ a.stlink{color:inherit;text-decoration:none}@media screen{a.stlink{border-bottom
 @media screen and (min-width:1100px){html .sec-courses .coursepage .cpheat figcaption{font-size:calc(var(--S) * .008)}}
 /* ---------- print fixes ---------- */
 @media print{
-  .racecards,dialog.lightbox{display:none!important}
+  .racecards,.stcards-wrap,dialog.lightbox{display:none!important}
   .cphead{flex-wrap:wrap!important;row-gap:2pt}html body .cphead h2{flex:1 0 100%!important;font-size:12pt!important;white-space:nowrap}.cphead .cplinks{margin-left:auto}
   .cpheat figcaption{font-size:7pt}.cpheat{margin-top:4pt}.cprofile{margin:.2rem 0 .3rem}
   .coursepage .cuttab td,.coursepage .cuttab th{padding:1.5pt 3pt}
@@ -352,7 +352,7 @@ a.st-coord{white-space:nowrap}
 .cuttab svg.ctno{display:inline-block;width:1.6em;height:1.6em;vertical-align:-.45em}
 @media print{.sec-stpages ul.st-cuts{font-size:7.6pt;line-height:1.15}.sec-stpages ul.st-cuts .cutv{margin:0 0 1pt}}
 @media screen{.racecard .rc-media{position:relative}.racecard .rc-media .rc-full{position:absolute;right:8px;bottom:8px;display:inline-flex;align-items:center;gap:.35em;font:600 .78rem/1 system-ui,sans-serif;padding:.4rem .6rem;border-radius:4px;border:1px solid #c9c9cf;background:#fffffff0;color:#242428;cursor:pointer;white-space:nowrap;box-shadow:0 1px 3px #0002}.racecard .rc-media .rc-full:hover{border-color:#242428}.racecard .rc-media .rc-full svg.ic{width:13px;height:13px}
-.rc-btns{flex-wrap:nowrap!important;gap:6px}.rc-btns .splitbtn{min-width:0}.rc-btns a{padding:.45rem .55rem}}
+.rc-btns{flex-wrap:wrap!important;gap:6px}.rc-btns .splitbtn{min-width:0;flex-wrap:wrap;max-width:100%}.rc-btns a{padding:.45rem .55rem;max-width:100%;box-sizing:border-box}}
 .infobox{background:var(--shade);padding:.5rem .7rem;margin:.6rem 0 0;line-height:1.4;display:block;color:var(--ink,#2a2a2a);-webkit-print-color-adjust:exact;print-color-adjust:exact}
 dialog.lightbox .lb-navs{position:fixed;top:10px;right:62px;z-index:5;display:flex;gap:8px}
 dialog.lightbox .lb-nav{position:relative;width:40px;height:40px;border-radius:50%;border:1px solid #d4d4d4;background:#f4f4f4;color:#2a2a2a;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;box-shadow:0 1px 4px #0004;padding:0}
@@ -554,7 +554,8 @@ dialog.lightbox{z-index:2147483647}dialog.lightbox::backdrop{z-index:2147483646}
 .racecard .rc-stats dd{font-size:.82rem;line-height:16px}
 .racecard .rc-btns{flex-wrap:wrap!important;gap:4px}
 .racecard .rc-btns a,.racecard .rc-btns button{font-size:.7rem;line-height:1;padding:.4rem .45rem}
-.racecard .rc-media .rc-full{font-size:.68rem;padding:.3rem .4rem;right:5px;bottom:5px}}
+.racecard .rc-media .rc-full{font-size:.68rem;padding:.3rem .4rem;right:5px;bottom:5px}
+.racecard svg.rc-elev{height:34px}}
 /* background park trails (OSM): only at the 1 mi scale bar or closer, never in print */
 .bgtr{display:none;opacity:.7}svg.z1mi .bgtr{display:inline}
 @media print{svg:not(.stzoom) .bgtr{display:none!important}} /* aid-station maps (1 mi bar) print them */
@@ -638,4 +639,78 @@ a.vw-plan{text-decoration:none}
 .am-i .amv{background:#3b6ea5;color:#fff;font-style:italic;font-family:Georgia,serif}
 @media print{html body a[href*="strava.com"] svg.ic{display:inline-block!important}}
 @media screen and (max-width:899px){.rc-btns{flex-wrap:wrap!important}} /* narrow 3+2 cards: Strava | Join our club split button takes the second line instead of overflowing */
-@media screen and (max-width:739px){.racecards{grid-template-columns:repeat(2,minmax(0,1fr))}} /* below ~740px: two per row (2+2+1), never one */
+@media screen and (max-width:739px){.racecards,.stcards{grid-template-columns:repeat(2,minmax(0,1fr))}} /* below ~740px: two per row, never one */
+@media screen and (max-width:390px){.racecard .rc-btns{flex-wrap:wrap!important;max-width:100%}.racecard .rc-btns .splitbtn{flex-wrap:wrap;max-width:100%;flex:1 1 auto}.racecard .rc-btns a{max-width:100%;box-sizing:border-box}}
+
+
+/* ---------- aid-station cards (web + embed; brief hours, cutoffs, full ✓/✕ amenity list) ---------- */
+@media screen{
+  .stcards-wrap{max-width:var(--SW,1200px);margin:0 auto 24px;padding:0 1rem;box-sizing:border-box;min-width:0}
+  .stcards-h{margin:8px 0 12px;font:650 1.05rem/1.3 system-ui,-apple-system,"Segoe UI",sans-serif;color:#242428}
+  .stcards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;min-width:0}
+  @media (min-width:740px){.stcards{grid-template-columns:repeat(3,minmax(0,1fr))}}
+  .stcard-brief{background:#fff;border:1px solid #dcdcdc;border-radius:8px;overflow:hidden;display:flex;flex-direction:column;min-width:0;max-width:100%;box-shadow:0 1px 3px #0000001a;box-sizing:border-box}
+  .stc-open{display:block;width:100%;margin:0;padding:10px 12px 8px;border:0;background:#fff;color:inherit;text-align:left;cursor:pointer;box-sizing:border-box;min-width:0}
+  .stc-open:hover,.stc-open:focus-visible{background:#fafafa;outline:none}
+  .stc-head{display:flex;align-items:center;gap:10px;min-width:0}
+  .stc-head .st-badge{width:44px;height:44px;flex:none}
+  .stc-head h3{margin:0;font:700 .95rem/1.25 system-ui,-apple-system,"Segoe UI",sans-serif;color:#242428;overflow-wrap:break-word}
+  .stc-sub{margin:.15rem 0 0;color:#666;font-size:.78rem;line-height:1.25;overflow-wrap:break-word}
+  .stc-hours,.stc-cuts{margin:6px 0 0;font-size:.82rem;line-height:1.3;color:#242428;overflow-wrap:break-word}
+  .stc-hours{color:#555;font-weight:550}
+  .stc-cuts{font-weight:650}
+  .stcard-brief .amen{display:flex;flex-direction:column;gap:4px;padding:0 12px 12px;margin:0;grid-template-columns:none;min-width:0}
+  .stcard-brief .am{min-width:0;align-items:flex-start}
+  .stcard-brief .am .amv{margin-top:1px}
+  .am-cal{color:#1f6fb2;font-weight:650;text-decoration:underline;text-underline-offset:2px;overflow-wrap:anywhere}
+  .am-cal:hover{color:#155a8f}
+  .cv-item.cv-hilite{outline:2px solid #1f6fb2;outline-offset:2px;border-radius:4px;background:#eef5fb}
+}
+@media screen and (max-width:560px){
+  .stcards-wrap{margin:0 auto 12px;padding:0 8px}
+  .stcards{gap:8px}
+  .stcards-h{margin:4px 0 8px;font-size:.95rem}
+  .stc-open{padding:8px 8px 6px}
+  .stc-head .st-badge{width:36px;height:36px}
+  .stc-head h3{font-size:.82rem}
+  .stc-sub{font-size:.7rem}
+  .stc-hours,.stc-cuts{font-size:.72rem}
+  .stcard-brief .amen{padding:0 8px 8px;font-size:.78rem;gap:3px}
+}
+
+
+
+/* ---------- calendar filters + phone subscribe links in the heading ---------- */
+.cv-filters{flex:none;min-width:0;max-width:100%;padding:6px 8px 8px;border-bottom:1px solid #e2e2e2;background:#fafafa;display:flex;flex-direction:column;gap:6px;box-sizing:border-box}
+.cv-frow{display:flex;flex-wrap:wrap;align-items:center;gap:4px;min-width:0}
+.cv-flab{font-weight:650;font-size:11px;color:#555;margin-right:2px;flex:none}
+.cv-chip{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border:1px solid #d4d4d4;border-radius:999px;background:#fff;font:600 11.5px/1.2 system-ui,sans-serif;color:#2a2a2a;cursor:pointer;max-width:100%;min-width:0;box-sizing:border-box}
+.cv-chip:has(input:not(:checked)){background:#f4f4f4;color:#666;border-color:#ddd}
+.cv-chip input{margin:0;flex:none}
+.cv-chip-ico{flex:none}
+.cv-chip[style*="--c"]{color:var(--c)}
+.cv-savelinks{display:none}
+@media print{.cv-filters,.cv-savelinks{display:none!important}}
+@media screen and (max-width:739px){
+  .cv-head{display:flex;flex-direction:column;align-items:stretch;gap:8px;padding:8px 8px 6px;box-sizing:border-box}
+  .cv-savelinks{display:flex;flex-direction:column;gap:6px;min-width:0}
+  .cv-savehint{margin:0;font:650 12.5px/1.3 system-ui,sans-serif;color:#2a2a2a}
+  .cv-savebtns{display:flex;gap:8px;min-width:0}
+  a.cv-save{flex:1 1 0;min-width:0;min-height:44px;box-sizing:border-box;display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:8px 6px;border:1px solid #bdbdbd;border-radius:8px;background:#fff;color:#2a2a2a;text-decoration:none;font:650 14px/1.2 system-ui,sans-serif;text-align:center;overflow-wrap:anywhere}
+  a.cv-save:hover,a.cv-save:focus-visible{border-color:#2a2a2a;background:#f4f4f4;outline:none}
+  a.cv-save svg{width:18px;height:18px;flex:none}
+  .vw-cal > .callinks,.calbox .callinks{display:none!important}
+  .cv-chip{min-height:28px;padding:4px 8px}
+}
+@media screen and (min-width:740px){.cv-savelinks{display:none!important}}
+/* paper-view calendar slot is short: keep filters compact so the event list keeps room */
+@media screen and (min-width:1100px){
+  html .sec-map .pg1 .calbox .cv-filters{padding:3px 6px 4px;gap:3px}
+  html .sec-map .pg1 .calbox .cv-flab{font-size:9px;margin:0}
+  html .sec-map .pg1 .calbox .cv-frow{gap:2px}
+  html .sec-map .pg1 .calbox .cv-chip{font-size:9px;padding:1px 5px;min-height:0;gap:2px}
+}
+@media screen and (min-width:1100px) and (max-height:620px){
+  html .sec-map .pg1 .calbox .cv-filters{padding:2px 4px 3px;gap:2px}
+}
+
