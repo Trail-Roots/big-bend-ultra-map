@@ -82,7 +82,11 @@ function briefCard(c: Ctx, k: string) {
   const title = k === 'S/F' ? s.name : `${k} · ${s.name}`;
   const hours = s.hours ? `<p class="stc-hours">Open ${esc(String(s.hours).replace(/ - /, '–'))}</p>` : '';
   return `<article class="stcard-brief" data-station="${esc(k)}" role="listitem">
-<button type="button" class="stc-open" data-station="${esc(k)}" aria-label="${esc(title)}: open station details">
+<div class="stc-media">
+<button type="button" class="stc-open stc-mapbtn" data-station="${esc(k)}" aria-label="${esc(title)}: open station details"><div class="stc-map st-map" data-station="${esc(k)}"></div></button>
+<button type="button" class="stc-open stc-full" data-station="${esc(k)}">${icon('expand')}Details</button>
+</div>
+<button type="button" class="stc-open stc-body" data-station="${esc(k)}" aria-label="${esc(title)}: open station details">
 <header class="stc-head"><svg class="st-badge" viewBox="-42 -42 84 84" overflow="visible" aria-hidden="true">${station(0, 0, k, s.spectator, { s: k === 'S/F' ? 2900 : 2000, fs: k === 'S/F' ? 34 : 28, badge: false, colors: c.colors, link: false })}</svg><div><h3>${esc(title)}</h3>${s.long ? `<p class="stc-sub">${esc(s.long)}</p>` : ''}</div></header>
 ${hours}<p class="stc-cuts">${esc(briefCuts(c, k))}</p>
 </button>${amList(a, 'web')}</article>`;

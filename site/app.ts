@@ -474,7 +474,7 @@ if (document.documentElement.classList.contains('embed') && parent !== window) {
       cl.removeAttribute('width'); cl.removeAttribute('height'); cl.style.cssText = `width:100%;height:auto;aspect-ratio:2/${2 * hh}`; host.appendChild(cl); } }
   }
   // print-only aid-station pages: fill their zoomed maps once
-  document.querySelectorAll<HTMLElement>('.sec-stpages .st-map').forEach((h) => stMap(h, h.dataset.station!, 0.75));
+  document.querySelectorAll<HTMLElement>('.sec-stpages .st-map, .stcards .st-map').forEach((h) => stMap(h, h.dataset.station!, 0.75));
   // print station pages: no link from a station's own page to itself (other stations' numbers keep their internal PDF links)
   document.querySelectorAll<HTMLElement>('.sec-stpages .stpage').forEach((pg) => { const own = '#station-' + encodeURIComponent(pg.dataset.st!);
     pg.querySelectorAll('a').forEach((a) => { if (a.getAttribute('href') === own) a.replaceWith(...a.childNodes); }); });
