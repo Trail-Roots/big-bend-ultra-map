@@ -497,12 +497,12 @@ if (document.documentElement.classList.contains('embed') && parent !== window) {
   // Drop bags on a station card / lightbox: close any lightbox, show the calendar tab, expand the drop-bag events, scroll to them
   const goDropBags = () => {
     if (rbox?.open) rbox.close(); if (sbox?.open) sbox.close();
-    document.querySelectorAll<HTMLInputElement>('input[data-cat="drop-bags"]').forEach((i) => { i.checked = true; });
+    document.querySelectorAll<HTMLInputElement>('input[data-cat]').forEach((i) => { i.checked = i.dataset.cat === 'drop-bags'; });
+    document.querySelectorAll<HTMLInputElement>('input[data-cat-all]').forEach((i) => { i.checked = false; });
     document.querySelector<HTMLButtonElement>('.vw-tab[data-view="cal"]')?.click();
-    document.dispatchEvent(new Event('racesel'));
-    const evs = [...document.querySelectorAll<HTMLElement>('#pb-cal .cv-item[data-cal="drop-bags"]')];
-    for (const e of evs) { e.hidden = false; e.setAttribute('aria-expanded', 'true'); const d = e.querySelector<HTMLElement>('.cv-det'); if (d) d.hidden = false; const g = e.closest<HTMLElement>('.cv-dgrp'); if (g) g.hidden = false; e.classList.add('cv-hilite'); }
-    const empty = document.querySelector<HTMLElement>('#pb-cal .cv-empty'); if (empty && evs.length) empty.hidden = true;
+    document.dispatchEvent(new Event('racesel')); // reapplies the distance filter; drop-bag events stay hidden when no drop-bag distance is selected
+    const evs = [...document.querySelectorAll<HTMLElement>('#pb-cal .cv-item[data-cal="drop-bags"]')].filter((e) => !e.hidden);
+    for (const e of evs) { e.setAttribute('aria-expanded', 'true'); const d = e.querySelector<HTMLElement>('.cv-det'); if (d) d.hidden = false; e.classList.add('cv-hilite'); }
     const target = document.getElementById('drop-bags') || evs[0] || document.getElementById('pb-cal');
     target?.scrollIntoView({ block: 'start', behavior: 'smooth' });
     setTimeout(() => evs.forEach((e) => e.classList.remove('cv-hilite')), 2500);
@@ -535,15 +535,30 @@ if (document.documentElement.classList.contains('embed') && parent !== window) {
 { const cv = document.querySelector<HTMLElement>('#pb-cal .cv'), sc = cv?.querySelector<HTMLElement>('.cv-scroll');
   if (cv && sc) {
     const T0 = Date.UTC(2027, 0, 17, 6, 0); // midnight Jan 17 2027 CT (race day) = minute 0 of the calendar data
+    // Categories work like distances: "All" checked + no group checked = every event; checking a group drills down to it; unchecking the last reverts to All.
+    const catKeys = () => [...new Set([...document.querySelectorAll<HTMLInputElement>('input[data-cat]')].map((i) => i.dataset.cat!))];
+    const pickedCats = (all: string[]) => { const p = [...new Set([...document.querySelectorAll<HTMLInputElement>('input[data-cat]')].filter((i) => i.checked).map((i) => i.dataset.cat!))]; return p.length ? p : all; };
+    const syncCats = () => { const all = catKeys(), on = pickedCats(all), only = on.length !== all.length;
+      document.querySelectorAll<HTMLInputElement>('input[data-cat]').forEach((i) => { i.checked = only && on.includes(i.dataset.cat!); });
+      document.querySelectorAll<HTMLInputElement>('input[data-cat-all]').forEach((i) => { i.checked = !only; }); };
     const filter = () => { const now = (Date.now() - T0) / 60000; let n = 0;
       const offR = (k: string) => document.documentElement.dataset['off' + k.replace(/\W/g, '')] === '1'; // shared race selection (set by the race filter's apply())
-      const catOn = (id?: string) => { if (!id) return true; const b = document.querySelector<HTMLInputElement>(`input[data-cat="${CSS.escape(id)}"]`); return !b || b.checked; };
-      sc.querySelectorAll<HTMLElement>('.cv-dgrp').forEach((g) => { let k = 0; g.querySelectorAll<HTMLElement>('.cv-item').forEach((e) => { const on = +e.dataset.b! >= now && (!e.dataset.race || !offR(e.dataset.race)) && catOn(e.dataset.cat); e.hidden = !on; if (on) k++; }); g.hidden = !k; n += k; });
+      syncCats();
+      const catsOn = pickedCats(catKeys());
+      const catOn = (id?: string) => !id || catsOn.includes(id);
+      sc.querySelectorAll<HTMLElement>('.cv-dgrp').forEach((g) => { let k = 0; g.querySelectorAll<HTMLElement>('.cv-item').forEach((e) => {
+        const rs = (e.dataset.race || '').trim().split(/\s+/).filter(Boolean);
+        const raceOk = !rs.length || rs.some((r) => !offR(r));
+        const on = +e.dataset.b! >= now && raceOk && catOn(e.dataset.cat); e.hidden = !on; if (on) k++; }); g.hidden = !k; n += k; });
       sc.querySelector<HTMLElement>('.cv-empty')!.hidden = n > 0; };
     filter(); setInterval(filter, 60000);
     // calendar shows the selected races' events + universal ones (title names no race); all races selected = every event
     document.addEventListener('racesel', filter); // one shared race selection: elevation legend, Layers / calendar distance checkboxes -> map, elevation, timeline, calendar
-    document.addEventListener('change', (e) => { if ((e.target as Element).matches?.('input[data-cat]')) filter(); });
+    document.addEventListener('change', (e) => {
+      const t = e.target as HTMLInputElement; if (!(t instanceof HTMLInputElement)) return;
+      if (t.matches('input[data-cat-all]')) { document.querySelectorAll<HTMLInputElement>('input[data-cat]').forEach((i) => { i.checked = false; }); filter(); }
+      else if (t.matches('input[data-cat]')) filter();
+    });
     const tip = document.createElement('div'); tip.className = 'cv-tip'; tip.hidden = true; document.body.appendChild(tip);
     let pinned: HTMLElement | null = null;
     const show = (e: HTMLElement) => { tip.textContent = e.dataset.tip!; tip.hidden = false; const r = e.getBoundingClientRect(), tw = tip.offsetWidth, th = tip.offsetHeight;

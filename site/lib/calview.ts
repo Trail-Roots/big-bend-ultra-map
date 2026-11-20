@@ -35,15 +35,21 @@ const when = (e: E) => allDay(e) ? 'All day' : e.b != null && e.b > e.a ? `${hm(
 /** location text: coordinates or the first part of a street address */
 const place = (l: string) => l ? (/^-?\d+\.\d+,\s*-?\d+\.\d+$/.test(l) ? l.split(',').map((v) => (+v).toFixed(5)).join(', ') : l.split(',').slice(0, 2).join(',')) : '';
 const isDropBags = (s: string) => /drop bags?/i.test(s);
-/** Category already marked on each event by its leading emoji + the wording in the title. Labels are taken from those titles, not invented. */
 /** Finish events in the calendar are the finish cutoffs (same times as cutoffs.json / RunSignup). */
 const evTitle = (s: string) => /\bFinish$/.test(s) ? `${s} cutoff` : s;
+/** Three category groups (Erik): Race day, Drop bags, Check-in & info. */
+export const CAT_CHIPS = [
+  { id: 'race-day', emoji: '🟢', lab: 'Race day' },
+  { id: 'drop-bags', emoji: '🎒', lab: 'Drop bags' },
+  { id: 'check-in', emoji: '🎫', lab: 'Check-in & info' },
+] as const;
 export function eventCat(s: string) {
   const m = /^\s*(\p{Extended_Pictographic}\uFE0F?)\s*(.*)$/u.exec(s);
-  const emoji = m?.[1] ?? '', rest = (m?.[2] ?? s).trim();
-  const lab = /^Registration\b/i.test(rest) ? 'Registration' : /^Reminder\b/i.test(rest) ? 'Reminder' : /drop bags?/i.test(rest) ? 'Drop bags' : /\bRace Start\b/i.test(rest) ? 'Race Start' : /\bCutoff\b/i.test(rest) ? 'Cutoff' : /\bFinish\b/i.test(rest) ? 'Finish' : rest;
-  const id = lab.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-  return { id, emoji, lab };
+  const rest = (m?.[2] ?? s).trim();
+  if (/drop bags?/i.test(rest)) return CAT_CHIPS[1];
+  if (/\bRace Start\b/i.test(rest) || /\bCutoff\b/i.test(rest) || /\bFinish\b/i.test(rest) || /^Race Over\b/i.test(rest) || /^(Sunrise|Sunset)\b/i.test(rest)) return CAT_CHIPS[0];
+  if (/^Registration\b/i.test(rest) || /^Reminder\b/i.test(rest) || /Packet Pickup/i.test(rest) || /Race Briefing/i.test(rest) || /Event FAQ/i.test(rest) || /Shakeout/i.test(rest)) return CAT_CHIPS[2];
+  throw new Error('[calview] calendar event is not in Race day, Drop bags, or Check-in & info: ' + s);
 }
 const GCAL_HREF = 'https://calendar.google.com/calendar/u/0?cid=Njc1ZWZhYmI1ZmY0MDE1OTZlNDk5Mzg5YWRiNzdiZTU4YTUxODhkMWFkOTc1MjE1MzgxZDUzNjI1OWVlMTU0NkBncm91cC5jYWxlbmRhci5nb29nbGUuY29t';
 const ICAL_HREF = 'webcal://calendar.google.com/calendar/ical/675efabb5ff401596e499389adb77be58a5188d1ad975215381d536259ee1546%40group.calendar.google.com/public/basic.ics';
@@ -53,12 +59,14 @@ const SAVE_LINKS = `<div class="cv-savelinks"><p class="cv-savehint">Save for of
 export function renderCalendar(c: Ctx) {
   const ev = (c.calendar.events as E[]).slice().sort((x, y) => x.a - y.a || x.s.localeCompare(y.s));
   const race = (s: string) => c.courses.order.find((k) => new RegExp(`\\b${k}\\b`).test(s));
+  const dropBagRaces = c.courses.order.filter((k) => ev.some((e) => new RegExp(`Last call for ${k} drop bags`, 'i').test(e.s)));
+  const racesOf = (s: string) => { if (/Drop bag return pickup/i.test(s)) return dropBagRaces; const k = race(s); return k ? [k] : []; };
   const tip = (e: E) => esc([evTitle(e.s), dayName(dayOf(e.a)) + ' · ' + when(e) + (allDay(e) ? '' : ' CT'), place(e.loc)].filter(Boolean).join('\n'));
   const attrs = (e: E, sty = true) => { const k = race(e.s), cat = eventCat(e.s); return ` data-a="${e.a}" data-b="${e.b ?? e.a}" data-cat="${esc(cat.id)}" data-tip="${tip(e)}" tabindex="0"${isDropBags(e.s) ? ' data-cal="drop-bags"' : ''}${k && sty ? ` style="--rc:${c.courses.colors[k]}"` : ''}`; };
   // ---- web: agenda, one group per day ----
   const days = [...new Set(ev.map((e) => dayOf(e.a)))].sort((a, b) => a - b);
   const agenda = days.map((d) => `<section class="cv-dgrp" data-day="${d}"><h3 class="cv-day">${dayName(d)}${d === 0 ? ' · race day' : ''}</h3><ol>${ev.filter((e) => dayOf(e.a) === d).map((e) =>
-    `<li class="cv-ev cv-item${race(e.s) ? ' cv-race' : ''}"${isDropBags(e.s) && !ev.slice(0, ev.indexOf(e)).some((x) => isDropBags(x.s)) ? ' id="drop-bags"' : ''} data-race="${race(e.s) ?? ''}" role="button" aria-expanded="false"${attrs(e)}><span class="cv-t">${when(e)}</span><span class="cv-s">${esc(evTitle(e.s))}</span>${e.loc ? `<span class="cv-l"><a class="cv-maplink" href="${mapsUrl(e.loc)}" target="_blank" rel="noopener">${esc(place(e.loc))}</a></span>` : ''}<div class="cv-det" hidden>${e.d ? `<div class="cv-desc">${safeDesc(e.d)}</div>` : ''}${e.loc ? `<p class="cv-dloc"><b>Location</b> <a class="cv-maplink" href="${mapsUrl(e.loc)}" target="_blank" rel="noopener">${esc(e.loc)}</a></p>` : ''}${!e.d && !e.loc ? '<p class="cv-dnone">No further details.</p>' : ''}</div></li>`).join('')}</ol></section>`).join('');
+    `<li class="cv-ev cv-item${race(e.s) ? ' cv-race' : ''}"${isDropBags(e.s) && !ev.slice(0, ev.indexOf(e)).some((x) => isDropBags(x.s)) ? ' id="drop-bags"' : ''} data-race="${esc(racesOf(e.s).join(' '))}" role="button" aria-expanded="false"${attrs(e)}><span class="cv-t">${when(e)}</span><span class="cv-s">${esc(evTitle(e.s))}</span>${e.loc ? `<span class="cv-l"><a class="cv-maplink" href="${mapsUrl(e.loc)}" target="_blank" rel="noopener">${esc(place(e.loc))}</a></span>` : ''}<div class="cv-det" hidden>${e.d ? `<div class="cv-desc">${safeDesc(e.d)}</div>` : ''}${e.loc ? `<p class="cv-dloc"><b>Location</b> <a class="cv-maplink" href="${mapsUrl(e.loc)}" target="_blank" rel="noopener">${esc(e.loc)}</a></p>` : ''}${!e.d && !e.loc ? '<p class="cv-dnone">No further details.</p>' : ''}</div></li>`).join('')}</ol></section>`).join('');
   // ---- print: hour-by-hour grid from race day forward ----
   const pe = ev.filter((e) => e.a >= 0 && e.a < 3000) /* print: race weekend only, as before */, timed = pe.filter((e) => !allDay(e)), alld = pe.filter(allDay);
   // one printed page per day (Erik): each page is that day's full 24 hours (12 AM - 12 AM) filling the page; overlap columns per day
@@ -79,10 +87,9 @@ export function renderCalendar(c: Ctx) {
       <div class="cv-col">${blocks}</div>
     </div></div>`; };
   const grid = `<div class="cv-print">${pdays.map(dayPage).join('')}</div>`;
-  const cats: { id: string; emoji: string; lab: string }[] = [];
-  for (const e of ev) { const cat = eventCat(e.s); if (cat.id && !cats.some((x) => x.id === cat.id)) cats.push(cat); }
+  for (const e of ev) eventCat(e.s); // every event must belong to one of the three groups
   const dist = `<div class="cv-frow" role="group" aria-label="Distances"><span class="cv-flab">Distances</span><label class="cv-chip cv-chip-all"><input type="checkbox" data-race-all checked> All</label>${c.courses.order.map((k) => `<label class="cv-chip" style="--c:${c.courses.colors[k]}"><input type="checkbox" data-race="${esc(k)}"> ${esc(k)}</label>`).join('')}</div>`;
-  const catsRow = `<div class="cv-frow" role="group" aria-label="Categories"><span class="cv-flab">Categories</span>${cats.map((x) => `<label class="cv-chip"><input type="checkbox" data-cat="${esc(x.id)}" checked> <span class="cv-chip-ico" aria-hidden="true">${x.emoji}</span> ${esc(x.lab)}</label>`).join('')}</div>`;
+  const catsRow = `<div class="cv-frow" role="group" aria-label="Categories"><span class="cv-flab">Categories</span><label class="cv-chip cv-chip-all"><input type="checkbox" data-cat-all checked> All</label>${CAT_CHIPS.map((x) => `<label class="cv-chip"><input type="checkbox" data-cat="${esc(x.id)}"> <span class="cv-chip-ico" aria-hidden="true">${x.emoji}</span> ${esc(x.lab)}</label>`).join('')}</div>`;
   return `<div class="cv">
   <div class="cv-head">${SAVE_LINKS}<div class="cv-title"><b>Race calendar</b><span class="cv-date cv-web">Upcoming events · times CT</span><span class="cv-date cv-pr">From race day forward · times CT</span></div></div>
   <div class="cv-filters" aria-label="Filter the calendar">${dist}${catsRow}</div>
