@@ -714,3 +714,8 @@ a.vw-plan{text-decoration:none}
   html .sec-map .pg1 .calbox .cv-filters{padding:2px 4px 3px;gap:2px}
 }
 
+
+@media print{.sec-courses ol.rs li.rs-info{align-items:baseline;flex-wrap:wrap}
+  .sec-courses ol.rs li.rs-info .rs-title,.sec-courses ol.rs li.rs-info .rs-cut{overflow-wrap:break-word;min-width:0}
+  .sec-courses ol.rs li.rs-nodrop .rs-title{font-weight:700}
+}

@@ -36,6 +36,8 @@ const when = (e: E) => allDay(e) ? 'All day' : e.b != null && e.b > e.a ? `${hm(
 const place = (l: string) => l ? (/^-?\d+\.\d+,\s*-?\d+\.\d+$/.test(l) ? l.split(',').map((v) => (+v).toFixed(5)).join(', ') : l.split(',').slice(0, 2).join(',')) : '';
 const isDropBags = (s: string) => /drop bags?/i.test(s);
 /** Category already marked on each event by its leading emoji + the wording in the title. Labels are taken from those titles, not invented. */
+/** Finish events in the calendar are the finish cutoffs (same times as cutoffs.json / RunSignup). */
+const evTitle = (s: string) => /\bFinish$/.test(s) ? `${s} cutoff` : s;
 export function eventCat(s: string) {
   const m = /^\s*(\p{Extended_Pictographic}\uFE0F?)\s*(.*)$/u.exec(s);
   const emoji = m?.[1] ?? '', rest = (m?.[2] ?? s).trim();
@@ -51,12 +53,12 @@ const SAVE_LINKS = `<div class="cv-savelinks"><p class="cv-savehint">Save for of
 export function renderCalendar(c: Ctx) {
   const ev = (c.calendar.events as E[]).slice().sort((x, y) => x.a - y.a || x.s.localeCompare(y.s));
   const race = (s: string) => c.courses.order.find((k) => new RegExp(`\\b${k}\\b`).test(s));
-  const tip = (e: E) => esc([e.s, dayName(dayOf(e.a)) + ' · ' + when(e) + (allDay(e) ? '' : ' CT'), place(e.loc)].filter(Boolean).join('\n'));
+  const tip = (e: E) => esc([evTitle(e.s), dayName(dayOf(e.a)) + ' · ' + when(e) + (allDay(e) ? '' : ' CT'), place(e.loc)].filter(Boolean).join('\n'));
   const attrs = (e: E, sty = true) => { const k = race(e.s), cat = eventCat(e.s); return ` data-a="${e.a}" data-b="${e.b ?? e.a}" data-cat="${esc(cat.id)}" data-tip="${tip(e)}" tabindex="0"${isDropBags(e.s) ? ' data-cal="drop-bags"' : ''}${k && sty ? ` style="--rc:${c.courses.colors[k]}"` : ''}`; };
   // ---- web: agenda, one group per day ----
   const days = [...new Set(ev.map((e) => dayOf(e.a)))].sort((a, b) => a - b);
   const agenda = days.map((d) => `<section class="cv-dgrp" data-day="${d}"><h3 class="cv-day">${dayName(d)}${d === 0 ? ' · race day' : ''}</h3><ol>${ev.filter((e) => dayOf(e.a) === d).map((e) =>
-    `<li class="cv-ev cv-item${race(e.s) ? ' cv-race' : ''}"${isDropBags(e.s) && !ev.slice(0, ev.indexOf(e)).some((x) => isDropBags(x.s)) ? ' id="drop-bags"' : ''} data-race="${race(e.s) ?? ''}" role="button" aria-expanded="false"${attrs(e)}><span class="cv-t">${when(e)}</span><span class="cv-s">${esc(e.s)}</span>${e.loc ? `<span class="cv-l"><a class="cv-maplink" href="${mapsUrl(e.loc)}" target="_blank" rel="noopener">${esc(place(e.loc))}</a></span>` : ''}<div class="cv-det" hidden>${e.d ? `<div class="cv-desc">${safeDesc(e.d)}</div>` : ''}${e.loc ? `<p class="cv-dloc"><b>Location</b> <a class="cv-maplink" href="${mapsUrl(e.loc)}" target="_blank" rel="noopener">${esc(e.loc)}</a></p>` : ''}${!e.d && !e.loc ? '<p class="cv-dnone">No further details.</p>' : ''}</div></li>`).join('')}</ol></section>`).join('');
+    `<li class="cv-ev cv-item${race(e.s) ? ' cv-race' : ''}"${isDropBags(e.s) && !ev.slice(0, ev.indexOf(e)).some((x) => isDropBags(x.s)) ? ' id="drop-bags"' : ''} data-race="${race(e.s) ?? ''}" role="button" aria-expanded="false"${attrs(e)}><span class="cv-t">${when(e)}</span><span class="cv-s">${esc(evTitle(e.s))}</span>${e.loc ? `<span class="cv-l"><a class="cv-maplink" href="${mapsUrl(e.loc)}" target="_blank" rel="noopener">${esc(place(e.loc))}</a></span>` : ''}<div class="cv-det" hidden>${e.d ? `<div class="cv-desc">${safeDesc(e.d)}</div>` : ''}${e.loc ? `<p class="cv-dloc"><b>Location</b> <a class="cv-maplink" href="${mapsUrl(e.loc)}" target="_blank" rel="noopener">${esc(e.loc)}</a></p>` : ''}${!e.d && !e.loc ? '<p class="cv-dnone">No further details.</p>' : ''}</div></li>`).join('')}</ol></section>`).join('');
   // ---- print: hour-by-hour grid from race day forward ----
   const pe = ev.filter((e) => e.a >= 0 && e.a < 3000) /* print: race weekend only, as before */, timed = pe.filter((e) => !allDay(e)), alld = pe.filter(allDay);
   // one printed page per day (Erik): each page is that day's full 24 hours (12 AM - 12 AM) filling the page; overlap columns per day
@@ -69,9 +71,9 @@ export function renderCalendar(c: Ctx) {
     if (cl.length) flush();
     const Y = (m: number) => ((m - D0) / 60).toFixed(4), hours: number[] = []; for (let m = D0; m <= D1; m += 60) hours.push(m);
     const blocks = tm.map((e) => { const p = pos.get(e)!, dd = Math.min(end(e), D1) - e.a, k = race(e.s);
-      return `<div class="cv-ev cv-blk${dd <= 45 ? ' cv-short' : ''}${k ? ' cv-race' : ''}"${attrs(e, false)} style="${k ? `--rc:${c.courses.colors[k]};` : ''}top:calc(${Y(e.a)} * var(--hh));height:calc(${(dd / 60).toFixed(4)} * var(--hh) - 2px);left:calc(${(p.col / p.n * 100).toFixed(3)}% + 1px);width:calc(${(100 / p.n).toFixed(3)}% - 3px)"><span class="cv-s">${esc(e.s).replace(/@/g, '@<wbr>')}</span><span class="cv-t">${when(e)}</span></div>`; }).join('');
+      return `<div class="cv-ev cv-blk${dd <= 45 ? ' cv-short' : ''}${k ? ' cv-race' : ''}"${attrs(e, false)} style="${k ? `--rc:${c.courses.colors[k]};` : ''}top:calc(${Y(e.a)} * var(--hh));height:calc(${(dd / 60).toFixed(4)} * var(--hh) - 2px);left:calc(${(p.col / p.n * 100).toFixed(3)}% + 1px);width:calc(${(100 / p.n).toFixed(3)}% - 3px)"><span class="cv-s">${esc(evTitle(e.s)).replace(/@/g, '@<wbr>')}</span><span class="cv-t">${when(e)}</span></div>`; }).join('');
     return `<div class="cv-dpage"><div class="cv-pday">${d !== pdays[0] ? "Race calendar (continued) · " : ""}${dayName(d)}${d === 0 ? ' · race day' : ''} · times CT</div>
-    ${ad.map((e) => `<div class="cv-ev cv-allday"${attrs(e)}><span class="cv-t">All day</span><span class="cv-s">${esc(e.s)}</span></div>`).join('')}
+    ${ad.map((e) => `<div class="cv-ev cv-allday"${attrs(e)}><span class="cv-t">All day</span><span class="cv-s">${esc(evTitle(e.s))}</span></div>`).join('')}
     <div class="cv-grid" style="height:calc(24 * var(--hh))">
       ${hours.map((m) => `<div class="cv-hr${m === D0 || m === D1 ? ' cv-mid' : ''}" style="top:calc(${Y(m)} * var(--hh))"><span>${hr(m)}</span></div>`).join('')}
       <div class="cv-col">${blocks}</div>

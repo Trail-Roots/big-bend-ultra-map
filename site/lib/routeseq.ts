@@ -9,6 +9,7 @@ import { routeBranches, type Branch } from './junctions';
 import { esc, station } from './util';
 import { miniBibSvg } from './panels';
 import type { Ctx } from './types';
+import { hm } from './calview';
 const k0 = Math.cos((29.35 * Math.PI) / 180), M = (a: number[], b: number[]) => Math.hypot((a[0] - b[0]) * 111320 * k0, (a[1] - b[1]) * 110540);
 // Erik's confirmed bearings win over computed ones: { "<junction id>": { "<trail taken>": "bear left" | "bear right" | "bear center" } }
 const BEAR = path.join(import.meta.dir, '../../sources/curated/bearings.json');
@@ -113,10 +114,48 @@ export function masterJunctions(c: Ctx) {
 }
 let MJC: ReturnType<typeof masterJunctions> | null = null; const mj = (c: Ctx) => (MJC ??= masterJunctions(c));
 const jname = (j: MJ) => j.turn ? `Turnaround on ${j.trails[0]}` : j.trails.join(" / ");
+
+/** Day label relative to race day (Sun Jan 17 2027), from calendar minutes. */
+const dayLabel = (m: number) => new Date(Date.UTC(2027, 0, 17 + Math.floor(m / 1440))).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', timeZone: 'UTC' });
+const shortT = (m: number) => hm(m).replace(/:00 (?=[AP]M)/, ' ').replace(' AM', 'a').replace(' PM', 'p');
+type CalE = { s: string; a: number; b: number | null };
+const span = (e: CalE) => { const d0 = dayLabel(e.a); if (e.b == null || e.b <= e.a) return `${d0} ${shortT(e.a)}`; const d1 = dayLabel(e.b); return d0 === d1 ? `${d0} ${shortT(e.a)}–${shortT(e.b)}` : `${d0} ${shortT(e.a)} – ${d1} ${shortT(e.b)}`; };
+const infoRow = (title: string, when = '', cls = '') => `<li class="rs-node rs-info${cls}"><span class="rs-pin"><i></i></span><span class="rs-mi"></span><span class="rs-title">${esc(title)}</span>${when ? `<span class="rs-cut">${esc(when)}</span>` : ''}</li>`;
+/** Pre-start and post-finish rows from the race calendar (content/calendar.json). Distances without a "Last call for … drop bags" event get an explicit "No drop bags" line. */
+function routeExtras(c: Ctx, k: string) {
+  const ev = (c.calendar.events as CalE[]);
+  const packs = ev.filter((e) => /Packet Pickup/i.test(e.s)).sort((a, b) => a.a - b.a);
+  const last = ev.filter((e) => new RegExp(`Last call for ${k} drop bags`, 'i').test(e.s));
+  const ret = ev.filter((e) => /Drop bag return pickup/i.test(e.s));
+  if (last.length > 1) throw new Error(`[routeseq] ${k}: ${last.length} drop-bag last-call events`);
+  if (ret.length > 1) throw new Error(`[routeseq] ${ret.length} drop-bag return pickup events`);
+  const pre: string[] = [];
+  if (last.length === 1) pre.push(infoRow('Drop bag cutoff', span(last[0])));
+  else pre.push(infoRow('No drop bags for this distance', '', ' rs-nodrop'));
+  if (packs.length) pre.push(infoRow('Packet pickup', packs.map(span).join(' · ')));
+  const post: string[] = [];
+  if (last.length === 1) {
+    if (ret.length === 1) post.push(infoRow('Drop bag pickup', span(ret[0])));
+    else throw new Error(`[routeseq] ${k} has a drop-bag cutoff but no return pickup event in the calendar`);
+  }
+  return { pre: pre.join(''), post: post.join('') };
+}
 export function routeSeqPage(c: Ctx, k: string) {
   const nodes = routeNodes(c, k), cc = c.courses.colors[k], { byNode } = mj(c);
   const R: { m: number; h: string }[] = []; let cur: TSeg | null = null; let rows = "", pend: Junction | null = null, segs = 0, links = 0;
-  const cutAt = (st: string[], m: number) => { const q = (c.cutoffs[k] as any[]).find((q) => st.includes(q.station) && q.station !== "S/F" && Math.abs(q.mile - m) < 0.3); return q?.cutoff && q.cutoff !== "TBD" ? `<span class="rs-cut">Cutoff ${esc(q.cutoff.replace(/:00 ?([AP])M$/, (_: string, a: string) => a.toLowerCase()).replace(/ ?([AP])M$/, (_: string, a: string) => a.toLowerCase()))}</span>` : ""; };
+  const shCut = (t: string) => t.replace(/:00 ?([AP])M$/, (_, a: string) => a.toLowerCase()).replace(/ ?([AP])M$/, (_, a: string) => a.toLowerCase());
+  const cutAt = (st: string[], m: number, title?: string) => {
+    // Start (S/F at mile 0) is the gun time, not a cutoff. The finish is also S/F; look it up by title so a nearby
+    // "Cross FM 170" junction cannot consume the finish cutoff (near() uses a 0.2 mi window).
+    const all = c.cutoffs[k] as any[];
+    const q = title === "Finish" ? [...all].reverse().find((q) => q.station === "S/F" && q.mile > 0) : all.find((q) => st.includes(q.station) && q.mile > 0 && Math.abs(q.mile - m) < 0.3);
+    if (!q?.cutoff || q.cutoff === "TBD") return "";
+    const start = String(c.courses.courses?.[k]?.start ?? "");
+    const sm = start.match(/^(\d+):(\d\d) (AM|PM)$/), cm = q.cutoff.match(/^(\d+):(\d\d) (AM|PM)$/);
+    const mins = (x: RegExpMatchArray) => (Number(x[1]) % 12 + (x[3] === "PM" ? 12 : 0)) * 60 + Number(x[2]);
+    const nextDay = sm && cm && mins(cm) < mins(sm);
+    return `<span class="rs-cut">Cutoff ${esc(shCut(q.cutoff))}${nextDay ? " Mon, Jan 18" : ""}</span>`;
+  };
   const aidOf = (x: Junction) => x.stations.filter((q) => q !== "S/F").map((q) => `Aid ${q} · ${esc(c.stations.stations[q].name)}`).join(", ");
   for (const x of nodes) {
     if ("seg" in x) { const s = x.seg; cur = s; segs++; const j = pend ? byNode.get(k + "/" + pend.id) : null; if (j) links++;
@@ -128,7 +167,7 @@ export function routeSeqPage(c: Ctx, k: string) {
       R.push({ m: x.mile, h: `<li class="rs-seg rs-pass" id="rs-${k}-${x.id}"><span class="rs-pin">${j ? `<a class="rs-jx" href="#ix-${j.id}" aria-label="Intersection photos"></a>` : "<i></i>"}</span><span class="rs-mi">mi ${fmt(x.mile)}</span><span class="rs-name">${j ? `<a class="rs-nl" href="#ix-${j.id}">${esc(x.next!)}</a>` : esc(x.next!)}</span><span class="rs-d"></span><span class="rs-dir">${esc(x.how!)}</span></li>` }); continue; }
     if (x.crit) { pend = x; continue; }
     const st = x.stations.map((q) => dot(c, q)).join(""), aid = aidOf(x);
-    R.push({ m: x.mile, h: `<li class="rs-node${x.stations.some((q) => q !== "S/F") ? " rs-aidrow" : ""}"><span class="rs-pin">${st || "<i></i>"}</span><span class="rs-mi">mi ${fmt(x.mile)}</span><span class="rs-title">${esc(x.title)}</span>${x.title === "Start" && c.courses.courses?.[k]?.start ? `<span class="rs-cut">· ${esc(String(c.courses.courses[k].start).replace(/:00 ?([AP])M$/, (_: string, a: string) => a.toLowerCase()).replace(/ ?([AP])M$/, (_: string, a: string) => a.toLowerCase()))}</span>` : ""}${cutAt(x.stations, x.mile)}${aid && !/aid$/.test(x.title) ? `<span class="rs-aid">${aid}</span>` : ""}</li>` });
+    R.push({ m: x.mile, h: `<li class="rs-node${x.stations.some((q) => q !== "S/F") ? " rs-aidrow" : ""}"><span class="rs-pin">${st || "<i></i>"}</span><span class="rs-mi">mi ${fmt(x.mile)}</span><span class="rs-title">${esc(x.title)}</span>${x.title === "Start" && c.courses.courses?.[k]?.start ? `<span class="rs-cut">· ${esc(String(c.courses.courses[k].start).replace(/:00 ?([AP])M$/, (_: string, a: string) => a.toLowerCase()).replace(/ ?([AP])M$/, (_: string, a: string) => a.toLowerCase()))}</span>` : ""}${cutAt(x.stations, x.mile, x.title)}${aid && !/aid$/.test(x.title) ? `<span class="rs-aid">${aid}</span>` : ""}</li>` });
     if (cur && aid && x.mile > cur.a + 0.05 && x.mile < cur.b - 0.05) { const T = cur.name ?? "Unnamed segment", sn = x.stations.filter((q) => q !== "S/F").map((q) => c.stations.stations[q].name).join(" / ");
       R.push({ m: x.mile + 1e-4, h: `<li class="rs-seg rs-after"><span class="rs-pin"><i></i></span><span class="rs-mi"></span><span class="rs-name${cur.name ? "" : " rs-unk"}">${esc(T)}</span><span class="rs-d">%%D%%</span><span class="rs-dir">${esc(`From ${sn}, stay on ${T}.`)}</span></li>` }); }
   }
@@ -138,8 +177,9 @@ export function routeSeqPage(c: Ctx, k: string) {
   R.forEach((r, i) => { if (r.h.includes("%%D%%")) { const nx = R.slice(i + 1).find((q) => q.m > r.m + 1e-3); r.h = r.h.replace("%%D%%", `${((nx?.m ?? r.m) - r.m).toFixed(1)} mi`); } });
   const sp = splitOf(c, k), col = (a: typeof R) => a.map((r) => r.h).join("");
   const A = R.filter((r) => r.m < sp.mile - 1e-6), B = R.filter((r) => r.m >= sp.mile - 1e-6);
+  const extra = routeExtras(c, k);
   console.log(`  routeseq ${k}: split at mi ${sp.mile.toFixed(1)} (${sp.kind}), ${A.length} + ${B.length} rows`);
-  return `<article class="doc routeseq" id="rs-${k}" data-course="${k}" style="--rc:${cc}"><h2 style="color:${cc}">${miniBibSvg(k, cc, 0.8)}</h2><div class="rs-cols"><div class="rs-col"><h3>${sp.out}</h3><ol class="rs">${col(A)}</ol></div><div class="rs-col"><h3>${sp.back}</h3><ol class="rs">${col(B)}</ol></div></div></article>`;
+  return `<article class="doc routeseq" id="rs-${k}" data-course="${k}" style="--rc:${cc}"><h2 style="color:${cc}">${miniBibSvg(k, cc, 0.8)}</h2><div class="rs-cols"><div class="rs-col"><h3>${sp.out}</h3><ol class="rs">${extra.pre}${col(A)}</ol></div><div class="rs-col"><h3>${sp.back}</h3><ol class="rs">${col(B)}${extra.post}</ol></div></div></article>`;
 }
 export function intersectionsSection(c: Ctx) {
   const man = fs.existsSync(MAN) ? JSON.parse(fs.readFileSync(MAN, "utf8")) : {}, imgs = man.junctions ?? {}, { list } = mj(c);
