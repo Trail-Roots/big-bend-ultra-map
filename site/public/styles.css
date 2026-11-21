@@ -801,21 +801,20 @@ html.cal-fs .cv:fullscreen,html.cal-fs .cv:-webkit-full-screen{position:static;i
 }
 
 
-/* Before / After the race sit off the route line, in the same columns as the list below/above them */
+/* Packet pickup / drop-bag rows sit off the wayfinding line, in the same type and columns as the route rows */
 @media print{
   .rs-col{--rs-gutter:.4in;--rs-mi:.5in;--rs-gap:6pt}
-  .rs-side{margin:0 0 5pt;min-width:0}
-  .rs-side.rs-post{margin:5pt 0 0}
-  .rs-side h4{margin:0 0 1.5pt;padding-left:calc(var(--rs-gutter) + var(--rs-mi) + var(--rs-gap));font:500 6.5pt/1.2 "Liberation Sans","Noto Sans",Arial,sans-serif;color:#777;letter-spacing:.04em;text-transform:uppercase}
-  .rs-notes{list-style:none;margin:0;padding:0}
-  .rs-notes li{position:relative;display:grid;grid-template-columns:var(--rs-mi) minmax(0,1fr) auto;column-gap:var(--rs-gap);align-items:baseline;margin:0;padding:1pt 0 1pt var(--rs-gutter);font:400 6.6pt/1.15 "Liberation Sans","Noto Sans",Arial,sans-serif;color:#2a2a2a;break-inside:avoid;min-width:0}
-  .rs-notes .rs-mark{position:absolute;left:.155in;top:calc(1pt + .55em);transform:translate(-50%,-50%);width:3.5pt;height:3.5pt;border-radius:50%;background:#888}
-  .rs-notes .rs-mi{width:auto}
-  .rs-notes .rs-title{font-weight:500;font-size:inherit;min-width:0;overflow-wrap:break-word}
-  .rs-notes .rs-when,.rs-notes .rs-cut{min-width:0;overflow-wrap:break-word;font-size:inherit}
-  .rs-notes .rs-when{font-weight:400;color:#333}
-  .rs-notes .rs-nodrop .rs-title{font-weight:600}
-  /* shared columns: mile | name | time — so Before/After times line up with cutoffs on the route rows */
+  ul.rs.rs-off{list-style:none;margin:0;padding:0}
+  ul.rs.rs-off + h3{margin-top:4pt}
+  ol.rs + ul.rs.rs-off{margin-top:4pt}
+  /* no vertical connector on off-line rows (they are not part of the route) */
+  ul.rs.rs-off li{position:relative;display:grid;grid-template-columns:var(--rs-mi) minmax(0,1fr) auto;column-gap:var(--rs-gap);align-items:baseline;margin:0;padding:1.6pt 0 1.6pt var(--rs-gutter);break-inside:avoid;min-width:0}
+  ul.rs.rs-off li::before{content:none}
+  ul.rs.rs-off .rs-pin{position:absolute;left:.155in;top:calc(1.6pt + .575em);transform:translate(-50%,-50%);display:flex;z-index:1}
+  ul.rs.rs-off .rs-mi{width:auto}
+  ul.rs.rs-off .rs-title{font-weight:600;min-width:0;overflow-wrap:break-word}
+  ul.rs.rs-off .rs-when,ul.rs.rs-off .rs-cut{grid-column:3;min-width:0;overflow-wrap:break-word}
+  ul.rs.rs-off .rs-when{font-weight:400;color:#2a2a2a}
   .sec-courses ol.rs li{display:grid;grid-template-columns:var(--rs-mi) minmax(0,1fr) auto;column-gap:var(--rs-gap);align-items:baseline;padding-left:var(--rs-gutter)}
   .sec-courses ol.rs li .rs-mi{width:auto}
   .sec-courses ol.rs li .rs-d{grid-column:3}

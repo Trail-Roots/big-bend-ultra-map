@@ -133,13 +133,12 @@ const dayLabel = (m: number) => new Date(Date.UTC(2027, 0, 17 + Math.floor(m / 1
 const shortT = (m: number) => hm(m).replace(/:00 (?=[AP]M)/, ' ').replace(' AM', 'a').replace(' PM', 'p');
 type CalE = { s: string; a: number; b: number | null };
 const span = (e: CalE) => { const d0 = dayLabel(e.a); if (e.b == null || e.b <= e.a) return `${d0} ${shortT(e.a)}`; const d1 = dayLabel(e.b); return d0 === d1 ? `${d0} ${shortT(e.a)}–${shortT(e.b)}` : `${d0} ${shortT(e.a)} – ${d1} ${shortT(e.b)}`; };
-/** Pre-start / post-finish calendar rows. kind 'cut' keeps the red cutoff style; 'info' is normal-color hours (packet pickup, return pickup). */
+/** Pre-start / post-finish calendar rows. Same type as the route rows; dots are not on the wayfinding line. kind 'cut' keeps the red cutoff style; 'info' is normal-color hours (packet pickup, return pickup). */
 const infoRow = (title: string, when = '', kind: 'cut' | 'info' | 'none' = 'info') => {
   const time = when ? `<span class="${kind === 'cut' ? 'rs-cut' : 'rs-when'}">${esc(when)}</span>` : '';
-  return `<li class="rs-note${kind === 'none' ? ' rs-nodrop' : ''}"><span class="rs-mark" aria-hidden="true"></span><span class="rs-mi"></span><span class="rs-title">${esc(title)}</span>${time}</li>`;
+  return `<li class="rs-off${kind === 'none' ? ' rs-nodrop' : ''}"><span class="rs-pin"><i></i></span><span class="rs-mi"></span><span class="rs-title">${esc(title)}</span>${time}</li>`;
 };
-const sideGroup = (cls: string, label: string, items: string[]) => items.length
-  ? `<div class="rs-side ${cls}"><h4>${esc(label)}</h4><ul class="rs-notes">${items.join('')}</ul></div>` : '';
+const offList = (items: string[]) => items.length ? `<ul class="rs rs-off">${items.join('')}</ul>` : '';
 /** Pre-start and post-finish rows from the race calendar (content/calendar.json). Distances without a "Last call for … drop bags" event get an explicit "No drop bags" line. */
 function routeExtras(c: Ctx, k: string) {
   const ev = (c.calendar.events as CalE[]);
@@ -149,15 +148,15 @@ function routeExtras(c: Ctx, k: string) {
   if (last.length > 1) throw new Error(`[routeseq] ${k}: ${last.length} drop-bag last-call events`);
   if (ret.length > 1) throw new Error(`[routeseq] ${ret.length} drop-bag return pickup events`);
   const pre: string[] = [];
+  if (packs.length) pre.push(infoRow('Packet pickup', packs.map(span).join(' · '), 'info'));
   if (last.length === 1) pre.push(infoRow('Drop bag cutoff', span(last[0]), 'cut'));
   else pre.push(infoRow('No drop bags for this distance', '', 'none'));
-  if (packs.length) pre.push(infoRow('Packet pickup', packs.map(span).join(' · '), 'info'));
   const post: string[] = [];
   if (last.length === 1) {
     if (ret.length === 1) post.push(infoRow('Drop bag pickup', span(ret[0]), 'info'));
     else throw new Error(`[routeseq] ${k} has a drop-bag cutoff but no return pickup event in the calendar`);
   }
-  return { pre: sideGroup('rs-before', 'Before the race', pre), post: sideGroup('rs-post', 'After the race', post) };
+  return { pre: offList(pre), post: offList(post) };
 }
 export function routeSeqPage(c: Ctx, k: string) {
   const nodes = routeNodes(c, k), cc = c.courses.colors[k], { byNode } = mj(c);
@@ -185,8 +184,9 @@ export function routeSeqPage(c: Ctx, k: string) {
     if (x.crit && x.pass) { const j = byNode.get(k + "/" + x.id); if (j) links++;
       { const mk = ixMark(j, x.next!); R.push({ m: x.mile, h: `<li class="rs-seg rs-pass" id="rs-${k}-${x.id}"><span class="rs-pin">${mk.pin}</span><span class="rs-mi">mi ${fmt(x.mile)}</span><span class="rs-name">${mk.name}</span><span class="rs-d"></span><span class="rs-dir">${esc(x.how!)}</span></li>` }); } continue; }
     if (x.crit) { pend = x; continue; }
-    const st = x.stations.map((q) => dot(c, q)).join(""), aid = aidOf(x);
-    R.push({ m: x.mile, h: `<li class="rs-node${x.stations.some((q) => q !== "S/F") ? " rs-aidrow" : ""}"><span class="rs-pin">${st || "<i></i>"}</span><span class="rs-mi">mi ${fmt(x.mile)}</span><span class="rs-title">${esc(x.title)}</span>${x.title === "Start" && c.courses.courses?.[k]?.start ? `<span class="rs-when">${esc(String(c.courses.courses[k].start).replace(/:00 ?([AP])M$/, (_: string, a: string) => a.toLowerCase()).replace(/ ?([AP])M$/, (_: string, a: string) => a.toLowerCase()))}</span>` : ""}${cutAt(x.stations, x.mile, x.title)}${aid && !/aid$/.test(x.title) ? `<span class="rs-aid">${aid}</span>` : ""}</li>` });
+    const finish = x.title === "Finish";
+    const st = (finish && !x.stations.includes("S/F") ? ["S/F", ...x.stations] : x.stations).map((q) => dot(c, q)).join(""), aid = aidOf(x);
+    R.push({ m: x.mile, h: `<li class="rs-node${finish || x.stations.some((q) => q !== "S/F") ? " rs-aidrow" : ""}"><span class="rs-pin">${st || "<i></i>"}</span><span class="rs-mi">mi ${fmt(x.mile)}</span><span class="rs-title">${esc(x.title)}</span>${x.title === "Start" && c.courses.courses?.[k]?.start ? `<span class="rs-when">${esc(String(c.courses.courses[k].start).replace(/:00 ?([AP])M$/, (_: string, a: string) => a.toLowerCase()).replace(/ ?([AP])M$/, (_: string, a: string) => a.toLowerCase()))}</span>` : ""}${cutAt(x.stations, x.mile, x.title)}${aid && !/aid$/.test(x.title) ? `<span class="rs-aid">${aid}</span>` : ""}</li>` });
     if (cur && aid && x.mile > cur.a + 0.05 && x.mile < cur.b - 0.05) { const T = cur.name ?? "Unnamed segment", sn = x.stations.filter((q) => q !== "S/F").map((q) => c.stations.stations[q].name).join(" / ");
       R.push({ m: x.mile + 1e-4, h: `<li class="rs-seg rs-after"><span class="rs-pin"><i></i></span><span class="rs-mi"></span><span class="rs-name${cur.name ? "" : " rs-unk"}">${esc(T)}</span><span class="rs-d">%%D%%</span><span class="rs-dir">${esc(`From ${sn}, stay on ${T}.`)}</span></li>` }); }
   }
@@ -198,7 +198,7 @@ export function routeSeqPage(c: Ctx, k: string) {
   const A = R.filter((r) => r.m < sp.mile - 1e-6), B = R.filter((r) => r.m >= sp.mile - 1e-6);
   const extra = routeExtras(c, k);
   console.log(`  routeseq ${k}: split at mi ${sp.mile.toFixed(1)} (${sp.kind}), ${A.length} + ${B.length} rows`);
-  return `<article class="doc routeseq" id="rs-${k}" data-course="${k}" style="--rc:${cc}"><h2 style="color:${cc}">${miniBibSvg(k, cc, 0.8)}</h2><div class="rs-cols"><div class="rs-col"><h3>${sp.out}</h3>${extra.pre}<ol class="rs">${col(A)}</ol></div><div class="rs-col"><h3>${sp.back}</h3><ol class="rs">${col(B)}</ol>${extra.post}</div></div></article>`;
+  return `<article class="doc routeseq" id="rs-${k}" data-course="${k}" style="--rc:${cc}"><h2 style="color:${cc}">${miniBibSvg(k, cc, 0.8)}</h2><div class="rs-cols"><div class="rs-col">${extra.pre}<h3>${sp.out}</h3><ol class="rs">${col(A)}</ol></div><div class="rs-col"><h3>${sp.back}</h3><ol class="rs">${col(B)}</ol>${extra.post}</div></div></article>`;
 }
 export function intersectionsSection(c: Ctx) {
   const { list } = mj(c);
