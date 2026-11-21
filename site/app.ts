@@ -339,7 +339,9 @@ if (document.documentElement.classList.contains('embed') && parent !== window) {
     const v = d.w + 'x' + d.h; if (v === hv) return; hv = v; const s = document.documentElement.style; s.setProperty('--host-vw', d.w / 100 + 'px'); s.setProperty('--host-vh', d.h / 100 + 'px'); });
   // pinned navbar inside the auto-height iframe: embed.js sends the iframe's top edge in the host window; shift the navbar down by what scrolled out
   addEventListener('message', (e) => { const d = e.data; if (e.source !== parent || !d || d.type !== 'bbu-host-scroll' || !Number.isFinite(d.top)) return;
-    const nav = document.querySelector<HTMLElement>('.topnav'); if (!nav) return; const y = Math.max(0, Math.min(-d.top, document.documentElement.scrollHeight - nav.offsetHeight - nav.offsetTop));
+    const nav = document.querySelector<HTMLElement>('.topnav'); if (!nav) return;
+      const chrome = Number(d.chrome) > 0 ? +d.chrome : 0;
+      const y = Math.max(0, Math.min(-d.top + chrome, document.documentElement.scrollHeight - nav.offsetHeight - nav.offsetTop));
     nav.style.transform = y ? `translateY(${y}px)` : ''; nav.classList.toggle('pinned', y > 0); hostTop = d.top; document.querySelectorAll<HTMLDialogElement>('dialog.lightbox[open]').forEach(fitModal); });
   // first report only after the web fonts are in (a fallback-font height would shrink, then grow, the reserved iframe)
   const go = () => { new ResizeObserver(post).observe(document.body); post(); }; (document.fonts ? document.fonts.ready : Promise.resolve()).then(() => document.readyState === 'complete' ? go() : addEventListener('load', go, { once: true }));
@@ -512,16 +514,37 @@ if (document.documentElement.classList.contains('embed') && parent !== window) {
     const evs = [...document.querySelectorAll<HTMLElement>('#pb-cal .cv-item[data-cal="drop-bags"]')].filter((e) => !e.hidden);
     for (const ev of evs) { ev.setAttribute('aria-expanded', 'true'); const d = ev.querySelector<HTMLElement>('.cv-det'); if (d) d.hidden = false; ev.classList.add('cv-hilite'); }
     setTimeout(() => evs.forEach((ev) => ev.classList.remove('cv-hilite')), 2500);
-    const target = document.getElementById('pb-cal') || evs[0];
-    if (!target) { if (rbox?.open) rbox.close(); if (sbox?.open) sbox.close(); return; }
-    const nav = document.querySelector<HTMLElement>('.topnav');
-    const top = Math.max(0, target.getBoundingClientRect().top + window.scrollY - (nav?.offsetHeight || 0));
-    if (inEmbed) parent.postMessage({ type: 'bbu-scroll-to', top, behavior: 'smooth' }, '*');
+    const cal = () => document.getElementById('pb-cal') || evs[0];
     if (rbox?.open) rbox.close(); if (sbox?.open) sbox.close();
-    if (!inEmbed) {
-      const scrollCal = () => { target.scrollIntoView({ block: 'start', behavior: 'smooth' }); };
-      requestAnimationFrame(() => requestAnimationFrame(scrollCal));
-      setTimeout(scrollCal, 80);
+    // Standalone: scroll after the dialog close restores any saved window position.
+    const scrollStandalone = () => { const target = cal(); if (target) target.scrollIntoView({ block: 'start', behavior: 'smooth' }); };
+    // Embed: do not measure or ask the host to scroll while the lightbox takeover is still
+    // on (iframe is 100vh + internally scrolled, host overflow is locked). Wait until the
+    // host has put the iframe back in flow and sent bbu-full off (iframe scroll back to 0),
+    // then send the calendar's offset in the iframe document. The host places it just below
+    // its own sticky header — do not subtract the map nav here.
+    const postHostScroll = () => {
+      const target = cal(); if (!target) return;
+      const nav = document.querySelector<HTMLElement>('.topnav');
+      const top = Math.max(0, target.getBoundingClientRect().top + window.scrollY - (nav?.offsetHeight || 0));
+      parent.postMessage({ type: 'bbu-scroll-to', top, behavior: 'smooth' }, '*');
+    };
+    if (inEmbed) {
+      let sent = false;
+      const send = () => { sent = true; postHostScroll(); };
+      const onFull = (e: MessageEvent) => {
+        if (e.source !== parent || !e.data || e.data.type !== 'bbu-full' || e.data.on) return;
+        removeEventListener('message', onFull);
+        requestAnimationFrame(() => requestAnimationFrame(send));
+        setTimeout(send, 120);
+      };
+      addEventListener('message', onFull);
+      // If the iframe was not in host-full mode, there will be no bbu-full off to wait for.
+      if (!hostFull) setTimeout(send, 0);
+      setTimeout(() => { if (!sent) send(); removeEventListener('message', onFull); }, 500);
+    } else {
+      requestAnimationFrame(() => requestAnimationFrame(scrollStandalone));
+      setTimeout(scrollStandalone, 80);
     }
   };
   document.addEventListener('click', (e) => {

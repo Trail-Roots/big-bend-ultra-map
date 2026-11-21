@@ -21,9 +21,64 @@
   // lightbox open inside the iframe: the iframe takes over the WHOLE host window (fixed, top layer) while it is open. A placeholder of the
   // same height keeps the host layout exactly where it was (no shift); host scrolling is locked and the scroll position restored on close.
   var full = null, pendingH = 0, pendingScroll = null;
+  // Visible fixed/sticky host bars at the top (Squarespace header, announcement bar, etc.).
+  // Ignore full-screen overlays (mobile menus) and the iframe itself.
+  function hostChromeHeight() {
+    var h = 0, vw = innerWidth, vh = innerHeight, seen = [];
+    function consider(el) {
+      if (!el || el === f || (f && f.contains(el)) || seen.indexOf(el) >= 0) return;
+      seen.push(el);
+      var s = getComputedStyle(el);
+      if ((s.position !== 'fixed' && s.position !== 'sticky') || s.visibility === 'hidden' || s.display === 'none' || +s.opacity === 0) return;
+      var r = el.getBoundingClientRect();
+      if (r.top > 12 || r.bottom <= 0) return;
+      if (r.height < 16 || r.height > Math.min(220, vh * 0.35)) return;
+      if (r.width < vw * 0.45) return;
+      if (r.bottom > h) h = r.bottom;
+    }
+    var nodes = document.querySelectorAll('header, #header, .header, [data-header], .header-announcement-bar-wrapper, .sqs-announcement-bar, .announcement-bar');
+    for (var i = 0; i < nodes.length; i++) consider(nodes[i]);
+    var pts = [1, 8, 16, 28];
+    for (var p = 0; p < pts.length; p++) {
+      var stack = document.elementsFromPoint(Math.max(1, vw / 2), pts[p]) || [];
+      for (var j = 0; j < stack.length; j++) consider(stack[j]);
+    }
+    return h;
+  }
+  function scrollRoot() {
+    var se = document.scrollingElement || document.documentElement;
+    if (se && se.scrollHeight > se.clientHeight + 5) return se;
+    for (var el = f.parentElement; el && el !== document.documentElement; el = el.parentElement) {
+      var oy = getComputedStyle(el).overflowY;
+      if ((oy === 'auto' || oy === 'scroll' || oy === 'overlay') && el.scrollHeight > el.clientHeight + 5) return el;
+    }
+    return se;
+  }
+  function rootScrollTop(root) { return root === document.documentElement || root === document.body ? (window.scrollY || document.documentElement.scrollTop || 0) : root.scrollTop; }
   function applyHostScroll(top, behavior) {
-    var y = f.getBoundingClientRect().top + window.scrollY + (+top || 0);
-    window.scrollTo({ top: Math.max(0, y), behavior: behavior === 'auto' || behavior === 'instant' ? 'auto' : 'smooth' });
+    var y = function () {
+      var root = scrollRoot(), chrome = hostChromeHeight(), fr = f.getBoundingClientRect();
+      if (root === document.documentElement || root === document.body) return fr.top + (window.scrollY || document.documentElement.scrollTop || 0) + (+top || 0) - chrome;
+      var rr = root.getBoundingClientRect();
+      return root.scrollTop + (fr.top + (+top || 0) - (rr.top + chrome));
+    };
+    var dest = Math.max(0, y()), smooth = behavior !== 'auto' && behavior !== 'instant';
+    var root = scrollRoot(), opts = { top: dest, behavior: smooth ? 'smooth' : 'auto' };
+    if (root === document.documentElement || root === document.body) window.scrollTo(opts);
+    else if (root.scrollTo) root.scrollTo(opts);
+    else root.scrollTop = dest;
+    // Smooth scroll can be interrupted as the iframe leaves the takeover and reports a new
+    // height; re-assert the destination once the layout has settled.
+    setTimeout(function () {
+      var now = rootScrollTop(scrollRoot()), next = Math.max(0, y());
+      if (Math.abs(now - next) > 8) {
+        var r = scrollRoot();
+        if (r === document.documentElement || r === document.body) window.scrollTo({ top: next, behavior: 'auto' });
+        else if (r.scrollTo) r.scrollTo({ top: next, behavior: 'auto' });
+        else r.scrollTop = next;
+      }
+      pos();
+    }, smooth ? 480 : 50);
   }
   function openFull() {
     if (full) return; var r = f.getBoundingClientRect(), de = document.documentElement, bd = document.body;
@@ -71,7 +126,7 @@
   function send(force) { if (full && f.contentWindow) { f.contentWindow.postMessage({ type: 'bbu-host-viewport', w: innerWidth, h: innerHeight }, origin); return; } var v = innerWidth + 'x' + innerHeight; if (!f.contentWindow || (v === sent && !force)) return; sent = v; f.contentWindow.postMessage({ type: 'bbu-host-viewport', w: innerWidth, h: innerHeight }, origin); }
   // pinned navbar: the iframe's top edge relative to the host viewport (negative once scrolled past)
   var raf = 0;
-  function pos() { if (raf || full) return; raf = requestAnimationFrame(function () { raf = 0; if (f.contentWindow) f.contentWindow.postMessage({ type: 'bbu-host-scroll', top: f.getBoundingClientRect().top }, origin); }); }
+  function pos() { if (raf || full) return; raf = requestAnimationFrame(function () { raf = 0; if (f.contentWindow) f.contentWindow.postMessage({ type: 'bbu-host-scroll', top: f.getBoundingClientRect().top, chrome: hostChromeHeight() }, origin); }); }
   addEventListener('scroll', pos, { passive: true });
   f.addEventListener('load', function () { send(true); pos(); });
   addEventListener('resize', function () { send(); pos(); }); addEventListener('orientationchange', function () { setTimeout(send, 100); });
