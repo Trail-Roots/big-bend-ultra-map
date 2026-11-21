@@ -71,14 +71,14 @@ export function amRows(a: any, mode: 'web' | 'print', opt: { bagRaces?: string[]
     if (a.camp) rows.push({ v: 'i', lab: 'Volunteers camp here overnight' });
     return rows;
   }
-  // cards + lightbox: Spectator access first, drop bags second; remaining services keep their previous order
+  // cards + lightbox: Spectator access, drop bags, then restrooms/privy; remaining services keep their previous order
   const rows: AmRow[] = [
     { v: yn(a.spectators), lab: 'Spectator access' },
     { v: bagsOn ? 'y' : yn(a.dropBags), lab: bagLab, href: opt.linkBags && bagsOn ? DROP_BAGS_HASH : undefined },
+    toilet ? { v: 'y', lab: toilet } : { v: 'u', lab: 'Toilet' },
     { v: 'y', lab: 'Water + sports drinks' },
     { v: yn(a.snacks), lab: 'Snacks' },
     { v: 'y', lab: aid },
-    toilet ? { v: 'y', lab: toilet } : { v: 'u', lab: 'Toilet' },
   ];
   if (veh) rows.push({ v: 'i', lab: veh });
   if (a.camp) rows.push({ v: 'i', lab: 'Volunteer overnight camp' });
