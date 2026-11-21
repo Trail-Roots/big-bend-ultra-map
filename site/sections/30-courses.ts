@@ -15,12 +15,12 @@ import siteCfg from '../../content/site.json';
 const thumb = (c, k: string) => uniq(renderRaceMap(c, k, true), `card${k}`).replace('class="racemap"', 'class="racemap rc-map"').replace(/ data-race="[^"]*"/, '');
 /** Compact elevation sparkline for a race card: only that race's GPX profile (content/profiles). No axes or labels, so it stays readable at phone card widths. */
 function cardProfile(c, k: string) {
-  const p = c.profiles[k], cc = c.courses.colors[k], D = c.courses.courses[k].distance_mi, W = 320, H = 48, PL = 2, PR = 2, PT = 5, PB = 3;
+  const p = c.profiles[k], cc = c.courses.colors[k], D = c.courses.courses[k].distance_mi, W = 320, H = 80, PL = 2, PR = 2, PT = 8, PB = 4;
   const lo0 = Math.min(...p.ft), hi0 = Math.max(...p.ft), pad = Math.max(20, (hi0 - lo0) * 0.08), lo = lo0 - pad, hi = hi0 + pad, span = hi - lo;
   const X = (m: number) => PL + (m / D) * (W - PL - PR), Y = (ft: number) => PT + (1 - (ft - lo) / span) * (H - PT - PB);
   const pts = p.mi.map((m: number, i: number) => `${f1(X(m))},${f1(Y(p.ft[i]))}`);
   const last = p.mi[p.mi.length - 1];
-  return `<svg class="rc-elev" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${k} elevation profile, ${totalGain(c, k).toLocaleString('en-US')} ft gain" preserveAspectRatio="none"><path d="M${f1(X(0))},${H - PB}L${pts.join('L')}L${f1(X(last))},${H - PB}z" fill="${cc}" fill-opacity="${BAND_OP}"/><path d="M${pts.join('L')}" fill="none" stroke="${cc}" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/></svg>`;
+  return `<svg class="rc-elev" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${k} elevation profile, ${totalGain(c, k).toLocaleString('en-US')} ft gain" preserveAspectRatio="none"><path d="M${f1(X(0))},${H - PB}L${pts.join('L')}L${f1(X(last))},${H - PB}z" fill="${cc}" fill-opacity="0.22"/><path d="M${pts.join('L')}" fill="none" stroke="${cc}" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/></svg>`;
 }
 function card(c, k: string) {
   const C = c.courses.courses[k], cc = c.courses.colors[k], club = (siteCfg as any).stravaClub as string;

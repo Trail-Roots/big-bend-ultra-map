@@ -2,6 +2,9 @@
 // Zoomed map (cloned from the main map in site/app.ts), photo slot, amenities (sources/curated/amenities.json), busiest times, hours, cutoffs per race.
 // Web cards + lightbox: every tracked service is listed with ✓ or ✕ (never omitted), except volunteer overnight camp, which is an info note only where it applies. Vehicle is shown only when the data has a limit (4x4), never "Any vehicle".
 // Print station pages: still list only what a station has (plus a 4x4 limit when it applies), so the PDF layout is unchanged aside from dropping "Any vehicle".
+import { readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { esc, station } from '../lib/util';
 import { renderStationHeat } from '../lib/timeline';
 import { milestones } from '../lib/milestones';
@@ -18,36 +21,72 @@ const toiletLab = (a: any) => (a.toilet === 'restrooms' ? 'Restrooms' : a.toilet
 // vehicle: only a real limitation (e.g. 4x4). "any" is omitted (Erik, Nov 2026).
 const vehicleLimit = (a: any) => (a.vehicle && a.vehicle !== 'any' ? (a.vehicle === '4x4' ? '4x4 only' : String(a.vehicle)) : null);
 
+/** Sheet station names → our ids (same map as scripts/content.ts). */
+const SHEET_ID: Record<string, string> = { 'Barton Warnock': 'S/F', Finish: 'S/F', Waterhole: '1', 'Whit Roy': '3', 'Whit Roy Mine': '3', 'Right Hand Shutup': '4', 'Paso al Solitario': '5', Contrabando: '2', Contabando: '2' };
+function csvRows(t: string): string[][] {
+  const rows: string[][] = []; let row: string[] = [], cell = '', q = false;
+  for (let i = 0; i < t.length; i++) {
+    const ch = t[i];
+    if (q) { if (ch === '"' && t[i + 1] === '"') { cell += '"'; i++; } else if (ch === '"') q = false; else cell += ch; }
+    else if (ch === '"') q = true; else if (ch === ',') { row.push(cell); cell = ''; }
+    else if (ch === '\n' || ch === '\r') { if (ch === '\r' && t[i + 1] === '\n') i++; row.push(cell); rows.push(row); row = []; cell = ''; }
+    else cell += ch;
+  }
+  if (cell || row.length) { row.push(cell); rows.push(row); }
+  return rows;
+}
+/** Per-station races with Drop Bags = YES on the official sheet, in course order (longest first). */
+let _bagRaces: Record<string, string[]> | null = null;
+function bagRacesFromSheet(order: string[]): Record<string, string[]> {
+  if (_bagRaces) return _bagRaces;
+  const sheet = readFileSync(join(dirname(fileURLToPath(import.meta.url)), '../../sources/sheet.csv'), 'utf8');
+  const by: Record<string, Set<string>> = {};
+  let cur: string | null = null;
+  for (const r of csvRows(sheet)) {
+    if (order.includes(r[0]) && r[1] === 'Mileage') { cur = r[0]; continue; }
+    if (!cur || !r[0]) { cur = r[0] ? cur : null; continue; }
+    const id = SHEET_ID[r[0].trim()];
+    if (!id) continue;
+    if ((r[6] || '').trim().toUpperCase() === 'YES') (by[id] ??= new Set()).add(cur);
+  }
+  _bagRaces = Object.fromEntries(Object.entries(by).map(([id, set]) => [id, order.filter((k) => set.has(k))]));
+  return _bagRaces;
+}
+
 /** Web: the same full set on every station, each ✓ or ✕. Print: only what the station has, plus a vehicle limit when it applies. */
-export function amRows(a: any, mode: 'web' | 'print'): AmRow[] {
+export function amRows(a: any, mode: 'web' | 'print', opt: { bagRaces?: string[]; linkBags?: boolean } = {}): AmRow[] {
   const aid = a.medic ? 'Medic & first aid' : 'Basic first aid';
   const toilet = toiletLab(a), veh = vehicleLimit(a);
+  const races = opt.bagRaces ?? [];
+  const bagsOn = races.length > 0 || a.dropBags === true;
+  const bagLab = races.length ? `Drop bags: ${races.join(', ')}` : 'Drop bags';
   if (mode === 'print') {
     const rows: AmRow[] = [{ v: 'y', lab: 'Water + sports drinks' }];
     if (a.snacks) rows.push({ v: 'y', lab: 'Snacks' });
     rows.push({ v: 'y', lab: aid });
     if (toilet) rows.push({ v: 'y', lab: toilet });
-    if (a.dropBags === true) rows.push({ v: 'y', lab: 'Drop bags' });
+    if (a.dropBags === true) rows.push({ v: 'y', lab: bagLab });
     if (a.spectators) rows.push({ v: 'y', lab: 'Spectator access' });
     if (veh) rows.push({ v: 'i', lab: veh });
     if (a.camp) rows.push({ v: 'i', lab: 'Volunteers camp here overnight' });
     return rows;
   }
+  // cards + lightbox: Spectator access first, drop bags second; remaining services keep their previous order
   const rows: AmRow[] = [
+    { v: yn(a.spectators), lab: 'Spectator access' },
+    { v: bagsOn ? 'y' : yn(a.dropBags), lab: bagLab, href: opt.linkBags && bagsOn ? DROP_BAGS_HASH : undefined },
     { v: 'y', lab: 'Water + sports drinks' },
     { v: yn(a.snacks), lab: 'Snacks' },
     { v: 'y', lab: aid },
     toilet ? { v: 'y', lab: toilet } : { v: 'u', lab: 'Toilet' },
-    { v: yn(a.dropBags), lab: 'Drop bags', href: a.dropBags === true ? DROP_BAGS_HASH : undefined },
-    { v: yn(a.spectators), lab: 'Spectator access' },
   ];
   if (veh) rows.push({ v: 'i', lab: veh });
   if (a.camp) rows.push({ v: 'i', lab: 'Volunteer overnight camp' });
   return rows;
 }
 
-export function amList(a: any, mode: 'web' | 'print') {
-  return `<ul class="amen">${amRows(a, mode).map((r) => {
+export function amList(a: any, mode: 'web' | 'print', opt: { bagRaces?: string[]; linkBags?: boolean } = {}) {
+  return `<ul class="amen">${amRows(a, mode, opt).map((r) => {
     const mark = r.v === 'y' ? '✓' : r.v === 'n' ? '✕' : r.v === 'u' ? '?' : mode === 'print' ? 'i' : icon('info');
     const state = r.v === 'y' ? 'available' : r.v === 'n' ? 'not available' : r.v === 'u' ? 'unknown' : 'info';
     const lab = r.href ? `<a href="${esc(r.href)}" class="am-cal">${esc(r.lab)}</a>` : esc(r.lab);
@@ -81,7 +120,7 @@ function briefCard(c: Ctx, k: string) {
 <div class="stc-title"><h3>${esc(title)}</h3>${s.long ? `<p class="stc-sub">${esc(s.long)}</p>` : ''}</div>
 <button type="button" class="stc-full" data-station="${esc(k)}" aria-label="${esc(title)}: open full screen">${icon('expand')}</button>
 </header>
-<div class="stc-cols">${amList(a, 'web')}${cutsCol(c, k)}</div>
+<div class="stc-cols">${amList(a, 'web', { bagRaces: bagRacesFromSheet(c.courses.order)[k] ?? [], linkBags: false })}${cutsCol(c, k)}</div>
 </article>`;
 }
 
@@ -104,7 +143,7 @@ export function stCard(c: Ctx, k: string, print = false) {
     return `<header class="st-head"><svg class="st-badge" viewBox="-42 -42 84 84" overflow="visible" aria-hidden="true">${station(0, 0, k, s.spectator, { s: k === 'S/F' ? 2900 : 2000, fs: k === 'S/F' ? 34 : 28, badge: false, colors: c.colors, link: false })}</svg><div><h2>${esc(k === 'S/F' ? s.name : `${k} · ${s.name}`)}</h2><p class="note">${esc(s.long ?? '')} · ${(s.elevation_ft ?? 0).toLocaleString('en-US')} ft</p></div></header>
 <div class="st-grid"><div class="st-map" data-station="${esc(k)}"></div><figure class="st-photo">${photo}</figure></div>
 <div class="st-info"><section><h3>Open</h3><p class="st-hours"><b>${esc(s.hours ?? '?')}</b></p><p class="st-coordp"><a class="st-coord" href="https://www.google.com/maps?q=${ll}" target="_blank" rel="noopener">${icon('pin')}Map: ${llTxt}</a></p>${NEAR[k] ? `<p class="st-nearp">Nearby: <a class="st-near" href="https://www.google.com/maps/search/?api=1&amp;query=${encodeURIComponent(NEAR[k] + ', TX')}" target="_blank" rel="noopener">${esc(NEAR[k])}</a></p>` : ''}</section>
-<section><h3>Available</h3>${amList(a, print ? 'print' : 'web')}</section>
+<section><h3>Available</h3>${amList(a, print ? 'print' : 'web', { bagRaces: bagRacesFromSheet(c.courses.order)[k] ?? [], linkBags: !print })}</section>
 <section><h3>Timing</h3><table class="st-cuts st-timing"><tbody>${cuts}</tbody></table></section></div>
 <section class="st-msl"><h3>Route</h3>${c.courses.order.filter((r) => c.cutoffs[r].some((q) => q.station === k)).map((r) => milestones(c, r, k)).join('')}</section>
 <section class="st-heat"><h3>Busiest times <small>(modelled per 15 min)</small></h3>${renderStationHeat(c, k)}</section>`;
