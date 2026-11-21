@@ -494,20 +494,42 @@ if (document.documentElement.classList.contains('embed') && parent !== window) {
       for (const [d, ic, lab] of [[-1, 'chevl', 'Previous ' + what], [1, 'chevr', 'Next ' + what]] as [number, string, string][]) { const b = document.createElement('button'); b.type = 'button'; b.className = 'lb-nav ' + (d < 0 ? 'lb-prev' : 'lb-next'); b.setAttribute('aria-label', lab); b.dataset.tip = lab + (d < 0 ? ' (←)' : ' (→)'); b.innerHTML = icon(ic); b.addEventListener('click', (e) => { e.stopPropagation(); go(box, d); }); nav.appendChild(b); }
       box.addEventListener('keydown', (e) => { if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return; const t = e.target as HTMLElement; if (t.closest('input,textarea,select,[contenteditable]')) return; e.preventDefault(); go(box, e.key === 'ArrowLeft' ? -1 : 1); }); } }
   for (const box of [rbox, sbox]) if (box) { box.querySelector('.lb-close')!.addEventListener('click', () => box.close()); box.addEventListener('click', (e) => { const t = e.target as Element; if (t === box || t.classList?.contains('lb-body')) box.close(); }); /* backdrop + the empty padding around the content close it; Esc closes natively */ }
-  // Drop bags on a station card / lightbox: close any lightbox, show the calendar tab, expand the drop-bag events, scroll to them
-  const goDropBags = () => {
-    if (rbox?.open) rbox.close(); if (sbox?.open) sbox.close();
+  // Drop bags in the station lightbox: close the detail view (and any calendar fullscreen), filter the calendar, then scroll to it.
+  // Do not depend on the URL hash. Dialog close and the embed host both restore the previous scroll, so scroll the real calendar
+  // element after that restore, and in the auto-height embed ask the host to scroll (the iframe itself has no scrollbar).
+  const goDropBags = (races: string[] = []) => {
+    document.querySelector<HTMLButtonElement>('[data-cal-fs-close]')?.click();
+    document.querySelector<HTMLButtonElement>('.vw-tab[data-view="cal"]')?.click();
+    if (races.length) {
+      const want = new Set(races);
+      document.querySelectorAll<HTMLInputElement>('input[data-race]').forEach((i) => { i.checked = want.has(i.dataset.race!); });
+      document.querySelectorAll<HTMLInputElement>('input[data-race-all]').forEach((i) => { i.checked = false; });
+      document.querySelector<HTMLInputElement>('input[data-race]')?.dispatchEvent(new Event('change', { bubbles: true }));
+    }
     document.querySelectorAll<HTMLInputElement>('input[data-cat]').forEach((i) => { i.checked = i.dataset.cat === 'drop-bags'; });
     document.querySelectorAll<HTMLInputElement>('input[data-cat-all]').forEach((i) => { i.checked = false; });
-    document.querySelector<HTMLButtonElement>('.vw-tab[data-view="cal"]')?.click();
-    document.dispatchEvent(new Event('racesel')); // reapplies the distance filter; drop-bag events stay hidden when no drop-bag distance is selected
+    document.querySelector<HTMLInputElement>('input[data-cat]')?.dispatchEvent(new Event('change', { bubbles: true }));
     const evs = [...document.querySelectorAll<HTMLElement>('#pb-cal .cv-item[data-cal="drop-bags"]')].filter((e) => !e.hidden);
-    for (const e of evs) { e.setAttribute('aria-expanded', 'true'); const d = e.querySelector<HTMLElement>('.cv-det'); if (d) d.hidden = false; e.classList.add('cv-hilite'); }
-    const target = document.getElementById('drop-bags') || evs[0] || document.getElementById('pb-cal');
-    target?.scrollIntoView({ block: 'start', behavior: 'smooth' });
-    setTimeout(() => evs.forEach((e) => e.classList.remove('cv-hilite')), 2500);
+    for (const ev of evs) { ev.setAttribute('aria-expanded', 'true'); const d = ev.querySelector<HTMLElement>('.cv-det'); if (d) d.hidden = false; ev.classList.add('cv-hilite'); }
+    setTimeout(() => evs.forEach((ev) => ev.classList.remove('cv-hilite')), 2500);
+    const target = document.getElementById('pb-cal') || evs[0];
+    if (!target) { if (rbox?.open) rbox.close(); if (sbox?.open) sbox.close(); return; }
+    const nav = document.querySelector<HTMLElement>('.topnav');
+    const top = Math.max(0, target.getBoundingClientRect().top + window.scrollY - (nav?.offsetHeight || 0));
+    if (inEmbed) parent.postMessage({ type: 'bbu-scroll-to', top, behavior: 'smooth' }, '*');
+    if (rbox?.open) rbox.close(); if (sbox?.open) sbox.close();
+    if (!inEmbed) {
+      const scrollCal = () => { target.scrollIntoView({ block: 'start', behavior: 'smooth' }); };
+      requestAnimationFrame(() => requestAnimationFrame(scrollCal));
+      setTimeout(scrollCal, 80);
+    }
   };
-  document.addEventListener('click', (e) => { const a = (e.target as Element).closest?.('a.am-cal, a[href="#drop-bags"]'); if (!a) return; e.preventDefault(); history.replaceState(null, '', '#drop-bags'); goDropBags(); });
+  document.addEventListener('click', (e) => {
+    const a = (e.target as Element).closest?.('a.am-cal, a[href="#drop-bags"]'); if (!a) return;
+    e.preventDefault(); e.stopPropagation();
+    const races = ((a as HTMLElement).dataset.races || '').trim().split(/\s+/).filter(Boolean);
+    goDropBags(races);
+  }, true);
   const fromHash = () => { const h = decodeURIComponent(location.hash); let m; if (h === '#drop-bags') goDropBags(); else if ((m = /^#course-(.+)$/.exec(h))) openRace(m[1]); else if ((m = /^#station-(.+)$/.exec(h))) openStation(m[1]); };
   addEventListener('hashchange', fromHash); fromHash();
 }

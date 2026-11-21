@@ -679,6 +679,7 @@ a.vw-plan{text-decoration:none}
   .stc-cr{flex:none}
   .stc-ct{min-width:0;overflow-wrap:anywhere;white-space:normal}
   .stc-cnone{font-weight:550;color:#666}
+  #pb-cal{scroll-margin-top:var(--navh,0px)}
   /* lightbox only: drop-bag calendar link matches surrounding text, with a black underline */
   .am-cal{color:inherit;font:inherit;font-weight:inherit;text-decoration:underline;text-decoration-color:#111;text-underline-offset:2px;overflow-wrap:anywhere}
   .am-cal:hover{color:inherit;text-decoration-thickness:2px}

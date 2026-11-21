@@ -20,7 +20,11 @@
   if (!s.dataset.height) f.style.height = est(f.getBoundingClientRect().width || s.parentNode.clientWidth || innerWidth, innerWidth, innerHeight) + 'px';
   // lightbox open inside the iframe: the iframe takes over the WHOLE host window (fixed, top layer) while it is open. A placeholder of the
   // same height keeps the host layout exactly where it was (no shift); host scrolling is locked and the scroll position restored on close.
-  var full = null, pendingH = 0;
+  var full = null, pendingH = 0, pendingScroll = null;
+  function applyHostScroll(top, behavior) {
+    var y = f.getBoundingClientRect().top + window.scrollY + (+top || 0);
+    window.scrollTo({ top: Math.max(0, y), behavior: behavior === 'auto' || behavior === 'instant' ? 'auto' : 'smooth' });
+  }
   function openFull() {
     if (full) return; var r = f.getBoundingClientRect(), de = document.documentElement, bd = document.body;
     full = { css: f.style.cssText, x: scrollX, y: scrollY, top: r.top, ph: document.createElement('div'), hO: de.style.overflow, bO: bd.style.overflow, hS: de.style.scrollbarGutter };
@@ -44,12 +48,21 @@
     if (F.mark) { try { F.mark.parentNode.moveBefore(f, F.mark); } catch (x) {} F.mark.parentNode.removeChild(F.mark); }
     for (var i = F.anc.length - 1; i >= 0; i--) { var A = F.anc[i]; if (A[1] == null) A[0].removeAttribute('style'); else A[0].setAttribute('style', A[1]); }
     F.ph.parentNode && F.ph.parentNode.removeChild(F.ph); var de = document.documentElement; de.style.overflow = F.hO; document.body.style.overflow = F.bO; de.style.scrollbarGutter = F.hS;
-    window.scrollTo(F.x, F.y); requestAnimationFrame(function () { window.scrollTo(F.x, F.y); pos(); });
+    var queued = pendingScroll; pendingScroll = null;
+    if (queued) applyHostScroll(queued.top, queued.behavior);
+    else { window.scrollTo(F.x, F.y); requestAnimationFrame(function () { window.scrollTo(F.x, F.y); pos(); }); }
+    if (queued) pos();
     f.contentWindow && f.contentWindow.postMessage({ type: 'bbu-full', on: false }, origin);
   }
   addEventListener('message', function (e) {
-    if (e.origin === origin && e.source === f.contentWindow && e.data && e.data.type === 'bbu-modal') { if (e.data.open) openFull(); else closeFull(); return; }
-    if (e.origin !== origin || e.source !== f.contentWindow || !e.data || e.data.type !== 'bbu-embed-height') return;
+    if (e.origin !== origin || e.source !== f.contentWindow || !e.data) return;
+    if (e.data.type === 'bbu-scroll-to') {
+      var top = +e.data.top; if (!isFinite(top)) return;
+      if (full) { pendingScroll = { top: top, behavior: e.data.behavior }; return; }
+      applyHostScroll(top, e.data.behavior); pos(); return;
+    }
+    if (e.data.type === 'bbu-modal') { if (e.data.open) openFull(); else closeFull(); return; }
+    if (e.data.type !== 'bbu-embed-height') return;
     var h = Math.ceil(+e.data.height); if (h > 0) { pendingH = h; if (full) return; f.style.height = h + 'px'; }
     send(); pos();
   });

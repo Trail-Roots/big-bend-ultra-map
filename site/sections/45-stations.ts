@@ -17,7 +17,7 @@ export const VOLUNTEER_HREF = 'https://trailroots.com/volunteers';
 const CREW_LAB = 'Volunteer camp · 4x4 only';
 
 type AmV = 'y' | 'n' | 'i' | 'u';
-type AmRow = { v: AmV; lab: string; href?: string; ic?: string };
+type AmRow = { v: AmV; lab: string; href?: string; ic?: string; races?: string[] };
 const yn = (val: unknown): AmV => (val === true ? 'y' : val === false ? 'n' : 'u');
 const toiletLab = (a: any) => (a.toilet === 'restrooms' ? 'Restrooms' : a.toilet === 'privy' ? 'Privy' : null);
 // vehicle: only a real limitation (e.g. 4x4). "any" is omitted (Erik, Nov 2026).
@@ -76,7 +76,7 @@ export function amRows(a: any, mode: 'web' | 'print', opt: { bagRaces?: string[]
   // cards + lightbox: spectator, drop bags, restrooms, first aid, then water and snacks; volunteer camp is one info row
   const rows: AmRow[] = [
     { v: yn(a.spectators), lab: a.spectators ? 'Spectator access' : 'No spectator access', ic: 'binoculars' },
-    { v: bagsOn ? 'y' : 'n', lab: bagsOn ? bagLab : 'No drop bags', ic: 'bag', href: opt.linkBags && bagsOn ? DROP_BAGS_HASH : undefined },
+    { v: bagsOn ? 'y' : 'n', lab: bagsOn ? bagLab : 'No drop bags', ic: 'bag', href: opt.linkBags && bagsOn ? DROP_BAGS_HASH : undefined, races: opt.linkBags && races.length ? races : undefined },
     { v: toilet ? 'y' : 'n', lab: toilet ?? 'No restrooms', ic: 'toilet' },
     { v: 'y', lab: aid, ic: 'firstaid' },
     { v: 'y', lab: 'Water + sports drinks', ic: 'droplet' },
@@ -94,7 +94,8 @@ export function amList(a: any, mode: 'web' | 'print', opt: { bagRaces?: string[]
     const mark = mode === 'print'
       ? (r.v === 'y' ? '✓' : r.v === 'n' ? '✕' : r.v === 'u' ? '?' : 'i')
       : (r.v === 'n' ? icon('x') : icon(r.ic || 'info'));
-    const lab = r.href ? `<a href="${esc(r.href)}" class="am-cal">${esc(r.lab)}</a>` : esc(r.lab);
+    const racesAttr = r.races?.length ? ` data-races="${esc(r.races.join(" "))}"` : "";
+    const lab = r.href ? `<a href="${esc(r.href)}" class="am-cal"${racesAttr}>${esc(r.lab)}</a>` : esc(r.lab);
     return `<li class="am am-${r.v}"><span class="amv" aria-hidden="true">${mark}</span>${lab}</li>`;
   }).join('')}</ul>`;
 }
