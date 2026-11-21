@@ -77,7 +77,7 @@ const noTitles = (h: string) => h.replace(/<title>[\s\S]*?<\/title>/g, '').repla
   if (bad.length) throw new Error('[links] map links not coordinate-based:\n' + bad.join('\n'));
   console.log('map links', n, 'all coordinate-based'); }
 // build check: every aid-station detail (web lightbox template + print page) shows a visible primary coordinates link
-{ const n = ctx.stations.order.length, cards = [...html.matchAll(/<a class="st-coord" href="https:\/\/www\.google\.com\/maps\?q=(-?\d+\.\d+),(-?\d+\.\d+)"[^>]*>[\s\S]*?Map: (-?\d+\.\d+), (-?\d+\.\d+)<\/a>/g)];
+{ const n = ctx.stations.order.length, cards = [...html.matchAll(/<a class="st-coord" href="https:\/\/www\.google\.com\/maps\?q=(-?\d+\.\d+),(-?\d+\.\d+)"[^>]*>[\s\S]*?Map: (?:<\/span>)?(-?\d+\.\d+), (-?\d+\.\d+)<\/a>/g)];
   if (cards.length !== 2 * n) throw new Error(`[stations] ${cards.length} coordinate links for ${n} stations (need lightbox + print each)`);
   console.log('station coord links', cards.length, 'ok'); }
 { const { RACE_VIEWS } = await import('./lib/racemap'); fs.writeFileSync(path.join(D, 'race-views.json'), JSON.stringify(RACE_VIEWS)); }

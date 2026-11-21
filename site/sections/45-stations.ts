@@ -1,6 +1,6 @@
 // Aid-station lightbox (web only): click a station on the map, in the heat map, in a race table, or on an aid-station card.
 // Zoomed map (cloned from the main map in site/app.ts), photo slot, amenities (sources/curated/amenities.json), busiest times, hours, cutoffs per race.
-// Web cards + lightbox: every tracked service is listed with ✓ or ✕ (never omitted), except volunteer overnight camp, which is an info note only where it applies. Vehicle is shown only when the data has a limit (4x4), never "Any vehicle".
+// Web cards + lightbox: every tracked service is listed (icon when present, red ✕ + "No …" when not). 4x4 and overnight camp are one info-only remote-volunteer note, only where it applies. Vehicle is never shown as "Any vehicle".
 // Print station pages: still list only what a station has (plus a 4x4 limit when it applies), so the PDF layout is unchanged aside from dropping "Any vehicle".
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
@@ -13,9 +13,11 @@ import amen from '../../sources/curated/amenities.json';
 import type { Ctx } from '../lib/types';
 export const meta = { id: 'stations', title: 'Aid stations', print: false };
 export const DROP_BAGS_HASH = '#drop-bags';
+export const VOLUNTEER_HREF = 'https://trailroots.com/volunteers';
+const CREW_LAB = 'Remote volunteer crew · 4x4 access, camps overnight';
 
 type AmV = 'y' | 'n' | 'i' | 'u';
-type AmRow = { v: AmV; lab: string; href?: string };
+type AmRow = { v: AmV; lab: string; href?: string; ic?: string; more?: { href: string; text: string; before?: string } };
 const yn = (val: unknown): AmV => (val === true ? 'y' : val === false ? 'n' : 'u');
 const toiletLab = (a: any) => (a.toilet === 'restrooms' ? 'Restrooms' : a.toilet === 'privy' ? 'Privy' : null);
 // vehicle: only a real limitation (e.g. 4x4). "any" is omitted (Erik, Nov 2026).
@@ -54,7 +56,7 @@ function bagRacesFromSheet(order: string[]): Record<string, string[]> {
 }
 
 /** Web: the same full set on every station, each ✓ or ✕. Print: only what the station has, plus a vehicle limit when it applies. */
-export function amRows(a: any, mode: 'web' | 'print', opt: { bagRaces?: string[]; linkBags?: boolean } = {}): AmRow[] {
+export function amRows(a: any, mode: 'web' | 'print', opt: { bagRaces?: string[]; linkBags?: boolean; volunteerInvite?: boolean } = {}): AmRow[] {
   const aid = a.medic ? 'Medic & first aid' : 'Basic first aid';
   const toilet = toiletLab(a), veh = vehicleLimit(a);
   const races = opt.bagRaces ?? [];
@@ -71,26 +73,34 @@ export function amRows(a: any, mode: 'web' | 'print', opt: { bagRaces?: string[]
     if (a.camp) rows.push({ v: 'i', lab: 'Volunteers camp here overnight' });
     return rows;
   }
-  // cards + lightbox: Spectator access, drop bags, then restrooms/privy; remaining services keep their previous order
+  // cards + lightbox: Spectator access, drop bags, restrooms, then water, snacks, first aid; 4x4 + camp are one info row
   const rows: AmRow[] = [
-    { v: yn(a.spectators), lab: 'Spectator access' },
-    { v: bagsOn ? 'y' : yn(a.dropBags), lab: bagLab, href: opt.linkBags && bagsOn ? DROP_BAGS_HASH : undefined },
-    toilet ? { v: 'y', lab: toilet } : { v: 'u', lab: 'Toilet' },
-    { v: 'y', lab: 'Water + sports drinks' },
-    { v: yn(a.snacks), lab: 'Snacks' },
-    { v: 'y', lab: aid },
+    { v: yn(a.spectators), lab: a.spectators ? 'Spectator access' : 'No spectator access', ic: 'binoculars' },
+    { v: bagsOn ? 'y' : 'n', lab: bagsOn ? bagLab : 'No drop bags', ic: 'bag', href: opt.linkBags && bagsOn ? DROP_BAGS_HASH : undefined },
+    { v: toilet ? 'y' : 'n', lab: toilet ?? 'No restrooms', ic: 'toilet' },
+    { v: 'y', lab: 'Water + sports drinks', ic: 'droplet' },
+    { v: yn(a.snacks), lab: a.snacks ? 'Snacks' : 'No snacks', ic: 'utensils' },
+    { v: 'y', lab: aid, ic: 'firstaid' },
   ];
-  if (veh) rows.push({ v: 'i', lab: veh });
-  if (a.camp) rows.push({ v: 'i', lab: 'Volunteer overnight camp' });
+  // 4x4-limited stations (Waterhole, Whit Roy, Shutup, Solitario). Wording includes overnight camp at Erik's request for all four.
+  if (veh === '4x4 only') {
+    const row: AmRow = { v: 'i', lab: CREW_LAB, ic: 'tent' };
+    if (opt.volunteerInvite) row.more = { href: VOLUNTEER_HREF, text: 'Volunteer', before: 'Want to help? ' };
+    rows.push(row);
+  }
   return rows;
 }
 
-export function amList(a: any, mode: 'web' | 'print', opt: { bagRaces?: string[]; linkBags?: boolean } = {}) {
+export function amList(a: any, mode: 'web' | 'print', opt: { bagRaces?: string[]; linkBags?: boolean; volunteerInvite?: boolean } = {}) {
   return `<ul class="amen">${amRows(a, mode, opt).map((r) => {
-    const mark = r.v === 'y' ? '✓' : r.v === 'n' ? '✕' : r.v === 'u' ? '?' : mode === 'print' ? 'i' : icon('info');
-    const state = r.v === 'y' ? 'available' : r.v === 'n' ? 'not available' : r.v === 'u' ? 'unknown' : 'info';
-    const lab = r.href ? `<a href="${esc(r.href)}" class="am-cal">${esc(r.lab)}</a>` : esc(r.lab);
-    return `<li class="am am-${r.v}" aria-label="${esc(r.lab)}: ${esc(state)}"><span class="amv" aria-hidden="true">${mark}</span>${lab}</li>`;
+    const mark = mode === 'print'
+      ? (r.v === 'y' ? '✓' : r.v === 'n' ? '✕' : r.v === 'u' ? '?' : 'i')
+      : (r.v === 'n' ? icon('x') : icon(r.ic || 'info'));
+    const labCore = r.href ? `<a href="${esc(r.href)}" class="am-cal">${esc(r.lab)}</a>` : esc(r.lab);
+    const lab = r.more
+      ? `${labCore} · ${esc(r.more.before || '')}<a href="${esc(r.more.href)}" class="am-cal" target="_blank" rel="noopener">${esc(r.more.text)}</a>`
+      : labCore;
+    return `<li class="am am-${r.v}"><span class="amv" aria-hidden="true">${mark}</span>${lab}</li>`;
   }).join('')}</ul>`;
 }
 
@@ -142,8 +152,8 @@ export function stCard(c: Ctx, k: string, print = false) {
     const photo = a.photo ? `<img src="${esc(a.photo)}" alt="${esc(s.name)} aid station">` : `<div class="ph-empty">${icon('pin')}<span>Photo coming soon</span></div>`;
     return `<header class="st-head"><svg class="st-badge" viewBox="-42 -42 84 84" overflow="visible" aria-hidden="true">${station(0, 0, k, s.spectator, { s: k === 'S/F' ? 2900 : 2000, fs: k === 'S/F' ? 34 : 28, badge: false, colors: c.colors, link: false })}</svg><div><h2>${esc(k === 'S/F' ? s.name : `${k} · ${s.name}`)}</h2><p class="note">${esc(s.long ?? '')} · ${(s.elevation_ft ?? 0).toLocaleString('en-US')} ft</p></div></header>
 <div class="st-grid"><div class="st-map" data-station="${esc(k)}"></div><figure class="st-photo">${photo}</figure></div>
-<div class="st-info"><section><h3>Open</h3><p class="st-hours"><b>${esc(s.hours ?? '?')}</b></p><p class="st-coordp"><a class="st-coord" href="https://www.google.com/maps?q=${ll}" target="_blank" rel="noopener">${icon('pin')}Map: ${llTxt}</a></p>${NEAR[k] ? `<p class="st-nearp">Nearby: <a class="st-near" href="https://www.google.com/maps/search/?api=1&amp;query=${encodeURIComponent(NEAR[k] + ', TX')}" target="_blank" rel="noopener">${esc(NEAR[k])}</a></p>` : ''}</section>
-<section><h3>Available</h3>${amList(a, print ? 'print' : 'web', { bagRaces: bagRacesFromSheet(c.courses.order)[k] ?? [], linkBags: !print })}</section>
+<div class="st-info"><section class="st-open"><h3>Open</h3><p class="st-hours"><b>${esc(s.hours ?? '?')}</b></p><h3 class="st-subh">Map</h3><p class="st-coordp"><a class="st-coord" href="https://www.google.com/maps?q=${ll}" target="_blank" rel="noopener">${icon('pin')}<span class="st-k">Map: </span>${llTxt}</a></p>${NEAR[k] ? `<h3 class="st-subh">Nearby</h3><p class="st-nearp"><span class="st-k">Nearby: </span><a class="st-near" href="https://www.google.com/maps/search/?api=1&amp;query=${encodeURIComponent(NEAR[k] + ', TX')}" target="_blank" rel="noopener">${esc(NEAR[k])}</a></p>` : ''}</section>
+<section><h3>Available</h3>${amList(a, print ? 'print' : 'web', { bagRaces: bagRacesFromSheet(c.courses.order)[k] ?? [], linkBags: !print, volunteerInvite: !print })}</section>
 <section><h3>Timing</h3><table class="st-cuts st-timing"><tbody>${cuts}</tbody></table></section></div>
 <section class="st-msl"><h3>Route</h3>${c.courses.order.filter((r) => c.cutoffs[r].some((q) => q.station === k)).map((r) => milestones(c, r, k)).join('')}</section>
 <section class="st-heat"><h3>Busiest times <small>(modelled per 15 min)</small></h3>${renderStationHeat(c, k)}</section>`;
