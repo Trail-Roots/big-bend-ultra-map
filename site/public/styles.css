@@ -661,9 +661,9 @@ a.vw-plan{text-decoration:none}
   @media (min-width:740px){.stcards{grid-template-columns:repeat(3,minmax(0,1fr))}}
   .stcard-brief{position:relative;background:#fff;border:1px solid #dcdcdc;border-radius:8px;overflow:hidden;display:flex;flex-direction:column;min-width:0;max-width:100%;box-shadow:0 1px 3px #0000001a;box-sizing:border-box;cursor:pointer}
   .stcard-brief:hover,.stcard-brief:focus-within{border-color:#bdbdbd;box-shadow:0 2px 6px #00000024}
-  .stc-head{display:flex;align-items:center;gap:8px;min-width:0;padding:10px 40px 8px 10px;box-sizing:border-box}
+  .stc-head{display:flex;align-items:flex-start;gap:8px;min-width:0;padding:10px 40px 8px 10px;box-sizing:border-box}
   .stc-title{min-width:0;flex:1;overflow-wrap:break-word}
-  .stc-head .st-badge{width:36px;height:36px;flex:none}
+  .stc-head .st-badge{width:36px;height:36px;flex:none;margin-top:calc((.9rem * 1.25 - 36px) / 2)}
   .stc-head h3{margin:0;font:700 .9rem/1.25 system-ui,-apple-system,"Segoe UI",sans-serif;color:#242428;overflow-wrap:break-word}
   .stc-sub{margin:.15rem 0 0;color:#666;font-size:.72rem;line-height:1.25;overflow-wrap:break-word}
   .stc-mapbtn{position:relative;flex:none;width:56px;height:56px;padding:0;border:1px solid #e3e3e8;border-radius:6px;overflow:hidden;background:#f3f3f5;cursor:pointer;box-sizing:border-box}
@@ -684,17 +684,27 @@ a.vw-plan{text-decoration:none}
   .am-cal:hover{color:inherit;text-decoration-thickness:2px}
   .am-cal:focus-visible{outline:2px solid #2a2a2a;outline-offset:2px;border-radius:2px}
   .cv-item.cv-hilite{outline:2px solid #1f6fb2;outline-offset:2px;border-radius:4px;background:#eef5fb}
-  /* lightbox left column: Open, Map, Nearby share one text edge; pin sits in a gutter, not in the text */
+  /* lightbox header: number dot centered on the title line, not title+note */
+  .stbox .st-head{align-items:flex-start}
+  .stbox .st-head h2{line-height:1.2}
+  .stbox .st-head .st-badge{margin-top:calc((1.5rem * 1.2 - 56px) / 2)}
+  /* lightbox left column: Open, Map, Nearby share one text edge; clock, pin and compass sit in one gutter, centered on the first content line */
   .stbox .st-info h3{font-weight:500;font-size:.8rem;line-height:1.3;text-transform:uppercase;letter-spacing:.04em;color:#666;margin:0 0 .3rem}
-  .stbox .st-open{--ico:1.15em;--igap:8px;position:relative;padding-left:calc(var(--ico) + var(--igap));min-width:0;box-sizing:border-box}
+  .stbox .st-open{--ico:1.15em;--igap:8px;--lh:1.3;min-width:0;box-sizing:border-box}
   .stbox .st-open > h3,.stbox .st-open > p{margin:0;min-width:0;overflow-wrap:anywhere}
-  .stbox .st-open > h3 + p{margin:0 0 0}
+  .stbox .st-open > h3{padding-left:calc(var(--ico) + var(--igap))}
   .stbox .st-open > h3.st-subh{margin-top:.85rem}
   .stbox .st-open .st-k{display:none}
   .stbox .st-hours,.stbox .st-hours b{font-size:inherit;font-weight:500;color:#242428}
-  .stbox .st-coordp,.stbox .st-nearp{position:relative;margin:0;font-size:inherit;color:#242428}
+  .stbox .st-open > p{display:grid;grid-template-columns:var(--ico) minmax(0,1fr);column-gap:var(--igap);align-items:start;line-height:var(--lh);font-size:inherit;color:#242428}
+  .stbox .st-open .st-gico{display:flex;align-items:center;justify-content:center;width:var(--ico);height:calc(1em * var(--lh));flex:none}
+  html body .stbox .st-open .st-gico svg.ic{width:var(--ico)!important;height:var(--ico)!important;display:block;margin:0!important;color:#555}
   .stbox .st-coord,.stbox .st-near{font-weight:400;color:#242428;display:inline;white-space:normal;overflow-wrap:anywhere}
-  html body .stbox .st-coord svg.ic{position:absolute;right:calc(100% + var(--igap));top:.15em;left:auto;margin:0!important;width:var(--ico)!important;height:var(--ico)!important;color:#555}
+  /* lightbox: Volunteer is a small outlined pill after the Available list, only at remote-crew stations */
+  .stbox .st-vol{margin:.85rem 0 0;min-width:0}
+  .stbox .st-volbtn{display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;max-width:100%;padding:.4rem .95rem;border:1px solid #c9c9cf;border-radius:999px;background:#fff;color:#242428;font:600 .82rem/1 system-ui,-apple-system,"Segoe UI",sans-serif;text-decoration:none;white-space:nowrap}
+  .stbox .st-volbtn:hover{border-color:#242428;background:#f4f4f4}
+  .stbox .st-volbtn:focus-visible{outline:2px solid #2a2a2a;outline-offset:2px}
 }
 @media print{.st-subh{display:none!important}}
 
@@ -708,7 +718,7 @@ a.vw-plan{text-decoration:none}
   .stcards-h{margin:4px 0 8px;font-size:.95rem}
   .stc-head{padding:8px 34px 6px 8px;gap:6px}
   .stc-mapbtn{width:48px;height:48px}
-  .stc-head .st-badge{width:32px;height:32px}
+  .stc-head .st-badge{width:32px;height:32px;margin-top:calc((.8rem * 1.25 - 32px) / 2)}
   .stc-head h3{font-size:.8rem}
   .stc-sub{font-size:.66rem}
   .stc-full{top:6px;right:6px;width:26px;height:26px}
