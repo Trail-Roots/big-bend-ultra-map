@@ -1,6 +1,6 @@
 // Aid-station lightbox (web only): click a station on the map, in the heat map, in a race table, or on an aid-station card.
 // Zoomed map (cloned from the main map in site/app.ts), photo slot, amenities (sources/curated/amenities.json), busiest times, hours, cutoffs per race.
-// Web cards + lightbox: every tracked service is listed with ✓ or ✕ (never omitted). Vehicle is shown only when the data has a limit (4x4), never "Any vehicle".
+// Web cards + lightbox: every tracked service is listed with ✓ or ✕ (never omitted), except volunteer overnight camp, which is an info note only where it applies. Vehicle is shown only when the data has a limit (4x4), never "Any vehicle".
 // Print station pages: still list only what a station has (plus a 4x4 limit when it applies), so the PDF layout is unchanged aside from dropping "Any vehicle".
 import { esc, station } from '../lib/util';
 import { renderStationHeat } from '../lib/timeline';
@@ -40,16 +40,16 @@ export function amRows(a: any, mode: 'web' | 'print'): AmRow[] {
     toilet ? { v: 'y', lab: toilet } : { v: 'u', lab: 'Toilet' },
     { v: yn(a.dropBags), lab: 'Drop bags', href: a.dropBags === true ? DROP_BAGS_HASH : undefined },
     { v: yn(a.spectators), lab: 'Spectator access' },
-    { v: yn(a.camp), lab: 'Volunteer overnight camp' },
   ];
   if (veh) rows.push({ v: 'i', lab: veh });
+  if (a.camp) rows.push({ v: 'i', lab: 'Volunteer overnight camp' });
   return rows;
 }
 
 export function amList(a: any, mode: 'web' | 'print') {
   return `<ul class="amen">${amRows(a, mode).map((r) => {
-    const mark = r.v === 'y' ? '✓' : r.v === 'n' ? '✕' : r.v === 'u' ? '?' : 'i';
-    const state = r.v === 'y' ? 'available' : r.v === 'n' ? 'not available' : r.v === 'u' ? 'unknown' : r.lab;
+    const mark = r.v === 'y' ? '✓' : r.v === 'n' ? '✕' : r.v === 'u' ? '?' : mode === 'print' ? 'i' : icon('info');
+    const state = r.v === 'y' ? 'available' : r.v === 'n' ? 'not available' : r.v === 'u' ? 'unknown' : 'info';
     const lab = r.href ? `<a href="${esc(r.href)}" class="am-cal">${esc(r.lab)}</a>` : esc(r.lab);
     return `<li class="am am-${r.v}" aria-label="${esc(r.lab)}: ${esc(state)}"><span class="amv" aria-hidden="true">${mark}</span>${lab}</li>`;
   }).join('')}</ul>`;
@@ -73,7 +73,7 @@ export function cutsCol(c: Ctx, k: string) {
 
 function briefCard(c: Ctx, k: string) {
   const s = c.stations.stations[k], a = (amen as any)[k] ?? {};
-  const title = k === 'S/F' ? s.name : `${k} · ${s.name}`;
+  const title = s.name; // number is already in the aid icon; don't repeat it in the card title
   return `<article class="stcard-brief" data-station="${esc(k)}" role="listitem">
 <header class="stc-head">
 <button type="button" class="stc-mapbtn" data-station="${esc(k)}" tabindex="-1" aria-hidden="true"><div class="stc-map st-map" data-station="${esc(k)}"></div></button>

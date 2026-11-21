@@ -636,7 +636,7 @@ a.vw-plan{text-decoration:none}
   .calbox .cv-dpage .cv-pday{font-size:11pt;padding:.06in 0 .02in}
   .calbox .cv-dpage .cv-grid{margin:.12in 0 0}
   .calbox .cv-blk{font-size:8.6pt;line-height:1.15}}
-.am-i .amv{background:#3b6ea5;color:#fff;font-style:italic;font-family:Georgia,serif}
+.am-i .amv{background:#3b6ea5;color:#fff}.am-i .amv svg.ic{width:12px;height:12px;display:block}
 @media print{html body a[href*="strava.com"] svg.ic{display:inline-block!important}}
 @media screen and (max-width:899px){.rc-btns{flex-wrap:wrap!important}} /* narrow 3+2 cards: Strava | Join our club split button takes the second line instead of overflowing */
 @media screen and (max-width:739px){.racecards,.stcards{grid-template-columns:repeat(2,minmax(0,1fr))}} /* below ~740px: two per row, never one */
