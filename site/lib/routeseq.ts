@@ -14,6 +14,19 @@ const k0 = Math.cos((29.35 * Math.PI) / 180), M = (a: number[], b: number[]) => 
 // Erik's confirmed bearings win over computed ones: { "<junction id>": { "<trail taken>": "bear left" | "bear right" | "bear center" } }
 const BEAR = path.join(import.meta.dir, '../../sources/curated/bearings.json');
 const MAN = path.join(import.meta.dir, '../../sources/curated/intersections.json');
+let _ixImgs: Record<string, string[]> | null = null;
+function ixImages(): Record<string, string[]> {
+  if (_ixImgs) return _ixImgs;
+  _ixImgs = fs.existsSync(MAN) ? (JSON.parse(fs.readFileSync(MAN, 'utf8')).junctions ?? {}) : {};
+  return _ixImgs;
+}
+const ixPhotoList = (id: string) => (ixImages()[id] ?? []).filter(Boolean);
+const hasIxPhoto = (id: string) => ixPhotoList(id).length > 0;
+const ixMark = (j: { id: string } | null, name: string) => {
+  if (!j) return { pin: '<i></i>', name: esc(name) };
+  if (!hasIxPhoto(j.id)) return { pin: '<span class="rs-jx" aria-hidden="true"></span>', name: esc(name) };
+  return { pin: `<a class="rs-jx" href="#ix-${j.id}" aria-label="Intersection photos"></a>`, name: `<a class="rs-nl" href="#ix-${j.id}">${esc(name)}</a>` };
+};
 export type Junction = { id: string; mile: number; title: string; crit: boolean; stations: string[]; ll?: number[]; trails?: string[]; turn?: boolean; next?: string; how?: string; dirSrc?: "geom" | "neutral"; pass?: boolean };
 /** segments (10K split at its turnaround) + junction nodes, in running order */
 const RNC: Record<string, ReturnType<typeof routeNodes0>> = {};
@@ -120,7 +133,13 @@ const dayLabel = (m: number) => new Date(Date.UTC(2027, 0, 17 + Math.floor(m / 1
 const shortT = (m: number) => hm(m).replace(/:00 (?=[AP]M)/, ' ').replace(' AM', 'a').replace(' PM', 'p');
 type CalE = { s: string; a: number; b: number | null };
 const span = (e: CalE) => { const d0 = dayLabel(e.a); if (e.b == null || e.b <= e.a) return `${d0} ${shortT(e.a)}`; const d1 = dayLabel(e.b); return d0 === d1 ? `${d0} ${shortT(e.a)}–${shortT(e.b)}` : `${d0} ${shortT(e.a)} – ${d1} ${shortT(e.b)}`; };
-const infoRow = (title: string, when = '', cls = '') => `<li class="rs-node rs-info${cls}"><span class="rs-pin"><i></i></span><span class="rs-mi"></span><span class="rs-title">${esc(title)}</span>${when ? `<span class="rs-cut">${esc(when)}</span>` : ''}</li>`;
+/** Pre-start / post-finish calendar rows. kind 'cut' keeps the red cutoff style; 'info' is normal-color hours (packet pickup, return pickup). */
+const infoRow = (title: string, when = '', kind: 'cut' | 'info' | 'none' = 'info') => {
+  const time = when ? `<span class="${kind === 'cut' ? 'rs-cut' : 'rs-when'}">${esc(when)}</span>` : '';
+  return `<li class="rs-note${kind === 'none' ? ' rs-nodrop' : ''}"><span class="rs-mark" aria-hidden="true"></span><span class="rs-mi"></span><span class="rs-title">${esc(title)}</span>${time}</li>`;
+};
+const sideGroup = (cls: string, label: string, items: string[]) => items.length
+  ? `<div class="rs-side ${cls}"><h4>${esc(label)}</h4><ul class="rs-notes">${items.join('')}</ul></div>` : '';
 /** Pre-start and post-finish rows from the race calendar (content/calendar.json). Distances without a "Last call for … drop bags" event get an explicit "No drop bags" line. */
 function routeExtras(c: Ctx, k: string) {
   const ev = (c.calendar.events as CalE[]);
@@ -130,15 +149,15 @@ function routeExtras(c: Ctx, k: string) {
   if (last.length > 1) throw new Error(`[routeseq] ${k}: ${last.length} drop-bag last-call events`);
   if (ret.length > 1) throw new Error(`[routeseq] ${ret.length} drop-bag return pickup events`);
   const pre: string[] = [];
-  if (last.length === 1) pre.push(infoRow('Drop bag cutoff', span(last[0])));
-  else pre.push(infoRow('No drop bags for this distance', '', ' rs-nodrop'));
-  if (packs.length) pre.push(infoRow('Packet pickup', packs.map(span).join(' · ')));
+  if (last.length === 1) pre.push(infoRow('Drop bag cutoff', span(last[0]), 'cut'));
+  else pre.push(infoRow('No drop bags for this distance', '', 'none'));
+  if (packs.length) pre.push(infoRow('Packet pickup', packs.map(span).join(' · '), 'info'));
   const post: string[] = [];
   if (last.length === 1) {
-    if (ret.length === 1) post.push(infoRow('Drop bag pickup', span(ret[0])));
+    if (ret.length === 1) post.push(infoRow('Drop bag pickup', span(ret[0]), 'info'));
     else throw new Error(`[routeseq] ${k} has a drop-bag cutoff but no return pickup event in the calendar`);
   }
-  return { pre: pre.join(''), post: post.join('') };
+  return { pre: sideGroup('rs-before', 'Before the race', pre), post: sideGroup('rs-post', 'After the race', post) };
 }
 export function routeSeqPage(c: Ctx, k: string) {
   const nodes = routeNodes(c, k), cc = c.courses.colors[k], { byNode } = mj(c);
@@ -161,13 +180,13 @@ export function routeSeqPage(c: Ctx, k: string) {
     if ("seg" in x) { const s = x.seg; cur = s; segs++; const j = pend ? byNode.get(k + "/" + pend.id) : null; if (j) links++;
       const aid = pend ? aidOf(pend) : "";
       if (aid) R.push({ m: s.a - 1e-4, h: `<li class="rs-node rs-aidrow"><span class="rs-pin">${pend!.stations.filter((q) => q !== "S/F").map((q) => dot(c, q)).join("")}</span><span class="rs-mi">mi ${fmt(s.a)}</span><span class="rs-title">${pend!.stations.filter((q) => q !== "S/F").map((q) => esc(c.stations.stations[q].name) + " aid").join(", ")}</span>${cutAt(pend!.stations, s.a)}</li>` });
-      R.push({ m: s.a, h: `<li class="rs-seg"${pend ? ` id="rs-${k}-${pend.id}"` : ""}><span class="rs-pin">${j ? `<a class="rs-jx" href="#ix-${j.id}" aria-label="Intersection photos"></a>` : "<i></i>"}</span><span class="rs-mi">${pend ? "mi " + fmt(s.a) : ""}</span><span class="rs-name${s.name ? "" : " rs-unk"}">${j ? `<a class="rs-nl" href="#ix-${j.id}">${esc(s.name ?? "Unnamed segment")}</a>` : esc(s.name ?? "Unnamed segment")}</span><span class="rs-d">${(s.b - s.a).toFixed(1)} mi</span>${pend?.how ? `<span class="rs-dir">${esc(pend.how)}</span>` : ""}</li>` });
+      { const mk = ixMark(j, s.name ?? "Unnamed segment"); R.push({ m: s.a, h: `<li class="rs-seg"${pend ? ` id="rs-${k}-${pend.id}"` : ""}><span class="rs-pin">${mk.pin}</span><span class="rs-mi">${pend ? "mi " + fmt(s.a) : ""}</span><span class="rs-name${s.name ? "" : " rs-unk"}">${mk.name}</span><span class="rs-d">${(s.b - s.a).toFixed(1)} mi</span>${pend?.how ? `<span class="rs-dir">${esc(pend.how)}</span>` : ""}</li>` }); }
       pend = null; continue; }
     if (x.crit && x.pass) { const j = byNode.get(k + "/" + x.id); if (j) links++;
-      R.push({ m: x.mile, h: `<li class="rs-seg rs-pass" id="rs-${k}-${x.id}"><span class="rs-pin">${j ? `<a class="rs-jx" href="#ix-${j.id}" aria-label="Intersection photos"></a>` : "<i></i>"}</span><span class="rs-mi">mi ${fmt(x.mile)}</span><span class="rs-name">${j ? `<a class="rs-nl" href="#ix-${j.id}">${esc(x.next!)}</a>` : esc(x.next!)}</span><span class="rs-d"></span><span class="rs-dir">${esc(x.how!)}</span></li>` }); continue; }
+      { const mk = ixMark(j, x.next!); R.push({ m: x.mile, h: `<li class="rs-seg rs-pass" id="rs-${k}-${x.id}"><span class="rs-pin">${mk.pin}</span><span class="rs-mi">mi ${fmt(x.mile)}</span><span class="rs-name">${mk.name}</span><span class="rs-d"></span><span class="rs-dir">${esc(x.how!)}</span></li>` }); } continue; }
     if (x.crit) { pend = x; continue; }
     const st = x.stations.map((q) => dot(c, q)).join(""), aid = aidOf(x);
-    R.push({ m: x.mile, h: `<li class="rs-node${x.stations.some((q) => q !== "S/F") ? " rs-aidrow" : ""}"><span class="rs-pin">${st || "<i></i>"}</span><span class="rs-mi">mi ${fmt(x.mile)}</span><span class="rs-title">${esc(x.title)}</span>${x.title === "Start" && c.courses.courses?.[k]?.start ? `<span class="rs-cut">· ${esc(String(c.courses.courses[k].start).replace(/:00 ?([AP])M$/, (_: string, a: string) => a.toLowerCase()).replace(/ ?([AP])M$/, (_: string, a: string) => a.toLowerCase()))}</span>` : ""}${cutAt(x.stations, x.mile, x.title)}${aid && !/aid$/.test(x.title) ? `<span class="rs-aid">${aid}</span>` : ""}</li>` });
+    R.push({ m: x.mile, h: `<li class="rs-node${x.stations.some((q) => q !== "S/F") ? " rs-aidrow" : ""}"><span class="rs-pin">${st || "<i></i>"}</span><span class="rs-mi">mi ${fmt(x.mile)}</span><span class="rs-title">${esc(x.title)}</span>${x.title === "Start" && c.courses.courses?.[k]?.start ? `<span class="rs-when">${esc(String(c.courses.courses[k].start).replace(/:00 ?([AP])M$/, (_: string, a: string) => a.toLowerCase()).replace(/ ?([AP])M$/, (_: string, a: string) => a.toLowerCase()))}</span>` : ""}${cutAt(x.stations, x.mile, x.title)}${aid && !/aid$/.test(x.title) ? `<span class="rs-aid">${aid}</span>` : ""}</li>` });
     if (cur && aid && x.mile > cur.a + 0.05 && x.mile < cur.b - 0.05) { const T = cur.name ?? "Unnamed segment", sn = x.stations.filter((q) => q !== "S/F").map((q) => c.stations.stations[q].name).join(" / ");
       R.push({ m: x.mile + 1e-4, h: `<li class="rs-seg rs-after"><span class="rs-pin"><i></i></span><span class="rs-mi"></span><span class="rs-name${cur.name ? "" : " rs-unk"}">${esc(T)}</span><span class="rs-d">%%D%%</span><span class="rs-dir">${esc(`From ${sn}, stay on ${T}.`)}</span></li>` }); }
   }
@@ -179,26 +198,54 @@ export function routeSeqPage(c: Ctx, k: string) {
   const A = R.filter((r) => r.m < sp.mile - 1e-6), B = R.filter((r) => r.m >= sp.mile - 1e-6);
   const extra = routeExtras(c, k);
   console.log(`  routeseq ${k}: split at mi ${sp.mile.toFixed(1)} (${sp.kind}), ${A.length} + ${B.length} rows`);
-  return `<article class="doc routeseq" id="rs-${k}" data-course="${k}" style="--rc:${cc}"><h2 style="color:${cc}">${miniBibSvg(k, cc, 0.8)}</h2><div class="rs-cols"><div class="rs-col"><h3>${sp.out}</h3><ol class="rs">${extra.pre}${col(A)}</ol></div><div class="rs-col"><h3>${sp.back}</h3><ol class="rs">${col(B)}${extra.post}</ol></div></div></article>`;
+  return `<article class="doc routeseq" id="rs-${k}" data-course="${k}" style="--rc:${cc}"><h2 style="color:${cc}">${miniBibSvg(k, cc, 0.8)}</h2><div class="rs-cols"><div class="rs-col"><h3>${sp.out}</h3>${extra.pre}<ol class="rs">${col(A)}</ol></div><div class="rs-col"><h3>${sp.back}</h3><ol class="rs">${col(B)}</ol>${extra.post}</div></div></article>`;
 }
 export function intersectionsSection(c: Ctx) {
-  const man = fs.existsSync(MAN) ? JSON.parse(fs.readFileSync(MAN, "utf8")) : {}, imgs = man.junctions ?? {}, { list } = mj(c);
-  const html = (j: MJ) => { const ph: string[] = imgs[j.id] ?? [];
-    // Erik: just the junction (its trail names), the photo frames and link(s) back to the route lists — no miles / distances
+  const { list } = mj(c);
+  const ixName = (j: MJ) => {
     const twins = list.filter((q) => q.trails.join("|") === j.trails.join("|") && q.turn === j.turn), ns = (q: MJ) => q.ll[1] - j.ll[1], ew = (q: MJ) => q.ll[0] - j.ll[0];
-    // same trail pair meeting twice: tell them apart by compass position (geometry only), never by mileage
     const pos = twins.length < 2 ? "" : (() => { const o = twins.filter((q) => q !== j); const vs = Math.max(...o.map((q) => Math.abs(ns(q)))) >= Math.max(...o.map((q) => Math.abs(ew(q)) * 0.87)); return vs ? (o.every((q) => ns(q) < 0) ? " (north)" : o.every((q) => ns(q) > 0) ? " (south)" : " (middle)") : (o.every((q) => ew(q) < 0) ? " (east)" : o.every((q) => ew(q) > 0) ? " (west)" : " (middle)"); })();
-    const nm = j.trails.join(" & ") + (j.turn ? " (turnaround)" : "") + pos, seenR = new Set<string>();
+    return j.trails.join(" & ") + (j.turn ? " (turnaround)" : "") + pos;
+  };
+  const html = (j: MJ) => {
+    // Erik: just the junction (its trail names), the photo frames and link(s) back to the route lists — no miles / distances
+    const ph = ixPhotoList(j.id), nm = ixName(j), seenR = new Set<string>();
     const back = j.uses.filter((u) => !seenR.has(u.k) && seenR.add(u.k)).map((u) => `<a href="#rs-${u.k}-${u.node}" style="color:${c.courses.colors[u.k]}">${u.k}</a>`).join(" · ");
-    return `<section class="ixe" id="ix-${j.id}" data-r="${[...seenR].join(" ")}"><h3>${esc(nm)}</h3><p class="ixu">Back to route list: ${back}</p><div class="ixph">${[0, 1].map((i) => ph[i] ? `<figure class="rs-fr"><img src="${esc(ph[i])}" alt="${esc(nm)}"/></figure>` : `<figure class="rs-fr rs-empty"><span>Photo</span></figure>`).join("")}</div></section>`; };
+    return `<section class="ixe" id="ix-${j.id}" data-r="${[...seenR].join(" ")}"><h3>${esc(nm)}</h3><p class="ixu">Back to route list: ${back}</p><div class="ixph">${ph.map((src) => `<figure class="rs-fr"><img src="${esc(src)}" alt="${esc(nm)}"/></figure>`).join("")}</div></section>`;
+  };
+  // Internal reminder only: do not delete photo-slot data; just don't show blank placeholders to visitors.
+  const missing = list.filter((j) => !hasIxPhoto(j.id));
+  const docDir = path.join(import.meta.dir, '../../docs');
+  fs.mkdirSync(docDir, { recursive: true });
+  const md = [
+    '# Missing route photos',
+    '',
+    'Internal reminder for the Big Bend Ultra map. These intersection entries are in the data but have no photos yet, so they are hidden on the site and in the PDF. Do not publish this list.',
+    '',
+    `Updated when the site is built. ${missing.length} of ${list.length} junctions are waiting on photos.`,
+    '',
+    '| Junction | Races | Id |',
+    '| --- | --- | --- |',
+    ...missing.map((j) => {
+      const races = [...new Set(j.uses.map((u) => u.k))].join(', ');
+      return `| ${ixName(j).replace(/\|/g, '\\|')} | ${races} | ${j.id} |`;
+    }),
+    '',
+  ];
+  const unused = Object.keys(ixImages()).filter((id) => !list.some((j) => j.id === id));
+  if (unused.length) md.push('The data file also has these ids that are not on the current courses:', '', ...unused.map((id) => `- ${id}`), '');
+  fs.writeFileSync(path.join(docDir, 'missing-route-photos.md'), md.join('\n'));
+  console.log(`  intersections hidden (no photo): ${missing.length} of ${list.length}`);
   // Erik: grouped by race distance, shortest first; each junction once, in the first (shortest) race that uses it; entries still list ALL their races
   const seen = new Set<string>(), groups = [...c.courses.order].sort((a: string, b: string) => parseFloat(a) - parseFloat(b)).map((k: string) => {
     const js = list.filter((j) => !seen.has(j.id) && j.uses.some((u) => u.k === k)); js.forEach((j) => seen.add(j.id)); return { k, js }; }).filter((g: any) => g.js.length);
   if (seen.size !== list.length) throw new Error("[intersections] junctions without a race group");
-  console.log("  intersections groups: " + groups.map((g: any) => g.k + " " + g.js.length).join(", "));
-  const ent = groups.map((g: any) => `<h2 class="ixgh">${esc(g.k)}</h2><div class="ixg">${g.js.map(html).join("")}</div>`).join("");
+  const shown = groups.map((g: any) => ({ k: g.k, js: g.js.filter((j: MJ) => hasIxPhoto(j.id)) })).filter((g: any) => g.js.length);
+  console.log("  intersections groups: " + (shown.length ? shown.map((g: any) => g.k + " " + g.js.length).join(", ") : "(none; all entries lack photos)"));
+  const ent = shown.map((g: any) => `<h2 class="ixgh">${esc(g.k)}</h2><div class="ixg">${g.js.map(html).join("")}</div>`).join("");
   const dd = list.flatMap((j) => j.uses); console.log(`  intersections directions: ${dd.filter((u) => u.src === "geom").length} from geometry, ${dd.filter((u) => u.src === "neutral").length} neutral (Continue)`);
-  console.log(`  intersections: ${list.length} junctions (from ${list.reduce((a, j) => a + j.uses.length, 0)} route junctions)`);
+  console.log(`  intersections: ${list.length} junctions (from ${list.reduce((a, j) => a + j.uses.length, 0)} route junctions), ${list.length - missing.length} with photos`);
+  if (!shown.length) return "";
   return `<article class="doc ixsec"><h2>Intersections</h2>${ent}</article>`;
 }
 

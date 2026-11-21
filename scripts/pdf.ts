@@ -29,7 +29,7 @@ try {
   for (const k of await p.$$eval('.coursepage', (e) => e.map((x) => (x as HTMLElement).dataset.course!))) {
     await p.evaluate((k) => { document.body.classList.add('printone'); document.querySelectorAll('.coursepage, .routeseq').forEach((x) => x.classList.toggle('on', (x as HTMLElement).dataset.course === k)); document.querySelectorAll('.ixe').forEach((x) => x.classList.toggle('off', !(x as HTMLElement).dataset.r!.split(' ').includes(k))); document.querySelectorAll<HTMLElement>('.ixgh').forEach((h) => (h.style.display = 'none')); /* per-course: just its junctions, no distance groups */ }, k);
     await p.pdf({ path: path.join(D, `course-${k}.pdf`), preferCSSPageSize: true, printBackground: true });
-    { const o = orient(path.join(D, `course-${k}.pdf`)).join(''); if (!/^LLP+$/.test(o)) throw new Error(`[pdf] course-${k}.pdf pages ${o}: want map, list (both landscape), photo pages`); console.log(`pdf course-${k}: ${o.length} pages (map, list, ${o.length - 2} photo)`); }
+    { const o = orient(path.join(D, `course-${k}.pdf`)).join(''); if (!/^LLP*$/.test(o)) throw new Error(`[pdf] course-${k}.pdf pages ${o}: want map, list (both landscape), then photo pages when that course has photos`); console.log(`pdf course-${k}: ${o.length} pages (map, list, ${o.length - 2} photo)`); }
   }
   await p.evaluate(() => document.body.classList.remove('printone'));
   // thumbnails for the limited cards embed (cards-embed.html): each race card map as a small JPEG (Playwright only, no ffmpeg on CI)
@@ -60,8 +60,8 @@ const pdfText = (n?: number) => { const doc = mupdf.Document.openDocument(fs.rea
     fs.writeFileSync(path.join(P, f), pg.toPixmap(mupdf.Matrix.scale(150 / 72, 150 / 72), mupdf.ColorSpace.DeviceRGB, false, true).asJPEG(82)); files.push(f); }
   if (files.length !== pages.length) throw new Error(`print images ${files.length} != pages ${pages.length}`);
   fs.writeFileSync(path.join(P, 'pages.json'), JSON.stringify(files.map((f, i) => ({ src: 'print/' + f, o: pages[i] }))));
-  // expected page sequence (README): map | access + elevation | calendar | [blank] | 5 x (race map on an odd page + 1 route list page) | 2 plans | 6 station pages | intersections | operations | regional
-  if (!/^PLPP?(LL){5}P{9,}LP$/.test(pages.join('')) || pages.map((x, i) => x === 'L' ? i + 1 : 0).filter(Boolean).slice(1, 11).filter((_, i) => i % 2 === 0).some((n) => n % 2 === 0)) throw new Error(`[pdf] page sequence ${pages.join('')} unexpected`);
+  // expected page sequence (README): map | access + elevation | calendar | [blank] | 5 x (race map on an odd page + 1 route list page) | 2 plans | 6 station pages | intersections (omitted when no photos) | operations | regional
+  if (!/^PLPP?(LL){5}P{8,}LP$/.test(pages.join('')) || pages.map((x, i) => x === 'L' ? i + 1 : 0).filter(Boolean).slice(1, 11).filter((_, i) => i % 2 === 0).some((n) => n % 2 === 0)) throw new Error(`[pdf] page sequence ${pages.join('')} unexpected`);
   console.log('print images', files.length, pages.join('')); }
 // PDF check: every aid-station print page carries its visible primary coordinates link text ("Map: lat, lng")
 { const st = JSON.parse(fs.readFileSync(path.join(import.meta.dir, '../content/stations.json'), 'utf8')), txt = pdfText();
@@ -80,11 +80,16 @@ const pdfText = (n?: number) => { const doc = mupdf.Document.openDocument(fs.rea
   if (miss.length || !links) throw new Error('[pdf] station page destinations missing: ' + miss.join(', ') + ' links ' + links);
   console.log('pdf internal station links', links, '-> 6 station pages'); }
 
-// PDF check: every route-list junction number links to its Intersections entry and back (named destinations)
+// PDF check: intersection photo entries (only those with real photos) link to and from the route lists
 { const raw = fs.readFileSync(OUT).toString("latin1"), ix = new Set(raw.match(/\/ix-J[\w-]+(?= ?\[)/g) ?? []), rs = new Set(raw.match(/\/rs-\w+-\w+-\d+(?= ?\[)/g) ?? []), lk = (raw.match(/\/Dest \/(ix|rs)-/g) || []).length;
   const want = [...fs.readFileSync(path.join(D, "index.html"), "utf8").matchAll(/class="ixe" id="(ix-[^"]+)"/g)].map((m) => "/" + m[1]), miss = want.filter((x) => !ix.has(x));
-  if (miss.length || !rs.size || !lk) throw new Error("[pdf] intersection link targets missing: " + miss.join(", ") + " back " + rs.size + " links " + lk);
-  console.log("pdf intersections", want.length, "entries,", rs.size, "back-link targets,", lk, "links"); }
+  if (want.length) {
+    if (miss.length || !rs.size || !lk) throw new Error("[pdf] intersection link targets missing: " + miss.join(", ") + " back " + rs.size + " links " + lk);
+    console.log("pdf intersections", want.length, "entries,", rs.size, "back-link targets,", lk, "links");
+  } else {
+    if (ix.size || [...raw.matchAll(/\/Dest \/ix-/g)].length) throw new Error("[pdf] hidden empty intersection entries still present");
+    console.log("pdf intersections none (no photos yet)");
+  } }
 // last, after all checks (they read the raw Chromium output)
 for (const f of fs.readdirSync(D).filter((f) => f.endsWith('.pdf'))) slim(path.join(D, f));
 console.log('pdf slimmed', (fs.statSync(OUT).size / 1024 / 1024).toFixed(2) + ' MB');

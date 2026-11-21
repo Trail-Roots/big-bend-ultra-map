@@ -325,7 +325,8 @@ html.embed dialog.lightbox .lb-close{position:sticky;top:10px;float:right;margin
 @media print{html,body{height:auto!important;min-height:0!important;overflow:visible!important}*,*::before,*::after{content-visibility:visible!important;will-change:auto!important;backdrop-filter:none!important;animation:none!important;transition:none!important}html body .topnav{position:static!important;transform:none!important}main,.sheet,.sec,.doc{contain:none!important;filter:none!important;opacity:1!important}}
 /* aid-station detail pages: print / PDF only, one station per portrait page */
 @media screen{.sec-stpages{display:none!important}}
-@media print{.sec-stpages .stpage{break-before:page;display:flex;flex-direction:column;height:10.3in;overflow:hidden}.stcard{display:flex;flex-direction:column;gap:5pt;overflow:hidden;border-top:1.2pt solid var(--line-strong);padding-top:6pt;min-height:0;font-size:9pt}.stcard .st-head .st-badge{width:38pt;height:38pt}.stcard .st-head h2{font-size:15pt}.stcard .st-map svg.stzoom{width:100%!important;overflow:hidden;border:.8pt solid var(--line)}.stcard .st-info{gap:10pt}.stcard .amen{font-size:8.5pt}.stcard .st-cuts{font-size:9pt}.stcard .st-heat svg{width:100%;height:auto}}
+@media print{.sec-stpages .stpage{break-before:page;display:flex;flex-direction:column;height:10.3in;overflow:hidden}.stcard{display:flex;flex-direction:column;gap:5pt;overflow:hidden;border-top:1.2pt solid var(--line-strong);padding-top:6pt;min-height:0;font-size:9pt}.stcard .st-head{align-items:flex-start}.stcard .st-head h2{font-size:15pt;line-height:1.2}.stcard .st-head .st-badge{width:38pt;height:38pt;margin-top:calc((15pt * 1.2 - 38pt) / 2)}.stcard .st-map svg.stzoom{width:100%!important;overflow:hidden;border:.8pt solid var(--line)}.stcard .st-info{gap:10pt}.stcard .amen{font-size:8pt;gap:2pt 8pt}.stcard .am{align-items:flex-start}.stcard .am .amv{width:11pt;height:11pt;margin-top:.6pt}.stcard .st-cuts{font-size:9pt}.stcard .st-heat svg{width:100%;height:auto}
+  html body .sec-stpages .am .amv svg.ic{display:block!important;width:7pt!important;height:7pt!important;margin:0!important;color:#fff}}
 .st-nearp{margin:.2rem 0 0;font-size:.8rem;color:var(--mute)}.st-near{color:var(--mute)}
 /* aid-station details: zoomed map and photo / placeholder share ONE fixed 4:3 frame on every station (web + print) */
 .st-grid{grid-template-columns:1fr 1fr!important;align-items:start}.st-grid>.st-map,.st-grid>.st-photo{aspect-ratio:4/3;width:100%;overflow:hidden}.st-grid>.st-map svg.stzoom{width:100%!important;height:100%!important;aspect-ratio:4/3!important}.st-photo .ph-empty{min-height:0;height:100%}.st-photo img{height:100%}
@@ -800,7 +801,25 @@ html.cal-fs .cv:fullscreen,html.cal-fs .cv:-webkit-full-screen{position:static;i
 }
 
 
-@media print{.sec-courses ol.rs li.rs-info{align-items:baseline;flex-wrap:wrap}
-  .sec-courses ol.rs li.rs-info .rs-title,.sec-courses ol.rs li.rs-info .rs-cut{overflow-wrap:break-word;min-width:0}
-  .sec-courses ol.rs li.rs-nodrop .rs-title{font-weight:700}
+/* Before / After the race sit off the route line, in the same columns as the list below/above them */
+@media print{
+  .rs-col{--rs-gutter:.4in;--rs-mi:.5in;--rs-gap:6pt}
+  .rs-side{margin:0 0 5pt;min-width:0}
+  .rs-side.rs-post{margin:5pt 0 0}
+  .rs-side h4{margin:0 0 1.5pt;padding-left:calc(var(--rs-gutter) + var(--rs-mi) + var(--rs-gap));font:500 6.5pt/1.2 "Liberation Sans","Noto Sans",Arial,sans-serif;color:#777;letter-spacing:.04em;text-transform:uppercase}
+  .rs-notes{list-style:none;margin:0;padding:0}
+  .rs-notes li{position:relative;display:grid;grid-template-columns:var(--rs-mi) minmax(0,1fr) auto;column-gap:var(--rs-gap);align-items:baseline;margin:0;padding:1pt 0 1pt var(--rs-gutter);font:400 6.6pt/1.15 "Liberation Sans","Noto Sans",Arial,sans-serif;color:#2a2a2a;break-inside:avoid;min-width:0}
+  .rs-notes .rs-mark{position:absolute;left:.155in;top:calc(1pt + .55em);transform:translate(-50%,-50%);width:3.5pt;height:3.5pt;border-radius:50%;background:#888}
+  .rs-notes .rs-mi{width:auto}
+  .rs-notes .rs-title{font-weight:500;font-size:inherit;min-width:0;overflow-wrap:break-word}
+  .rs-notes .rs-when,.rs-notes .rs-cut{min-width:0;overflow-wrap:break-word;font-size:inherit}
+  .rs-notes .rs-when{font-weight:400;color:#333}
+  .rs-notes .rs-nodrop .rs-title{font-weight:600}
+  /* shared columns: mile | name | time — so Before/After times line up with cutoffs on the route rows */
+  .sec-courses ol.rs li{display:grid;grid-template-columns:var(--rs-mi) minmax(0,1fr) auto;column-gap:var(--rs-gap);align-items:baseline;padding-left:var(--rs-gutter)}
+  .sec-courses ol.rs li .rs-mi{width:auto}
+  .sec-courses ol.rs li .rs-d{grid-column:3}
+  .sec-courses ol.rs li .rs-cut,.sec-courses ol.rs li .rs-when{grid-column:3}
+  .sec-courses ol.rs li .rs-dir,.sec-courses ol.rs li .rs-cont,.sec-courses ol.rs li .rs-aid{grid-column:2/-1;padding-left:0;flex-basis:auto}
+  .sec-courses .rs-when{font-weight:400;color:#2a2a2a}
 }
