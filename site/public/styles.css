@@ -638,10 +638,13 @@ a.vw-plan{text-decoration:none}
   .calbox .cv-blk{font-size:8.6pt;line-height:1.15}}
 .am-i .amv{background:#3b6ea5;color:#fff}.am-i .amv svg.ic{width:12px;height:12px;display:block}
 @media screen{
-  .am .amv{width:16px;height:16px;border-radius:0;background:none;border:0;color:#242428;font-size:0}
-  .am-y .amv,.am-i .amv,.am-u .amv{background:none;color:#242428}
-  .am-n .amv{background:none;color:#b00020}
-  html body .am .amv svg.ic{width:16px!important;height:16px!important;display:block;margin:0;color:inherit}
+  /* Feature icons sit in the same 18px circles as the earlier ✓/✕ marks: green when present, red-tinted when missing, blue for the volunteer info row. */
+  .am .amv{width:18px;height:18px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;flex:none;border:0;font-size:0}
+  .am-y .amv{background:#2f8f46;color:#fff}
+  .am-n .amv{background:#c62828;color:#fff}
+  .am-i .amv{background:#3b6ea5;color:#fff}
+  .am-u .amv{background:var(--bg-hover);color:#555;border:1px solid var(--line)}
+  html body .am .amv svg.ic{width:12px!important;height:12px!important;display:block;margin:0;color:inherit}
   .stbox .amen .am-i{grid-column:1/-1}
 }
 @media print{html body a[href*="strava.com"] svg.ic{display:inline-block!important}}

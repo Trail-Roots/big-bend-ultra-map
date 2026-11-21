@@ -14,7 +14,7 @@ import type { Ctx } from '../lib/types';
 export const meta = { id: 'stations', title: 'Aid stations', print: false };
 export const DROP_BAGS_HASH = '#drop-bags';
 export const VOLUNTEER_HREF = 'https://trailroots.com/volunteers';
-const CREW_LAB = 'Remote volunteer crew · 4x4 access, camps overnight';
+const CREW_LAB = 'Volunteer camp · 4x4 only';
 
 type AmV = 'y' | 'n' | 'i' | 'u';
 type AmRow = { v: AmV; lab: string; href?: string; ic?: string; more?: { href: string; text: string; before?: string } };
@@ -73,14 +73,14 @@ export function amRows(a: any, mode: 'web' | 'print', opt: { bagRaces?: string[]
     if (a.camp) rows.push({ v: 'i', lab: 'Volunteers camp here overnight' });
     return rows;
   }
-  // cards + lightbox: Spectator access, drop bags, restrooms, then water, snacks, first aid; 4x4 + camp are one info row
+  // cards + lightbox: spectator, drop bags, restrooms, first aid, then water and snacks; volunteer camp is one info row
   const rows: AmRow[] = [
     { v: yn(a.spectators), lab: a.spectators ? 'Spectator access' : 'No spectator access', ic: 'binoculars' },
     { v: bagsOn ? 'y' : 'n', lab: bagsOn ? bagLab : 'No drop bags', ic: 'bag', href: opt.linkBags && bagsOn ? DROP_BAGS_HASH : undefined },
     { v: toilet ? 'y' : 'n', lab: toilet ?? 'No restrooms', ic: 'toilet' },
+    { v: 'y', lab: aid, ic: 'firstaid' },
     { v: 'y', lab: 'Water + sports drinks', ic: 'droplet' },
     { v: yn(a.snacks), lab: a.snacks ? 'Snacks' : 'No snacks', ic: 'utensils' },
-    { v: 'y', lab: aid, ic: 'firstaid' },
   ];
   // 4x4-limited stations (Waterhole, Whit Roy, Shutup, Solitario). Wording includes overnight camp at Erik's request for all four.
   if (veh === '4x4 only') {
