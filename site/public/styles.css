@@ -169,7 +169,7 @@ html.embed,html.embed body,html.embed .sec.noprint{background:transparent!import
 .fp-zoom{position:relative;overflow:hidden;border:1px solid #000;background:#fff;touch-action:none}.fp-stage{transform-origin:0 0;cursor:grab}.fp-stage.drag{cursor:grabbing}.fp-zoom img{user-select:none;-webkit-user-drag:none}
 @media print{.fp-stage{transform:none!important}}
 .plan svg.fp-north{position:absolute;top:8px;width:28px!important;height:52px!important;pointer-events:none;z-index:2}.plan svg.fp-tr{right:10px}.plan svg.fp-tl{left:10px}@media print{.plan svg.fp-north{width:16pt!important;height:30pt!important;top:5pt}}
-.fp-zoomctl{position:absolute;right:8px;bottom:8px;z-index:3;display:flex;flex-direction:column;gap:4px}.fp-zoomctl button{width:30px;height:30px;font:700 18px/1 system-ui,sans-serif;background:#fff;border:1px solid #64748b;border-radius:4px;cursor:pointer}
+.fp-zoomctl{position:absolute;right:6px;top:6px;display:flex;flex-direction:column;gap:2px;z-index:2;opacity:.85}.fp-zoomctl button{width:24px;height:24px;padding:0;border:1px solid #bbb;border-radius:4px;background:var(--tip-bg);color:#333;font:600 15px/1 system-ui,sans-serif;cursor:pointer}.fp-zoomctl button:hover{background:var(--bg-hover)}
 @media print{.fp-zoomctl{display:none!important}}
 /* ?view=embed&h=auto (dist/embed.js): the iframe takes the page's height, so size the map from the width, not the viewport height */
 @media screen and (min-width:1001px){.autoh .sheet{grid-template-columns:minmax(0,44fr) minmax(0,51fr)}.autoh .main{justify-self:stretch}.autoh .main svg.mainmap{height:auto!important;min-height:0!important;width:100%!important;max-width:none!important}}
@@ -238,11 +238,11 @@ html.embed,html.embed body,html.embed .sec.noprint{background:transparent!import
 /* one icon set on every action button (site/lib/icons.ts); icons are web-only */
 svg.ic{width:1.15em;height:1.15em;flex:none;display:inline-block;vertical-align:-.2em;box-shadow:none;stroke-width:2}
 .cpbtns button,.cpbtns a,.cplinks a,.printctl a,.printctl button,.callinks a,.autoplay{display:inline-flex;align-items:center;gap:.35em}
-.zctl button,.fp-zoomctl button{display:inline-flex;align-items:center;justify-content:center}.zctl button svg.ic{width:15px;height:15px}.fp-zoomctl button svg.ic{width:17px;height:17px}
+.zctl button,.fp-zoomctl button{display:inline-flex;align-items:center;justify-content:center}.zctl button svg.ic{width:15px;height:15px}.fp-zoomctl button svg.ic{width:15px;height:15px}
 .zctl button[data-z=reset]{visibility:visible!important}
 @media screen and (max-width:1099px){.cphead h2{white-space:normal}}
 
-html body svg.ic{width:1.15em!important;height:1.15em!important;max-width:none!important;min-width:0!important;min-height:0!important;background:none!important;box-shadow:none!important;margin:0!important}html body .zctl button svg.ic{width:15px!important;height:15px!important}html body .fp-zoomctl button svg.ic{width:17px!important;height:17px!important}
+html body svg.ic{width:1.15em!important;height:1.15em!important;max-width:none!important;min-width:0!important;min-height:0!important;background:none!important;box-shadow:none!important;margin:0!important}html body .zctl button svg.ic{width:15px!important;height:15px!important}html body .fp-zoomctl button svg.ic{width:15px!important;height:15px!important}
 @media print{html body svg.ic{display:none!important}}
 @media print{.cphead{flex-wrap:nowrap}html body .cphead h2{white-space:nowrap;font-size:13pt;flex:0 1 auto;min-width:0}.cphead h2 svg{flex:none}.cphead .cplinks{flex:none}}
 
