@@ -66,7 +66,7 @@ export function amRows(a: any, mode: 'web' | 'print', opt: { bagRaces?: string[]
   // spectator, drop bags, restrooms, first aid, then water and snacks; volunteer camp is one info row
   const rows: AmRow[] = [
     { v: yn(a.spectators), lab: a.spectators ? 'Spectator access' : 'No spectator access', ic: 'binoculars' },
-    { v: bagsOn ? 'y' : 'n', lab: bagsOn ? bagLab : 'No drop bags', ic: 'bag', href: opt.linkBags && bagsOn ? DROP_BAGS_HASH : undefined, races: opt.linkBags && races.length ? races : undefined },
+    { v: bagsOn ? 'y' : 'n', lab: bagsOn ? bagLab : 'No drop bags', ic: 'bag', href: opt.linkBags && bagsOn ? DROP_BAGS_HASH : undefined, races: races.length ? races : undefined },
     { v: toilet ? 'y' : 'n', lab: toilet ?? 'No restrooms', ic: 'toilet' },
     { v: 'y', lab: aid, ic: 'firstaid' },
     { v: 'y', lab: 'Water + Skratch Labs', ic: 'droplet', mark: 'Skratch Labs', more: `Sports drinks are provided by <a href="https://www.skratchlabs.com/" target="_blank" rel="noopener">Skratch Labs</a>.` },
@@ -84,13 +84,17 @@ export function amList(a: any, mode: 'web' | 'print', opt: { bagRaces?: string[]
   const items = amRows(a, mode, opt).map((r) => {
     const mark = r.v === 'n' ? icon('x') : icon(r.ic || 'info');
     const racesAttr = r.races?.length ? ` data-races="${esc(r.races.join(" "))}"` : "";
-    const labInner = r.mark ? esc(r.lab).replace(esc(r.mark), `<span class="am-sponsor">${esc(r.mark)}</span>`) : esc(r.lab);
+    let labInner = r.mark ? esc(r.lab).replace(esc(r.mark), `<span class="am-sponsor">${esc(r.mark)}</span>`) : esc(r.lab);
+    if (r.races?.length && mode !== 'print' && /^Drop bags:/.test(r.lab)) {
+      labInner = `<span class="am-bag-yes">Drop bags: <span class="am-bag-races">${r.races.map((k) => `<span data-race="${esc(k)}">${esc(k)}</span>`).join(', ')}</span></span><span class="am-bag-no" hidden>No drop bags</span>`;
+    }
     const lab = r.href ? `<a href="${esc(r.href)}" class="am-cal"${racesAttr}>${labInner}</a>` : labInner;
     if (r.more && mode === 'print') notes.push(r.more);
     const body = r.more && mode !== 'print'
       ? `<details class="am-more"><summary>${lab}</summary><div class="am-more-body">${r.more}</div></details>`
       : lab;
-    return `<li class="am am-${r.v}${r.more ? ' am-exp' : ''}"><span class="amv" aria-hidden="true">${mark}</span>${body}</li>`;
+    const bagCls = r.races?.length ? ' am-bags' : '';
+    return `<li class="am am-${r.v}${r.more ? ' am-exp' : ''}${bagCls}"${racesAttr}><span class="amv" aria-hidden="true">${mark}</span>${body}</li>`;
   }).join('');
   const note = mode === 'print' && notes.length ? `<div class="am-notes">${notes.map((n) => `<p>${n}</p>`).join('')}</div>` : '';
   return `<ul class="amen">${items}</ul>${note}`;
@@ -112,14 +116,14 @@ export function cutsCol(c: Ctx, k: string) {
   if (k === 'S/F') {
     for (const r of c.courses.order) {
       const start = c.cutoffs[r].find((x, i) => i === 0 && x.station === k && x.cutoff && x.cutoff !== 'TBD');
-      if (start) rows.push(`<li class="stc-start"><span class="stc-dot stc-dot-g" aria-hidden="true"></span><span class="stc-cr">${esc(r)}</span> <span class="stc-clab">start</span> <span class="stc-ct">${esc(shortCut(start.cutoff))}</span></li>`);
+      if (start) rows.push(`<li class="stc-start" data-race="${esc(r)}"><span class="stc-dot stc-dot-g" aria-hidden="true"></span><span class="stc-cr">${esc(r)}</span> <span class="stc-clab">start</span> <span class="stc-ct">${esc(shortCut(start.cutoff))}</span></li>`);
     }
   }
   for (const r of c.courses.order) {
     const vs = c.cutoffs[r].map((x: any, i: number) => ({ x, i })).filter(({ x, i }: any) => x.station === k && i > 0 && x.cutoff && x.cutoff !== 'TBD');
     for (const v of vs) {
       const raw = (k === 'S/F' && (v.x.cutoff === '1:00 AM' || /Jan 18/.test(v.x.cutoff))) ? '1:00 AM Mon' : v.x.cutoff;
-      rows.push(`<li class="stc-cut"><span class="stc-dot stc-dot-r" aria-hidden="true"></span><span class="stc-cr">${esc(r)}</span> <span class="stc-clab">cutoff</span> <span class="stc-ct">${esc(shortCut(raw))}</span></li>`);
+      rows.push(`<li class="stc-cut" data-race="${esc(r)}"><span class="stc-dot stc-dot-r" aria-hidden="true"></span><span class="stc-cr">${esc(r)}</span> <span class="stc-clab">cutoff</span> <span class="stc-ct">${esc(shortCut(raw))}</span></li>`);
     }
   }
   const list = rows.length ? rows.join('') : `<li class="stc-cnone">None</li>`;
@@ -129,7 +133,8 @@ export function cutsCol(c: Ctx, k: string) {
 function briefCard(c: Ctx, k: string) {
   const s = c.stations.stations[k], a = (amen as any)[k] ?? {};
   const title = s.name; // number is already in the aid icon; don't repeat it in the card title
-  return `<article class="stcard-brief" data-station="${esc(k)}" role="listitem">
+  const visit = c.courses.order.filter((r) => c.cutoffs[r]?.some((x) => x.station === k));
+  return `<article class="stcard-brief" data-station="${esc(k)}" data-races="${esc(visit.join(' '))}" role="listitem">
 <header class="stc-head">
 <button type="button" class="stc-mapbtn" data-station="${esc(k)}" tabindex="-1" aria-hidden="true"><div class="stc-map st-map" data-station="${esc(k)}"></div></button>
 <svg class="st-badge" viewBox="-42 -42 84 84" overflow="visible" aria-hidden="true">${station(0, 0, k, s.spectator, { s: k === 'S/F' ? 2900 : 2000, fs: k === 'S/F' ? 34 : 28, badge: false, colors: c.colors, link: false })}</svg>
@@ -172,7 +177,7 @@ export function stCard(c: Ctx, k: string, print = false) {
             ? `${race} cutoff ${esc(time)} at mile ${esc(mile)} — runners must leave by this time`
             : `${race} at mile ${esc(mile)}`;
       const dot = kind === 'start' ? '<span class="stc-dot stc-dot-g" aria-hidden="true"></span>' : kind === 'cutoff' ? '<span class="stc-dot stc-dot-r" aria-hidden="true"></span>' : '';
-      return `<li class="cutv${j ? '' : ' cut1'}${kind ? ' cut-' + kind : ''}"><span class="cutdot">${dot}</span><span class="cutline">${line}</span></li>`;
+      return `<li class="cutv${j ? '' : ' cut1'}${kind ? ' cut-' + kind : ''}" data-race="${esc(r)}"><span class="cutdot">${dot}</span><span class="cutline">${line}</span></li>`;
     })).join('');
     const photo = a.photo ? `<img src="${esc(a.photo)}" alt="${esc(s.name)} aid station">` : `<div class="ph-empty">${icon('pin')}<span>Photo coming soon</span></div>`;
     const title = (print || k === 'S/F') ? s.name : `${k} · ${s.name}`;

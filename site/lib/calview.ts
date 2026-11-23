@@ -99,7 +99,11 @@ export function renderCalendar(c: Ctx) {
   return `<div class="cv">
   <div class="cv-head">${SAVE_LINKS}<div class="cv-title-row"><div class="cv-title"><b>Race calendar</b><span class="cv-date cv-web">Upcoming events · times CT</span><span class="cv-date cv-pr">From race day forward · times CT</span></div><button type="button" class="cv-fsbtn" data-cal-fs aria-label="Show all calendar events">${icon('expand')} <span class="cv-fsbtn-lab">Show all</span></button><button type="button" class="cv-fsclose" data-cal-fs-close aria-label="Close full screen calendar">${icon('x')} Close</button></div></div>
   <div class="cv-filters" aria-label="Filter the calendar">${dist}${catsRow}</div>
+  <div class="cv-list">
   <div class="cv-scroll" tabindex="0" aria-label="Race calendar events">${agenda}<p class="cv-empty" hidden>No upcoming events.</p></div>
+  <div class="cv-more" hidden aria-hidden="true"><div class="cv-more-fade"></div><button type="button" class="cv-more-btn" aria-label="More events below">${icon('chevd')}</button></div>
+  </div>
+  ${CAL_LINKS}
   ${grid}${DROP_NOTE_PRINT}
 </div>`;
 }

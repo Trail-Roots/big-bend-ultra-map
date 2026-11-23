@@ -17,7 +17,7 @@ svg .legend path{fill:none}
 svg .stnum{fill:#fff;font-weight:700}
 .topnav{display:flex;gap:1rem;align-items:center;padding:.5rem 1rem;background:#fff;border-bottom:1px solid #ddd;flex-wrap:wrap}
 .topnav a{color:var(--ink);text-decoration:none}.topnav a[aria-current]{font-weight:700;border-bottom:2px solid var(--ink)}
-/* Standard text nav (not pill buttons): icon + short label — Distances, Aid stations, Venue, Lodging, Calendar, Flow */
+/* Standard text nav: Overview, Distances, Aid stations, Venue, Lodging, Calendar, Flow */
 .sitenav{display:flex;align-items:center;gap:0 .95rem;flex:1;min-width:0;overflow-x:auto;overflow-y:hidden;flex-wrap:nowrap;-webkit-overflow-scrolling:touch}
 .sitenav a{flex:none;display:inline-flex;align-items:center;gap:.35em;white-space:nowrap;color:inherit;text-decoration:none;font:600 13px/1.2 system-ui,sans-serif;padding:6px 0;border-bottom:2px solid transparent}
 .sitenav a:hover{border-bottom-color:#bbb}
@@ -34,8 +34,9 @@ html body .sitenav a svg.ic{width:15px!important;height:15px!important;flex:none
   html body .sitenav a svg.ic{width:14px!important;height:14px!important}
 }
 @media screen and (max-width:420px){
-  .sitenav{gap:0 .6rem}
-  .sitenav a{font-size:12px}
+  .sitenav{gap:0 .48rem}
+  .sitenav a{font-size:11.5px;gap:.22em}
+  html body .sitenav a svg.ic{width:13px!important;height:13px!important}
 }
 .brand{display:flex;align-items:center;gap:.4rem;font-weight:700}.brand img{height:28px}
 .printctl{margin-left:auto;display:flex;gap:.4rem;align-items:center}.printctl a,.printctl button{font:inherit;font-size:.9rem;padding:.25rem .7rem;border:1px solid #888;border-radius:4px;background:#fff;color:var(--ink);text-decoration:none;cursor:pointer}.printctl a.pdf{background:var(--ink);color:#fff;border-color:var(--ink)}
@@ -420,7 +421,7 @@ table.st-timing tr.cutv{display:table-row;margin:0}table.st-timing th,table.st-t
 .cv-tip::first-line{font-weight:700}
 .calbox .callinks{margin-top:6px;justify-content:flex-end}.calbox .callinks svg.dlico{width:.8em;height:.8em;flex:none;box-shadow:none;display:inline-block}
 /* screen paper view: the calendar fills the slot under the elevation chart down to the map bottom; list scrolls inside the box */
-@media screen and (min-width:1100px){html .sec-map .pg1 .calbox{position:absolute;margin:0;overflow:hidden}html .sec-map .pg1 .calbox .vw{height:100%;min-height:0;gap:0}html .sec-map .pg1 .calbox .vw-pane.on,html .sec-map .pg1 .calbox .vw-cal{flex:1;min-height:0;height:100%;display:flex;flex-direction:column}html .sec-map .pg1 .calbox .cv,html .sec-map .pg1 .calbox .vw-cal .cv{flex:1;min-height:0;height:auto;max-height:100%}html .sec-map .pg1 .calbox .cv-scroll{overflow-x:hidden;overflow-y:auto;overscroll-behavior:auto}html .sec-map .pg1 .calbox .callinks{display:none!important}html .sec-map .pg1 .cv{--hh:44px}}
+@media screen and (min-width:1100px){html .sec-map .pg1 .calbox{position:absolute;margin:0;overflow:hidden}html .sec-map .pg1 .calbox .vw{height:100%;min-height:0;gap:0}html .sec-map .pg1 .calbox .vw-pane.on,html .sec-map .pg1 .calbox .vw-cal{flex:1;min-height:0;height:100%;display:flex;flex-direction:column}html .sec-map .pg1 .calbox .cv,html .sec-map .pg1 .calbox .vw-cal .cv{flex:1;min-height:0;height:auto;max-height:100%;display:flex;flex-direction:column}html .sec-map .pg1 .calbox .cv-list{flex:1;min-height:0}html .sec-map .pg1 .calbox .cv-scroll{overflow-x:hidden;overflow-y:auto;overscroll-behavior:auto}html .sec-map .pg1 .calbox .callinks{position:static;display:flex;flex:none;margin:.4cqw 0 0;font-size:.75cqw;flex-wrap:nowrap;white-space:nowrap;overflow:hidden}html .sec-map .pg1 .cv{--hh:44px}}
 @media screen and (min-width:1001px) and (max-width:1099px){.sheet .calbox{grid-column:2;grid-row:4}}
 @media screen and (max-width:1000px){.calbox{order:2}}
 @media screen and (max-width:560px){.cv{--hh:66px;height:470px;font-size:11.5px}.cv-item{grid-template-columns:minmax(0,1fr)}.cv-item .cv-l{grid-column:1}.cv-blk .cv-s{white-space:normal;overflow-wrap:anywhere;line-height:1.15;font-size:10.5px}.cv-blk.cv-short{flex-direction:column;gap:0}.cv-blk.cv-short .cv-t{display:none}.cv-col{left:46px}.cv-hr span{width:40px}.cv-allday{margin-left:46px}}
@@ -523,14 +524,15 @@ html body .topnav .navlayers > summary svg,html body .topnav .printctl a.pdf svg
 .cv-det[hidden]{display:none!important}.cv-det ol,.cv-det ul{margin:.3em 0;padding-left:1.4em}.cv-det p{margin:.3em 0}.cv-desc a{color:#2a2a2a;text-decoration:underline}.cv-dloc b{margin-right:4px}.cv-dnone{color:#666}
 @media print{.cv-det{display:none!important}}
 /* site-plan previews (Race parking / Race finish views) + full-screen plan lightbox */
-dialog.planbox .lb-body{flex-direction:column;align-items:center;padding:60px 12px 24px}
-dialog.planbox .pl-one,dialog.planbox .pl-site{width:min(1400px,100%);background:#fff;border-radius:8px;padding:12px 16px;box-sizing:border-box}dialog.planbox .pl-one[hidden]{display:none}
+dialog.planbox .lb-body{flex-direction:column;align-items:stretch;justify-content:flex-start;padding:56px 12px 16px;height:100%;box-sizing:border-box}
+dialog.planbox .pl-one,dialog.planbox .pl-site{width:min(1600px,100%);margin:0 auto;background:#fff;border-radius:8px;padding:12px 16px;box-sizing:border-box;display:flex;flex-direction:column;flex:1;min-height:0}dialog.planbox .pl-one[hidden]{display:none}
 dialog.planbox .pl-one h3,dialog.planbox .pl-site h3{margin:0 0 8px;font-size:1rem}
-dialog.planbox .pl-site .pl-title{margin:0 0 10px;font-size:1.15rem}
-dialog.planbox .pl-site .pl-block{margin:18px 0 0}
-dialog.planbox .pl-site .pl-block:first-of-type{margin-top:12px}
-dialog.planbox .fp-zoom{width:min(100%,calc((100vh - 200px) * var(--ar)))!important;margin:0 auto}
-@media (max-width:699px){dialog.planbox .lb-body{padding:60px 4px 80px}dialog.planbox .pl-one{padding:8px}dialog.planbox .fp-zoom{width:100%!important}}
+dialog.planbox .pl-site .pl-title{margin:0 0 8px;font-size:1.15rem;flex:none}
+dialog.planbox .pl-site .pl-block{margin:8px 0 0;display:flex;flex-direction:column;flex:1;min-height:0}
+dialog.planbox .pl-site .pl-block:first-of-type{margin-top:8px}
+dialog.planbox .fp-zoom{flex:1 1 auto;width:100%!important;max-width:none!important;height:auto;min-height:min(52vh, calc(var(--host-vh, 1vh) * 52));margin:0 auto}
+dialog.planbox .fp-zoom .fp-stage,dialog.planbox .fp-zoom img{width:100%;height:auto}
+@media (max-width:699px){dialog.planbox .lb-body{padding:56px 4px 16px}dialog.planbox .pl-one,dialog.planbox .pl-site{padding:8px}dialog.planbox .fp-zoom{width:100%!important;min-height:min(48vh, calc(var(--host-vh, 1vh) * 48))}}
 @media (max-width:560px){.vw-bar{justify-content:space-between}}
 .cv-dgrp .cv-det ol{list-style:decimal}.cv-dgrp .cv-det ul{list-style:disc}
 @media (min-width:700px){.printctl .navlayers .lpanel{left:auto;right:0}}
@@ -543,8 +545,8 @@ dialog#racebox .lb-body{padding-top:60px} /* clear of the close / prev / next co
 @media print{.cv-mapcard{display:none!important}}
 /* views box: Race calendar and Operations occupy the identical box; the Operations chart is rendered at that box's aspect (no letterbox) */
 .vw-tlbox,.vw-tlv{width:100%;height:100%}.vw-tlv svg.timeline{display:block;width:100%!important;height:100%!important;max-width:none!important;max-height:none!important}
-@media screen and (max-width:1099px){.vw-pane.on{display:flex;flex-direction:column;min-height:0}.vw-cal .callinks{flex:none}.vw-cal .cv{height:auto!important;max-height:none}.vw-cal .cv-scroll{flex:none;height:17.5rem;max-height:17.5rem;overflow-x:hidden;overflow-y:auto;overscroll-behavior:auto}.vw-tlbox,.vw-tlv{height:auto}} /* below 1100px: calendar sizes to head + filters + ~3-4 event rows (list scrolls; leftover gestures chain to the host) */
-@media screen and (max-width:560px){.vw-cal .cv-scroll{height:23rem;max-height:23rem}}
+@media screen and (max-width:1099px){.vw-pane.on{display:flex;flex-direction:column;min-height:0}.vw-cal .callinks{flex:none}.vw-cal .cv{height:auto!important;max-height:none}.vw-cal .cv-list{flex:none;height:17.5rem;max-height:17.5rem;position:relative}.vw-cal .cv-scroll{flex:1;height:auto;max-height:none;overflow-x:hidden;overflow-y:auto;overscroll-behavior:auto}.vw-tlbox,.vw-tlv{height:auto}} /* below 1100px: calendar sizes to head + filters + ~3-4 event rows (list scrolls; leftover gestures chain to the host) */
+@media screen and (max-width:560px){.vw-cal .cv-list{height:23rem;max-height:23rem}}
 
 /* lightboxes sit above everything in our page (also inside the embed's full-window iframe) */
 dialog.lightbox{z-index:2147483647}dialog.lightbox::backdrop{z-index:2147483646}
@@ -799,6 +801,17 @@ a.vw-plan{text-decoration:none}
   .cv-frow[aria-label="Distances"] .cv-chip{flex:0 0 auto;max-width:none;justify-content:center}
 }
 @media screen and (min-width:740px){.cv-savelinks{display:none!important}}
+/* more-events fade + chevron: only when the list can scroll further down; fade never captures pointer */
+.cv-list{position:relative;flex:1;min-height:0;display:flex;flex-direction:column}
+.cv-more{position:absolute;left:0;right:0;bottom:0;height:3.2rem;z-index:5;pointer-events:none;display:flex;align-items:flex-end;justify-content:center;padding-bottom:2px}
+.cv-more[hidden]{display:none!important}
+.cv-more-fade{position:absolute;inset:0;background:linear-gradient(to bottom,rgba(255,255,255,0),#fff);pointer-events:none}
+.cv-more-btn{position:relative;z-index:1;pointer-events:auto;border:0;background:transparent;color:#555;padding:0 6px;cursor:pointer;line-height:0}
+.cv-more-btn svg{width:22px;height:22px;display:block}
+.cv-more-btn:hover,.cv-more-btn:focus-visible{color:#111;outline:none}
+@media print{.cv-more{display:none!important}}
+/* desktop Show all: keep the original Apple/Google subscribe row visible at the bottom of the overlay */
+@media screen and (min-width:740px){html.cal-fs .cv .callinks{display:flex!important;flex:none;margin:8px 10px 10px;font-size:12px;flex-wrap:wrap;white-space:normal;overflow:visible;justify-content:flex-end}}
 /* Show all / full-screen calendar control; same DOM in the overlay so filters stay in sync */
 .cv{position:relative}
 .cv-fsclose{display:none}
@@ -823,6 +836,7 @@ html.cal-fs .cv-flab,html.cal-fs .sec-map .pg1 .calbox .cv-flab{position:static;
 html.cal-fs .cv-frow,html.cal-fs .sec-map .pg1 .calbox .cv-frow{position:static;gap:6px}
 html.cal-fs .cv-chip,html.cal-fs .sec-map .pg1 .calbox .cv-chip{position:relative;flex:none;max-width:none;font-size:12.5px;padding:6px 10px;min-height:32px;gap:4px;justify-content:flex-start}
 html.cal-fs .cv-chip input,html.cal-fs .sec-map .pg1 .calbox .cv-chip input{position:static;width:auto;height:auto;margin:0;overflow:visible;clip:auto;clip-path:none}
+html.cal-fs .cv-list,html.cal-fs .vw-cal .cv-list,html.cal-fs .sec-map .pg1 .calbox .cv-list{flex:1;min-height:0;height:auto;max-height:none}
 html.cal-fs .cv-scroll,html.cal-fs .vw-cal .cv-scroll,html.cal-fs .sec-map .pg1 .calbox .cv-scroll{flex:1;min-height:0;height:auto;max-height:none;overflow:auto}
 html.cal-fs .cv:fullscreen,html.cal-fs .cv:-webkit-full-screen{position:static;inset:auto;width:100%;height:100%;background:#fff}
 /* paper-view calendar slot is short: keep filters compact so the event list keeps room */

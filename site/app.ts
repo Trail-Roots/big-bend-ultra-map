@@ -4,6 +4,47 @@ import { icon } from './lib/icons';
 import { placeTip } from './tip';
 // race filter (checkboxes in the Map layers box): which races are shown
 const raceOn = (k: string) => !document.documentElement.dataset['off' + k.replace(/\W/g, '')];
+const allRaceKeys = () => [...new Set([...document.querySelectorAll<HTMLInputElement>('input[data-race]')].map((i) => i.dataset.race!))];
+const selectedRaceKeys = () => { const all = allRaceKeys(), p = [...new Set([...document.querySelectorAll<HTMLInputElement>('input[data-race]')].filter((i) => i.checked).map((i) => i.dataset.race!))]; return p.length ? p : all; };
+/** fit the overview map to the selected routes (all / none → default overview zoom) */
+function fitMapToSelection() {
+  const all = allRaceKeys(), on = selectedRaceKeys(), mm = document.querySelector<SVGSVGElement>('svg.mainmap');
+  const sub = on.length > 0 && on.length < all.length, bb = [Infinity, Infinity, -Infinity, -Infinity];
+  document.querySelectorAll<SVGGElement>('.mainmap g.raceroute').forEach((g) => {
+    if (sub && on.includes(g.dataset.rc!)) { const b = g.dataset.bb!.split(',').map(Number); bb[0] = Math.min(bb[0], b[0]); bb[1] = Math.min(bb[1], b[1]); bb[2] = Math.max(bb[2], b[2]); bb[3] = Math.max(bb[3], b[3]); }
+  });
+  if (mm) zoomToBox(mm, sub && Number.isFinite(bb[0]) ? { x0: bb[0], y0: bb[1], x1: bb[2], y1: bb[3] } : null);
+}
+/** hide race cards, station cards, timing rows, drop-bag labels, and map station markers that don't apply to the shared race selection */
+function syncRaceChrome() {
+  const all = allRaceKeys(), on = all.filter((k) => raceOn(k)), sel = on.length ? on : all;
+  const filtered = on.length > 0 && on.length < all.length;
+  document.querySelectorAll<HTMLElement>('.racecard[data-course]').forEach((el) => { el.hidden = filtered && !sel.includes(el.dataset.course!); });
+  document.querySelectorAll<HTMLElement>('.stcard-brief[data-races]').forEach((el) => {
+    const rs = (el.dataset.races || '').trim().split(/\s+/).filter(Boolean);
+    el.hidden = filtered && !rs.some((r) => sel.includes(r));
+  });
+  document.querySelectorAll<HTMLElement>('.st-cuts [data-race], .st-timing [data-race], .cutv[data-race]').forEach((el) => {
+    el.hidden = filtered && !sel.includes(el.dataset.race!);
+  });
+  document.querySelectorAll<HTMLElement>('.am-bags[data-races]').forEach((el) => {
+    const rs = (el.dataset.races || '').trim().split(/\s+/).filter(Boolean);
+    const vis = filtered ? rs.filter((r) => sel.includes(r)) : rs;
+    const yes = el.querySelector<HTMLElement>('.am-bag-yes'), no = el.querySelector<HTMLElement>('.am-bag-no'), races = el.querySelector<HTMLElement>('.am-bag-races');
+    if (races) races.innerHTML = vis.map((k) => `<span data-race="${k}">${k}</span>`).join(', ');
+    const show = vis.length > 0;
+    if (yes) yes.hidden = !show; if (no) no.hidden = show;
+    el.classList.toggle('am-y', show); el.classList.toggle('am-n', !show);
+  });
+  const bySt: Record<string, string[]> = {};
+  document.querySelectorAll<HTMLElement>('.stcard-brief[data-races][data-station]').forEach((el) => { bySt[el.dataset.station!] = (el.dataset.races || '').trim().split(/\s+/).filter(Boolean); });
+  document.querySelectorAll<SVGElement>('.mainmap .stpick[data-station], .mainmap .stlabel[data-station]').forEach((el) => {
+    const rs = bySt[el.dataset.station!]; if (!rs) return;
+    el.style.display = (!filtered || rs.some((r) => sel.includes(r))) ? '' : 'none';
+  });
+}
+document.addEventListener('bbu-sync-race', syncRaceChrome);
+
 type Row = { b: string; l?: string; c?: string };
 /** tooltip text with a clear hierarchy: bold value / title, then a lighter label */
 const rich = (txt: SVGTextElement, rows: Row[], lh: number, x = 0, fsz?: number, y0 = 0) => { const NS2 = 'http://www.w3.org/2000/svg'; txt.textContent = ''; txt.setAttribute('font-weight', '400');
@@ -218,13 +259,34 @@ if (hdEl && prof) {
   // auto-play (web only): slow sweep of the race-day clock, looping; off for reduced motion; pause persisted
   // play window: first race start → last runner off course (latest finish across all courses); loops back to the first start
   // loop window: first start -> last runner off course of the VISIBLE races only (race filter), 10 min padding each side
-  let PA = 0, PB = 1; const span = () => { const CS = (Object.entries(TM.courses) as [string, any][]).filter(([k]) => raceOn(k)).map(([, C]) => C); const S = CS.length ? CS : Object.values(TM.courses) as any[];
-    PA = Math.min(...S.map((C) => C.start)) - 10; PB = Math.max(...S.map((C) => C.start + 2 + Math.max(...C.T))) + 10; }; span(); document.addEventListener('change', (e) => { if ((e.target as Element).matches?.('input[data-race], input[data-race-all]')) span(); });
+  // loop window: earliest start → latest official finish cutoff of the visible races (all races if none/All selected)
+  let PA = 0, PB = 1;
+  const finishCutoff = (k: string, C: any) => {
+    const cuts = (HD.courses as any)[k]?.cut as [number, number, string][] | undefined;
+    if (cuts?.length) return C.start + cuts[cuts.length - 1][1];
+    return C.start + 2 + Math.max(...C.T);
+  };
+  const span = () => {
+    const entries = (Object.entries(TM.courses) as [string, any][]).filter(([k]) => raceOn(k));
+    const S = entries.length ? entries : (Object.entries(TM.courses) as [string, any][]);
+    PA = Math.min(...S.map(([, C]) => C.start));
+    PB = Math.max(...S.map(([k, C]) => finishCutoff(k, C)));
+    if (!(PB > PA)) PB = PA + 1;
+  };
+  span(); document.addEventListener('change', (e) => { if ((e.target as Element).matches?.('input[data-race], input[data-race-all]')) span(); });
   document.querySelector('svg.profile')?.addEventListener('click', () => setTimeout(span, 0));
   const LOOP_S = 90, KEY = 'bbu-autoplay-paused';
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
   let paused = localStorage.getItem(KEY) === '1', user = false, t0 = 0, f0 = 0, raf = 0, last = 0;
   const running = () => !reduced && !paused && !user && !document.hidden && !matchMedia('print').matches;
+  const clampClock = () => {
+    if (tShown < 0) return;
+    const t = Math.min(PB, Math.max(PA, tShown));
+    f0 = (t - PA) / (PB - PA || 1); t0 = 0;
+    if (t !== tShown) setTime(t);
+  };
+  document.addEventListener('racesel', () => { span(); clampClock(); });
+  main.addEventListener('bbu-map-reset', (e) => { e.preventDefault(); span(); fitMapToSelection(); f0 = 0; t0 = 0; setTime(PA); });
   const tick = (t: number) => {
     raf = 0; if (!running()) return;
     if (!t0) t0 = t - f0 * LOOP_S * 1000;
@@ -327,6 +389,11 @@ function scrollToTarget(target: HTMLElement, behavior: ScrollBehavior = 'smooth'
   if (inEmbed) parent.postMessage({ type: 'bbu-scroll-to', top, behavior }, '*');
   else window.scrollTo({ top, behavior });
 }
+/** Top of the embed / map, sitting just below the host (Squarespace) header. */
+function scrollToOverview(behavior: ScrollBehavior = 'smooth') {
+  if (inEmbed) parent.postMessage({ type: 'bbu-scroll-to', top: 0, behavior }, '*');
+  else window.scrollTo({ top: 0, behavior });
+}
 function setRaceView(k: 'cal' | 'tl') {
   const pg = document.querySelector<HTMLElement>('.vw'); if (!pg) return;
   pg.dataset.view = k;
@@ -417,7 +484,7 @@ if (document.documentElement.classList.contains('embed') && parent !== window) {
       const sums: Record<string, number[]> = Object.fromEntries(Object.keys(heatSrc).map((st) => [st, sum(st)])), G = Math.max(1, ...Object.entries(sums).filter(([st]) => st !== 'S/F').flatMap(([, a]) => a));
       tlsvg.querySelectorAll<SVGGElement>('g.tlst').forEach((g) => { const st = g.dataset.station!, a = sums[st]; if (!a) return; const m = Math.max(1, ...a); void G;
         g.querySelectorAll<SVGRectElement>('rect.hc').forEach((rc) => { const v = a[+rc.dataset.i!] || 0; rc.style.display = v ? '' : 'none'; rc.setAttribute('fill-opacity', (0.06 + 0.9 * Math.sqrt(Math.min(1, v / m))).toFixed(2)); }); }); }
-    void NSf; void HDt; if (!force) document.dispatchEvent(new Event('racesel'));
+    void NSf; void HDt; syncRaceChrome(); if (!force) document.dispatchEvent(new Event('racesel'));
   };
   document.querySelector<HTMLInputElement>('input[data-layer="zoom"]')?.addEventListener('change', (e) => { if (e.isTrusted) (e.target as HTMLInputElement).dataset.manual = '1'; });
   document.addEventListener('change', (e) => {
@@ -446,6 +513,7 @@ if (document.documentElement.classList.contains('embed') && parent !== window) {
   const openStation = (k: string) => { if (!sbox) return; curSt = k; const t = document.getElementById(`st-${k === 'S/F' ? 'SF' : k}`) as HTMLTemplateElement | null; if (!t) return;
     const body = sbox.querySelector('.lb-body')!; body.innerHTML = ''; body.appendChild(t.content.cloneNode(true));
     stMap(body.querySelector<HTMLElement>('.st-map'), k, 0.75);
+    document.dispatchEvent(new Event('bbu-sync-race'));
     if (!sbox.open) { embedModal(sbox, true); sbox.showModal(); } };
   // zoomed map: a copy of the main map framed on station k (zoom transform reset); hh = half height / half width of the frame
   /* zf = main frame width / zoomed frame half-width: 6 = 3x the main map's base scale, where its scale bar reads 1 mi (zoom.ts rule: 1 mi from 2.625x up to 5.25x) */
@@ -574,9 +642,11 @@ if (document.documentElement.classList.contains('embed') && parent !== window) {
   }, true);
   const fromHash = () => { const h = decodeURIComponent(location.hash); let m;
     if (h === '#drop-bags') goDropBags();
+    else if (h === '#overview') { markSitenav('#overview'); scrollToOverview(); }
     else if (h === '#calendar' || h === '#flow') { setRaceView(h === '#flow' ? 'tl' : 'cal'); markSitenav(h); const box = document.getElementById('pb-cal'); if (box) scrollToTarget(box); }
     else if (h === '#distances' || h === '#stations') { const el = document.getElementById(h.slice(1)); if (el) { markSitenav(h); scrollToTarget(el); } }
     else if (h === '#venue-map') { markSitenav(h); document.dispatchEvent(new Event('bbu-open-plan')); }
+    else if (!h || h === '#') { markSitenav('#overview'); }
     else if ((m = /^#course-(.+)$/.exec(h))) openRace(m[1]);
     else if ((m = /^#station-(.+)$/.exec(h))) {
     const go = () => openStation(m[1]);
@@ -590,7 +660,7 @@ if (document.documentElement.classList.contains('embed') && parent !== window) {
 }
 
 
-// ---- Venue map lightbox: parking and finish area plans together in one view ----
+// ---- Venue map lightbox: parking plan only, zoomable ----
 { const pb = document.getElementById('planbox') as HTMLDialogElement | null;
   if (pb) {
     const fit = () => { requestAnimationFrame(() => pb.querySelectorAll<HTMLButtonElement>('.fp-zoomctl button[data-z="reset"]').forEach((b) => b.click())); };
@@ -637,8 +707,21 @@ if (document.documentElement.classList.contains('embed') && parent !== window) {
         const raceOk = !rs.length || rs.some((r) => !offR(r));
         const on = +e.dataset.b! >= now && raceOk && catOn(e.dataset.cat); e.hidden = !on; if (on) k++; }); g.hidden = !k; n += k; });
       sc.querySelector<HTMLElement>('.cv-empty')!.hidden = n > 0;
-      if (!document.documentElement.classList.contains('cal-fs')) sc.scrollTop = 0; };
+      if (!document.documentElement.classList.contains('cal-fs')) sc.scrollTop = 0;
+      syncMore(); };
+    const more = cv.querySelector<HTMLElement>('.cv-more');
+    const moreBtn = cv.querySelector<HTMLButtonElement>('.cv-more-btn');
+    const syncMore = () => {
+      if (!more) return;
+      const leftover = sc.scrollHeight - sc.scrollTop - sc.clientHeight;
+      more.hidden = leftover <= 2;
+      more.setAttribute('aria-hidden', String(more.hidden));
+    };
+    sc.addEventListener('scroll', syncMore, { passive: true });
+    addEventListener('resize', syncMore);
+    moreBtn?.addEventListener('click', () => { sc.scrollBy({ top: Math.max(80, sc.clientHeight * 0.6), behavior: 'smooth' }); });
     filter(); setInterval(filter, 60000);
+    requestAnimationFrame(syncMore);
     // calendar shows the selected races' events + universal ones (title names no race); all races selected = every event
     document.addEventListener('racesel', filter); // one shared race selection: elevation legend, Layers / calendar distance checkboxes -> map, elevation, timeline, calendar
     document.addEventListener('change', (e) => {
@@ -685,6 +768,13 @@ if (document.documentElement.classList.contains('embed') && parent !== window) {
       const href = a.getAttribute('href') || '';
       if (a.target === '_blank') return; // Accommodations
       if (href === '#venue-map') return; // handled by the plan lightbox
+      if (href === '#overview') {
+        e.preventDefault();
+        markSitenav('#overview');
+        history.replaceState(null, '', href);
+        scrollToOverview();
+        return;
+      }
       if (href === '#calendar' || href === '#flow' || href === '#distances' || href === '#stations') {
         e.preventDefault();
         if (href === '#calendar' || href === '#flow') setRaceView(href === '#flow' ? 'tl' : 'cal');
@@ -700,9 +790,14 @@ if (document.documentElement.classList.contains('embed') && parent !== window) {
       const pb = document.getElementById('planbox'); if (pb instanceof HTMLDialogElement && pb.open) { markSitenav('#venue-map'); return; }
       const mid = innerHeight * 0.35;
       const vis = (el: HTMLElement | null) => { if (!el) return false; const r = el.getBoundingClientRect(); return r.bottom > mid && r.top < innerHeight * 0.7; };
+      const mainEl = document.getElementById('pb-main');
+      const navH = document.querySelector<HTMLElement>('.topnav')?.getBoundingClientRect().bottom ?? 0;
+      const atTop = mainEl ? mainEl.getBoundingClientRect().top <= navH + 80 : (window.scrollY || 0) < 40;
       if (vis(st)) markSitenav('#stations');
       else if (vis(dist)) markSitenav('#distances');
+      else if (atTop) markSitenav('#overview');
       else if (vis(box)) markSitenav(document.querySelector<HTMLElement>('.vw')?.dataset.view === 'tl' ? '#flow' : '#calendar');
+      else markSitenav('#overview');
     };
     addEventListener('scroll', pick, { passive: true });
     if (inEmbed) addEventListener('message', (e) => { if (e.source === parent && e.data?.type === 'bbu-host-scroll') pick(); });
