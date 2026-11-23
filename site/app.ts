@@ -595,7 +595,8 @@ if (document.documentElement.classList.contains('embed') && parent !== window) {
         const rs = (e.dataset.race || '').trim().split(/\s+/).filter(Boolean);
         const raceOk = !rs.length || rs.some((r) => !offR(r));
         const on = +e.dataset.b! >= now && raceOk && catOn(e.dataset.cat); e.hidden = !on; if (on) k++; }); g.hidden = !k; n += k; });
-      sc.querySelector<HTMLElement>('.cv-empty')!.hidden = n > 0; };
+      sc.querySelector<HTMLElement>('.cv-empty')!.hidden = n > 0;
+      if (!document.documentElement.classList.contains('cal-fs')) sc.scrollTop = 0; };
     filter(); setInterval(filter, 60000);
     // calendar shows the selected races' events + universal ones (title names no race); all races selected = every event
     document.addEventListener('racesel', filter); // one shared race selection: elevation legend, Layers / calendar distance checkboxes -> map, elevation, timeline, calendar
@@ -655,7 +656,7 @@ if (document.documentElement.classList.contains('embed') && parent !== window) {
       reqFs(cv).then(() => { if (fsEl()) after(); else fallback(); }).catch(fallback); };
     const close = () => { if (!document.documentElement.classList.contains('cal-fs')) return;
       exitFs(); document.documentElement.classList.remove('cal-fs'); if (host) { host = false; if (inEmbed) parent.postMessage({ type: 'bbu-modal', open: false }, '*'); }
-      ph?.remove(); ph = null; document.querySelector<HTMLButtonElement>('[data-cal-fs]')?.focus(); dispatchEvent(new Event('resize')); };
+      ph?.remove(); ph = null; { const list = document.querySelector<HTMLElement>('#pb-cal .cv-scroll'); if (list) list.scrollTop = 0; } document.querySelector<HTMLButtonElement>('[data-cal-fs]')?.focus(); dispatchEvent(new Event('resize')); };
     document.querySelectorAll<HTMLButtonElement>('[data-cal-fs]').forEach((b) => b.addEventListener('click', open));
     document.querySelectorAll<HTMLButtonElement>('[data-cal-fs-close]').forEach((b) => b.addEventListener('click', close));
     addEventListener('keydown', (e) => { if ((e.key === 'Escape' || e.key === 'Esc') && document.documentElement.classList.contains('cal-fs')) { e.preventDefault(); close(); } });

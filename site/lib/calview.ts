@@ -91,7 +91,7 @@ export function renderCalendar(c: Ctx) {
   const dist = `<div class="cv-frow" role="group" aria-label="Distances"><span class="cv-flab">Distances</span><label class="cv-chip cv-chip-all"><input type="checkbox" data-race-all checked> All</label>${c.courses.order.map((k) => `<label class="cv-chip" style="--c:${c.courses.colors[k]}"><input type="checkbox" data-race="${esc(k)}"> ${esc(k)}</label>`).join('')}</div>`;
   const catsRow = `<div class="cv-frow" role="group" aria-label="Categories"><span class="cv-flab">Categories</span><label class="cv-chip cv-chip-all"><input type="checkbox" data-cat-all checked> All</label>${CAT_CHIPS.map((x) => `<label class="cv-chip"><input type="checkbox" data-cat="${esc(x.id)}"> <span class="cv-chip-ico" aria-hidden="true">${x.emoji}</span> ${esc(x.lab)}</label>`).join('')}</div>`;
   return `<div class="cv">
-  <button type="button" class="cv-fsbtn" data-cal-fs aria-label="Open the race calendar full screen">${icon('expand')}</button>
+  <button type="button" class="cv-fsbtn" data-cal-fs aria-label="Show all calendar events">${icon('expand')} <span class="cv-fsbtn-lab">Show all</span></button>
   <div class="cv-head">${SAVE_LINKS}<div class="cv-title"><b>Race calendar</b><span class="cv-date cv-web">Upcoming events · times CT</span><span class="cv-date cv-pr">From race day forward · times CT</span></div><button type="button" class="cv-fsclose" data-cal-fs-close aria-label="Close full screen calendar">${icon('x')} Close</button></div>
   <div class="cv-filters" aria-label="Filter the calendar">${dist}${catsRow}</div>
   <div class="cv-scroll" tabindex="0" aria-label="Race calendar events">${agenda}<p class="cv-empty" hidden>No upcoming events.</p></div>
