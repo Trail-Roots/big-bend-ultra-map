@@ -130,6 +130,7 @@ svg.mainmap,svg.mini{touch-action:pan-x pan-y}svg.panning{cursor:grabbing}
 /* ---------- ?view=embed ---------- */
 /* ?view=embed renders exactly the same paper layout; only the background behind the sheets is neutral (transparent) */
 html.embed,html.embed body,html.embed .sec.noprint{background:transparent!important}
+html.embed,html.embed body{overflow-x:hidden;overscroll-behavior:contain;overscroll-behavior-x:none}
 .cprofile{margin:.4rem 0 .8rem}
 /* ---------- wide / desktop: whole main map visible, fitted to the screen height ---------- */
 @media screen and (min-width:1001px){
@@ -233,8 +234,10 @@ html body svg.ic{width:1.15em!important;height:1.15em!important;max-width:none!i
 /* ---------- race cards (web, modeled on the Strava route cards on trailroots.com/sky-island); full pages open in a lightbox ---------- */
 @media screen{
   .sec-courses .cppages > .coursepage{display:none}
-  /* 5 race cards, never a lone card on the last row (Erik): 5 across on wide screens, 3+2 in between, 1 per row on phones (below) */
-  .racecards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;max-width:var(--SW,1200px);margin:24px auto;padding:0 1rem;box-sizing:border-box}
+  /* 5 race cards, never a lone card on the last row (Erik): 3+2 from 740px, two per row on phones. */
+  .racecards-wrap{max-width:var(--SW,1200px);margin:24px auto;padding:0 1rem;box-sizing:border-box;min-width:0}
+  .racecards-h,.stcards-h{margin:8px 0 12px;font:650 1.05rem/1.3 system-ui,-apple-system,"Segoe UI",sans-serif;color:#242428}
+  .racecards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;box-sizing:border-box;min-width:0}
   .racecard{background:#fff;border:1px solid #dcdcdc;border-radius:8px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 1px 3px #0000001a;font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
   .racecard .rc-open:not(.rc-full){display:block;padding:0;border:0;background:none;cursor:zoom-in;border-bottom:1px solid #eee}
   .racecard svg.rc-map{display:block;width:100%;height:auto}.racecard svg.rc-elev{display:block;width:100%;max-width:100%;height:76px;box-sizing:border-box;background:transparent;border:0;flex:none}
@@ -279,7 +282,7 @@ a.stlink{color:inherit;text-decoration:none}@media screen{a.stlink{border-bottom
 @media screen and (min-width:1100px){html .sec-courses .coursepage .cpheat figcaption{font-size:calc(var(--S) * .008)}}
 /* ---------- print fixes ---------- */
 @media print{
-  .racecards,.stcards-wrap,dialog.lightbox{display:none!important}
+  .racecards-wrap,.racecards,.stcards-wrap,dialog.lightbox{display:none!important}
   .cphead{flex-wrap:wrap!important;row-gap:2pt}html body .cphead h2{flex:1 0 100%!important;font-size:12pt!important;white-space:nowrap}.cphead .cplinks{margin-left:auto}
   .cpheat figcaption{font-size:7pt}.cpheat{margin-top:4pt}.cprofile{margin:.2rem 0 .3rem}
   .coursepage .cuttab td,.coursepage .cuttab th{padding:1.5pt 3pt}
@@ -376,10 +379,12 @@ table.st-timing tr.cutv{display:table-row;margin:0}table.st-timing th,table.st-t
 @media screen{.stripsbox .callinks{justify-content:flex-end}}@media screen and (min-width:1100px){html .sec-map .pg1 .stripsbox .callinks{left:auto;right:0}}
 /* ---------- race-day calendar (lib/calview.ts): day grid + agenda, neutral grays; race events carry a race-colour bar ---------- */
 .calbox{position:relative;min-width:0}
-.cv{--hh:48px;display:flex;flex-direction:column;background:#fff;border:1px solid #d4d4d4;border-radius:6px;overflow:hidden;font:400 12px/1.3 system-ui,sans-serif;color:#2a2a2a;height:520px}
+.cv{--hh:48px;display:flex;flex-direction:column;background:#fff;border:1px solid #d4d4d4;border-radius:6px;overflow:hidden;overflow-x:hidden;overscroll-behavior:contain;overscroll-behavior-x:none;touch-action:pan-y;font:400 12px/1.3 system-ui,sans-serif;color:#2a2a2a;height:520px}
 .cv-head{display:flex;align-items:center;justify-content:space-between;padding:6px 10px;border-bottom:1px solid #e2e2e2;background:#f4f4f4}
 .cv-title{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 10px}.cv-title b{font-size:13px;font-weight:650}.cv-date{color:#555;font-size:11.5px}
-.cv-scroll{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;position:relative;scroll-behavior:auto}
+.cv-scroll{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;overscroll-behavior-x:none;touch-action:pan-y;-webkit-overflow-scrolling:touch;position:relative;scroll-behavior:auto}
+.cv-scroll,.cv-scroll *{touch-action:pan-y;overscroll-behavior-x:none}
+.cv-item,.cv-dgrp,.cv-agenda,.cv-day,.cv-filters,.cv-frow{min-width:0;max-width:100%;overflow-x:hidden}
 .cv-day{position:sticky;top:0;z-index:4;background:#fff;border-bottom:1px solid #e2e2e2;padding:5px 10px;font-weight:650;font-size:11.5px;color:#3a3a3a}
 .cv-agenda ol{list-style:none;margin:0;padding:2px 0 6px}
 .cv-item{display:grid;grid-template-columns:8.6em minmax(0,1fr);column-gap:8px;padding:3px 10px 3px 7px;margin:1px 6px;border-left:3px solid var(--rc,#9a9a9a);border-radius:3px;cursor:default}
@@ -518,7 +523,8 @@ dialog#racebox .lb-body{padding-top:60px} /* clear of the close / prev / next co
 @media print{.cv-mapcard{display:none!important}}
 /* views box: Race calendar and Operations occupy the identical box; the Operations chart is rendered at that box's aspect (no letterbox) */
 .vw-tlbox,.vw-tlv{width:100%;height:100%}.vw-tlv svg.timeline{display:block;width:100%!important;height:100%!important;max-width:none!important;max-height:none!important}
-@media screen and (max-width:1099px){.vw-pane.on{display:flex;flex-direction:column;min-height:0}.vw-cal .callinks{flex:none}.vw-cal .cv{height:auto!important}.vw-tlbox,.vw-tlv{height:auto}} /* below 1100px the views box sizes to its container (the stacked calbox grid cell, height from content: no width- or screen-height-based box) */
+@media screen and (max-width:1099px){.vw-pane.on{display:flex;flex-direction:column;min-height:0}.vw-cal .callinks{flex:none}.vw-cal .cv{height:auto!important;max-height:none}.vw-cal .cv-scroll{flex:none;height:17.5rem;max-height:17.5rem;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;overscroll-behavior-x:none;touch-action:pan-y;-webkit-overflow-scrolling:touch}.vw-tlbox,.vw-tlv{height:auto}} /* below 1100px: calendar sizes to its box (head + filters + ~3-4 event rows), not the screen; the list scrolls inside */
+@media screen and (max-width:560px){.vw-cal .cv-scroll{height:23rem;max-height:23rem}}
 
 /* lightboxes sit above everything in our page (also inside the embed's full-window iframe) */
 dialog.lightbox{z-index:2147483647}dialog.lightbox::backdrop{z-index:2147483646}
@@ -541,13 +547,13 @@ dialog.lightbox{z-index:2147483647}dialog.lightbox::backdrop{z-index:2147483646}
 .cv-blk .cv-t{font-size:12px}
 .cv-tip{font-size:13px}}
 @media screen and (max-width:560px){.cv{font-size:13px;line-height:19px}
-.cv-head{padding:8px 12px}
+.cv-head{padding:8px 44px 8px 12px}
 .cv-day{padding:10px 12px}
 .cv-item{grid-template-columns:minmax(0,1fr);padding:4px 10px 4px 9px;margin:0 6px}
 .cv-allday{margin-left:50px}
 .cv-blk .cv-s{font-size:11.5px;line-height:14px}
 /* Race cards: two per row, tighter */
-.racecards{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:12px auto;padding:0 8px} /* phones: two per row (2+2+1) */
+.racecards-wrap{margin:12px auto;padding:0 8px}.racecards{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:0;padding:0} /* phones: two per row (2+2+1) */
 .racecard .rc-body{padding:7px 8px 8px;gap:6px}
 .racecard .rc-body h3{font-size:.86rem;line-height:18px;gap:.3rem;flex-wrap:wrap}
 .racecard .rc-stats{flex-wrap:wrap;gap:4px 10px}
@@ -650,7 +656,8 @@ a.vw-plan{text-decoration:none}
 }
 @media print{html body a[href*="strava.com"] svg.ic{display:inline-block!important}}
 @media screen and (max-width:899px){.rc-btns{flex-wrap:wrap!important}} /* narrow 3+2 cards: Strava | Join our club split button takes the second line instead of overflowing */
-@media screen and (max-width:739px){.racecards,.stcards{grid-template-columns:repeat(2,minmax(0,1fr))}} /* below ~740px: two per row, never one */
+@media screen and (max-width:739px){.racecards{grid-template-columns:repeat(2,minmax(0,1fr))}} /* race cards stay two per row on phones */
+@media screen and (max-width:739px){.stcards{grid-template-columns:minmax(0,1fr)}} /* aid stations: one per row on phones so the amenity list is not squeezed */
 @media screen and (max-width:390px){.racecard .rc-btns{flex-wrap:wrap!important;max-width:100%}.racecard .rc-btns .splitbtn{flex-wrap:wrap;max-width:100%;flex:1 1 auto}.racecard .rc-btns a{max-width:100%;box-sizing:border-box}}
 
 
@@ -658,7 +665,7 @@ a.vw-plan{text-decoration:none}
 @media screen{
   .stcards-wrap{max-width:var(--SW,1200px);margin:0 auto 24px;padding:0 1rem;box-sizing:border-box;min-width:0}
   .stcards-h{margin:8px 0 12px;font:650 1.05rem/1.3 system-ui,-apple-system,"Segoe UI",sans-serif;color:#242428}
-  .stcards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;min-width:0;align-items:stretch}
+  .stcards{display:grid;grid-template-columns:minmax(0,1fr);gap:14px;min-width:0;align-items:stretch}
   @media (min-width:740px){.stcards{grid-template-columns:repeat(3,minmax(0,1fr))}}
   .stcard-brief{position:relative;background:#fff;border:1px solid #dcdcdc;border-radius:8px;overflow:hidden;display:flex;flex-direction:column;min-width:0;max-width:100%;box-shadow:0 1px 3px #0000001a;box-sizing:border-box;cursor:pointer}
   .stcard-brief:hover,.stcard-brief:focus-within{border-color:#bdbdbd;box-shadow:0 2px 6px #00000024}
@@ -715,9 +722,10 @@ a.vw-plan{text-decoration:none}
 .stc-full:hover,.stc-full:focus-visible,.cv-fsbtn:hover,.cv-fsbtn:focus-visible{border-color:#242428;background:#f4f4f4;outline:2px solid #2a2a2a;outline-offset:2px}
 .stc-full svg.ic,.cv-fsbtn svg.ic{width:15px;height:15px;flex:none;display:block}
 @media screen and (max-width:560px){
-  .stcards-wrap{margin:0 auto 12px;padding:0 8px}
+  .racecards-wrap,.stcards-wrap{margin-left:auto;margin-right:auto;padding:0 8px}
+  .stcards-wrap{margin-top:0;margin-bottom:12px}
   .stcards{gap:8px}
-  .stcards-h{margin:4px 0 8px;font-size:.95rem}
+  .racecards-h,.stcards-h{margin:4px 0 8px;font-size:.95rem}
   .stc-head{padding:8px 34px 6px 8px;gap:6px}
   .stc-mapbtn{width:48px;height:48px}
   .stc-head .st-badge{width:32px;height:32px;margin-top:calc((.8rem * 1.25 - 32px) / 2)}
@@ -743,7 +751,7 @@ a.vw-plan{text-decoration:none}
 .cv-savelinks{display:none}
 @media print{.cv-filters,.cv-savelinks{display:none!important}}
 @media screen and (max-width:739px){
-  .cv-head{display:flex;flex-direction:column;align-items:stretch;gap:8px;padding:8px 8px 6px;box-sizing:border-box}
+  .cv-head{display:flex;flex-direction:column;align-items:stretch;gap:8px;padding:8px 44px 6px 8px;box-sizing:border-box}
   .cv-savelinks{display:flex;flex-direction:column;gap:6px;min-width:0}
   .cv-savehint{margin:0;font:650 12.5px/1.3 system-ui,sans-serif;color:#2a2a2a}
   .cv-savebtns{display:flex;gap:8px;min-width:0}
@@ -762,12 +770,12 @@ a.vw-plan{text-decoration:none}
   .cv-frow[aria-label="Distances"] .cv-chip{flex:0 0 auto;max-width:none;justify-content:center}
 }
 @media screen and (min-width:740px){.cv-savelinks{display:none!important}}
-/* desktop calendar: same top-right expand icon as the station cards; hidden on phones */
+/* calendar expand icon (same as the station cards); available on phones so a short 3-4 item list can open full screen */
 .cv{position:relative}
-.cv-fsbtn,.cv-fsclose{display:none}
-@media screen and (min-width:740px){
+.cv-fsclose{display:none}
+@media screen{
   .cv-fsbtn{display:inline-flex}
-  .cv-head{padding-right:40px;box-sizing:border-box}
+  .cv-head{padding-right:44px;box-sizing:border-box}
 }
 @media print{.cv-fsbtn,.cv-fsclose{display:none!important}}
 html.cal-fs .cv-fsbtn{display:none!important}
@@ -787,7 +795,7 @@ html.cal-fs .cv-flab,html.cal-fs .sec-map .pg1 .calbox .cv-flab{position:static;
 html.cal-fs .cv-frow,html.cal-fs .sec-map .pg1 .calbox .cv-frow{position:static;gap:6px}
 html.cal-fs .cv-chip,html.cal-fs .sec-map .pg1 .calbox .cv-chip{position:relative;flex:none;max-width:none;font-size:12.5px;padding:6px 10px;min-height:32px;gap:4px;justify-content:flex-start}
 html.cal-fs .cv-chip input,html.cal-fs .sec-map .pg1 .calbox .cv-chip input{position:static;width:auto;height:auto;margin:0;overflow:visible;clip:auto;clip-path:none}
-html.cal-fs .cv-scroll{flex:1;min-height:0;overflow:auto}
+html.cal-fs .cv-scroll,html.cal-fs .vw-cal .cv-scroll{flex:1;min-height:0;height:auto;max-height:none;overflow:auto;overflow-x:hidden;overscroll-behavior:contain;overscroll-behavior-x:none;touch-action:pan-y}
 html.cal-fs .cv:fullscreen,html.cal-fs .cv:-webkit-full-screen{position:static;inset:auto;width:100%;height:100%;background:#fff}
 /* paper-view calendar slot is short: keep filters compact so the event list keeps room */
 @media screen and (min-width:1100px){
