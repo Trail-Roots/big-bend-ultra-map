@@ -763,6 +763,7 @@ if (document.documentElement.classList.contains('embed') && parent !== window) {
 // ---- top nav: Distances / Aid stations scroll to those sections; Race calendar / Flow switch the views box and scroll to it ----
 { const nav = document.querySelector<HTMLElement>('.sitenav');
   if (nav) {
+    let holdNav: string | null = null;
     nav.addEventListener('click', (e) => {
       const a = (e.target as Element).closest?.('a'); if (!(a instanceof HTMLAnchorElement) || !nav.contains(a)) return;
       const href = a.getAttribute('href') || '';
@@ -770,6 +771,7 @@ if (document.documentElement.classList.contains('embed') && parent !== window) {
       if (href === '#venue-map') return; // handled by the plan lightbox
       if (href === '#overview') {
         e.preventDefault();
+        holdNav = '#overview';
         markSitenav('#overview');
         history.replaceState(null, '', href);
         scrollToOverview();
@@ -780,6 +782,7 @@ if (document.documentElement.classList.contains('embed') && parent !== window) {
         if (href === '#calendar' || href === '#flow') setRaceView(href === '#flow' ? 'tl' : 'cal');
         const id = href === '#calendar' || href === '#flow' ? 'pb-cal' : href.slice(1);
         const el = document.getElementById(id);
+        holdNav = href;
         markSitenav(href);
         history.replaceState(null, '', href);
         if (el) scrollToTarget(el);
@@ -787,17 +790,22 @@ if (document.documentElement.classList.contains('embed') && parent !== window) {
     });
     const box = document.getElementById('pb-cal'), dist = document.getElementById('distances'), st = document.getElementById('stations');
     const pick = () => {
+      // Venue stays active while the lightbox is open
       const pb = document.getElementById('planbox'); if (pb instanceof HTMLDialogElement && pb.open) { markSitenav('#venue-map'); return; }
-      const mid = innerHeight * 0.35;
-      const vis = (el: HTMLElement | null) => { if (!el) return false; const r = el.getBoundingClientRect(); return r.bottom > mid && r.top < innerHeight * 0.7; };
+      // In the trailroots.com embed the iframe is as tall as the whole page, so iframe innerHeight / scrollY are useless.
+      // Use the sticky nav's bottom as the activation line: embed.js pins that nav just below the host header from bbu-host-scroll.
+      const line = document.querySelector<HTMLElement>('.topnav')?.getBoundingClientRect().bottom ?? 0;
+      const reached = (el: HTMLElement | null) => !!el && el.getBoundingClientRect().top <= line + 12;
       const mainEl = document.getElementById('pb-main');
-      const navH = document.querySelector<HTMLElement>('.topnav')?.getBoundingClientRect().bottom ?? 0;
-      const atTop = mainEl ? mainEl.getBoundingClientRect().top <= navH + 80 : (window.scrollY || 0) < 40;
-      if (vis(st)) markSitenav('#stations');
-      else if (vis(dist)) markSitenav('#distances');
-      else if (atTop) markSitenav('#overview');
-      else if (vis(box)) markSitenav(document.querySelector<HTMLElement>('.vw')?.dataset.view === 'tl' ? '#flow' : '#calendar');
-      else markSitenav('#overview');
+      const calBeside = !!(mainEl && box && Math.abs(mainEl.getBoundingClientRect().top - box.getBoundingClientRect().top) < 80);
+      let href = '#overview';
+      if (box && !calBeside && reached(box)) href = document.querySelector<HTMLElement>('.vw')?.dataset.view === 'tl' ? '#flow' : '#calendar';
+      if (reached(dist)) href = '#distances';
+      if (reached(st)) href = '#stations';
+      // Calendar / Flow share the overview screen on desktop (beside the map): keep a click until a lower section reaches the line
+      if (holdNav && holdNav !== href && (holdNav === '#calendar' || holdNav === '#flow') && href === '#overview') { markSitenav(holdNav); return; }
+      holdNav = null;
+      markSitenav(href);
     };
     addEventListener('scroll', pick, { passive: true });
     if (inEmbed) addEventListener('message', (e) => { if (e.source === parent && e.data?.type === 'bbu-host-scroll') pick(); });
