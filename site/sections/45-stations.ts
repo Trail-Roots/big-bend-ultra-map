@@ -147,27 +147,40 @@ export function stCardsHtml(c: Ctx) {
 
 // secondary, subtler named-place link (the primary link is always coordinates); none where no valid named place exists
 const NEAR: Record<string, string> = { 'S/F': 'Barton Warnock Visitor Center', '2': 'West Contrabando Trailhead', '3': 'Whit-Roy Cinnabar Mine', '5': 'Paso al Solitario' };
-/** '5:30 AM' -> '\u20075:30a' (hour padded with a figure space so every time lines up digit for digit) */
-const sh = (t: string) => t.replace(/^(\d{1,2}):(\d\d) ?([AP])M$/i, (_, h, m, a) => (h.length < 2 ? '\u2007' : '') + h + ':' + m + a.toLowerCase());
+/** Full clock for the detail view: "5:30 AM"; the 100K finish is "1:00 AM Mon". */
+function longCut(t: string, k: string): string {
+  if (k === 'S/F' && (t === '1:00 AM' || /Jan 18/.test(t))) return '1:00 AM Mon';
+  return t.replace(/, /g, ' ');
+}
 /** one station's detail block: the web lightbox template body, or (print) the same block (photo / placeholder and coordinates link included) */
 export function stCard(c: Ctx, k: string, print = false) {
     const s = c.stations.stations[k], a = (amen as any)[k] ?? {}, LL = s.link_lonlat ?? s.lonlat, ll = `${LL[1].toFixed(6)},${LL[0].toFixed(6)}`, llTxt = `${LL[1].toFixed(5)}, ${LL[0].toFixed(5)}`; /* primary map link: ALWAYS coordinates, always visible (web + print) */
-    /* Timing: one row per event (every visit of every race here): race | mileage (GPX, right-aligned) | start / cutoff | time (bold; Google Calendar), tabular numerals */
+    /* Timing: one sentence per event. Finish cutoffs at S/F say "finish cutoff" / "must finish"; aid stations say "must leave". */
     const open = openFromHours(s.hours);
     const opens = open ? `<p class="st-opens"><span class="stc-dot stc-dot-g" aria-hidden="true"></span> Opens ${esc(open.long)}</p>` : '';
     const cuts = c.courses.order.flatMap((r) => c.cutoffs[r].map((x, i) => ({ x, i })).filter(({ x }) => x.station === k).map(({ x, i }, j) => {
       const kind = i === 0 ? 'start' : x.cutoff !== 'TBD' ? 'cutoff' : '';
-      const lab = kind === 'start' ? 'start' : kind === 'cutoff' ? 'cutoff <span class="cut-note">runners must leave by this time</span>' : '—';
-      const t = kind ? sh(x.cutoff) : '';
+      const mile = x.mile.toFixed(1);
+      const time = kind ? longCut(x.cutoff, k) : '';
+      const race = `<span class="cutr" style="color:${c.courses.colors[r]}">${esc(r)}</span>`;
+      const finish = k === 'S/F' && kind === 'cutoff';
+      const line = kind === 'start'
+        ? `${race} start ${esc(time)} (mile ${esc(mile)})`
+        : kind === 'cutoff' && finish
+          ? `${race} finish cutoff ${esc(time)} — runners must finish by this time`
+          : kind === 'cutoff'
+            ? `${race} cutoff ${esc(time)} at mile ${esc(mile)} — runners must leave by this time`
+            : `${race} at mile ${esc(mile)}`;
       const dot = kind === 'start' ? '<span class="stc-dot stc-dot-g" aria-hidden="true"></span>' : kind === 'cutoff' ? '<span class="stc-dot stc-dot-r" aria-hidden="true"></span>' : '';
-      return `<tr class="cutv${j ? '' : ' cut1'}${kind ? ' cut-' + kind : ''}"><td class="cutdot">${dot}</td><th class="cutr" style="color:${c.courses.colors[r]}">${j ? '' : r}</th><td class="cutm">${x.mile.toFixed(1)}</td><td class="cutu">mi</td><td class="cutl">${lab}</td><td class="cutt">${t ? `<b>${esc(t)}</b>` : ''}</td></tr>`; })).join('');
+      return `<li class="cutv${j ? '' : ' cut1'}${kind ? ' cut-' + kind : ''}"><span class="cutdot">${dot}</span><span class="cutline">${line}</span></li>`;
+    })).join('');
     const photo = a.photo ? `<img src="${esc(a.photo)}" alt="${esc(s.name)} aid station">` : `<div class="ph-empty">${icon('pin')}<span>Photo coming soon</span></div>`;
     const title = (print || k === 'S/F') ? s.name : `${k} · ${s.name}`;
     return `<header class="st-head"><svg class="st-badge" viewBox="-42 -42 84 84" overflow="visible" aria-hidden="true">${station(0, 0, k, s.spectator, { s: k === 'S/F' ? 2900 : 2000, fs: k === 'S/F' ? 34 : 28, badge: false, colors: c.colors, link: false })}</svg><div><h2>${esc(title)}</h2><p class="note">${esc(s.long ?? '')} · ${(s.elevation_ft ?? 0).toLocaleString('en-US')} ft</p></div></header>
 <div class="st-grid"><div class="st-map" data-station="${esc(k)}"></div><figure class="st-photo">${photo}</figure></div>
 <div class="st-info"><section class="st-open"><h3>Open</h3><p class="st-hours"><span class="st-gico" aria-hidden="true">${icon('clock')}</span><b>${esc(s.hours ?? '?')}</b></p><h3 class="st-subh">Map</h3><p class="st-coordp"><span class="st-gico" aria-hidden="true">${icon('pin')}</span><a class="st-coord" href="https://www.google.com/maps?q=${ll}" target="_blank" rel="noopener"><span class="st-k">Map: </span>${llTxt}</a></p>${NEAR[k] ? `<h3 class="st-subh">Nearby</h3><p class="st-nearp"><span class="st-gico" aria-hidden="true">${icon('compass')}</span><span class="st-k">Nearby: </span><a class="st-near" href="https://www.google.com/maps/search/?api=1&amp;query=${encodeURIComponent(NEAR[k] + ', TX')}" target="_blank" rel="noopener">${esc(NEAR[k])}</a></p>` : ''}</section>
 <section class="st-avail"><h3>Available</h3>${amList(a, print ? 'print' : 'web', { bagRaces: bagRacesFromSheet(c.courses.order)[k] ?? [], linkBags: !print })}${!print && vehicleLimit(a) === '4x4 only' ? `<p class="st-vol"><a class="st-volbtn" href="${VOLUNTEER_HREF}" target="_blank" rel="noopener">Volunteer</a></p>` : ''}</section>
-<section class="st-timing-sec"><h3>Timing</h3>${opens}<table class="st-cuts st-timing"><tbody>${cuts}</tbody></table></section></div>
+<section class="st-timing-sec"><h3>Timing</h3>${opens}<ul class="st-cuts st-timing">${cuts}</ul></section></div>
 <section class="st-msl"><h3>Route</h3>${c.courses.order.filter((r) => c.cutoffs[r].some((q) => q.station === k)).map((r) => milestones(c, r, k)).join('')}</section>
 <section class="st-heat"><h3>Busiest times <small>(modelled per 15 min)</small></h3>${renderStationHeat(c, k)}</section>`;
 }
