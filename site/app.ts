@@ -512,7 +512,11 @@ if (document.documentElement.classList.contains('embed') && parent !== window) {
     document.querySelectorAll<HTMLInputElement>('input[data-cat-all]').forEach((i) => { i.checked = false; });
     document.querySelector<HTMLInputElement>('input[data-cat]')?.dispatchEvent(new Event('change', { bubbles: true }));
     const evs = [...document.querySelectorAll<HTMLElement>('#pb-cal .cv-item[data-cal="drop-bags"]')].filter((e) => !e.hidden);
-    for (const ev of evs) { ev.setAttribute('aria-expanded', 'true'); const d = ev.querySelector<HTMLElement>('.cv-det'); if (d) d.hidden = false; ev.classList.add('cv-hilite'); }
+    // Keep rows compact so the clipped preview actually shows the filtered events
+    // (expanding every detail block pushed them out of the short in-page window).
+    const sc = document.querySelector<HTMLElement>('#pb-cal .cv-scroll');
+    if (sc && !document.documentElement.classList.contains('cal-fs')) sc.scrollTop = 0;
+    for (const ev of evs) ev.classList.add('cv-hilite');
     setTimeout(() => evs.forEach((ev) => ev.classList.remove('cv-hilite')), 2500);
     const cal = () => document.getElementById('pb-cal') || evs[0];
     if (rbox?.open) rbox.close(); if (sbox?.open) sbox.close();
