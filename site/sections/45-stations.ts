@@ -69,8 +69,8 @@ export function amRows(a: any, mode: 'web' | 'print', opt: { bagRaces?: string[]
     { v: bagsOn ? 'y' : 'n', lab: bagsOn ? bagLab : 'No drop bags', ic: 'bag', href: opt.linkBags && bagsOn ? DROP_BAGS_HASH : undefined, races: opt.linkBags && races.length ? races : undefined },
     { v: toilet ? 'y' : 'n', lab: toilet ?? 'No restrooms', ic: 'toilet' },
     { v: 'y', lab: aid, ic: 'firstaid' },
-    { v: 'y', lab: 'Water + sports drinks', ic: 'droplet' },
-    { v: yn(a.snacks), lab: a.snacks ? 'Snacks' : 'No snacks', ic: 'utensils' },
+    { v: 'y', lab: 'Water + Skratch Labs', ic: 'droplet', mark: 'Skratch Labs', more: `Sports drinks are provided by <a href="https://www.skratchlabs.com/" target="_blank" rel="noopener">Skratch Labs</a>.` },
+    { v: yn(a.snacks), lab: a.snacks ? 'Snacks' : 'No snacks', ic: 'utensils', more: a.snacks ? "You'll likely see a mix of sweet and salty snacks, fruit, and more substantial food at longer-race stations. Offerings vary." : undefined },
   ];
   // 4x4-limited stations (Waterhole, Whit Roy, Shutup, Solitario). Wording includes overnight camp at Erik's request for all four.
   if (veh === '4x4 only') {
@@ -80,28 +80,50 @@ export function amRows(a: any, mode: 'web' | 'print', opt: { bagRaces?: string[]
 }
 
 export function amList(a: any, mode: 'web' | 'print', opt: { bagRaces?: string[]; linkBags?: boolean } = {}) {
-  return `<ul class="amen">${amRows(a, mode, opt).map((r) => {
+  const notes: string[] = [];
+  const items = amRows(a, mode, opt).map((r) => {
     const mark = r.v === 'n' ? icon('x') : icon(r.ic || 'info');
     const racesAttr = r.races?.length ? ` data-races="${esc(r.races.join(" "))}"` : "";
-    const lab = r.href ? `<a href="${esc(r.href)}" class="am-cal"${racesAttr}>${esc(r.lab)}</a>` : esc(r.lab);
-    return `<li class="am am-${r.v}"><span class="amv" aria-hidden="true">${mark}</span>${lab}</li>`;
-  }).join('')}</ul>`;
+    const labInner = r.mark ? esc(r.lab).replace(esc(r.mark), `<span class="am-sponsor">${esc(r.mark)}</span>`) : esc(r.lab);
+    const lab = r.href ? `<a href="${esc(r.href)}" class="am-cal"${racesAttr}>${labInner}</a>` : labInner;
+    if (r.more && mode === 'print') notes.push(r.more);
+    const body = r.more && mode !== 'print'
+      ? `<details class="am-more"><summary>${lab}</summary><div class="am-more-body">${r.more}</div></details>`
+      : lab;
+    return `<li class="am am-${r.v}${r.more ? ' am-exp' : ''}"><span class="amv" aria-hidden="true">${mark}</span>${body}</li>`;
+  }).join('');
+  const note = mode === 'print' && notes.length ? `<div class="am-notes">${notes.map((n) => `<p>${n}</p>`).join('')}</div>` : '';
+  return `<ul class="amen">${items}</ul>${note}`;
 }
 
-/** Compact cutoff times for the brief cards: "6:30 PM" → "6:30p". Starts and TBD visits are omitted. */
-const shortCut = (t: string) => t.replace(/(\d{1,2}:\d{2}) ?([AP])M/gi, (_, hm, a) => hm + a.toLowerCase()).replace(/, /g, ' / ');
+/** Compact clock: "6:30 PM" → "6:30p", "9 AM" → "9a". */
+const shortCut = (t: string) => t.replace(/(\d{1,2}:\d{2}) ?([AP])M/gi, (_, hm, a) => hm + a.toLowerCase()).replace(/(\d{1,2}) ?([AP])M/gi, (_, h, a) => h + a.toLowerCase()).replace(/, /g, ' / ');
+/** Station hours start, e.g. "5:45a - 11p" → { short: "5:45a", long: "5:45 AM" }. */
+function openFromHours(hours?: string): { short: string; long: string } | null {
+  const m = (hours || '').match(/^\s*(\d{1,2}(?::\d{2})?)\s*([ap])m?\b/i);
+  if (!m) return null;
+  const ap = m[2].toLowerCase() === 'p' ? 'PM' : 'AM';
+  return { short: shortCut(m[1] + ' ' + ap), long: m[1] + ' ' + ap };
+}
 export function cutsCol(c: Ctx, k: string) {
-  const hits: { r: string; t: string }[] = [];
+  const rows: string[] = [];
+  const open = openFromHours(c.stations.stations[k]?.hours);
+  if (open) rows.push(`<li class="stc-open"><span class="stc-dot stc-dot-g" aria-hidden="true"></span><span class="stc-clab">Opens</span> <span class="stc-ct">${esc(open.short)}</span></li>`);
+  if (k === 'S/F') {
+    for (const r of c.courses.order) {
+      const start = c.cutoffs[r].find((x, i) => i === 0 && x.station === k && x.cutoff && x.cutoff !== 'TBD');
+      if (start) rows.push(`<li class="stc-start"><span class="stc-dot stc-dot-g" aria-hidden="true"></span><span class="stc-cr">${esc(r)}</span> <span class="stc-clab">start</span> <span class="stc-ct">${esc(shortCut(start.cutoff))}</span></li>`);
+    }
+  }
   for (const r of c.courses.order) {
     const vs = c.cutoffs[r].map((x: any, i: number) => ({ x, i })).filter(({ x, i }: any) => x.station === k && i > 0 && x.cutoff && x.cutoff !== 'TBD');
-    if (!vs.length) continue;
-    const raw = vs.length === 1 ? vs[0].x.cutoff : vs.map((v: any) => v.x.cutoff).join(', ');
-    hits.push({ r, t: (k === 'S/F' && (raw === '1:00 AM' || /Jan 18/.test(raw))) ? '1:00 AM Mon' : raw });
+    for (const v of vs) {
+      const raw = (k === 'S/F' && (v.x.cutoff === '1:00 AM' || /Jan 18/.test(v.x.cutoff))) ? '1:00 AM Mon' : v.x.cutoff;
+      rows.push(`<li class="stc-cut"><span class="stc-dot stc-dot-r" aria-hidden="true"></span><span class="stc-cr">${esc(r)}</span> <span class="stc-clab">cutoff</span> <span class="stc-ct">${esc(shortCut(raw))}</span></li>`);
+    }
   }
-  const rows = hits.length
-    ? hits.map((h) => `<li><span class="stc-cr">${esc(h.r)}</span> <span class="stc-ct">${esc(shortCut(h.t))}</span></li>`).join('')
-    : `<li class="stc-cnone">None</li>`;
-  return `<div class="stc-cuts"><h4>Cutoffs</h4><ul>${rows}</ul></div>`;
+  const list = rows.length ? rows.join('') : `<li class="stc-cnone">None</li>`;
+  return `<div class="stc-cuts"><h4>Timing</h4><ul>${list}</ul></div>`;
 }
 
 function briefCard(c: Ctx, k: string) {
@@ -120,7 +142,7 @@ function briefCard(c: Ctx, k: string) {
 
 /** Screen-only grid of brief aid-station cards (embed + site), after the race cards. */
 export function stCardsHtml(c: Ctx) {
-  return `<div class="ui stcards-wrap"><h2 class="stcards-h">Aid stations</h2><div class="stcards" role="list">${c.stations.order.map((k) => briefCard(c, k)).join('')}</div></div>`;
+  return `<div class="ui stcards-wrap" id="stations"><h2 class="stcards-h">Aid stations</h2><div class="stcards" role="list">${c.stations.order.map((k) => briefCard(c, k)).join('')}</div></div>`;
 }
 
 // secondary, subtler named-place link (the primary link is always coordinates); none where no valid named place exists
@@ -131,15 +153,21 @@ const sh = (t: string) => t.replace(/^(\d{1,2}):(\d\d) ?([AP])M$/i, (_, h, m, a)
 export function stCard(c: Ctx, k: string, print = false) {
     const s = c.stations.stations[k], a = (amen as any)[k] ?? {}, LL = s.link_lonlat ?? s.lonlat, ll = `${LL[1].toFixed(6)},${LL[0].toFixed(6)}`, llTxt = `${LL[1].toFixed(5)}, ${LL[0].toFixed(5)}`; /* primary map link: ALWAYS coordinates, always visible (web + print) */
     /* Timing: one row per event (every visit of every race here): race | mileage (GPX, right-aligned) | start / cutoff | time (bold; Google Calendar), tabular numerals */
-    const cuts = c.courses.order.flatMap((r) => c.cutoffs[r].map((x, i) => ({ x, i })).filter(({ x }) => x.station === k).map(({ x, i }, j) => { const lab = i === 0 ? 'start' : x.cutoff !== 'TBD' ? 'cutoff' : '', t = lab ? sh(x.cutoff) : '';
-      return `<tr class="cutv${j ? '' : ' cut1'}"><th class="cutr" style="color:${c.courses.colors[r]}">${j ? '' : r}</th><td class="cutm">${x.mile.toFixed(1)}</td><td class="cutu">mi</td><td class="cutl">${lab || '—'}</td><td class="cutt">${t ? `<b>${esc(t)}</b>` : ''}</td></tr>`; })).join('');
+    const open = openFromHours(s.hours);
+    const opens = open ? `<p class="st-opens"><span class="stc-dot stc-dot-g" aria-hidden="true"></span> Opens ${esc(open.long)}</p>` : '';
+    const cuts = c.courses.order.flatMap((r) => c.cutoffs[r].map((x, i) => ({ x, i })).filter(({ x }) => x.station === k).map(({ x, i }, j) => {
+      const kind = i === 0 ? 'start' : x.cutoff !== 'TBD' ? 'cutoff' : '';
+      const lab = kind === 'start' ? 'start' : kind === 'cutoff' ? 'cutoff <span class="cut-note">runners must leave by this time</span>' : '—';
+      const t = kind ? sh(x.cutoff) : '';
+      const dot = kind === 'start' ? '<span class="stc-dot stc-dot-g" aria-hidden="true"></span>' : kind === 'cutoff' ? '<span class="stc-dot stc-dot-r" aria-hidden="true"></span>' : '';
+      return `<tr class="cutv${j ? '' : ' cut1'}${kind ? ' cut-' + kind : ''}"><td class="cutdot">${dot}</td><th class="cutr" style="color:${c.courses.colors[r]}">${j ? '' : r}</th><td class="cutm">${x.mile.toFixed(1)}</td><td class="cutu">mi</td><td class="cutl">${lab}</td><td class="cutt">${t ? `<b>${esc(t)}</b>` : ''}</td></tr>`; })).join('');
     const photo = a.photo ? `<img src="${esc(a.photo)}" alt="${esc(s.name)} aid station">` : `<div class="ph-empty">${icon('pin')}<span>Photo coming soon</span></div>`;
     const title = (print || k === 'S/F') ? s.name : `${k} · ${s.name}`;
     return `<header class="st-head"><svg class="st-badge" viewBox="-42 -42 84 84" overflow="visible" aria-hidden="true">${station(0, 0, k, s.spectator, { s: k === 'S/F' ? 2900 : 2000, fs: k === 'S/F' ? 34 : 28, badge: false, colors: c.colors, link: false })}</svg><div><h2>${esc(title)}</h2><p class="note">${esc(s.long ?? '')} · ${(s.elevation_ft ?? 0).toLocaleString('en-US')} ft</p></div></header>
 <div class="st-grid"><div class="st-map" data-station="${esc(k)}"></div><figure class="st-photo">${photo}</figure></div>
 <div class="st-info"><section class="st-open"><h3>Open</h3><p class="st-hours"><span class="st-gico" aria-hidden="true">${icon('clock')}</span><b>${esc(s.hours ?? '?')}</b></p><h3 class="st-subh">Map</h3><p class="st-coordp"><span class="st-gico" aria-hidden="true">${icon('pin')}</span><a class="st-coord" href="https://www.google.com/maps?q=${ll}" target="_blank" rel="noopener"><span class="st-k">Map: </span>${llTxt}</a></p>${NEAR[k] ? `<h3 class="st-subh">Nearby</h3><p class="st-nearp"><span class="st-gico" aria-hidden="true">${icon('compass')}</span><span class="st-k">Nearby: </span><a class="st-near" href="https://www.google.com/maps/search/?api=1&amp;query=${encodeURIComponent(NEAR[k] + ', TX')}" target="_blank" rel="noopener">${esc(NEAR[k])}</a></p>` : ''}</section>
 <section class="st-avail"><h3>Available</h3>${amList(a, print ? 'print' : 'web', { bagRaces: bagRacesFromSheet(c.courses.order)[k] ?? [], linkBags: !print })}${!print && vehicleLimit(a) === '4x4 only' ? `<p class="st-vol"><a class="st-volbtn" href="${VOLUNTEER_HREF}" target="_blank" rel="noopener">Volunteer</a></p>` : ''}</section>
-<section><h3>Timing</h3><table class="st-cuts st-timing"><tbody>${cuts}</tbody></table></section></div>
+<section class="st-timing-sec"><h3>Timing</h3>${opens}<table class="st-cuts st-timing"><tbody>${cuts}</tbody></table></section></div>
 <section class="st-msl"><h3>Route</h3>${c.courses.order.filter((r) => c.cutoffs[r].some((q) => q.station === k)).map((r) => milestones(c, r, k)).join('')}</section>
 <section class="st-heat"><h3>Busiest times <small>(modelled per 15 min)</small></h3>${renderStationHeat(c, k)}</section>`;
 }

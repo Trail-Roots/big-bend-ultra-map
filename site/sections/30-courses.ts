@@ -71,6 +71,6 @@ ${profile(c, k)}${milestones(c, k)}${courseTable(c, k)}<figure class="cpheat"><f
   }).join('');
   void nav;
   // web: compact Strava-style race cards; each opens its full (print-view) race page in a lightbox. Print / PDF: the full pages, unchanged order.
-  return `<div class="ui racecards-wrap"><h2 class="racecards-h">Race distances</h2><div class="racecards" role="list">${c.courses.order.map((k) => card(c, k)).join('')}</div></div>${stCardsHtml(c)}<div class="cppages"><div class="padblank"><p>This page intentionally left blank</p></div>${pages}${intersectionsSection(c)}</div>
+  return `<div class="ui racecards-wrap" id="distances"><h2 class="racecards-h">Race distances</h2><div class="racecards" role="list">${c.courses.order.map((k) => card(c, k)).join('')}</div></div>${stCardsHtml(c)}<div class="cppages"><div class="padblank"><p>This page intentionally left blank</p></div>${pages}${intersectionsSection(c)}</div>
 <dialog class="lightbox" id="racebox" aria-label="Race page"><button type="button" class="lb-close" aria-label="Close">${icon('x')}</button><div class="lb-body"></div></dialog>`;
 }

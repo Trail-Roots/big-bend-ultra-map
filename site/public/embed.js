@@ -99,14 +99,33 @@
     f.contentWindow.postMessage({ type: 'bbu-full', on: true, top: full.top, w: innerWidth, h: innerHeight }, origin);
   }
   function closeFull() {
-    if (!full) return; var F = full; full = null; f.style.cssText = F.css;
-    if (F.mark) { try { F.mark.parentNode.moveBefore(f, F.mark); } catch (x) {} F.mark.parentNode.removeChild(F.mark); }
+    if (!full) return; var F = full;
+    // Keep `full` set until the iframe is back in its slot so a 100vh height
+    // report cannot be applied mid-restore (that left a blank host page).
+    f.style.cssText = F.css;
+    var back = false;
+    if (F.mark) {
+      var p = F.mark.parentNode;
+      if (p) {
+        try { if (p.moveBefore) p.moveBefore(f, F.mark); else p.insertBefore(f, F.mark); back = true; }
+        catch (x) { try { p.insertBefore(f, F.mark); back = true; } catch (y) {} }
+      }
+      if (F.mark.parentNode) F.mark.parentNode.removeChild(F.mark);
+    }
     for (var i = F.anc.length - 1; i >= 0; i--) { var A = F.anc[i]; if (A[1] == null) A[0].removeAttribute('style'); else A[0].setAttribute('style', A[1]); }
-    F.ph.parentNode && F.ph.parentNode.removeChild(F.ph); var de = document.documentElement; de.style.overflow = F.hO; document.body.style.overflow = F.bO; de.style.scrollbarGutter = F.hS;
+    if (back) { F.ph.parentNode && F.ph.parentNode.removeChild(F.ph); }
+    else if (F.ph && F.ph.parentNode) {
+      // moveBefore failed: put the iframe back where the placeholder is so the slot does not collapse to a white gap.
+      try { F.ph.parentNode.insertBefore(f, F.ph); F.ph.parentNode.removeChild(F.ph); back = true; } catch (z) {}
+    }
+    var de = document.documentElement; de.style.overflow = F.hO || ''; document.body.style.overflow = F.bO || ''; de.style.scrollbarGutter = F.hS || '';
+    try { f.contentWindow && f.contentWindow.scrollTo(0, 0); } catch (e) {}
     var queued = pendingScroll; pendingScroll = null;
     if (queued) applyHostScroll(queued.top, queued.behavior);
     else { window.scrollTo(F.x, F.y); requestAnimationFrame(function () { window.scrollTo(F.x, F.y); pos(); }); }
     if (queued) pos();
+    full = null;
+    if (pendingH > 0) f.style.height = pendingH + 'px';
     f.contentWindow && f.contentWindow.postMessage({ type: 'bbu-full', on: false }, origin);
   }
   addEventListener('message', function (e) {
@@ -117,6 +136,14 @@
       applyHostScroll(top, e.data.behavior); pos(); return;
     }
     if (e.data.type === 'bbu-modal') { if (e.data.open) openFull(); else closeFull(); return; }
+    if (e.data.type === 'bbu-scroll-by') {
+      if (full) return;
+      var dy = +e.data.dy;
+      if (!isFinite(dy) || !dy) return;
+      window.scrollBy(0, dy);
+      pos();
+      return;
+    }
     if (e.data.type !== 'bbu-embed-height') return;
     var h = Math.ceil(+e.data.height); if (h > 0) { pendingH = h; if (full) return; f.style.height = h + 'px'; }
     send(); pos();

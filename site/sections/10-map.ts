@@ -35,13 +35,20 @@ export function render(c: Ctx) {
   // one landscape letter page, split ~50/50: main map left half; right half = header, timeline / heat map, elevation (charts drawn larger: scale K)
   const strIn = inch(stripBox as Box), evIn = inch(evBox as Box), hdIn = inch([L.logo[0], L.logo[1], st.w, L.logo[3]] as Box);
   const GAPIN = 0.2, HALF = (LETTER.h - 2 * LETTER.margin - GAPIN) / 2, Z = Math.min(HALF / mainIn.w, (LETTER.w - 2 * LETTER.margin) / mainIn.h);
-  const K = mainIn.w / strIn.w, cx0 = mainIn.w + GAPIN / Z, GS = 0.15, CALH = 0.45, colH = K * (hdIn.h + 0.25 + evIn.h + GS + strIn.h + CALH), c0 = Math.max(0, (mainIn.h - colH) / 2);
+  const K = mainIn.w / strIn.w, cx0 = mainIn.w + GAPIN / Z, GS = 0.15;
+  // Screen: Venue / Lodging / Calendar / Flow live in the top nav, so no button bar or subscribe band under the calendar.
+  // Stretch the calendar so its bottom lines up with the map (print geometry is unchanged).
+  const colH = K * (hdIn.h + 0.25 + evIn.h + GS + strIn.h), c0 = Math.max(0, (mainIn.h - colH) / 2);
   const p1: [string, { l: number; t: number; w: number; h: number }][] = [['pb-main', { l: 0, t: 0, w: mainIn.w, h: mainIn.h }],
     ['pb-hdr', { l: cx0, t: c0, w: K * hdIn.w, h: K * hdIn.h }],
-    ['pb-prof', { l: cx0, t: c0 + K * (hdIn.h + 0.25), w: K * evIn.w, h: K * evIn.h }], ['pb-cal', { l: cx0, t: c0 + K * (hdIn.h + 0.25 + evIn.h + GS), w: K * strIn.w, h: K * strIn.h }]]; // screen: elevation above the race-day calendar; subscribe row below it (CALH)
+    ['pb-prof', { l: cx0, t: c0 + K * (hdIn.h + 0.25), w: K * evIn.w, h: K * evIn.h }], ['pb-cal', { l: cx0, t: c0 + K * (hdIn.h + 0.25 + evIn.h + GS), w: K * strIn.w, h: K * strIn.h }]];
   // screen only: trim the empty band above the elevation chart (TR user units, legend moved down by TR) and give the freed height to the calendar
   const PB = profileBody(c), TR = profileTrim(PB), PH = PB.H + 40, dT = K * evIn.h * TR / PH;
-  const p1s = p1.map(([id, q]) => [id, id === 'pb-prof' ? { ...q, h: q.h - dT } : id === 'pb-cal' ? { ...q, t: q.t - dT, h: q.h + dT } : q] as [string, typeof q]);
+  const p1s = p1.map(([id, q]) => {
+    if (id === 'pb-prof') return [id, { ...q, h: q.h - dT }] as [string, typeof q];
+    if (id === 'pb-cal') { const t = q.t - dT; return [id, { ...q, t, h: mainIn.h - t }] as [string, typeof q]; }
+    return [id, q] as [string, typeof q];
+  });
   const trimCss = `@media screen{html svg.profile .plgbg,html svg.profile .plegend{transform:translateY(var(--pt,0px))}}`; // viewBox trimmed by app.ts (screen only)
   const w1 = Math.max(...p1.map(([, q]) => q.l + q.w)), h1 = mainIn.h;
   const P1 = { ...place(w1, h1, 'landscape') }; // screen paper-view geometry (unchanged sheet)

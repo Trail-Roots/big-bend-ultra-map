@@ -320,6 +320,26 @@ document.querySelectorAll<HTMLElement>('.fp-zoom:not(.fp-static)').forEach((box)
 let hostTop = 0;
 const inEmbed = document.documentElement.classList.contains('embed') && parent !== window;
 let hostFull = false;
+/** Scroll a target so it sits just below the host (Squarespace) bar and the map top nav. */
+function scrollToTarget(target: HTMLElement, behavior: ScrollBehavior = 'smooth') {
+  const nav = document.querySelector<HTMLElement>('.topnav');
+  const top = Math.max(0, target.getBoundingClientRect().top + window.scrollY - (nav?.offsetHeight || 0));
+  if (inEmbed) parent.postMessage({ type: 'bbu-scroll-to', top, behavior }, '*');
+  else window.scrollTo({ top, behavior });
+}
+function setRaceView(k: 'cal' | 'tl') {
+  const pg = document.querySelector<HTMLElement>('.vw'); if (!pg) return;
+  pg.dataset.view = k;
+  document.getElementById('vw-cal')?.classList.toggle('on', k === 'cal');
+  document.getElementById('vw-tl')?.classList.toggle('on', k === 'tl');
+  dispatchEvent(new Event('resize'));
+}
+function markSitenav(href: string | null) {
+  document.querySelectorAll<HTMLAnchorElement>('.sitenav a').forEach((a) => {
+    const on = !!href && a.getAttribute('href') === href;
+    if (on) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
+  });
+}
 function fitModal(d: HTMLDialogElement) { if (!inEmbed) return; if (hostFull) { for (const k of ['position', 'inset', 'top', 'height', 'margin']) d.style.removeProperty(k); return; } const hv = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--host-vh')) * 100 || innerHeight;
   const y = Math.max(0, Math.min(-hostTop, document.documentElement.scrollHeight - hv)); Object.assign(d.style, { position: 'fixed', inset: 'auto 0 auto 0', top: y + 'px', height: hv + 'px', margin: '0' }); }
 function embedModal(d: HTMLDialogElement, open: boolean) { if (!inEmbed) return; if (open) fitModal(d); parent.postMessage({ type: 'bbu-modal', open }, '*'); }
@@ -328,7 +348,7 @@ function embedModal(d: HTMLDialogElement, open: boolean) { if (!inEmbed) return;
 if (inEmbed) addEventListener('message', (e) => { const m = e.data; if (e.source !== parent || !m || m.type !== 'bbu-full') return; hostFull = !!m.on;
   const root = document.documentElement;
   if (hostFull) { root.style.setProperty('--host-vw', m.w / 100 + 'px'); root.style.setProperty('--host-vh', m.h / 100 + 'px'); root.classList.add('hostfull'); scrollTo(0, Math.max(0, -m.top)); }
-  else { root.classList.remove('hostfull'); scrollTo(0, 0); }
+  else { root.classList.remove('hostfull'); scrollTo(0, 0); document.querySelectorAll<HTMLDialogElement>('dialog.lightbox').forEach((d) => { if (!d.open) for (const k of ['position', 'inset', 'top', 'height', 'margin']) d.style.removeProperty(k); }); }
   document.querySelectorAll<HTMLDialogElement>('dialog.lightbox[open]').forEach(fitModal); dispatchEvent(new Event('resize')); });
 // ---- ?view=embed inside an iframe (dist/embed.js): report the content height to the parent so it can size the iframe ----
 if (document.documentElement.classList.contains('embed') && parent !== window) {
@@ -484,7 +504,7 @@ if (document.documentElement.classList.contains('embed') && parent !== window) {
   // clicks: station markers on the main map (instead of jumping to Google Maps; the lightbox links there), heat-map icons, race-table names, aid-station cards
   document.addEventListener('click', (e) => { const t = e.target as Element; if (!(t instanceof Element)) return;
     if (t.closest('a.am-cal, a[href="#drop-bags"]')) return; // drop-bag links go to the calendar (handled below)
-    const card = t.closest<HTMLElement>('.stcard-brief'); if (card?.dataset.station && !(t as Element).closest('a')) { openStation(card.dataset.station); history.replaceState(null, '', `#station-${encodeURIComponent(card.dataset.station)}`); return; }
+    const card = t.closest<HTMLElement>('.stcard-brief'); if (card?.dataset.station && !(t as Element).closest('a, details.am-more, summary, .am-more-body')) { openStation(card.dataset.station); history.replaceState(null, '', `#station-${encodeURIComponent(card.dataset.station)}`); return; }
     const a = t.closest<Element>('g.stpick, a.stlink, g.marker[data-station], g.pcall[data-st]'); if (!a) return; const k = a.getAttribute('data-station') ?? a.getAttribute('data-st');
     const ms = a.closest<HTMLElement>('.msfig-here'); if (ms ? k === ms.dataset.here : a.closest('.lightbox.stbox, .sec-stpages, .st-badge')) return; /* never a station's own details; milestone strips there link to the OTHER stations */ if (!k) return;
     if (document.querySelector('svg.mainmap.panning')) return; e.preventDefault(); openStation(k); history.replaceState(null, '', `#station-${encodeURIComponent(k)}`); });
@@ -501,7 +521,8 @@ if (document.documentElement.classList.contains('embed') && parent !== window) {
   // element after that restore, and in the auto-height embed ask the host to scroll (the iframe itself has no scrollbar).
   const goDropBags = (races: string[] = []) => {
     document.querySelector<HTMLButtonElement>('[data-cal-fs-close]')?.click();
-    document.querySelector<HTMLButtonElement>('.vw-tab[data-view="cal"]')?.click();
+    setRaceView('cal');
+    markSitenav('#calendar');
     if (races.length) {
       const want = new Set(races);
       document.querySelectorAll<HTMLInputElement>('input[data-race]').forEach((i) => { i.checked = want.has(i.dataset.race!); });
@@ -520,19 +541,12 @@ if (document.documentElement.classList.contains('embed') && parent !== window) {
     setTimeout(() => evs.forEach((ev) => ev.classList.remove('cv-hilite')), 2500);
     const cal = () => document.getElementById('pb-cal') || evs[0];
     if (rbox?.open) rbox.close(); if (sbox?.open) sbox.close();
-    // Standalone: scroll after the dialog close restores any saved window position.
-    const scrollStandalone = () => { const target = cal(); if (target) target.scrollIntoView({ block: 'start', behavior: 'smooth' }); };
     // Embed: do not measure or ask the host to scroll while the lightbox takeover is still
     // on (iframe is 100vh + internally scrolled, host overflow is locked). Wait until the
     // host has put the iframe back in flow and sent bbu-full off (iframe scroll back to 0),
     // then send the calendar's offset in the iframe document. The host places it just below
     // its own sticky header — do not subtract the map nav here.
-    const postHostScroll = () => {
-      const target = cal(); if (!target) return;
-      const nav = document.querySelector<HTMLElement>('.topnav');
-      const top = Math.max(0, target.getBoundingClientRect().top + window.scrollY - (nav?.offsetHeight || 0));
-      parent.postMessage({ type: 'bbu-scroll-to', top, behavior: 'smooth' }, '*');
-    };
+    const postHostScroll = () => { const target = cal(); if (target) scrollToTarget(target); };
     if (inEmbed) {
       let sent = false;
       const send = () => { sent = true; postHostScroll(); };
@@ -547,8 +561,9 @@ if (document.documentElement.classList.contains('embed') && parent !== window) {
       if (!hostFull) setTimeout(send, 0);
       setTimeout(() => { if (!sent) send(); removeEventListener('message', onFull); }, 500);
     } else {
-      requestAnimationFrame(() => requestAnimationFrame(scrollStandalone));
-      setTimeout(scrollStandalone, 80);
+      const go = () => { const target = cal(); if (target) scrollToTarget(target); };
+      requestAnimationFrame(() => requestAnimationFrame(go));
+      setTimeout(go, 80);
     }
   };
   document.addEventListener('click', (e) => {
@@ -557,32 +572,54 @@ if (document.documentElement.classList.contains('embed') && parent !== window) {
     const races = ((a as HTMLElement).dataset.races || '').trim().split(/\s+/).filter(Boolean);
     goDropBags(races);
   }, true);
-  const fromHash = () => { const h = decodeURIComponent(location.hash); let m; if (h === '#drop-bags') goDropBags(); else if ((m = /^#course-(.+)$/.exec(h))) openRace(m[1]); else if ((m = /^#station-(.+)$/.exec(h))) openStation(m[1]); };
-  addEventListener('hashchange', fromHash); fromHash();
+  const fromHash = () => { const h = decodeURIComponent(location.hash); let m;
+    if (h === '#drop-bags') goDropBags();
+    else if (h === '#calendar' || h === '#flow') { setRaceView(h === '#flow' ? 'tl' : 'cal'); markSitenav(h); const box = document.getElementById('pb-cal'); if (box) scrollToTarget(box); }
+    else if (h === '#distances' || h === '#stations') { const el = document.getElementById(h.slice(1)); if (el) { markSitenav(h); scrollToTarget(el); } }
+    else if (h === '#venue-map') { markSitenav(h); document.dispatchEvent(new Event('bbu-open-plan')); }
+    else if ((m = /^#course-(.+)$/.exec(h))) openRace(m[1]);
+    else if ((m = /^#station-(.+)$/.exec(h))) {
+    const go = () => openStation(m[1]);
+    if (document.documentElement.classList.contains('cal-fs')) {
+      document.querySelector<HTMLButtonElement>('[data-cal-fs-close]')?.click();
+      if (inEmbed && hostFull) { const once = (e: MessageEvent) => { if (e.source !== parent || !e.data || e.data.type !== 'bbu-full' || e.data.on) return; removeEventListener('message', once); go(); }; addEventListener('message', once); }
+      else setTimeout(go, 0);
+    } else go();
+  } };
+  addEventListener('hashchange', fromHash); queueMicrotask(fromHash);
 }
 
 
-// ---- site-plan lightbox (sections/20-timeline.ts): Race parking / Race finish previews open full-screen pan / zoom viewers; prev / next (buttons, arrow
-// keys) switch Parking <-> Finish; Esc / close / backdrop close it (same pattern as the race and aid-station lightboxes) ----
+// ---- Venue map lightbox: parking and finish area plans together in one view ----
 { const pb = document.getElementById('planbox') as HTMLDialogElement | null;
-  if (pb) { const P = ['park', 'fin'], panes = [...pb.querySelectorAll<HTMLElement>('.pl-one')]; let cur = 'park';
-    const show = (k: string) => { cur = k; panes.forEach((x) => (x.hidden = x.dataset.plan !== k)); pb.setAttribute('aria-label', k === 'park' ? 'Parking plan' : 'Finish area plan');
-      requestAnimationFrame(() => pb.querySelector<HTMLButtonElement>(`.pl-one[data-plan="${k}"] .fp-zoomctl button[data-z="reset"]`)?.click()); };
-    const open = (k: string) => { show(k); if (!pb.open) { embedModal(pb, true); pb.showModal(); } pb.scrollTop = 0; };
-    document.querySelectorAll<HTMLButtonElement>('[data-open-plan]').forEach((b) => b.addEventListener('click', () => open(b.dataset.openPlan!)));
-    const nav = document.createElement('div'); nav.className = 'lb-navs'; pb.appendChild(nav);
-    const go = (d: number) => show(P[(P.indexOf(cur) + d + P.length) % P.length]);
-    for (const [d, ic, lab] of [[-1, 'chevl', 'Previous plan'], [1, 'chevr', 'Next plan']] as [number, string, string][]) { const b = document.createElement('button'); b.type = 'button'; b.className = 'lb-nav ' + (d < 0 ? 'lb-prev' : 'lb-next'); b.setAttribute('aria-label', lab); b.dataset.tip = lab + (d < 0 ? ' (←)' : ' (→)'); b.innerHTML = icon(ic); b.addEventListener('click', (e) => { e.stopPropagation(); go(d); }); nav.appendChild(b); }
-    pb.addEventListener('keydown', (e) => { if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') { e.preventDefault(); go(e.key === 'ArrowLeft' ? -1 : 1); } });
+  if (pb) {
+    const fit = () => { requestAnimationFrame(() => pb.querySelectorAll<HTMLButtonElement>('.fp-zoomctl button[data-z="reset"]').forEach((b) => b.click())); };
+    const open = () => { if (!pb.open) { embedModal(pb, true); pb.showModal(); } pb.scrollTop = 0; fit(); markSitenav('#venue-map'); };
+    const onOpen = (e: Event) => { e.preventDefault(); open(); history.replaceState(null, '', '#venue-map'); };
+    document.querySelectorAll<HTMLElement>('[data-open-plan], .sitenav a[href="#venue-map"]').forEach((b) => b.addEventListener('click', onOpen));
+    document.addEventListener('bbu-open-plan', () => open());
     pb.querySelector('.lb-close')!.addEventListener('click', () => pb.close()); pb.addEventListener('click', (e) => { const t = e.target as Element; if (t === pb || t.classList?.contains('lb-body')) pb.close(); });
-    addEventListener('resize', () => { if (pb.open) show(cur); }); // re-fit (whole plan in view) on resize / orientation change
-    pb.addEventListener('close', () => embedModal(pb, false)); addEventListener('beforeprint', () => { if (pb.open) pb.close(); }); } }
+    addEventListener('resize', () => { if (pb.open) fit(); });
+    pb.addEventListener('close', () => { embedModal(pb, false); if (location.hash === '#venue-map') history.replaceState(null, '', location.pathname + location.search); });
+    addEventListener('beforeprint', () => { if (pb.open) pb.close(); }); } }
 
 // fixed navbar: reserve its height at the top of the page
 { const nav = document.querySelector<HTMLElement>('.topnav'); if (nav && !document.documentElement.classList.contains('embed')) { const set = () => document.documentElement.style.setProperty('--navh', nav.offsetHeight + 'px'); new ResizeObserver(set).observe(nav); set(); } }
 // ---- race calendar (sections/10-map.ts, lib/calview.ts): web agenda from the current moment forward (same structure every day), custom tips ----
 { const cv = document.querySelector<HTMLElement>('#pb-cal .cv'), sc = cv?.querySelector<HTMLElement>('.cv-scroll');
   if (cv && sc) {
+    // In-box list scroll, without trapping the host page: only this list is a scroller.
+    // At the top/bottom, leftover wheel / touch is forwarded to embed.js (window.scrollBy).
+    // No touch-action / overscroll-behavior on the iframe or embed root; preventDefault only on wheel at an edge.
+    if (inEmbed) {
+      const atEdge = (dy: number) => dy > 0 ? sc.scrollTop + sc.clientHeight >= sc.scrollHeight - 1 : dy < 0 ? sc.scrollTop <= 0 : false;
+      const blocked = () => document.documentElement.classList.contains('cal-fs') || hostFull;
+      const send = (dy: number) => { if (!dy || blocked()) return; parent.postMessage({ type: 'bbu-scroll-by', dy }, '*'); };
+      sc.addEventListener('wheel', (e) => { if (blocked() || !atEdge(e.deltaY)) return; e.preventDefault(); send(e.deltaY); }, { passive: false });
+      let lastY = 0;
+      sc.addEventListener('touchstart', (e) => { if (e.touches.length === 1) lastY = e.touches[0].clientY; }, { passive: true });
+      sc.addEventListener('touchmove', (e) => { if (e.touches.length !== 1 || blocked()) return; const y = e.touches[0].clientY, dy = lastY - y; lastY = y; if (atEdge(dy)) send(dy); }, { passive: true });
+    }
     const T0 = Date.UTC(2027, 0, 17, 6, 0); // midnight Jan 17 2027 CT (race day) = minute 0 of the calendar data
     // Categories work like distances: "All" checked + no group checked = every event; checking a group drills down to it; unchecking the last reverts to All.
     const catKeys = () => [...new Set([...document.querySelectorAll<HTMLInputElement>('input[data-cat]')].map((i) => i.dataset.cat!))];
@@ -640,11 +677,37 @@ if (document.documentElement.classList.contains('embed') && parent !== window) {
     sc.addEventListener('scroll', hide, { passive: true }); addEventListener('scroll', hide, { passive: true }); document.addEventListener('click', hide);
     addEventListener('keydown', (k: KeyboardEvent) => { if (k.key === 'Escape') hide(); });
   } }
-// ---- race-day views (sections/20-timeline.ts): tablist (web only); arrow keys / Home / End move between tabs; print shows its own pages ----
-{ const pg = document.querySelector<HTMLElement>('.vw'), tabs = [...document.querySelectorAll<HTMLButtonElement>('.vw-tab')];
-  const go = (t: HTMLButtonElement, focus = false) => { tabs.forEach((x) => { const on = x === t; x.setAttribute('aria-selected', String(on)); x.tabIndex = on ? 0 : -1; document.getElementById('vw-' + x.dataset.view)?.classList.toggle('on', on); });
-    pg!.dataset.view = t.dataset.view; if (focus) t.focus(); dispatchEvent(new Event('resize')); /* panes were display:none: let size-dependent code re-measure */ };
-  tabs.forEach((t, i) => { t.addEventListener('click', () => go(t)); t.addEventListener('keydown', (e) => { const n = tabs.length, j = e.key === 'ArrowRight' ? (i + 1) % n : e.key === 'ArrowLeft' ? (i - 1 + n) % n : e.key === 'Home' ? 0 : e.key === 'End' ? n - 1 : -1; if (j >= 0) { e.preventDefault(); go(tabs[j], true); } }); }); }
+// ---- top nav: Distances / Aid stations scroll to those sections; Race calendar / Flow switch the views box and scroll to it ----
+{ const nav = document.querySelector<HTMLElement>('.sitenav');
+  if (nav) {
+    nav.addEventListener('click', (e) => {
+      const a = (e.target as Element).closest?.('a'); if (!(a instanceof HTMLAnchorElement) || !nav.contains(a)) return;
+      const href = a.getAttribute('href') || '';
+      if (a.target === '_blank') return; // Accommodations
+      if (href === '#venue-map') return; // handled by the plan lightbox
+      if (href === '#calendar' || href === '#flow' || href === '#distances' || href === '#stations') {
+        e.preventDefault();
+        if (href === '#calendar' || href === '#flow') setRaceView(href === '#flow' ? 'tl' : 'cal');
+        const id = href === '#calendar' || href === '#flow' ? 'pb-cal' : href.slice(1);
+        const el = document.getElementById(id);
+        markSitenav(href);
+        history.replaceState(null, '', href);
+        if (el) scrollToTarget(el);
+      }
+    });
+    const box = document.getElementById('pb-cal'), dist = document.getElementById('distances'), st = document.getElementById('stations');
+    const pick = () => {
+      const pb = document.getElementById('planbox'); if (pb instanceof HTMLDialogElement && pb.open) { markSitenav('#venue-map'); return; }
+      const mid = innerHeight * 0.35;
+      const vis = (el: HTMLElement | null) => { if (!el) return false; const r = el.getBoundingClientRect(); return r.bottom > mid && r.top < innerHeight * 0.7; };
+      if (vis(st)) markSitenav('#stations');
+      else if (vis(dist)) markSitenav('#distances');
+      else if (vis(box)) markSitenav(document.querySelector<HTMLElement>('.vw')?.dataset.view === 'tl' ? '#flow' : '#calendar');
+    };
+    addEventListener('scroll', pick, { passive: true });
+    if (inEmbed) addEventListener('message', (e) => { if (e.source === parent && e.data?.type === 'bbu-host-scroll') pick(); });
+    pick();
+  } }
 // desktop Full screen: the same calendar DOM fills the viewport (toggles stay in sync). Tries the Fullscreen API (works in the trailroots.com iframe because embed.js sets allow=fullscreen); if that is denied, a CSS overlay plus the existing host-window takeover (bbu-modal / bbu-full) is the fallback. Close button and Esc exit.
 { const cv = document.querySelector<HTMLElement>('#pb-cal .cv');
   if (cv) {

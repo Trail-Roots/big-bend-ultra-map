@@ -10,6 +10,14 @@
 </head>
 <body class="{{bodyclass}}">{{draftbanner}}
 <nav class="ui topnav"><a class="brand" href="https://trailroots.com/big-bend-ultra" target="_blank" rel="noopener"><img src="logo_ink_crop.png" alt="">Big Bend Ultra {{year}}</a>
+  <div class="sitenav" role="navigation" aria-label="On this page">
+    <a href="#distances">{{ic:route}}<span>Distances</span></a>
+    <a href="#stations">{{ic:firstaid}}<span>Aid stations</span></a>
+    <a href="#venue-map" aria-label="Venue map">{{ic:map}}<span>Venue</span></a>
+    <a href="https://www.stay22.com/embed/6a3b6089aa090046926ecf10" target="_blank" rel="noopener" aria-label="Lodging (Stay22, opens in a new tab)">{{ic:house}}<span>Lodging</span></a>
+    <a href="#calendar" data-view="cal" aria-label="Race calendar">{{ic:calendar}}<span>Calendar</span></a>
+    <a href="#flow" data-view="tl">{{ic:footprints}}<span>Flow</span></a>
+  </div>
   {{register}}<span class="printctl">{{layers}}<a class="pdf" href="big-bend-ultra-2027-map.pdf" download aria-label="Download PDF">{{ic:filedown}}<span class="pdflab">Download PDF</span></a></span>{{draftnote}}</nav>
 {{defs}}<main>{{body}}</main>
 <script src="app.js"></script>
