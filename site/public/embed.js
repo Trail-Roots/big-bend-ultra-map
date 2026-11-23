@@ -15,7 +15,7 @@
   function atH(r, hh) { var H = HT.hh, i = 0; hh = Math.max(H[0], Math.min(H[H.length - 1], hh)); while (i < H.length - 2 && hh > H[i + 1]) i++; var a = r[i + 1], b = r[i + 2]; return Math.abs(b - a) < 100 ? a + (b - a) * (hh - H[i]) / (H[i + 1] - H[i]) : (hh - H[i] < H[i + 1] - hh ? a : b); }
   function est0(w, hh) { var T = HT.w; if (w <= T[0][0]) return atH(T[0], hh); for (var i = 0; i < T.length - 1; i++) { var a = atH(T[i], hh), b = atH(T[i + 1], hh); if (w < T[i + 1][0]) return Math.abs(b - a) < 200 ? a + (b - a) * (w - T[i][0]) / (T[i + 1][0] - T[i][0]) : a; } return atH(T[T.length - 1], hh); }
   function est(w, hw, hh) { if (!HT || !HT.w || !HT.w.length) return 900; var T = HT.w, k = 0; while (k < T.length - 1 && w >= T[k + 1][0]) k++; return Math.round(est0(w, hh) + (HT.s ? HT.s[k] * Math.max(0, Math.min(hw - w, 200)) : 0)); }
-  f.setAttribute('allow', 'fullscreen'); f.style.cssText = 'display:block;width:100%;max-width:100%;border:0;overflow:hidden;overscroll-behavior:contain;height:' + (s.dataset.height || '900') + 'px';
+  f.setAttribute('allow', 'fullscreen'); f.setAttribute('scrolling', 'no'); f.style.cssText = 'display:block;width:100%;max-width:100%;border:0;height:' + (s.dataset.height || '900') + 'px';
   s.parentNode.insertBefore(f, s.nextSibling);
   if (!s.dataset.height) f.style.height = est(f.getBoundingClientRect().width || s.parentNode.clientWidth || innerWidth, innerWidth, innerHeight) + 'px';
   // lightbox open inside the iframe: the iframe takes over the WHOLE host window (fixed, top layer) while it is open. A placeholder of the

@@ -130,7 +130,6 @@ svg.mainmap,svg.mini{touch-action:pan-x pan-y}svg.panning{cursor:grabbing}
 /* ---------- ?view=embed ---------- */
 /* ?view=embed renders exactly the same paper layout; only the background behind the sheets is neutral (transparent) */
 html.embed,html.embed body,html.embed .sec.noprint{background:transparent!important}
-html.embed,html.embed body{overflow-x:hidden;overscroll-behavior:contain;overscroll-behavior-x:none}
 .cprofile{margin:.4rem 0 .8rem}
 /* ---------- wide / desktop: whole main map visible, fitted to the screen height ---------- */
 @media screen and (min-width:1001px){
@@ -379,11 +378,10 @@ table.st-timing tr.cutv{display:table-row;margin:0}table.st-timing th,table.st-t
 @media screen{.stripsbox .callinks{justify-content:flex-end}}@media screen and (min-width:1100px){html .sec-map .pg1 .stripsbox .callinks{left:auto;right:0}}
 /* ---------- race-day calendar (lib/calview.ts): day grid + agenda, neutral grays; race events carry a race-colour bar ---------- */
 .calbox{position:relative;min-width:0}
-.cv{--hh:48px;display:flex;flex-direction:column;background:#fff;border:1px solid #d4d4d4;border-radius:6px;overflow:hidden;overflow-x:hidden;overscroll-behavior:contain;overscroll-behavior-x:none;touch-action:pan-y;font:400 12px/1.3 system-ui,sans-serif;color:#2a2a2a;height:520px}
+.cv{--hh:48px;display:flex;flex-direction:column;background:#fff;border:1px solid #d4d4d4;border-radius:6px;overflow:hidden;font:400 12px/1.3 system-ui,sans-serif;color:#2a2a2a;height:520px}
 .cv-head{display:flex;align-items:center;justify-content:space-between;padding:6px 10px;border-bottom:1px solid #e2e2e2;background:#f4f4f4}
 .cv-title{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 10px}.cv-title b{font-size:13px;font-weight:650}.cv-date{color:#555;font-size:11.5px}
-.cv-scroll{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;overscroll-behavior-x:none;touch-action:pan-y;-webkit-overflow-scrolling:touch;position:relative;scroll-behavior:auto}
-.cv-scroll,.cv-scroll *{touch-action:pan-y;overscroll-behavior-x:none}
+.cv-scroll{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;overscroll-behavior-x:none;overscroll-behavior-y:auto;touch-action:pan-y;-webkit-overflow-scrolling:touch;position:relative;scroll-behavior:auto}
 .cv-item,.cv-dgrp,.cv-agenda,.cv-day,.cv-filters,.cv-frow{min-width:0;max-width:100%;overflow-x:hidden}
 .cv-day{position:sticky;top:0;z-index:4;background:#fff;border-bottom:1px solid #e2e2e2;padding:5px 10px;font-weight:650;font-size:11.5px;color:#3a3a3a}
 .cv-agenda ol{list-style:none;margin:0;padding:2px 0 6px}
@@ -523,7 +521,7 @@ dialog#racebox .lb-body{padding-top:60px} /* clear of the close / prev / next co
 @media print{.cv-mapcard{display:none!important}}
 /* views box: Race calendar and Operations occupy the identical box; the Operations chart is rendered at that box's aspect (no letterbox) */
 .vw-tlbox,.vw-tlv{width:100%;height:100%}.vw-tlv svg.timeline{display:block;width:100%!important;height:100%!important;max-width:none!important;max-height:none!important}
-@media screen and (max-width:1099px){.vw-pane.on{display:flex;flex-direction:column;min-height:0}.vw-cal .callinks{flex:none}.vw-cal .cv{height:auto!important;max-height:none}.vw-cal .cv-scroll{flex:none;height:17.5rem;max-height:17.5rem;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;overscroll-behavior-x:none;touch-action:pan-y;-webkit-overflow-scrolling:touch}.vw-tlbox,.vw-tlv{height:auto}} /* below 1100px: calendar sizes to its box (head + filters + ~3-4 event rows), not the screen; the list scrolls inside */
+@media screen and (max-width:1099px){.vw-pane.on{display:flex;flex-direction:column;min-height:0}.vw-cal .callinks{flex:none}.vw-cal .cv{height:auto!important;max-height:none}.vw-cal .cv-scroll{flex:none;height:17.5rem;max-height:17.5rem;overflow-y:auto;overflow-x:hidden;overscroll-behavior-x:none;overscroll-behavior-y:auto;touch-action:pan-y;-webkit-overflow-scrolling:touch}.vw-tlbox,.vw-tlv{height:auto}} /* below 1100px: calendar sizes to its box (head + filters + ~3-4 event rows), not the screen; the list scrolls inside */
 @media screen and (max-width:560px){.vw-cal .cv-scroll{height:23rem;max-height:23rem}}
 
 /* lightboxes sit above everything in our page (also inside the embed's full-window iframe) */
