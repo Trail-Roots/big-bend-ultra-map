@@ -493,7 +493,8 @@ if (document.documentElement.classList.contains('embed') && parent !== window) {
     else if (t.matches('input[data-race]')) { const k = t.dataset.race!, on = t.checked; document.querySelectorAll<HTMLInputElement>(`input[data-race="${k}"]`).forEach((i) => { i.checked = on; }); apply(); }
   });
   // elevation legend: click a race to toggle it (same as its checkbox)
-  document.querySelector('svg.profile')?.addEventListener('click', (e) => { const g = (e.target as Element).closest<SVGGElement>('g.plegend'); if (!g) return; const cb = document.querySelector<HTMLInputElement>(`input[data-race="${g.dataset.legend}"]`); if (cb) { cb.checked = !cb.checked; apply(); } });
+  // toggle the shared race filter (all Layers / calendar copies); unchecking the last race reverts to All
+  document.querySelector('svg.profile')?.addEventListener('click', (e) => { const g = (e.target as Element).closest<SVGGElement>('g.plegend'); if (!g) return; const cb = document.querySelector<HTMLInputElement>(`input[data-race="${g.dataset.legend}"]`); if (cb) { cb.checked = !cb.checked; cb.dispatchEvent(new Event('change', { bubbles: true })); } });
   // print always shows every race (the filter is a screen view only)
   addEventListener('beforeprint', () => apply(raceKeys())); addEventListener('afterprint', () => apply());
 }
