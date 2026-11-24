@@ -425,11 +425,28 @@ if (document.documentElement.classList.contains('embed') && parent !== window) {
   addEventListener('message', (e) => { const d = e.data; if (e.source !== parent || !d || d.type !== 'bbu-host-viewport' || !(d.w > 0 && d.h > 0)) return;
     const v = d.w + 'x' + d.h; if (v === hv) return; hv = v; const s = document.documentElement.style; s.setProperty('--host-vw', d.w / 100 + 'px'); s.setProperty('--host-vh', d.h / 100 + 'px'); });
   // pinned navbar inside the auto-height iframe: embed.js sends the iframe's top edge in the host window; shift the navbar down by what scrolled out
+  // Touch screens: the position arrives a frame or more after the host has already scrolled (the host scrolls on the compositor), so a
+  // pinned navbar would ride along with the page and snap back ("droop"). There it hides as soon as the host scrolls (or a vertical swipe
+  // starts) and fades back in, already in place, once the scroll has been still for ~180 ms. Mouse / trackpad desktops keep the live pin.
+  const touchUI = matchMedia('(hover: none) and (pointer: coarse)');
+  let navY = 0, navT = 0;
+  const navEl = () => document.querySelector<HTMLElement>('.topnav');
+  const reveal = () => { const nav = navEl(); if (!nav) return; nav.classList.remove('navhide'); nav.classList.add('navshow'); };
+  const hideNav = () => { const nav = navEl(); if (!nav || !touchUI.matches) return; clearTimeout(navT); navT = setTimeout(reveal, 180) as unknown as number;
+    if (!nav.classList.contains('navhide')) { nav.classList.remove('navshow'); nav.classList.add('navhide'); document.dispatchEvent(new Event('bbu-nav-hide')); } };
   addEventListener('message', (e) => { const d = e.data; if (e.source !== parent || !d || d.type !== 'bbu-host-scroll' || !Number.isFinite(d.top)) return;
-    const nav = document.querySelector<HTMLElement>('.topnav'); if (!nav) return;
+    const nav = navEl(); if (!nav) return;
       const chrome = Number(d.chrome) > 0 ? +d.chrome : 0;
       const y = Math.max(0, Math.min(-d.top + chrome, document.documentElement.scrollHeight - nav.offsetHeight - nav.offsetTop));
+    // pinned (or leaving / entering the pin) and moving: hide until the scroll settles; at rest in its natural slot (y = 0) it scrolls with the page as normal content
+    if (Math.abs(y - navY) > 0.5 && (y > 0 || navY > 0) && !hostFull) hideNav();
+    navY = y;
     nav.style.transform = y ? `translateY(${y}px)` : ''; nav.classList.toggle('pinned', y > 0); hostTop = d.top; document.querySelectorAll<HTMLDialogElement>('dialog.lightbox[open]').forEach(fitModal); });
+  // a host-page swipe (embed.js forwards its first move) or a vertical swipe on our own page hides the pinned bar before the scroll even starts
+  addEventListener('message', (e) => { if (e.source === parent && e.data?.type === 'bbu-host-touchmove' && navY > 0 && !hostFull) hideNav(); });
+  { let x0 = 0, y0 = 0, pan = false;
+    addEventListener('touchstart', (e: TouchEvent) => { const t = e.touches[0]; if (!t) return; x0 = t.clientX; y0 = t.clientY; pan = !!(e.target as Element)?.closest?.('.zhost, .fp-zoom, .cv-scroll, svg.mainmap, .navlayers .lpanel, .sitenav, dialog'); }, { passive: true });
+    addEventListener('touchmove', (e: TouchEvent) => { const t = e.touches[0]; if (!t || pan || navY <= 0 || hostFull) return; const dx = t.clientX - x0, dy = t.clientY - y0; if (Math.abs(dy) > 6 && Math.abs(dy) > Math.abs(dx)) hideNav(); }, { passive: true }); }
   // first report only after the web fonts are in (a fallback-font height would shrink, then grow, the reserved iframe)
   const go = () => { new ResizeObserver(post).observe(document.body); post(); }; (document.fonts ? document.fonts.ready : Promise.resolve()).then(() => document.readyState === 'complete' ? go() : addEventListener('load', go, { once: true }));
 }
@@ -660,6 +677,20 @@ if (document.documentElement.classList.contains('embed') && parent !== window) {
   addEventListener('hashchange', fromHash); queueMicrotask(fromHash);
 }
 
+
+// ---- phones (< 740 px): the page sections live in a hamburger menu: the same .sitenav links (same scroll-to and active highlight), shown as a dropdown ----
+{ const nav = document.querySelector<HTMLElement>('.topnav'), btn = nav?.querySelector<HTMLButtonElement>('.navmenu'), menu = document.getElementById('sitenav');
+  if (nav && btn && menu) {
+    const isOpen = () => nav.classList.contains('menu-open');
+    const set = (open: boolean) => { nav.classList.toggle('menu-open', open); btn.setAttribute('aria-expanded', String(open)); };
+    btn.addEventListener('click', (e) => { e.stopPropagation(); const open = !isOpen(); if (open) nav.querySelector<HTMLDetailsElement>('.navlayers[open]')?.removeAttribute('open'); set(open); });
+    menu.addEventListener('click', (e) => { if ((e.target as Element).closest?.('a') && isOpen()) set(false); });
+    document.addEventListener('click', (e) => { if (isOpen() && !(e.target as Element).closest?.('.sitenav, .navmenu')) set(false); });
+    addEventListener('keydown', (e: KeyboardEvent) => { if ((e.key === 'Escape' || e.key === 'Esc') && isOpen()) { set(false); btn.focus(); } });
+    document.addEventListener('bbu-nav-hide', () => set(false));
+    nav.querySelector('.navlayers')?.addEventListener('toggle', (e) => { if ((e.target as HTMLDetailsElement).open) set(false); });
+    matchMedia('(min-width:740px)').addEventListener('change', (m) => { if (m.matches) set(false); });
+  } }
 
 // ---- Venue map lightbox: parking plan only, zoomable ----
 { const pb = document.getElementById('planbox') as HTMLDialogElement | null;

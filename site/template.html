@@ -9,8 +9,8 @@
 <script>/* ?view=embed: same layout as the site, transparent background (for embedding in the race site) */var q=new URLSearchParams(location.search);if(q.get("view")==="embed"){document.documentElement.classList.add("embed");if(q.get("h")==="auto")document.documentElement.classList.add("autoh");var hw=+q.get("hw"),hh=+q.get("hh");if(hw>0&&hh>0){document.documentElement.style.setProperty("--host-vw",hw/100+"px");document.documentElement.style.setProperty("--host-vh",hh/100+"px")}}</script>
 </head>
 <body class="{{bodyclass}}">{{draftbanner}}
-<nav class="ui topnav"><a class="brand" href="https://trailroots.com/big-bend-ultra" target="_blank" rel="noopener"><img src="logo_ink_crop.png" alt="">Big Bend Ultra {{year}}</a>
-  <div class="sitenav" role="navigation" aria-label="On this page">
+<nav class="ui topnav"><a class="brand" href="https://trailroots.com/big-bend-ultra" target="_blank" rel="noopener" aria-label="Big Bend Ultra {{year}}"><img src="logo_ink_crop.png" alt=""><span class="brandtxt">Big Bend Ultra {{year}}</span></a>
+  <div class="sitenav" id="sitenav" role="navigation" aria-label="On this page">
     <a href="#overview" aria-current="page">{{ic:overview}}<span>Overview</span></a>
     <a href="#distances">{{ic:route}}<span>Distances</span></a>
     <a href="#stations">{{ic:firstaid}}<span>Aid stations</span></a>
@@ -19,7 +19,7 @@
     <a href="#calendar" data-view="cal" aria-label="Race calendar">{{ic:calendar}}<span>Calendar</span></a>
     <a href="#flow" data-view="tl">{{ic:footprints}}<span>Flow</span></a>
   </div>
-  {{register}}<span class="printctl">{{layers}}<a class="pdf" href="big-bend-ultra-2027-map.pdf" download aria-label="Download PDF">{{ic:filedown}}<span class="pdflab">Download PDF</span></a></span>{{draftnote}}</nav>
+  {{register}}<span class="printctl">{{layers}}<a class="pdf" href="big-bend-ultra-2027-map.pdf" download aria-label="Download PDF">{{ic:filedown}}<span class="pdflab">Download PDF</span></a></span>{{draftnote}}<button type="button" class="navmenu" aria-label="Sections menu" aria-expanded="false" aria-controls="sitenav">{{ic:menu}}</button></nav>
 {{defs}}<main>{{body}}</main>
 <script src="app.js"></script>
 </body>

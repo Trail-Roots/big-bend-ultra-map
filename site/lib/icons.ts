@@ -9,6 +9,7 @@ const P: Record<string, string> = {
   calendar: '<rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01"/>',
   play: '<path d="M6 3l14 9-14 9z"/>',
   pause: '<rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/>',
+  menu: '<path d="M4 6h16M4 12h16M4 18h16"/>',
   plus: '<path d="M5 12h14M12 5v14"/>',
   minus: '<path d="M5 12h14"/>',
   phone: '<rect x="6" y="2" width="12" height="20" rx="2"/><path d="M11 18h2"/>',

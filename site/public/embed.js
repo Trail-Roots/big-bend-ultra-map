@@ -94,7 +94,11 @@
     if (!full.mark) for (var el = f.parentElement; el && el !== document.documentElement; el = el.parentElement) { var cs = getComputedStyle(el);
       if (cs.transform !== 'none' || cs.filter !== 'none' || cs.perspective !== 'none' || (cs.contain && cs.contain !== 'none') || cs.willChange !== 'auto' || (cs.zIndex !== 'auto' && cs.position !== 'static') || cs.isolation === 'isolate' || (cs.backdropFilter && cs.backdropFilter !== 'none')) {
         full.anc.push([el, el.getAttribute('style')]); el.style.setProperty('transform', 'none', 'important'); el.style.setProperty('filter', 'none', 'important'); el.style.setProperty('perspective', 'none', 'important'); el.style.setProperty('contain', 'none', 'important'); el.style.setProperty('will-change', 'auto', 'important'); el.style.setProperty('z-index', 'auto', 'important'); el.style.setProperty('isolation', 'auto', 'important'); el.style.setProperty('backdrop-filter', 'none', 'important'); } }
-    f.style.cssText = 'display:block;position:fixed;inset:0;width:100vw;height:100vh;height:100dvh;max-width:none;max-height:none;margin:0;padding:0;border:0;z-index:2147483647;background:transparent';
+    // 1px taller than the viewport on purpose: an iframe that exactly fills the viewport while the host can't scroll is promoted by Android
+    // Chrome to the page's (implicit) root scroller, and after the takeover its document keeps the full-window layout size (360 x 696 inside a
+    // 317 x 4300 frame): the page then overflows sideways and paints white from the lower aid stations down. The page inside also stops being
+    // scrollable while it is full window (html.hostfull overflow:hidden), which rules the promotion out on its own as well.
+    f.style.cssText = 'display:block;position:fixed;inset:0 auto auto 0;width:100vw;height:calc(100vh + 1px);height:calc(100dvh + 1px);max-width:none;max-height:none;margin:0;padding:0;border:0;z-index:2147483647;background:transparent';
     window.scrollTo(full.x, full.y);
     f.contentWindow.postMessage({ type: 'bbu-full', on: true, top: full.top, w: innerWidth, h: innerHeight }, origin);
   }
@@ -113,7 +117,7 @@
       if (F.mark.parentNode) F.mark.parentNode.removeChild(F.mark);
     }
     for (var i = F.anc.length - 1; i >= 0; i--) { var A = F.anc[i]; if (A[1] == null) A[0].removeAttribute('style'); else A[0].setAttribute('style', A[1]); }
-    if (back) { F.ph.parentNode && F.ph.parentNode.removeChild(F.ph); }
+    if (back || !F.mark) { F.ph.parentNode && F.ph.parentNode.removeChild(F.ph); } // never moved (no moveBefore): it is still in its slot, and moving it would reload it
     else if (F.ph && F.ph.parentNode) {
       // moveBefore failed: put the iframe back where the placeholder is so the slot does not collapse to a white gap.
       try { F.ph.parentNode.insertBefore(f, F.ph); F.ph.parentNode.removeChild(F.ph); back = true; } catch (z) {}
@@ -155,6 +159,9 @@
   var raf = 0;
   function pos() { if (raf || full) return; raf = requestAnimationFrame(function () { raf = 0; if (f.contentWindow) f.contentWindow.postMessage({ type: 'bbu-host-scroll', top: f.getBoundingClientRect().top, chrome: hostChromeHeight() }, origin); }); }
   addEventListener('scroll', pos, { passive: true });
+  // touch: the first move of a host-page swipe tells the page to tuck its pinned navbar away before the scroll starts (passive: never blocks scrolling)
+  var tm = false; addEventListener('touchstart', function () { tm = false; }, { passive: true });
+  addEventListener('touchmove', function () { if (tm || full || !f.contentWindow) return; tm = true; f.contentWindow.postMessage({ type: 'bbu-host-touchmove' }, origin); }, { passive: true });
   f.addEventListener('load', function () { send(true); pos(); });
   addEventListener('resize', function () { send(); pos(); }); addEventListener('orientationchange', function () { setTimeout(send, 100); });
   // print: the built print pages as images (preloaded), only they print; landscape / portrait per page

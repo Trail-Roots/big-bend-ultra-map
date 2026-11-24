@@ -923,3 +923,31 @@ ul.st-timing .cutr{font-weight:700}
 @media print{
   .cv-dropnote-pr{display:block;margin:.08in 0 0;font:400 8pt/1.3 system-ui,sans-serif;color:#333}
 }
+/* Distance filter: hidden race / station cards (and their per-race rows) stay hidden whatever display a layout rule gives them */
+.racecard[hidden],.stcard-brief[hidden],.st-cuts [data-race][hidden],.st-timing [data-race][hidden],.cutv[data-race][hidden],.am-bag-yes[hidden],.am-bag-no[hidden]{display:none!important}
+/* ---------- phones (< 740 px): logo-only brand, icon-only Layers, page sections in a hamburger menu (desktop keeps the text nav) ---------- */
+.topnav .navmenu{display:none}
+@media screen and (max-width:739px){
+  html body .topnav{flex-wrap:nowrap}
+  html body .topnav .brand{flex:none;overflow:visible}
+  .topnav .brandtxt,.topnav .lyrlab{display:none}
+  html body .topnav .navlayers > summary{padding:0 .5rem}
+  html body .topnav .navmenu{display:inline-flex;align-items:center;justify-content:center;flex:none;box-sizing:border-box;height:var(--nb-h);min-width:var(--nb-h);margin:0;padding:0 .4rem;border:1px solid #bdbdbd;border-radius:6px;background:#fff;color:#2a2a2a;cursor:pointer;font:inherit}
+  html body .topnav .navmenu svg.ic{width:18px;height:18px;vertical-align:0}
+  html body .topnav .navmenu[aria-expanded="true"],html body .topnav .navmenu:hover{background:#f4f4f4;border-color:#8a8a8a}
+  html body .topnav .navmenu:focus-visible{outline:2px solid #2a2a2a;outline-offset:2px}
+  html body .sitenav{display:none;position:absolute;top:calc(100% + 4px);right:8px;left:auto;z-index:45;order:0;flex:none;width:max-content;min-width:210px;max-width:calc(100% - 16px);box-sizing:border-box;flex-direction:column;align-items:stretch;gap:2px;padding:6px;overflow:visible;background:#fff;border:1px solid #ddd;border-radius:8px;box-shadow:0 6px 18px #0003}
+  html body .topnav.menu-open .sitenav{display:flex}
+  html body .sitenav a{min-height:44px;box-sizing:border-box;padding:10px 12px;gap:10px;font-size:15px;border-bottom:0;border-radius:6px}
+  html body .sitenav a svg.ic{width:18px!important;height:18px!important}
+  html body .sitenav a:hover{background:#f4f4f4}
+  html body .sitenav a[aria-current]{background:#efefef;box-shadow:inset 3px 0 0 #2a2a2a}
+}
+/* touch screens, embed: the navbar hides while the host page scrolls and fades back in, in place, when the scroll stops (no lagging "droop") */
+html.embed body .topnav.navhide{opacity:0;visibility:hidden;transition:none}
+html.embed body .topnav.navshow{transition:opacity .16s ease-out}
+/* embed takeover (lightbox / full-screen calendar): the page itself must not be a scroller while the iframe fills the host window, or Android
+   Chrome makes the iframe the root scroller and its layout keeps the window size after closing (sideways overflow + white page); the dialog scrolls */
+html.embed.hostfull{overflow:hidden}
+/* the embed never scrolls sideways */
+html.embed{overflow-x:hidden}
