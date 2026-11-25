@@ -18,7 +18,7 @@ svg .stnum{fill:#fff;font-weight:700}
 .topnav{display:flex;gap:1rem;align-items:center;padding:.5rem 1rem;background:#fff;border-bottom:1px solid #ddd;flex-wrap:wrap}
 .topnav a{color:var(--ink);text-decoration:none}.topnav a[aria-current]{font-weight:700;border-bottom:2px solid var(--ink)}
 /* Standard text nav: Overview, Distances, Aid stations, Venue, Lodging, Calendar, Flow */
-.sitenav{display:flex;align-items:center;gap:0 .95rem;flex:1;min-width:0;overflow-x:auto;overflow-y:hidden;flex-wrap:nowrap;-webkit-overflow-scrolling:touch}
+.sitenav{display:flex;align-items:center;justify-content:center;gap:0 .95rem;flex:1 1 auto;overflow:visible;flex-wrap:nowrap}
 .sitenav a{flex:none;display:inline-flex;align-items:center;gap:.35em;white-space:nowrap;color:inherit;text-decoration:none;font:600 13px/1.2 system-ui,sans-serif;padding:6px 0;border-bottom:2px solid transparent}
 .sitenav a:hover{border-bottom-color:#bbb}
 .sitenav a[aria-current]{font-weight:700;border-bottom-color:var(--ink)}
@@ -951,3 +951,23 @@ html.embed body .topnav.navshow{transition:opacity .16s ease-out}
 html.embed.hostfull{overflow:hidden}
 /* the embed never scrolls sideways */
 html.embed{overflow-x:hidden}
+/* desktop text nav (>= 740 px): the 7 section links, logo, Layers, Register, PDF and draft note must all stay
+   visible. Below 1600 px the links occupy a full second row (flex wrap would otherwise leave the logo alone
+   on row 1 and stack Register / Layers / PDF under it). At 1600 px and up, everything fits on one row.
+   The bar must never scroll sideways. The sheet-centering inset is capped so a short host window cannot
+   squeeze the links away. */
+@media screen and (min-width:740px){
+  html body .topnav{flex-wrap:wrap;align-items:center;row-gap:2px}
+  html body .topnav .brand{flex:none;min-width:max-content;overflow:visible;text-overflow:clip}
+  html body .topnav .draftnote,html body .topnav .navreg,html body .topnav .printctl{flex:none}
+  html body .sitenav{overflow:visible;overflow-x:visible;flex-wrap:nowrap;justify-content:center}
+}
+@media screen and (min-width:740px) and (max-width:1599px){
+  html body .sitenav{flex:1 1 100%;width:100%;min-width:100%;order:5}
+}
+@media screen and (min-width:1600px){
+  html body .sitenav{flex:1 1 auto;width:auto;min-width:max-content;order:0}
+}
+@media screen and (min-width:1100px){
+  html body .topnav{padding-inline:max(1rem,min(2.5rem,calc((calc(var(--host-vw, 1vw) * 100) - min(calc(calc(var(--host-vw, 1vw) * 100) - 48px),calc((calc(var(--host-vh, 1vh) * 100) - 90px) * 11 / 8.5),1600px)) / 2)))}
+}
